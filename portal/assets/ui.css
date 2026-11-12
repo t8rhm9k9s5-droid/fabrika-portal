@@ -1,0 +1,221 @@
+/* фирменный шрифт ALS Ekibastuz (24.10.2026, пользователь: лицензия куплена и для сайта); файлы — только внутри зашифрованного сайта.
+   28.10.2026: сначала woff2 (вдвое легче, те же 501/498/497 знаков), OTF — запасной */
+@font-face{font-family:"ALS Ekibastuz";font-style:normal;font-weight:100 500;font-display:swap;src:url(fonts/als-ekibastuz-400.woff2) format("woff2"),url(fonts/als-ekibastuz-400.otf) format("opentype")}
+@font-face{font-family:"ALS Ekibastuz";font-style:normal;font-weight:600 700;font-display:swap;src:url(fonts/als-ekibastuz-700.woff2) format("woff2"),url(fonts/als-ekibastuz-700.otf) format("opentype")}
+@font-face{font-family:"ALS Ekibastuz";font-style:normal;font-weight:800 1000;font-display:swap;src:url(fonts/als-ekibastuz-900.woff2) format("woff2"),url(fonts/als-ekibastuz-900.otf) format("opentype")}
+/* нижнее меню, 23.10.2026: 54 px, ниже к краю экрана; --tb-top — где кончается меню (от низа экрана) */
+:root{--tb-top:calc(max(18px,env(safe-area-inset-bottom,0px) - 16px) + 54px)}
+/* «Фабрика» — one look for every page (22.10.2026): the colours, type and glass of the 3D model and the same tab bar below.
+   The pages keep their own markup; their variables are pointed at these tokens (html:root wins over a page's :root). */
+html:root{
+  --bg:#eef2f1; --surface-solid:#fafcfb; --fg:#1b2225;
+  --f-body:"ALS Ekibastuz",-apple-system,BlinkMacSystemFont,"SF Pro Text","Golos Text","Segoe UI Variable Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-display:"ALS Ekibastuz",-apple-system,BlinkMacSystemFont,"SF Pro Display","Golos Text","Segoe UI Variable Display","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-narrow:var(--f-display);
+  --accent:#e8590c; --on-accent:#fff;
+  --glass:rgba(255,255,255,.34); --glass-ui:rgba(255,255,255,.46); --glass-text:rgba(250,251,253,.74); --glass-pill:rgba(255,255,255,.3);
+  --glass-sel:rgba(255,255,255,.86); --glass-well:rgba(118,118,128,.14);
+  --rim:rgba(255,255,255,.85); --rim-low:rgba(255,255,255,.32); --edge:rgba(255,255,255,.55); --edge-out:rgba(20,30,40,.08);
+  --sheen:linear-gradient(165deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,.16) 30%,rgba(255,255,255,0) 52%,rgba(255,255,255,.1) 100%);
+  --blur:blur(22px) saturate(190%) brightness(1.05); --blur-text:blur(30px) saturate(170%) brightness(1.06);
+  --gshadow:0 12px 36px rgba(18,28,38,.18),0 2px 6px rgba(18,28,38,.08);
+  --r-panel:26px; --r-card:18px; --spring:cubic-bezier(.34,1.56,.64,1);
+  --line:rgba(60,70,80,.16); --line-strong:rgba(60,70,80,.3); --muted:#5b6670;
+  --card:rgba(255,255,255,.72); --card-edge:rgba(20,30,40,.08);
+  /* the pages' own names for the same things */
+  --paper:var(--bg); --panel:var(--card); --ink:var(--fg); --rule:var(--line); --chip:var(--glass-well); --track:var(--glass-well);
+  --halo:var(--bg); --sel:var(--fg); --accent-ink:var(--on-accent);
+}
+@media (prefers-color-scheme:dark){
+  html:root:not([data-theme="light"]){
+    --bg:#101518; --surface-solid:#161c1f; --fg:#e6edef; --accent:#ff9f0a; --on-accent:#1a0d05;
+    --glass:rgba(28,30,36,.36); --glass-ui:rgba(38,40,48,.46); --glass-text:rgba(22,24,30,.74); --glass-pill:rgba(255,255,255,.08);
+    --glass-sel:rgba(255,255,255,.2); --glass-well:rgba(118,118,128,.24);
+    --rim:rgba(255,255,255,.34); --rim-low:rgba(255,255,255,.08); --edge:rgba(255,255,255,.14); --edge-out:rgba(0,0,0,.35);
+    --sheen:linear-gradient(165deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 30%,rgba(255,255,255,0) 55%,rgba(255,255,255,.04) 100%);
+    --gshadow:0 14px 40px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+    --line:rgba(255,255,255,.12); --line-strong:rgba(255,255,255,.24); --muted:#a3adb5;
+    --card:rgba(255,255,255,.055); --card-edge:rgba(255,255,255,.1);
+    --paper:var(--bg); --panel:var(--card); --ink:var(--fg); --rule:var(--line); --chip:var(--glass-well); --track:var(--glass-well);
+    --halo:var(--bg); --sel:var(--fg); --accent-ink:var(--on-accent); color-scheme:dark;
+  }
+}
+html:root[data-theme="dark"]{
+  --bg:#101518; --surface-solid:#161c1f; --fg:#e6edef; --accent:#ff9f0a; --on-accent:#1a0d05;
+  --glass:rgba(28,30,36,.36); --glass-ui:rgba(38,40,48,.46); --glass-text:rgba(22,24,30,.74); --glass-pill:rgba(255,255,255,.08);
+  --glass-sel:rgba(255,255,255,.2); --glass-well:rgba(118,118,128,.24);
+  --rim:rgba(255,255,255,.34); --rim-low:rgba(255,255,255,.08); --edge:rgba(255,255,255,.14); --edge-out:rgba(0,0,0,.35);
+  --sheen:linear-gradient(165deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 30%,rgba(255,255,255,0) 55%,rgba(255,255,255,.04) 100%);
+  --gshadow:0 14px 40px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --line:rgba(255,255,255,.12); --line-strong:rgba(255,255,255,.24); --muted:#a3adb5;
+  --card:rgba(255,255,255,.055); --card-edge:rgba(255,255,255,.1);
+  --paper:var(--bg); --panel:var(--card); --ink:var(--fg); --rule:var(--line); --chip:var(--glass-well); --track:var(--glass-well);
+  --halo:var(--bg); --sel:var(--fg); --accent-ink:var(--on-accent); color-scheme:dark;
+}
+
+/* the pages take the iOS ground (assets/ios.css has the iOS tokens and rows) */
+html:root,html:root:not([data-theme="light"]),html:root[data-theme="dark"]{--bg:var(--ios-bg);--card:var(--ios-group);--line:var(--ios-sep);--muted:var(--ios-2)}
+
+html body{background:var(--bg);color:var(--ios-label);font-family:var(--f-body);-webkit-font-smoothing:antialiased;letter-spacing:-.01em;
+  padding-bottom:calc(var(--tb-top) + 24px)}
+.sitenav{display:none!important}
+/* large title, like «Настройки» */
+html body h1{font:700 34px/1.12 var(--f-display);letter-spacing:-.025em;margin:6px 0 4px;text-wrap:balance}
+html body .eyebrow{font:600 13px/1.2 var(--f-body);letter-spacing:0;text-transform:none;color:var(--ios-2);margin:0}
+html body .lead{color:var(--ios-2);font-size:15px}
+html body .hd{border:0;background:none;padding-bottom:6px}
+/* inputs and small buttons like iOS */
+/* 28.10.2026, совместимость: селекторы :is() раскрыты в обычные списки — Safari до 14 и Chrome до 88 отбрасывают всё правило с :is() */
+html body .cp:not(#_),html body .btn:not(#_),html body #ndvSum{border-radius:999px;border:0;background:var(--ios-fill);color:var(--ios-blue);font:500 14px var(--f-body);padding:6px 12px;cursor:pointer}
+html body .btn.pri{background:var(--ios-blue);color:#fff}
+html body input[type="search"],html body .search{border-radius:12px;border:0;background:var(--ios-fill);color:var(--ios-label)}
+html body .search input{background:transparent;color:var(--ios-label)}
+/* filters (docs, archive) inside a sheet: an iOS list with a check mark */
+.tabpanel .filters,.tabpanel .chips{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden;margin:0}
+.tabpanel .filters button,.tabpanel .chips .chip{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;padding:0 16px;border:0;border-top:.5px solid var(--ios-sep);
+  border-radius:0;background:none;color:var(--ios-label);font:400 17px var(--f-body);text-align:left;box-shadow:none;cursor:pointer}
+.tabpanel .filters button:first-child,.tabpanel .chips .chip:first-child{border-top:0}
+.tabpanel .filters button small,.tabpanel .chips .chip small{margin-left:auto;margin-right:8px;color:var(--ios-2);font:400 15px var(--f-body);opacity:1}
+.tabpanel .filters button[aria-pressed="true"],.tabpanel .chips .chip[aria-pressed="true"]{background:none;color:var(--ios-label)}
+.tabpanel .filters button[aria-pressed="true"]::after,.tabpanel .chips .chip[aria-pressed="true"]::after{content:"✓";color:var(--ios-blue);font:600 18px var(--f-body);margin-left:8px}
+/* the plan's layers: rows with switches */
+.tabpanel .togs{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden}
+.tabpanel .tog{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;padding:0 16px;border:0;border-top:.5px solid var(--ios-sep);border-radius:0;
+  background:none;color:var(--ios-label);font:400 17px var(--f-body);box-shadow:none;cursor:pointer}
+.tabpanel .tog:first-child{border-top:0}
+.tabpanel .tog::after{content:"";flex:none;width:51px;height:31px;border-radius:16px;background:var(--ios-fill) radial-gradient(circle at 15.5px 50%,#fff 12.5px,transparent 13.5px) no-repeat;transition:background .2s}
+.tabpanel .tog[aria-pressed="true"]{background:none;color:var(--ios-label)}
+.tabpanel .tog[aria-pressed="true"]::after{background:var(--ios-green) radial-gradient(circle at 35.5px 50%,#fff 12.5px,transparent 13.5px) no-repeat}
+/* the archive: each section is a group of rows */
+html body section.grp{border:0;background:none;box-shadow:none;border-radius:0;margin-top:22px}
+html body .gh{display:block;border:0;padding:0 16px 7px;margin:0}
+html body .gh h2{font:400 13px/1.3 var(--f-body);text-transform:uppercase;color:var(--ios-2);letter-spacing:.01em;margin:0;display:inline}
+html body .gh .gsum{font:400 13px var(--f-body);color:var(--ios-2);text-transform:none;letter-spacing:0;margin-left:6px}
+html body .gh p{font-size:13px;color:var(--ios-2);margin:3px 0 0}
+html body section.grp .doc{background:var(--ios-group);border:0;border-radius:0;margin:0;padding:10px 16px;gap:4px 14px;position:relative}
+html body section.grp .doc + .doc::before{content:"";position:absolute;top:0;left:88px;right:0;height:.5px;background:var(--ios-sep)}
+html body section.grp .gh + .doc{border-top-left-radius:22px;border-top-right-radius:22px}
+html body section.grp .doc:last-child{border-bottom-left-radius:22px;border-bottom-right-radius:22px}
+html body section.grp .doc .th{border-radius:8px;border:0;width:58px;height:74px}
+html body .bd h3{font:600 16px/1.3 var(--f-body)}
+html body .mt{font:400 13px/1.35 var(--f-body);color:var(--ios-2)}
+html body .use{font-size:13.5px;color:var(--ios-label)}
+html body .use b{color:var(--ios-blue)}
+html body .kpis{gap:10px}
+html body .kpis div{background:var(--ios-group);border-radius:16px;padding:10px 14px}
+html body .kpis dd{font:700 24px/1.1 var(--f-display);letter-spacing:-.02em}
+html body .kpis dt{font:400 12.5px/1.2 var(--f-body);text-transform:none;letter-spacing:0;color:var(--ios-2)}
+/* the drawings: a list with thumbnails instead of big cards */
+html body .grid:has(> .doc){display:block;background:var(--ios-group);border-radius:22px;overflow:hidden}
+html body .grid > .doc{display:flex;flex-direction:row;align-items:center;gap:14px;border:0;border-radius:0;background:none;padding:10px 16px;position:relative;box-shadow:none}
+html body .grid > .doc + .doc::before{content:"";position:absolute;top:0;left:110px;right:0;height:.5px;background:var(--ios-sep)}
+html body .grid > .doc .th{flex:none;width:80px;height:60px;aspect-ratio:auto;border:0;border-radius:8px;background:#fff}
+html body .grid > .doc .tx{padding:0;flex:1;min-width:0}
+html body .grid > .doc .t{font:400 16px/1.3 var(--f-body)}
+html body .grid > .doc .s{font-size:13px;color:var(--ios-2)}
+html body .grid > .doc .tag{display:none}
+html body .grid > .doc::after{content:"";flex:none;width:7px;height:7px;border-right:2.2px solid var(--ios-3);border-top:2.2px solid var(--ios-3);transform:rotate(45deg);margin-right:4px}
+
+/* 28.10.2026, совместимость: перед inset: и 100dvh стоят длинная запись (top/right/bottom/left) и vh — Safari 13–14.0 и Chrome < 87 не знают inset,
+   Safari < 15.4 и Chrome < 108 — dvh; без фолбэка слои и карта теряли размеры */
+/* ---- the tab bar and its half-sheet (the same as in the model) ---- */
+.tabbar,.tabpanel{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 var(--rim),inset 0 -1px 0 var(--rim-low),0 0 0 .5px var(--edge-out),var(--gshadow);isolation:isolate;color:var(--fg)}
+.tabbar::before,.tabpanel::before{content:"";position:absolute;top:0;right:0;bottom:0;left:0;inset:0;border-radius:inherit;background:var(--sheen);pointer-events:none;z-index:-1}
+.tabpanel{background:var(--glass-text);-webkit-backdrop-filter:var(--blur-text);backdrop-filter:var(--blur-text)}
+.tabbar{position:fixed;z-index:60;left:max(26px,env(safe-area-inset-left,0px));right:max(26px,env(safe-area-inset-right,0px));
+  bottom:max(18px,env(safe-area-inset-bottom,0px) - 16px);height:54px;border-radius:27px;display:grid;grid-template-columns:repeat(var(--n,4),1fr);padding:0 6px;box-sizing:border-box}
+@media (min-width:600px){ .tabbar{left:50%;right:auto;width:min(calc(110px * var(--n,4)),calc(100% - 24px));transform:translateX(-50%)} }
+.tabbar > button,.tabbar > a{position:relative;display:grid;justify-items:center;align-content:center;gap:3px;border:0;background:none;color:var(--fg);
+  font:500 11px/1 var(--f-body);cursor:pointer;border-radius:22px;margin:4px 0;text-decoration:none;transition:transform .35s var(--spring),background .2s,color .2s}
+.tabbar svg{width:22px;height:22px}
+.tabbar > :active{transform:scale(.94)}
+.tabbar > [aria-expanded="true"]{color:var(--accent);background:var(--glass-sel)}
+.tabbar > .dot::after{content:"";position:absolute;top:6px;left:calc(50% + 9px);width:8px;height:8px;border-radius:50%;background:var(--accent);border:2px solid var(--surface-solid)}
+.tabpanel{position:fixed;z-index:60;left:8px;right:8px;bottom:calc(var(--tb-top) + 8px);border-radius:26px;padding:8px 14px 16px;
+  max-height:calc(100vh - 84px - env(safe-area-inset-bottom,0px) - 70px);max-height:calc(100dvh - 84px - env(safe-area-inset-bottom,0px) - 70px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;font-family:var(--f-body)}
+@media (min-width:600px){ .tabpanel{left:50%;right:auto;width:min(560px,calc(100% - 24px));transform:translateX(-50%)} }
+.tabpanel[hidden]{display:none!important}
+.tabpanel .grab{display:block;width:44px;height:22px;margin:0 auto;border:0;background:none;cursor:pointer;position:relative}
+.tabpanel .grab::after{content:"";position:absolute;left:4px;right:4px;top:8px;height:5px;border-radius:3px;background:var(--line-strong)}
+
+.tabpanel .tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.tabpanel .tiles a{display:grid;justify-items:center;gap:6px;padding:10px 2px;border-radius:14px;border:1px solid var(--edge);background:var(--glass-pill);
+  color:var(--fg);font:500 11px/1.15 var(--f-body);text-align:center;text-decoration:none}
+.tabpanel .tiles a[aria-current="page"]{border-color:var(--accent);color:var(--accent)}
+.tabpanel .tiles svg{width:22px;height:22px}
+.tabpanel .rows button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 6px;border:0;border-bottom:1px solid var(--line);
+  background:none;color:var(--fg);font:500 15px var(--f-body);text-align:left;cursor:pointer}
+.tabpanel .rows button:last-child{border-bottom:0}
+.tabpanel .rows button:disabled{opacity:.4;cursor:default}
+.tabpanel .rows svg{width:22px;height:22px;flex:none;color:var(--muted)}
+.tabpanel .rows .st{margin-left:auto;font:500 12.5px var(--f-body);color:var(--muted)}
+.tabpanel .rows .st.on{color:var(--accent)}
+.tabpanel .edst{margin:0 4px 4px;font:13px/1.4 var(--f-body);color:var(--muted)}
+.tabpanel .edst b{color:var(--fg)}
+/* what a page moves into a sheet loses its page spacing there */
+.tabpanel .bar{position:static;border:0;padding:0;background:none;display:grid;gap:10px}
+.tabpanel .legend{max-height:none}
+/* a document viewer covers everything, the bar too */
+.viewer:not([hidden]) ~ .tabbar,.vw:not([hidden]) ~ .tabbar,.photo:not([hidden]) ~ .tabbar,.lightbox:not([hidden]) ~ .tabbar,.viewer:not([hidden]) ~ .tabpanel,.vw:not([hidden]) ~ .tabpanel,.photo:not([hidden]) ~ .tabpanel,.lightbox:not([hidden]) ~ .tabpanel{display:none!important}
+.t14toast{bottom:calc(var(--tb-top) + 16px)!important}
+
+/* ---- the plan: the map on the whole screen, like the model ---- */
+body.pg-plan{padding-bottom:0;height:100%;overflow:hidden}
+body.pg-plan .app{height:100vh;height:100dvh;display:block}
+body.pg-plan .app > header{display:none}
+body.pg-plan main{display:block;height:100%}
+body.pg-plan .mapwrap{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;height:auto;border:0;background:var(--bg)}
+body.pg-plan aside{display:none}
+body.pg-plan .ctrl{top:auto;bottom:calc(var(--tb-top) + 16px);right:max(14px,env(safe-area-inset-right,0px));gap:0;padding:3px;border-radius:22px;
+  background:var(--glass-ui);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--rim),var(--gshadow)}
+body.pg-plan .ctrl button{width:42px;height:42px;border:0;border-radius:50%;background:transparent;box-shadow:none;color:var(--fg);font-family:var(--f-body)}
+body.pg-plan .scale{bottom:calc(var(--tb-top) + 20px)}
+body.pg-plan .north{top:calc(12px + env(safe-area-inset-top,0px))}
+body.pg-plan #cardSec{position:fixed;z-index:55;left:8px;right:8px;bottom:calc(var(--tb-top) + 8px);max-height:min(52vh,calc(100vh - 180px));max-height:min(52vh,calc(100dvh - 180px));overflow:auto;
+  padding:14px 16px;border-radius:var(--r-panel);background:var(--glass-text);-webkit-backdrop-filter:var(--blur-text);backdrop-filter:var(--blur-text);
+  border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--rim),var(--gshadow);box-sizing:border-box}
+@media (min-width:600px){ body.pg-plan #cardSec{left:auto;right:max(14px,env(safe-area-inset-right,0px));width:400px;bottom:calc(var(--tb-top) + 8px)} }
+body.pg-plan #cardSec[hidden]{display:none!important}
+body.pg-plan #cardSec .card{border:0;background:none;box-shadow:none;padding:0}
+body.pg-plan #cardSec .cx{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;border:0;background:var(--glass-well);color:var(--fg);font:18px/1 var(--f-body);cursor:pointer}
+body.pg-plan .tabpanel .list{padding:0;margin-top:8px}
+body.pg-plan .tabpanel #q{width:100%;box-sizing:border-box;padding:10px 12px}
+.tabpanel details.src summary{cursor:pointer;color:var(--muted);font:500 13px var(--f-body);margin:0 4px}
+.tabpanel details.src p{font-size:12.5px;color:var(--muted)}
+/* the plan's camera list: grouped rows (the list is flat: a header, then its cameras) */
+body.pg-plan .tabpanel #q{height:38px;border:0;border-radius:12px;background:var(--ios-fill);color:var(--ios-label);font:400 17px var(--f-body);padding:0 12px}
+body.pg-plan .tabpanel #q::placeholder{color:var(--ios-2)}
+body.pg-plan .tabpanel #list .grp{font:400 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);padding:18px 16px 7px}
+body.pg-plan .tabpanel #list .item{grid-template-columns:44px minmax(0,1fr) auto;align-items:center;min-height:46px;padding:0 16px;border-radius:0;background:var(--sheet-group);position:relative;font:400 17px var(--f-body);color:var(--ios-label)}
+body.pg-plan .tabpanel #list .item + .item::before{content:"";position:absolute;top:0;left:68px;right:0;height:.5px;background:var(--ios-sep)}
+body.pg-plan .tabpanel #list .grp + .item{border-top-left-radius:16px;border-top-right-radius:16px}
+body.pg-plan .tabpanel #list .item:has(+ .grp),body.pg-plan .tabpanel #list .item:last-child{border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+body.pg-plan .tabpanel #list .item .num{font:600 15px var(--f-body);color:var(--ios-blue)}
+body.pg-plan .tabpanel #list .item .ip{font:400 14px var(--f-body);color:var(--ios-2)}
+body.pg-plan .tabpanel #list .item.sel{background:var(--sheet-group);box-shadow:none}
+body.pg-plan .tabpanel #list .item.sel .t{color:var(--ios-blue)}
+body.pg-plan .tabpanel #list .item:active{background:var(--ios-fill)}
+
+/* 23.10.2026: «‹ Назад» всегда на месте — висит вверху и не уезжает при прокрутке (как нижнее меню) */
+a.back,button.back{position:fixed!important;z-index:70;top:calc(8px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));margin:0!important;
+  padding:8px 14px 8px 6px!important;border-radius:999px;background:var(--glass-ui,rgba(255,255,255,.72));-webkit-backdrop-filter:var(--blur-s,blur(16px));backdrop-filter:var(--blur-s,blur(16px));
+  border:1px solid var(--edge,rgba(255,255,255,.55));box-shadow:0 4px 16px rgba(18,28,38,.14)}
+body:has(.back){padding-top:calc(48px + env(safe-area-inset-top,0px))}
+body *:has(.back){-webkit-backdrop-filter:none!important;backdrop-filter:none!important;filter:none!important}   /* иначе «Назад» прилипает к шапке, а не к экрану */
+
+/* 27.10.2026, пользователь: «при быстром скролинге меню улетает вверх» — iOS прокручивал страницу вместе с position:fixed (меню, «‹ Назад»).
+   На сенсорных экранах (класс t14sc ставит site.js) прокручивается body, а не страница: фиксированное больше не уезжает. Отступ под меню —
+   ::after в конце body (нижний padding у прокручиваемого flex-блока iOS учитывает не всегда). */
+html.t14sc{height:100%;overflow:hidden}
+html.t14sc body:not(.pg-plan){height:100%;margin:0;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:0}
+html.t14sc body:not(.pg-plan)::after{content:"";display:block;flex:none;height:calc(var(--tb-top) + 24px)}
+html.t14sc body:not(.pg-plan) > .app{flex:none;min-height:auto}
+
+/* 28.10.2026, совместимость: отступы вместо gap у flex (Safari < 14.1, Chrome < 84; класс no-flexgap ставит assets/pwa.js) */
+html.no-flexgap .tabpanel .rows button > * + *{margin-left:12px}
+html.no-flexgap .grid > .doc > * + *{margin-left:14px}
+html.no-flexgap .tabpanel .tiles a > * + *{margin-top:6px}
+html.no-flexgap .kpis > * + *{margin-left:10px}
+/* 28.10.2026, аудит касаний: на сенсорных экранах капсулы .btn/.cp («Открыть», «Скачать», «Скопировать») были 30 px высотой — минимум 40 px */
+@media (pointer:coarse){html body button.btn,html body button.cp{min-height:40px}}

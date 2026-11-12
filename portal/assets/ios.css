@@ -1,0 +1,361 @@
+/* «Фабрика» — iOS 27 «Настройки» look (22.10.2026): grouped inset lists for every page and every sheet of the model.
+   Loaded by the pages (link) and inlined into the model after glass.css. */
+html:root{--ios-bg:#f2f2f7;--ios-group:#fff;--ios-sep:rgba(60,60,67,.29);--ios-label:#000;--ios-2:rgba(60,60,67,.6);--ios-3:rgba(60,60,67,.3);
+  --ios-fill:rgba(120,120,128,.2);--ios-green:#34c759;--ios-blue:#007aff;--tile-dark:0;--sheet-group:#fff;--sheet-bg:rgba(242,242,247,.93);--sheet-bg-solid:#f2f2f7;--sheet-edge:rgba(0,0,0,.08);}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]){--ios-bg:#000;--ios-group:#1c1c1e;--ios-sep:rgba(84,84,88,.62);--ios-label:#fff;--ios-2:rgba(235,235,245,.6);
+  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#0a84ff;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}}
+html:root[data-theme="dark"]{--ios-bg:#000;--ios-group:#1c1c1e;--ios-sep:rgba(84,84,88,.62);--ios-label:#fff;--ios-2:rgba(235,235,245,.6);
+  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#0a84ff;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}
+
+/* the building blocks: a group of rows; a row = tile · title/subtitle · value · chevron (or a switch) */
+.ios{max-width:760px;margin:0 auto;padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:24px;padding-block:calc(10px + env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ihdr{font:400 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:26px 16px 7px}
+.ifoot{font:400 13px/1.38 var(--f-body);color:var(--ios-2);margin:8px 16px 0}
+.ifoot a{color:var(--ios-blue)}
+.igroup{background:var(--ios-group);border-radius:22px;overflow:hidden}
+.tabpanel .igroup{background:var(--sheet-group)}
+.tabpanel{--glass-text:var(--sheet-bg)}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]) .tabpanel .itile{background:#3a3a3c}}
+html:root[data-theme="dark"] .tabpanel .itile{background:#3a3a3c}
+.irow{display:flex;align-items:stretch;gap:14px;width:100%;box-sizing:border-box;min-height:52px;padding:0 0 0 16px;margin:0;border:0;background:none;
+  color:var(--ios-label);font:400 17px/1.25 var(--f-body);text-align:left;text-decoration:none;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.irow::-webkit-details-marker{display:none}
+.irow:active{background:var(--ios-fill)}
+.irow.static{cursor:default} .irow.static:active{background:none}
+.irow .ic{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 16px 11px 0;border-top:.5px solid var(--ios-sep)}
+.igroup > .irow:first-child > .ic,.igroup > details:first-child > .irow > .ic,.igroup > :first-child > .irow:first-child > .ic{border-top:0}
+.itile{flex:none;align-self:center;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--c,#8e8e93);color:var(--ci,#fff);font:600 14px/1 var(--f-body)}
+/* dark: the tile goes dark and the glyph takes the colour, as in iOS «Настройки» with dark icons */
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]) .itile{background:#2c2c2e;color:var(--c,#8e8e93)}}
+html:root[data-theme="dark"] .itile{background:#2c2c2e;color:var(--c,#8e8e93)}
+.itile svg{width:19px;height:19px}
+.ibody{flex:1;min-width:0}
+.ititle{display:block;overflow-wrap:anywhere}
+.isub{display:block;font:400 13.5px/1.3 var(--f-body);color:var(--ios-2);margin-top:2px;overflow-wrap:anywhere}
+.ival{flex:none;margin-left:auto;color:var(--ios-2);font:400 17px/1.25 var(--f-body);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ichev{flex:none;width:9px;height:14px;position:relative}
+.ichev::before{content:"";position:absolute;left:0;top:3px;width:7px;height:7px;border-right:2.2px solid var(--ios-3);border-top:2.2px solid var(--ios-3);transform:rotate(45deg);border-radius:1px}
+details[open] > .irow .ichev::before{transform:rotate(135deg);top:1px}
+.isw{flex:none;width:51px;height:31px;border-radius:16px;background:var(--ios-fill);position:relative;transition:background .25s}
+.isw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18),0 1px 1px rgba(0,0,0,.12);transition:transform .25s var(--spring)}
+[aria-pressed="true"] > .ic > .isw,.isw.on{background:var(--ios-green)}
+[aria-pressed="true"] > .ic > .isw::after,.isw.on::after{transform:translateX(20px)}
+.iavatar{flex:none;align-self:center;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 22px/1 var(--f-display);
+  background:linear-gradient(180deg,#a9b4dc,#6c78ab);margin:10px 0}
+.irow.big .ititle{font-weight:600;font-size:19px}
+.idetail{padding:2px 16px 12px 60px;border-top:0}
+.idetail .drow{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:.5px solid var(--ios-sep);font-size:15px;flex-wrap:wrap}
+.idetail .drow > span:first-child{color:var(--ios-2);min-width:96px}
+.idetail .drow a{color:var(--ios-blue);text-decoration:none}
+.ibar{height:6px;border-radius:3px;background:var(--ios-fill);overflow:hidden;margin-top:6px}
+.ibar i{display:block;height:100%;border-radius:3px}
+/* sheets: headers, rows, footers */
+.tabpanel h4,.tabpanel .tabsec > h4{font:400 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:20px 16px 7px}
+.tabpanel h4:first-of-type{margin-top:6px}
+.irow:disabled{opacity:.4;cursor:default}
+.irow[aria-current="page"] .ival{color:var(--ios-blue)}
+.tabpanel .ifoot{margin:8px 16px 0}
+.tabpanel .ifoot b{color:var(--ios-label)}
+.tabpanel .toc .irow{color:var(--ios-label)}
+/* the model's sheet (22.10.2026): layers are switch rows, places are rows with a chevron, the tilt is a group */
+/* 28.10.2026, совместимость: селекторы :is() раскрыты в обычные списки — Safari до 14 и Chrome до 88 отбрасывают всё правило с :is() */
+#app .tabpanel #chips,#app .tabpanel .mchips{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden;padding:0;margin:0}
+#app .tabpanel #chips .chip,#app .tabpanel .mchips .chip{display:flex;align-items:center;gap:14px;width:100%;height:auto;min-height:52px;padding:0 16px;margin:0;border:0;border-radius:0;
+  background:none;box-shadow:none;color:var(--ios-label);font:400 17px/1.25 var(--f-body);text-align:left;position:relative;transform:none;cursor:pointer}
+#app .tabpanel #chips .chip + .chip::before,#app .tabpanel .mchips .chip + .chip::before{content:"";position:absolute;top:0;left:60px;right:0;height:.5px;background:var(--ios-sep)}
+#app .tabpanel #chips .chip i,#app .tabpanel .mchips .chip i{flex:none;width:30px;height:30px;border-radius:8px;border:0;background:var(--c);margin:0;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
+#app .tabpanel #chips .chip .chl,#app .tabpanel .mchips .chip .chl{flex:1;min-width:0;padding:10px 0}
+#app .tabpanel #chips .chip::after,#app .tabpanel .mchips .chip::after{content:"";flex:none;width:51px;height:31px;border-radius:16px;background:var(--ios-fill) radial-gradient(circle at 15.5px 50%,#fff 12.5px,transparent 13.5px) no-repeat;transition:background .2s}
+#app .tabpanel #chips .chip[aria-pressed="true"],#app .tabpanel .mchips .chip[aria-pressed="true"]{background:none;color:var(--ios-label);border:0}
+#app .tabpanel #chips .chip[aria-pressed="true"]::after,#app .tabpanel .mchips .chip[aria-pressed="true"]::after{background:var(--ios-green) radial-gradient(circle at 35.5px 50%,#fff 12.5px,transparent 13.5px) no-repeat}
+#app .tabpanel #chips .chip:active,#app .tabpanel .mchips .chip:active{background:var(--ios-fill)}
+#app .tabpanel #chips .chip.more{display:none}
+.tabpanel #places{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden;padding:0;margin:0}
+.tabpanel #places .place.irow,.tabpanel .isolo .irow{height:auto;border:0;border-radius:0;background:none;box-shadow:none;color:var(--ios-label);font:400 17px/1.25 var(--f-body);transform:none}
+.tabpanel #places .place.irow:first-of-type > .ic{border-top:0}
+.tabpanel #places .place.on .ititle{color:var(--ios-blue)}
+.tabpanel .isolo{margin-top:16px;background:var(--sheet-group)}
+.tabpanel .isolo .irow > .ic{border-top:0}
+.tabpanel .isolo .irow[aria-pressed="true"]{background:none;color:var(--ios-label)}
+.tabpanel .tilts{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden;margin-top:10px}
+.tabpanel .tilts button{display:flex;align-items:center;justify-content:flex-start;gap:14px;width:100%;min-height:50px;padding:0 16px;border:0;border-radius:0;background:none;
+  color:var(--ios-blue);font:400 17px var(--f-body);position:relative;box-shadow:none}
+.tabpanel .tilts button + button::before{content:"";position:absolute;top:0;left:48px;right:0;height:.5px;background:var(--ios-sep)}
+.tabpanel .tilts button svg{width:20px;height:20px}
+.tabpanel .views{background:var(--ios-fill);border-radius:999px;box-shadow:none}
+/* the model's other windows (objects, saving, help, the card): the same sheet, title and grouped rows */
+.objpanel,.filepanel,.notes,.card,.morepanel{--glass-text:var(--sheet-bg);color:var(--ios-label)}
+.objpanel .ph h2,.filepanel .ph h2,.notes .ph h2,.notes > h2{font:700 20px/1.2 var(--f-display);letter-spacing:-.01em;text-transform:none;color:var(--ios-label);margin:4px 0 6px}
+.objpanel .x,.filepanel .x,.notes .x,.card .x{background:var(--ios-fill);color:var(--ios-2)}
+#objQ{box-sizing:border-box;width:100%;height:38px;border:0;border-radius:12px;background:var(--ios-fill);color:var(--ios-label);font:400 17px var(--f-body);padding:0 12px;box-shadow:none}
+#objQ::placeholder{color:var(--ios-2)}
+.objpanel .lctl{margin:8px 4px 2px}
+.objpanel .lctl button{color:var(--ios-blue);text-decoration:none;font:400 15px var(--f-body)}
+#objList details.sec{border:0;margin-top:14px}
+#objList details.sec > summary{padding:4px 16px 7px;font:400 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);border-radius:0}
+#objList details.sec > summary:hover,#objList details.grp > summary:hover{background:none}
+#objList details.sec > summary .cnt,#objList details.grp > summary .cnt{font:400 15px var(--f-body);color:var(--ios-2);text-transform:none}
+#objList details.sec > ul,#objList details.sec.cams{background:var(--sheet-group);border-radius:16px;overflow:hidden;gap:0;margin:0}
+#objList details.sec.cams{padding:0}
+#objList details.sec.cams > summary{background:var(--sheet-bg)}
+#objList ul{gap:0}
+#objList li{position:relative}
+#objList details.sec > ul > li + li::before,#objList details.grp + details.grp::before,#objList details.grp > ul > li + li::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--ios-sep);z-index:1}
+#objList details.grp{position:relative;margin:0}
+#objList details.grp > summary{min-height:46px;padding:0 16px;font:400 17px/1.25 var(--f-body);color:var(--ios-label);text-transform:none;border-radius:0}
+#objList details.grp > summary::before{order:9;margin:0 2px 0 8px;width:7px;height:7px;border-width:0 2.2px 2.2px 0;border-color:var(--ios-3);transform:rotate(-45deg)}
+#objList details.grp[open] > summary::before{transform:rotate(45deg)}
+#objList details.grp > ul{margin:0 0 0 16px;border-top:.5px solid var(--ios-sep)}
+#objList li button{min-height:46px;padding:6px 16px;border:0;border-radius:0;font:400 17px/1.25 var(--f-body);color:var(--ios-label);background:none}
+#objList li button:hover{background:var(--ios-fill)}
+#objList li button.on{color:var(--ios-blue);background:none;border:0}
+#objList li button small{font:400 14px var(--f-body);color:var(--ios-2)}
+#objList li button .num{font:600 15px var(--f-body);color:var(--ios-blue);min-width:32px}
+#objList li.b{gap:0}
+#objList li button.subt{min-height:28px;margin-right:12px;padding:0 10px;border:0;border-radius:999px;background:var(--ios-fill);font:500 14px var(--f-body);color:var(--ios-label)}
+#objList ul.subl{margin:0 0 0 16px;padding:0;border-left:0;border-top:.5px solid var(--ios-sep)}
+#objList .addcam{margin-top:16px;border-radius:14px;min-height:50px;background:var(--sheet-group);color:var(--ios-blue);border:0;font:400 17px var(--f-body)}
+/* saving: an action list, the reset in red */
+.filepanel .lead{color:var(--ios-2);font:400 15px/1.35 var(--f-body);margin:0 4px 12px}
+.filepanel .fbtns{display:block;background:var(--sheet-group);border-radius:16px;overflow:hidden}
+.filepanel .fbtns > .btn{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:50px;margin:0;padding:0 16px;border:0;border-radius:0;
+  background:none;box-shadow:none;color:var(--ios-blue);font:400 17px var(--f-body);text-align:left;position:relative;box-sizing:border-box}
+.filepanel .fbtns > .btn + .btn::before,.filepanel .fbtns > .impbox + .btn::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--ios-sep)}
+.filepanel .fbtns > .btn.primary{color:var(--ios-blue);font-weight:600}
+.filepanel .fbtns > .btn.danger{color:#ff3b30}
+.filepanel .fbtns > .btn:disabled{color:var(--ios-3)}
+.filepanel .fbtns > .btn:active{background:var(--ios-fill);transform:none}
+.filepanel .small{color:var(--ios-2);font:400 13px/1.38 var(--f-body);margin:8px 16px 0}
+/* the card: a sheet with the title on top */
+.card h3{font:700 20px/1.2 var(--f-display);color:var(--ios-label)}
+.card .kind{font:400 13px/1.2 var(--f-body);text-transform:none;letter-spacing:0;color:var(--ios-2)}
+.card .cardgrp{background:var(--sheet-group);margin:4px 0 10px;border-radius:16px}
+.card .cardgrp .irow{color:var(--ios-label);text-decoration:none}
+/* back to the section, like the iOS navigation bar */
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+/* 28.10.2026, совместимость: перед inset:0 и dvh — длинная запись и vh (Safari 13–14.0 / < 15.4, Chrome < 87 / < 108); перед color-mix() — простой цвет (Safari < 16.2, Chrome < 111) */
+/* a sheet from below (personal login, report, versions, assistant, forms) — 23.10.2026, the user: one style everywhere.
+   The same floating glass panel as the model's menus and the object card: inset from the edges, rounded on all corners,
+   a grab handle, title 20/700, the round close button, grouped rows on a lighter layer */
+.isheet-bg{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:90;background:rgba(0,0,0,.28)}
+.isheet{position:fixed;z-index:91;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  max-height:min(86vh,820px);max-height:min(86dvh,820px);display:flex;flex-direction:column;background:var(--sheet-bg);color:var(--ios-label);border-radius:28px;
+  -webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);border:.5px solid var(--sheet-edge);
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.18);font-family:var(--f-body);overflow:hidden}
+.isheet::before{content:"";position:absolute;top:7px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:var(--ios-3)}
+@media (min-width:640px){.isheet{left:50%;right:auto;width:560px;transform:translateX(-50%);bottom:16px}}
+.isheet-h{display:flex;align-items:flex-start;gap:12px;padding:22px 14px 6px 20px}
+.isheet-h > div{flex:1;min-width:0}
+.isheet-h h3{margin:0;font:700 20px/1.2 var(--f-display);letter-spacing:-.01em}
+.isheet-h p{margin:4px 0 0;color:var(--ios-2);font-size:14px;line-height:1.35}
+.isheet-x{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--ios-fill);color:var(--ios-2);font:20px/1 var(--f-body);cursor:pointer;display:grid;place-items:center}
+.isheet-b{overflow:auto;padding:8px 14px 18px;overscroll-behavior:contain}
+.isheet .igroup,.isheet .ibtn:not(.pri),.isheet .chipq{background:var(--sheet-group)}
+.isheet .ititle.mono{font-family:var(--f-body);letter-spacing:0}
+.isheet .ifoot,.isheet .imsg{margin-left:6px;margin-right:6px}
+.iform{display:grid;gap:12px;margin-top:8px}
+.iform[hidden]{display:none}
+.iflds .ifield + .ifield{border-top:.5px solid var(--ios-sep)}
+.ifield{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;margin-left:0}
+.ifield > span{flex:none;width:118px;font-size:16px;color:var(--ios-label)}
+.ifield input,.ifield select,.ifield textarea{flex:1;min-width:0;border:0;background:none;color:var(--ios-label);font:400 17px var(--f-body);padding:12px 0;outline:none}
+.ifield textarea{resize:vertical;min-height:72px}
+.ibtn{min-height:50px;border:0;border-radius:14px;background:var(--ios-group);color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;padding:0 16px}
+.ibtn.pri{background:var(--ios-blue);color:#fff;font-weight:600}
+.ibtn.red{color:#ff3b30}
+.ibtn:disabled{opacity:.5}
+.imsg{margin:0 16px;font-size:14px;color:var(--ios-2)} .imsg.bad{color:#ff3b30} .imsg:empty{display:none}
+.idone{margin:18px 8px;font-size:16px;line-height:1.45}
+.iseg{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border-radius:10px;background:var(--ios-fill)}
+.iseg button{min-height:32px;border:0;border-radius:8px;background:none;color:var(--ios-label);font:500 14px var(--f-body);cursor:pointer}
+.iseg button[aria-pressed="true"]{background:var(--ios-group);box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.iavatar.sm{width:44px;height:44px;font-size:17px;margin:8px 0}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em}
+.ic .cp{flex:none;border:0;border-radius:999px;background:var(--ios-fill);color:var(--ios-blue);font:500 14px var(--f-body);padding:6px 12px;cursor:pointer}
+/* the assistant */
+.isheet.ai{height:min(88vh,820px);height:min(88dvh,820px)}
+.ai-log{display:flex;flex-direction:column;gap:8px;min-height:120px;padding:4px 0 10px}
+.ai-m{max-width:86%;padding:9px 13px;border-radius:18px;font-size:16px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+.ai-m.u{align-self:flex-end;background:var(--ios-blue);color:#fff;border-bottom-right-radius:6px}
+.ai-m.a{align-self:flex-start;background:var(--ios-group);border-bottom-left-radius:6px}
+.ai-m.wait{color:var(--ios-2);animation:aip 1.2s infinite}
+.ai-m.err{color:#ff3b30}
+@keyframes aip{50%{opacity:.4}}
+.ai-sug{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.ai-sug[hidden]{display:none}
+.chipq{border:0;border-radius:999px;background:var(--ios-group);color:var(--ios-blue);font:400 15px var(--f-body);padding:8px 14px;cursor:pointer}
+.ai-bar{position:sticky;bottom:0;display:flex;align-items:flex-end;gap:8px;padding:8px 0 0;background:var(--ios-bg)}
+.ai-bar textarea{flex:1;min-width:0;max-height:140px;resize:none;border:.5px solid var(--ios-sep);border-radius:20px;background:var(--ios-group);color:var(--ios-label);font:400 16px/1.35 var(--f-body);padding:9px 14px;outline:none}
+.ai-bar button{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:var(--ios-blue);color:#fff;display:grid;place-items:center;cursor:pointer}
+.ai-bar button svg{width:20px;height:20px}
+/* «Вид»: three views (23.10.2026) — the whole site, from above, the 2D plan */
+#app .tabpanel .views{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:2px}
+#app .tabpanel .views button{white-space:nowrap;font-size:13px;padding:0 4px;min-height:34px}
+
+/* 23.10.2026, the user: no ruler / «весь участок» capsule on the model — «Вид» → «Общий план» shows the whole site */
+#app .zoom{display:none!important}
+/* ===== 23.10.2026, the user: «единый общий стиль сквозно везде». Every window — the tab panels (model and pages), the object list,
+   the object card, the sheets (report, version, login) and the notices — is one material: the same glass, edge, rim, radius 26,
+   a 20/700 title with a round × on the right, and iOS-blue actions. ===== */
+.tabpanel .phead{display:flex;align-items:center;gap:12px;padding:0 0 6px 6px;margin-top:-2px}
+.tabpanel .phead h3{flex:1;min-width:0;margin:0;font:700 20px/1.2 var(--f-display);letter-spacing:-.01em;color:var(--ios-label);text-wrap:balance}
+.tabpanel .phead + div > h4:first-child,.tabpanel .phead ~ div > h4:first-child{margin-top:8px}
+.tabpanel .phead .x,.tabpanel .phead .isheet-x,.isheet-h .x,.isheet-h .isheet-x,.card .x,.card .isheet-x,.ph .x,.ph .isheet-x{flex:none;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--ios-fill);color:var(--ios-2);
+  font:400 18px/1 var(--f-body);display:grid;place-items:center;cursor:pointer}
+.isheet{border-radius:26px;border:1px solid var(--edge,var(--sheet-edge));background:var(--sheen,none) var(--sheet-bg);
+  -webkit-backdrop-filter:var(--blur-text,blur(30px) saturate(170%));backdrop-filter:var(--blur-text,blur(30px) saturate(170%));
+  box-shadow:inset 0 1px 0 var(--rim,transparent),inset 0 -1px 0 var(--rim-low,transparent),0 0 0 .5px var(--edge-out,transparent),var(--gshadow,0 18px 50px rgba(0,0,0,.35))}
+html body .t14toast{position:fixed;z-index:2147483646;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;pointer-events:none;
+  width:max-content;max-width:min(520px,calc(100% - 16px));box-sizing:border-box;padding:12px 18px;border-radius:22px;
+  background:var(--sheen,none) var(--sheet-bg);color:var(--ios-label);border:1px solid var(--edge,var(--sheet-edge));
+  -webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);
+  box-shadow:0 14px 40px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.15);font:400 15px/1.35 var(--f-body);text-align:left;transition:opacity .2s,transform .25s}
+html body .t14toast.on{opacity:1;transform:translate(-50%,0)}
+.tabpanel div > h4:first-of-type:not(:first-child){margin-top:20px}
+#app .objpanel > .grab{display:block;width:44px;height:22px;margin:-4px auto 0;padding:0;border:0;background:none;cursor:pointer;position:relative}
+#app .objpanel > .grab::after{content:"";position:absolute;left:4px;right:4px;top:8px;height:5px;border-radius:3px;background:var(--line-strong)}
+#app .objpanel .ph{padding-left:6px}
+/* the fold-outs inside a panel (plan: legend, sources) are rows like the rest, with a chevron that turns when open */
+html body .tabpanel details{display:block;background:var(--sheet-group);border-radius:22px;overflow:hidden;margin:0;padding:0;border:0}
+html body .tabpanel details > summary{list-style:none;display:flex;align-items:center;gap:12px;min-height:50px;margin:0;padding:0 18px 0 16px;
+  font:400 17px/1.25 var(--f-body);color:var(--ios-label);text-transform:none;letter-spacing:0;cursor:pointer}
+html body .tabpanel details > summary::-webkit-details-marker{display:none}
+html body .tabpanel details > summary::marker{content:""}
+html body .tabpanel details > summary .lbl{font:inherit;color:inherit;text-transform:none;letter-spacing:0}
+html body .tabpanel details > summary::after{content:"";margin-left:auto;flex:none;width:7px;height:7px;border-right:2.2px solid var(--ios-3);border-top:2.2px solid var(--ios-3);transform:rotate(135deg);transition:transform .2s}
+html body .tabpanel details[open] > summary::after{transform:rotate(-45deg)}
+html body .tabpanel details[open] > :not(summary){padding-left:16px;padding-right:16px}
+html body .tabpanel details[open] > :last-child{padding-bottom:14px}
+html body .tabpanel details.src p{font-size:13px;line-height:1.4;color:var(--ios-2);margin:0}
+html body .tabpanel details > summary .lbl::after{content:none}
+html body .tabpanel details.src > summary{font:400 17px/1.25 var(--f-body);color:var(--ios-label);margin:0}
+/* ===== object cards, variant C (23.10.2026, the user's choice): summary, tabs, actions, alerts, numbers, sections; output plan/fact ===== */
+.cc{--t-bad:#ff3b30;--t-warn:#ff9500;--t-ok:#34c759;--seg-on:#fff;--seg-sh:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.04);--cc-fill:rgba(118,118,128,.12);display:flex;flex-direction:column;gap:12px;margin-top:2px}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]) .cc{--t-bad:#ff453a;--t-warn:#ff9f0a;--t-ok:#30d158;--seg-on:#636366;--seg-sh:0 1px 4px rgba(0,0,0,.35);--cc-fill:rgba(255,255,255,.08)}
+  html:root:not([data-theme="light"]) .cc .itile{background:#3a3a3c}}
+html:root[data-theme="dark"] .cc{--t-bad:#ff453a;--t-warn:#ff9f0a;--t-ok:#30d158;--seg-on:#636366;--seg-sh:0 1px 4px rgba(0,0,0,.35);--cc-fill:rgba(255,255,255,.08)}
+html:root[data-theme="dark"] .cc .itile{background:#3a3a3c}
+.cc [data-tone="bad"]{--tc:var(--t-bad)} .cc [data-tone="warn"]{--tc:var(--t-warn)} .cc [data-tone="ok"]{--tc:var(--t-ok)}
+.cc-sum{margin:0;font:400 15px/1.35 var(--f-body);color:var(--ios-2);text-wrap:pretty}
+.cc-seg{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:2px;padding:2px;border-radius:10px;background:var(--ios-fill)}
+.cc-seg button{min-height:32px;margin:0;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ios-label);font:600 12.5px/1 var(--f-body);letter-spacing:-.015em;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .2s}
+.cc-seg button[aria-selected="true"]{background:var(--seg-on);box-shadow:var(--seg-sh)}
+.cc-pane{display:flex;flex-direction:column;gap:10px}
+.cc-pane[hidden]{display:none}
+.cc-pane > .igroup.cardgrp{margin:0}
+.cc-acts{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px}
+.cc-act{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:64px;margin:0;padding:10px 4px 9px;border:0;border-radius:14px;background:var(--sheet-group);
+  color:var(--ios-label);font:600 12.5px/1.15 var(--f-body);text-decoration:none;text-align:center;cursor:pointer}
+.cc-act:active{opacity:.7}
+.cc-ai{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff}
+.cc-ai svg{width:17px;height:17px}
+.cc-alerts{display:flex;flex-direction:column;gap:6px}
+.cc-al{display:flex;align-items:center;gap:10px;width:100%;margin:0;padding:10px 12px;border:0;border-radius:14px;text-align:left;font:inherit;color:var(--ios-label);
+  background:var(--ios-fill);background:color-mix(in srgb,var(--tc) 15%,transparent)}
+button.cc-al{cursor:pointer}
+.cc-al > i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--tc)}
+.cc-alt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.cc-alt b{font:600 14.5px/1.25 var(--f-body)}
+.cc-alt span{font:400 13px/1.3 var(--f-body);color:var(--ios-2)}
+.cc-al em{flex:none;font:700 14.5px/1 var(--f-body);font-style:normal;color:var(--tc);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cc-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cc-stat{padding:10px 12px;border-radius:14px;background:var(--sheet-group);display:flex;flex-direction:column;gap:2px;min-width:0}
+.cc-stat:last-child:nth-child(odd){grid-column:1/-1}
+.cc-stat span{font:400 12.5px/1.2 var(--f-body);color:var(--ios-2)}
+.cc-stat b{font:650 21px/1.15 var(--f-display);color:var(--ios-label);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-stat small{font:500 13px var(--f-body);color:var(--ios-2);margin-left:4px}
+.cc-sec{border-radius:18px;background:var(--sheet-group);padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.cc-sh{display:flex;align-items:center;gap:10px;min-width:0}
+.cc-sh .itile{width:28px;height:28px;border-radius:8px}
+.cc-sh .itile svg{width:17px;height:17px}
+.cc-st{flex:1;min-width:0;font:600 15.5px/1.25 var(--f-body);color:var(--ios-label)}
+.cc-sv{flex:none;max-width:52%;font:600 14px/1.2 var(--f-body);color:var(--tc,var(--ios-2));text-align:right;font-variant-numeric:tabular-nums}
+.cc-sb{min-width:0;font:400 14px/1.4 var(--f-body);color:var(--ios-label)}
+.cc-sb > :first-child{margin-top:0}
+.cc-sb > :last-child{margin-bottom:0}
+.cc-sb p{margin:8px 0}
+.cc-sb .note,.cc-note{font:400 12.5px/1.4 var(--f-body);color:var(--ios-2);margin:8px 0 0}
+.cc-sb dl.kv,.cc-rows{margin:0;display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);gap:0 10px}
+.cc-sb dl.kv dt,.cc-sb dl.kv dd,.cc-rows dt,.cc-rows dd{margin:0;padding:6px 0;border-top:.5px solid var(--ios-sep);font:400 14px/1.3 var(--f-body)}
+.cc-sb dl.kv dt,.cc-rows dt{color:var(--ios-2);font-size:13px}
+.cc-sb dl.kv > dt:first-of-type,.cc-sb dl.kv > dt:first-of-type + dd,.cc-rows > dt:first-of-type,.cc-rows > dt:first-of-type + dd{border-top:0}
+.cc-sb .camlist{display:flex;flex-wrap:wrap;gap:6px}
+.cc-sb .camlist button{border:0;border-radius:9px;background:var(--cc-fill);color:var(--ios-label);padding:6px 10px;font:400 13.5px/1.2 var(--f-body)}
+.cc-sb .camlist button b{color:var(--ios-blue);margin-right:5px;font-weight:600}
+.cc-sb table{width:100%;font-size:13px}
+.cc-sb details.info{background:none;border:0;padding:0}
+.cc-gauge{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--ios-fill);background:color-mix(in srgb,var(--t-ok) 30%,transparent)}
+.cc-gauge > i{background:var(--t-ok)}
+.cc-gauge.bad{background:repeating-linear-gradient(135deg,var(--t-bad) 0 5px,transparent 5px 10px);background:repeating-linear-gradient(135deg,var(--t-bad) 0 5px,color-mix(in srgb,var(--t-bad) 45%,transparent) 5px 10px)}
+.cc-gauge.bad > i{background:var(--t-warn)}
+.cc-gl{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font:400 12px/1.2 var(--f-body);color:var(--ios-2)}
+.cc-person{display:flex;align-items:center;gap:12px;padding:10px 8px 10px 12px;border-radius:18px;background:var(--sheet-group)}
+.cc-ava{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:var(--ai);font:700 16px/1 var(--f-display)}
+.cc-pt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cc-pt b{font:600 15.5px/1.25 var(--f-body);color:var(--ios-label)}
+.cc-pt > span{font:400 13px/1.3 var(--f-body);color:var(--ios-2)}
+.cc-pt .cc-ph{font-size:13px;color:var(--ios-2)}
+.cc-call{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--t-ok);color:#fff}
+.cc-call svg{width:19px;height:19px}
+.cc-orow{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.cc-orow:first-child{margin-top:0}
+.cc-orow > span{flex:1;min-width:0;font:400 13px/1.25 var(--f-body);color:var(--ios-2)}
+.cc-orow b{font:650 17px/1.2 var(--f-display);color:var(--ios-label);font-variant-numeric:tabular-nums}
+.cc-orow b small{font:500 12.5px var(--f-body);color:var(--ios-2)}
+.cc-orow b.cc-dash{font:500 14px var(--f-body);color:var(--ios-3)}
+.cc-orow em{flex:none;min-width:44px;text-align:right;font:700 14px var(--f-body);font-style:normal;color:var(--tc,var(--ios-2))}
+.cc-obar{height:6px;border-radius:3px;background:var(--cc-fill);margin-top:5px;overflow:hidden}
+.cc-obar > i{display:block;height:100%;border-radius:3px;background:var(--tc,var(--ios-3))}
+.cc-otab{margin-top:8px;border-collapse:collapse}
+.cc-otab th,.cc-otab td{padding:5px 0;border-top:.5px solid var(--ios-sep);text-align:right;font-variant-numeric:tabular-nums}
+.cc-otab th{color:var(--ios-2);font-weight:400;border-top:0}
+.cc-otab td:first-child{text-align:left}
+.cc-bars{display:flex;flex-direction:column;gap:8px}
+.cc-bars > div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;font:400 13px/1.25 var(--f-body)}
+.cc-bars em{font-style:normal;color:var(--ios-2);font-variant-numeric:tabular-nums}
+.cc-bars i{grid-column:1/-1;display:block;height:5px;border-radius:3px;background:#30b0c7}
+.cc-wind{display:flex;gap:14px;align-items:center}
+.cc-wind svg{flex:none;width:100px;height:100px}
+.cc-wind circle,.cc-wind path{fill:none;stroke:var(--ios-sep)}
+.cc-wind polygon{fill:var(--ios-fill);fill:color-mix(in srgb,var(--ios-blue) 35%,transparent);stroke:var(--ios-blue);stroke-width:1.5;stroke-linejoin:round}
+.cc-wind text{font:9px var(--f-body);fill:var(--ios-2);text-anchor:middle}
+.cc-wl{flex:1;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 14px;font:400 13px/1.3 var(--f-body)}
+.cc-wl span{display:flex;justify-content:space-between;gap:6px;font-variant-numeric:tabular-nums}
+.cc-wl i{font-style:normal;color:var(--ios-2)}
+/* the segmented controls (login sheet, «Управление», card tabs): the selected segment is lighter than the track in both themes, as in iOS */
+html:root{--seg-on:#fff;--seg-sh:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.04)}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]){--seg-on:#636366;--seg-sh:0 1px 4px rgba(0,0,0,.35)}}
+html:root[data-theme="dark"]{--seg-on:#636366;--seg-sh:0 1px 4px rgba(0,0,0,.35)}
+.iseg button{font:600 13px/1 var(--f-body)}
+.iseg button[aria-pressed="true"]{background:var(--seg-on);box-shadow:var(--seg-sh)}
+.cc-otab td[data-tone]{color:var(--tc,var(--ios-2));font-weight:600}
+.cc-otab small{color:var(--ios-2);font-size:12px}
+.cc-miss{color:var(--ios-3);font-size:12.5px}
+.cc-otab td:last-child,.cc-otab th:last-child{padding-left:10px;white-space:nowrap}
+.cc-chip{display:inline-flex;gap:5px;align-items:baseline;padding:6px 10px;border-radius:9px;background:var(--cc-fill);font:400 13.5px/1.2 var(--f-body);color:var(--ios-label)}
+.cc-chip b{font-weight:650;font-variant-numeric:tabular-nums}
+/* night shift row in the area card (23.10.2026) */
+.cc-night .cc-ava{background:#3a3f8f;color:#fff}
+.cc-night .cc-ava svg{width:20px;height:20px}
+.cc-person + .cc-person{margin-top:8px}
+/* 27.10.2026, пользователь: «в меню при скролинге вниз не хватает кнопки назад» — шапка панели (заголовок и ×) прилипает к верху при прокрутке */
+.tabpanel .phead{position:sticky;top:-8px;z-index:4;margin:-2px -14px 0;padding:8px 14px 8px 20px;background:var(--sheet-bg-solid,var(--glass-text))}
+.tabpanel .phead .x{width:34px;height:34px}
+
+/* 28.10.2026, совместимость: gap у flex-контейнеров появился в Safari 14.1 и Chrome 84. Класс no-flexgap ставит assets/pwa.js (проверка при загрузке);
+   здесь — отступы вместо gap для рядов списков и листов. На современных браузерах правила не действуют. */
+html.no-flexgap .irow > * + *{margin-left:14px}
+html.no-flexgap .irow .ic > * + *{margin-left:10px}
+html.no-flexgap .idetail .drow > * + *{margin-left:10px}
+html.no-flexgap .isheet-h > * + *{margin-left:12px}
+html.no-flexgap .ai-sug > *{margin:0 8px 8px 0}
+html.no-flexgap .ai-bar > * + *{margin-left:8px}
+html.no-flexgap .ai-log > * + *{margin-top:8px}
+html.no-flexgap .ifield > * + *{margin-left:12px}
+html.no-flexgap #app .tabpanel #chips .chip > * + *,html.no-flexgap #app .tabpanel .mchips .chip > * + *{margin-left:14px}
+html.no-flexgap .tabpanel .tilts button > * + *{margin-left:14px}
+/* 28.10.2026, аудит касаний: круглые × (30 px) и крестик карточки плана — область касания 44×44 без изменения вида (невидимое поле ::after) */
+.tabpanel .phead .x,.isheet-h .isheet-x,.ph .x,.tabpanel .pbk{position:relative}   /* .card .x уже position:absolute (index.html) — не трогаем */
+.tabpanel .phead .x::after,.isheet-h .isheet-x::after,.card .x::after,.ph .x::after,body.pg-plan #cardSec .cx::after{content:"";position:absolute;top:-7px;right:-7px;bottom:-7px;left:-7px;border-radius:50%}

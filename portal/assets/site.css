@@ -1,0 +1,20 @@
+/* «Фабрика» — общие стили страниц сайта, которые не задаёт ui.css: раскладка страницы, капсулы фильтров и поиска, шапка плана, просмотр PDF.
+   Карточки, списки и всплывающие сообщения — в ui.css и ios.css (аудит 24.10.2026: старые правила стекла и панели правки убраны). */
+body{display:flex;flex-direction:column}
+body>.app{flex:1 1 auto;min-height:0;height:auto}
+:root{--g-rim:rgba(255,255,255,.72);--g-rim-low:rgba(255,255,255,.22);--g-edge:rgba(20,32,40,.10);--g-a:62%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--g-rim:rgba(255,255,255,.16);--g-rim-low:rgba(255,255,255,.05);--g-edge:rgba(0,0,0,.45);--g-a:70%}}
+:root[data-theme="dark"]{--g-rim:rgba(255,255,255,.16);--g-rim-low:rgba(255,255,255,.05);--g-edge:rgba(0,0,0,.45);--g-a:70%}
+/* capsule controls. 28.10.2026, совместимость: перед color-mix() стоит простой цвет (Safari < 16.2, Chrome < 111 иначе оставляли фон прозрачным) */
+.chip,.btn,.filters button,.addbtn,.search,.vctl .btn,.vbar button,.vbar a{border-radius:999px !important}
+.chip,.filters button{background:var(--panel);background:color-mix(in srgb,var(--panel) 60%,transparent);border:1px solid var(--g-edge);box-shadow:inset 0 1px 0 var(--g-rim-low)}
+.chip[aria-pressed="true"],.filters button[aria-pressed="true"]{background:var(--ink);color:var(--panel);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.search{background:var(--panel);background:color-mix(in srgb,var(--panel) 66%,transparent);border:1px solid var(--g-edge);box-shadow:inset 0 1px 0 var(--g-rim)}
+/* plan page header, PDF viewer bars */
+.app>header{background:var(--panel);background:color-mix(in srgb,var(--panel) var(--g-a),transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+.vh,.vbar{-webkit-backdrop-filter:blur(26px) saturate(1.7);backdrop-filter:blur(26px) saturate(1.7)}
+.vh{background:var(--panel);background:color-mix(in srgb,var(--panel) 80%,transparent)}
+@media (prefers-reduced-transparency:reduce){
+  .vh,.vbar,.app>header,.chip,.search{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  .app>header{background:var(--panel) !important}
+}

@@ -1,0 +1,624 @@
+/* «Фабрика» — дизайн-система портала (28.10.2026, утверждённые макеты: Main, IOS27_Phone, IPad27_Home/Sales, Android17_Tablet).
+   Пользователь: «бери этот вариант в работу, темы светлая, тёмная и авто, и про производительность не забывай, чтобы был вариант
+   авто-подстройки под конкретное устройство». Стиль — iOS 27 / iPadOS 27 (жидкое стекло) и Android 17 (Material 3) для Android-планшетов.
+   Подключается последним (после site.css, ios.css, ui.css): перекрывает их токены и вид оболочки.
+
+   Темы: светлая — html:root и [data-theme="light"]; тёмная — [data-theme="dark"]; авто — без атрибута, по prefers-color-scheme.
+   Производительность: html[data-perf="max|mid|eco"] (ставит скрипт до отрисовки, уточняет assets/site.js); «eco» дублируется
+   прежним html[data-fx="lite"]. Платформа: html[data-plat="ios|android|desk"]. */
+
+/* ===================================================================== токены: светлая (по умолчанию) */
+html:root,html:root[data-theme="light"]{
+  --p-bg:#ECEEF3; --p-bg-hi:#DCE4F4; --p-bg-lo:#E6E8EE;
+  --p-grad:radial-gradient(110% 75% at 78% -12%,#D9E3F6 0%,#ECEEF4 55%,#ECEEF3 100%);
+  --p-card:#FFFFFF; --p-card2:#F2F2F6; --p-soft:rgba(120,120,128,.12); --p-sel:rgba(120,120,128,.16);
+  --p-fg:#1C1C1E; --p-fg2:rgba(60,60,67,.74); --p-fg3:rgba(60,60,67,.58); --p-line:rgba(60,60,67,.17); --p-inset:rgba(255,255,255,.9);
+  --p-glass-a:rgba(255,255,255,.58); --p-glass-s:#F7F7FA; --p-glass-edge:rgba(255,255,255,.78); --p-glass-out:rgba(20,30,50,.09); --p-glass-rim:rgba(255,255,255,.95);
+  --p-sheet-a:rgba(247,247,250,.9); --p-sheet-s:#F4F4F7; --p-shadow-a:0 10px 30px rgba(30,40,70,.13),0 1px 3px rgba(30,40,70,.06); --p-card-sh:0 1px 2px rgba(30,40,70,.05);
+  --p-tint:#0A6FE0; --p-active:#0A6FE0; --p-on-tint:#fff;
+  --ic-home:#0A6FE0; --ic-map:#6550CC; --ic-prod:#9941BD; --ic-stock:#AC6200; --ic-omts:#9A5A00; --ic-sales:#C33D32; --ic-items:#0877D8;
+  --ic-docs:#157F98; --ic-calls:#218847; --ic-chat:#218847; --ic-err:#C33D32; --ic-grey:#626266; --ic-ai:#6550CC;
+  --t-bad:#D2342A; --t-warn:#B25E00; --t-ok:#1E8A45;
+  --map-bg:#E9EDF5; --map-bld:#C9D3E6; --map-edge:#8C9AB8; --map-line:#D6DCE8;
+  color-scheme:light;
+}
+/* ===================================================================== токены: тёмная (по макетам) */
+html:root[data-theme="dark"]{
+  --p-bg:#10151F; --p-bg-hi:#26304A; --p-bg-lo:#0E121B;
+  --p-grad:radial-gradient(110% 75% at 78% -12%,#26304A 0%,#141A26 55%,#10151F 100%);
+  --p-card:#2A2B32; --p-card2:#34353D; --p-soft:rgba(120,120,128,.24); --p-sel:rgba(255,255,255,.14);
+  --p-fg:#F2F2F7; --p-fg2:rgba(235,235,245,.66); --p-fg3:rgba(235,235,245,.5); --p-line:rgba(84,84,88,.62); --p-inset:rgba(255,255,255,.07);
+  --p-glass-a:rgba(120,120,135,.22); --p-glass-s:#2C2E37; --p-glass-edge:rgba(255,255,255,.15); --p-glass-out:rgba(0,0,0,.25); --p-glass-rim:rgba(255,255,255,.26);
+  --p-sheet-a:rgba(34,35,43,.9); --p-sheet-s:#23242B; --p-shadow-a:0 14px 40px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.22); --p-card-sh:none;
+  --p-tint:#4DA3FF; --p-active:#4DA3FF; --p-on-tint:#06121F;
+  --ic-home:#389BFF; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#4FA8FF;
+  --ic-docs:#54BFD3; --ic-calls:#66D98A; --ic-chat:#66D98A; --ic-err:#FF776B; --ic-grey:#BABAC1; --ic-ai:#9B8AFF;
+  --t-bad:#FF8A7E; --t-warn:#FFB547; --t-ok:#4CD97B;
+  --map-bg:#1E2433; --map-bld:#3A4560; --map-edge:#55628A; --map-line:#2E3750;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){html:root:not([data-theme]){
+  --p-bg:#10151F; --p-bg-hi:#26304A; --p-bg-lo:#0E121B;
+  --p-grad:radial-gradient(110% 75% at 78% -12%,#26304A 0%,#141A26 55%,#10151F 100%);
+  --p-card:#2A2B32; --p-card2:#34353D; --p-soft:rgba(120,120,128,.24); --p-sel:rgba(255,255,255,.14);
+  --p-fg:#F2F2F7; --p-fg2:rgba(235,235,245,.66); --p-fg3:rgba(235,235,245,.5); --p-line:rgba(84,84,88,.62); --p-inset:rgba(255,255,255,.07);
+  --p-glass-a:rgba(120,120,135,.22); --p-glass-s:#2C2E37; --p-glass-edge:rgba(255,255,255,.15); --p-glass-out:rgba(0,0,0,.25); --p-glass-rim:rgba(255,255,255,.26);
+  --p-sheet-a:rgba(34,35,43,.9); --p-sheet-s:#23242B; --p-shadow-a:0 14px 40px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.22); --p-card-sh:none;
+  --p-tint:#4DA3FF; --p-active:#4DA3FF; --p-on-tint:#06121F;
+  --ic-home:#389BFF; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#4FA8FF;
+  --ic-docs:#54BFD3; --ic-calls:#66D98A; --ic-chat:#66D98A; --ic-err:#FF776B; --ic-grey:#BABAC1; --ic-ai:#9B8AFF;
+  --t-bad:#FF8A7E; --t-warn:#FFB547; --t-ok:#4CD97B;
+  --map-bg:#1E2433; --map-bld:#3A4560; --map-edge:#55628A; --map-line:#2E3750;
+  color-scheme:dark}}
+
+/* ===================================================================== Android 17 (Material 3): сплошные поверхности вместо стекла */
+html:root[data-plat="android"],html:root[data-plat="android"][data-theme="light"]{
+  --p-bg:#FEF7FF; --p-grad:none; --p-card:#F3EDF7; --p-card2:#ECE6F0; --p-soft:#E6E0E9; --p-sel:#E8DEF8;
+  --p-fg:#1D1B20; --p-fg2:#49454F; --p-fg3:#7A757F; --p-line:#CAC4D0;
+  --p-glass-a:#F3EDF7; --p-glass-s:#F3EDF7; --p-glass-edge:transparent; --p-glass-out:transparent; --p-glass-rim:transparent;
+  --p-sheet-a:#F3EDF7; --p-sheet-s:#F3EDF7; --p-shadow-a:0 2px 6px rgba(0,0,0,.12); --p-tint:#6750A4; --p-active:#6750A4; --p-on-tint:#fff;
+  --m-rail:#F7F2FA; --m-search:#ECE6F0; --m-active:#E8DEF8; --m-on-active:#1D192B; --m-fab:#EADDFF; --m-on-fab:#21005D;
+}
+html:root[data-plat="android"][data-theme="dark"]{
+  --p-bg:#121218; --p-grad:none; --p-card:#211F26; --p-card2:#2B2930; --p-soft:#36343B; --p-sel:#4A4458;
+  --p-fg:#E6E1E9; --p-fg2:#CAC4D0; --p-fg3:#948F99; --p-line:#49454F;
+  --p-glass-a:#1B1B22; --p-glass-s:#1B1B22; --p-glass-edge:transparent; --p-glass-out:transparent; --p-glass-rim:transparent;
+  --p-sheet-a:#211F26; --p-sheet-s:#211F26; --p-shadow-a:0 2px 8px rgba(0,0,0,.4); --p-tint:#D0BCFF; --p-active:#D0BCFF; --p-on-tint:#381E72;
+  --m-rail:#1B1B22; --m-search:#2B2930; --m-active:#4A4458; --m-on-active:#F3EDF7; --m-fab:#3A3270; --m-on-fab:#E5DEFF;
+}
+@media (prefers-color-scheme:dark){html:root[data-plat="android"]:not([data-theme]){
+  --p-bg:#121218; --p-grad:none; --p-card:#211F26; --p-card2:#2B2930; --p-soft:#36343B; --p-sel:#4A4458;
+  --p-fg:#E6E1E9; --p-fg2:#CAC4D0; --p-fg3:#948F99; --p-line:#49454F;
+  --p-glass-a:#1B1B22; --p-glass-s:#1B1B22; --p-glass-edge:transparent; --p-glass-out:transparent; --p-glass-rim:transparent;
+  --p-sheet-a:#211F26; --p-sheet-s:#211F26; --p-shadow-a:0 2px 8px rgba(0,0,0,.4); --p-tint:#D0BCFF; --p-active:#D0BCFF; --p-on-tint:#381E72;
+  --m-rail:#1B1B22; --m-search:#2B2930; --m-active:#4A4458; --m-on-active:#F3EDF7; --m-fab:#3A3270; --m-on-fab:#E5DEFF}}
+
+/* ===================================================================== производительность: стекло, тени, движение */
+html:root{--brand:#F04B30; --brand-ink:#fff; --p-side:280px; --p-gap:12px; --p-r:26px;
+  --p-glass:var(--p-glass-a); --p-sheet:var(--p-sheet-a); --p-shadow:var(--p-shadow-a); --p-blur:blur(24px) saturate(170%); --p-dur:.22s;
+  --p-blur-big:var(--p-blur); --p-glass-big:var(--p-glass); --p-bar:rgba(236,238,243,.9)}
+/* 28.10.2026 23:00 («лаги при скроллинге — только iPhone и iPad»): «mid» — размытие только на малых поверхностях (капсула, кнопки);
+   большие (боковая панель на весь экран, листы) — сплошные: размытие под ними пересчитывалось на каждом кадре прокрутки */
+html:root[data-perf="mid"]{--p-blur:blur(12px) saturate(150%); --p-dur:.14s; --p-blur-big:none; --p-glass-big:var(--p-glass-s); --p-shadow:0 6px 18px rgba(30,40,70,.1),0 1px 2px rgba(30,40,70,.05)}
+html:root[data-perf="eco"],html:root[data-fx="lite"]{--p-glass:var(--p-glass-s); --p-sheet:var(--p-sheet-s); --p-shadow:none; --p-blur:none; --p-blur-big:none; --p-glass-big:var(--p-glass-s); --p-dur:0s; --p-card-sh:none}
+html:root[data-theme="dark"]{--p-bar:rgba(16,21,31,.9)}
+@media (prefers-color-scheme:dark){html:root:not([data-theme]){--p-bar:rgba(16,21,31,.9)}}
+html:root[data-plat="android"]{--p-bar:#FEF7FF}
+html:root[data-plat="android"][data-theme="dark"]{--p-bar:#121218}
+@media (prefers-color-scheme:dark){html:root[data-plat="android"]:not([data-theme]){--p-bar:#121218}}
+@media (prefers-reduced-transparency:reduce){html:root,html:root[data-perf]{--p-glass:var(--p-glass-s); --p-sheet:var(--p-sheet-s); --p-blur:none}}
+html[data-fx="lite"] *,html[data-fx="lite"] *::before,html[data-fx="lite"] *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;animation:none!important;transition:none!important}
+html[data-fx="lite"] body .tabbar,html[data-fx="lite"] body .tabpanel,html[data-fx="lite"] .pbtn,html[data-fx="lite"] .pside,html[data-fx="lite"] .psrch{box-shadow:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* имена тех же вещей у страниц и у iOS-слоя */
+html:root[data-theme],html:root:not([data-theme]){
+  --ios-bg:transparent; --ios-group:var(--p-card); --ios-sep:var(--p-line); --ios-label:var(--p-fg); --ios-2:var(--p-fg2); --ios-3:var(--p-fg3);
+  --ios-fill:var(--p-soft); --ios-blue:var(--p-tint); --sheet-group:var(--p-card); --sheet-bg:var(--p-sheet); --sheet-bg-solid:var(--p-sheet-s); --sheet-edge:var(--p-line);
+  --bg:var(--p-bg); --surface-solid:var(--p-card); --fg:var(--p-fg); --muted:var(--p-fg2); --line:var(--p-line); --card:var(--p-card); --card-edge:var(--p-line);
+  --accent:var(--p-tint); --on-accent:var(--p-on-tint); --glass-well:var(--p-soft); --glass-ui:var(--p-glass); --glass:var(--p-glass); --glass-text:var(--p-sheet);
+  --edge:var(--p-glass-edge); --rim:var(--p-glass-rim); --gshadow:var(--p-shadow); --blur:var(--p-blur); --blur-text:var(--p-blur);
+  --paper:var(--p-bg); --panel:var(--p-card); --ink:var(--p-fg); --rule:var(--p-line); --halo:var(--p-bg); --chip:var(--p-soft); --track:var(--p-soft);
+  --seg-on:var(--p-card); --cc-fill:var(--p-soft);
+}
+html:root[data-theme="dark"]{--seg-on:#5A5B63}
+@media (prefers-color-scheme:dark){html:root:not([data-theme]){--seg-on:#5A5B63}}
+
+/* ===================================================================== основа страницы */
+html{background:var(--p-grad) no-repeat,var(--p-bg);background-size:100% 100vh,auto;min-height:100%}
+html body{background:transparent;color:var(--p-fg);font-family:var(--f-body)}
+html body h1{font:700 34px/1.12 var(--f-display);letter-spacing:-.022em;text-wrap:balance}
+html body h2,html body h3{font-weight:700}
+html body .eyebrow,html body .lead,html body .ihdr{color:var(--p-fg2)}
+html body .ihdr{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.03em;color:var(--p-fg3)}
+html body .igroup,html body .ios .igroup{background:var(--p-card);border-radius:var(--p-r);box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh)}
+html body .itile,html body .tabpanel .itile{background:var(--p-soft)!important;color:var(--c,var(--p-fg2))!important;border-radius:9px}
+html body .itile svg{stroke-width:1.75}
+body.has-portal p.eyebrow:has(.brand-mark){display:none}
+:focus-visible{outline:2px solid var(--p-active);outline-offset:2px}
+/* заголовок раздела с цветной точкой раздела, как в макетах телефона */
+body.has-portal:not(.pg-home) :is(.ios,.pitems) h1:first-of-type::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--sec,var(--p-tint));margin:0 10px 0 2px;vertical-align:.2em}
+
+/* ===================================================================== стекло: одна «материя» для оболочки */
+.pglass,.ptop .pbtn,.ptop .pback,.psrch,html body .tabbar,.pside{background:var(--p-glass);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur);
+  border:1px solid var(--p-glass-edge);box-shadow:inset 0 1px 0 var(--p-glass-rim),0 0 0 .5px var(--p-glass-out),var(--p-shadow)}
+.pside{background:var(--p-glass-big);-webkit-backdrop-filter:var(--p-blur-big);backdrop-filter:var(--p-blur-big)}
+.ptop .pbtn,.ptop .pback{box-shadow:inset 0 1px 0 var(--p-glass-rim),0 0 0 .5px var(--p-glass-out)}
+
+/* ===================================================================== шапка */
+.ptop{display:flex;align-items:center;gap:10px;width:100%;max-width:1240px;margin:0 auto;box-sizing:border-box;align-self:stretch;position:relative;z-index:20;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 2px max(16px,env(safe-area-inset-left,0px))}
+/* 28.10.2026 23:00, пользователь: «нет кнопки назад, и её много где нет» — шапка с «Назад» всегда сверху (sticky, Safari 13+);
+   фон появляется после прокрутки (site.js ставит .scrolled), без размытия — чтобы прокрутка на iPhone/iPad не тормозила */
+.ptop{position:-webkit-sticky;position:sticky;top:0;padding-bottom:8px;transition:background var(--p-dur),box-shadow var(--p-dur)}
+.ptop.scrolled{background:var(--p-bar);box-shadow:0 1px 0 var(--p-line)}
+html[data-perf="max"] .ptop.scrolled{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
+body.pback-on .ptop.scrolled .pback,body .ptop.scrolled .pback{background:transparent;border-color:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.ptop .plogo{display:flex;align-items:center;color:var(--p-fg);text-decoration:none;margin-right:auto;min-width:0}
+.ptop .plogo svg{width:132px;height:auto;display:block}
+.ptop .pcrumb{display:none;margin-right:auto;font:400 13.5px/1.3 var(--f-body);color:var(--p-fg2);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptop .pcrumb a{color:inherit;text-decoration:none}
+.ptop .pcrumb .brand-mark{display:inline-block;width:15px;height:14px;vertical-align:-2px;margin-right:6px;color:var(--p-fg)}
+.ptop .pcrumb a:hover{color:var(--p-fg)}
+.pbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:44px;height:44px;padding:0 14px;box-sizing:border-box;
+  border-radius:999px;border:1px solid var(--p-line);background:var(--p-card);color:var(--p-fg);font:500 14px var(--f-body);cursor:pointer;text-decoration:none;
+  transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1),background var(--p-dur)}
+.pbtn:active{transform:scale(.94)}
+.pbtn.round{width:44px;padding:0}
+.pbtn[hidden]{display:none!important}
+.pbtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pbtn[aria-expanded="true"]{color:var(--p-tint)}
+.ptop .psett,.ptop .psearchb,.ptop .pasrch{display:none}
+.ptop .pback{flex:none;display:inline-flex;align-items:center;gap:2px;height:44px;padding:0 16px 0 8px;margin-right:4px;border-radius:999px;color:var(--p-tint);font:500 16px/1 var(--f-body);cursor:pointer}
+.ptop .pback[hidden]{display:none}
+.ptop .pback svg,.tabpanel .pbk svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ptop .pback span{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.ptop .pback:not([hidden]){margin-right:auto}.ptop .pback:not([hidden]) + .plogo{display:none}}
+@media (max-width:560px){.ptop .pbtn.plocal{width:44px;padding:0}.ptop .pbtn.plocal span{display:none}}
+.tabpanel .phead .pbk{flex:none;display:inline-flex;align-items:center;gap:1px;height:34px;padding:0 10px 0 4px;margin-left:-6px;border:0;border-radius:999px;background:none;color:var(--p-tint);font:500 16px/1 var(--f-body);cursor:pointer}
+/* карта: своя навигация — капсула инструментов (Разделы, 3D, Слои, Объекты, Профиль); шапка портала, как и раньше, не показывается */
+body.pg-plan .ptop{display:none}
+/* одна кнопка «Назад»: своя ссылка вида (a.back) на страницах портала спрятана — её роль и подпись берёт кнопка в шапке */
+body.pback-on a.back,body.pback-on button.back{display:none!important}
+body.pback-on:has(.back){padding-top:0!important}
+
+/* ===================================================================== телефон: плавающая капсула вкладок + круглая кнопка поиска */
+:root{--dock-b:max(12px,calc(env(safe-area-inset-bottom,0px) - 10px)); --dock-x:max(16px,calc(50% - 250px)); --tb-top:calc(var(--dock-b) + 62px)}
+html body .tabbar{position:fixed;z-index:60;left:var(--dock-x);right:var(--dock-x);bottom:var(--dock-b);width:auto;transform:none;height:62px;padding:4px;box-sizing:border-box;
+  border-radius:31px;display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:2px;isolation:isolate}
+html body .tabbar::before{content:none}
+body.has-srch .tabbar{right:calc(var(--dock-x) + 72px)}
+html body .tabbar>*{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;height:100%;margin:0;border:0;border-radius:27px;
+  background:transparent;color:var(--p-fg2);font:500 10.5px/1.1 var(--f-body);text-decoration:none;cursor:pointer;padding:0 4px;
+  transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1),background var(--p-dur),color var(--p-dur)}
+html body .tabbar>* svg{width:23px;height:23px;stroke-width:1.7}
+html body .tabbar>*:active{transform:scale(.93)}
+html body .tabbar>*[aria-current="page"],html body .tabbar>*.on,html body .tabbar>*[aria-expanded="true"]{background:var(--p-sel);color:var(--p-tint);box-shadow:inset 0 1px 0 var(--p-glass-rim)}
+html body .tabbar>* span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* открыт лист — подсвечена только его вкладка */
+html body .tabbar:has(>[aria-expanded="true"])>:is([aria-current="page"],.on):not([aria-expanded="true"]){background:transparent;color:var(--p-fg2);box-shadow:none}
+html body .tabbar>.dot::after{content:"";position:absolute;top:7px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--brand);border:2px solid var(--p-card)}
+.psrch{position:fixed;z-index:60;right:var(--dock-x);bottom:var(--dock-b);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--p-fg);cursor:pointer;padding:0;box-sizing:border-box;transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1)}
+.psrch svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.psrch:active{transform:scale(.93)}
+.psrch[aria-expanded="true"]{color:var(--p-tint)}
+:is(.viewer,.vw,.photo,.lightbox):not([hidden]) ~ .psrch{display:none!important}
+/* затемнение под капсулой, как в iOS: содержимое мягко уходит под стекло */
+html body.has-portal:not(.pg-plan)::before{content:"";position:fixed;z-index:50;left:0;right:0;bottom:0;height:120px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,var(--p-bar))}
+@supports (color:color-mix(in srgb,#000 50%,#fff)){html body.has-portal:not(.pg-plan)::before{background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--p-bg) 72%,transparent))}}
+html[data-perf="mid"] body.has-portal::before{content:none}
+html[data-perf="eco"] body.has-portal::before{content:none}
+
+/* ===================================================================== листы: Разделы, Поиск, Профиль, инструменты раздела */
+html body .tabpanel{background:var(--p-sheet);-webkit-backdrop-filter:var(--p-blur-big);backdrop-filter:var(--p-blur-big);border:1px solid var(--p-glass-edge);border-radius:30px;
+  box-shadow:inset 0 1px 0 var(--p-glass-rim),0 0 0 .5px var(--p-glass-out),var(--p-shadow);color:var(--p-fg);bottom:calc(var(--tb-top) + 10px)}
+html body .tabpanel::before{content:none}
+html[data-perf="mid"] body .tabpanel{background:var(--p-sheet-s)}
+html body .tabpanel .phead{background:var(--p-sheet-s)}
+/* 29.10.2026 (скриншот пользователя: «вверху буквы из разных меню наезжают друг на друга»): шапка панели прилипает к верху, а была прозрачной —
+   пункты меню при прокрутке просвечивали сквозь заголовок. Теперь фон сплошной (без размытия — не тормозит iPhone) */
+html[data-perf="max"] body .tabpanel .phead,html[data-perf="mid"] body .tabpanel .phead{background:var(--p-sheet-s);-webkit-backdrop-filter:none;backdrop-filter:none}
+html body .tabpanel .phead h3{font-weight:700}
+html body .tabpanel .x{background:var(--p-soft);color:var(--p-fg)}
+html body .tabpanel h4{color:var(--p-fg3);font-weight:600;letter-spacing:.03em}
+.psub{font:600 12px/1.3 var(--f-body);color:var(--p-fg3);margin:14px 16px 8px;text-transform:uppercase;letter-spacing:.03em}
+.pseg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;margin:0 0 4px;border-radius:14px;background:var(--p-soft)}
+.pseg button{height:38px;border:0;border-radius:11px;background:transparent;color:var(--p-fg2);font:500 14px var(--f-body);cursor:pointer;transition:background var(--p-dur)}
+.pseg button[aria-pressed="true"]{background:var(--seg-on);color:var(--p-fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.irow.off{opacity:.55;cursor:default}
+.irow .itag{font:400 12px var(--f-body);color:var(--p-fg3);margin-left:auto;padding-left:8px;white-space:nowrap}
+.psearch{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border-radius:16px;background:var(--p-card);border:1px solid var(--p-line)}
+.psearch svg{width:20px;height:20px;flex:none;color:var(--p-fg2);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.psearch input,html body .psearch input[type="search"]{flex:1;min-width:0;height:100%;border:0;background:transparent!important;color:var(--p-fg);font:400 16px var(--f-body);outline:none;border-radius:0!important;padding:0!important}
+.psearch input::placeholder{color:var(--p-fg3)}
+.pres{margin-top:12px}
+.pres .pempty{padding:18px 16px;color:var(--p-fg2);font:400 14px/1.45 var(--f-body)}
+/* ответ помощника в поиске */
+.pai .pai-a{padding:12px 16px 14px;border-top:.5px solid var(--ios-sep);white-space:pre-wrap;font-size:15px;line-height:1.45;color:var(--ios-label)}
+.pai .pai-a.wait{color:var(--ios-2)}
+.pai .pai-a.err{color:var(--t-bad)}
+.pai .pai-seg{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px 10px;border-top:.5px solid var(--ios-sep)}
+.pai .pai-seg button{border:0;border-radius:14px;padding:6px 12px;font:500 13.5px var(--f-body,inherit);background:var(--p-soft);color:var(--p-fg2);cursor:pointer}
+.pai .pai-seg button[aria-pressed="true"]{background:var(--ic-ai);color:#fff}
+.pai .pai-a .pai-by{color:var(--ios-2);font-size:12.5px}
+
+/* ===================================================================== боковая панель (планшет и компьютер) */
+.pside{display:none}
+.pside .pbadge{margin-left:auto;font:500 13.5px/1 var(--f-body);color:var(--p-fg3);font-variant-numeric:tabular-nums;padding-left:6px}
+.pside .pbadge:empty{display:none}
+@media (min-width:701px){
+  :root{--p-side:236px}
+  .pside{display:flex;flex-direction:column;gap:2px;position:fixed;z-index:60;top:var(--p-gap);bottom:var(--p-gap);left:var(--p-gap);width:var(--p-side);box-sizing:border-box;
+    padding:18px 10px 14px;border-radius:30px;overflow:auto;overscroll-behavior:contain;scrollbar-width:none}
+  .pside::-webkit-scrollbar{display:none}
+  .pside .plogo{color:var(--p-fg);display:block;padding:4px 10px 0;margin-bottom:16px}
+  .pside .plogo svg{width:min(176px,100%);height:auto;display:block}
+  .pside .pcap{font:600 12.5px/1.2 var(--f-body);color:var(--p-fg3);padding:0 12px;margin:14px 0 6px}
+  .pside .pnavs{display:grid;gap:2px}
+  .pside .pnav{display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border-radius:21px;color:var(--p-fg);text-decoration:none;font:500 15px/1.15 var(--f-body);
+    border:0;background:none;width:100%;text-align:left;cursor:pointer;box-sizing:border-box;transition:background var(--p-dur)}
+  .pside .pnav:hover{background:var(--p-sel);background:color-mix(in srgb,var(--p-sel) 60%,transparent)}
+  .pside .pnav[aria-current="page"]{background:var(--p-sel);box-shadow:inset 0 1px 0 var(--p-glass-rim)}
+  .pside .pnav .pi{flex:none;display:inline-flex;color:var(--c,var(--p-fg2))}
+  .pside .pnav .pi svg{width:21px;height:21px;stroke-width:1.7}
+  .pside .pnav .pt{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .pside .pfoot{margin-top:auto;display:grid;gap:2px;padding-top:10px}
+  .pside .pfab{display:none}
+  body.has-portal:not(.pg-plan){padding-left:calc(var(--p-side) + var(--p-gap) * 2);padding-bottom:40px}
+  html body.has-portal:not(.pg-plan)::before{content:none}
+  body.has-portal .ptop{padding:calc(14px + env(safe-area-inset-top,0px)) 24px 2px 20px;max-width:none}
+  body.has-portal .ptop .plogo{display:none}
+  body.has-portal .ptop .pcrumb{display:block}
+  body.has-portal .ptop .psett,body.has-portal .ptop .psearchb{display:inline-flex}
+  body.has-portal:not(.pg-plan) .tabbar,body.has-portal .psrch{display:none}
+  body.has-portal .tabpanel{left:auto!important;right:var(--p-gap)!important;top:var(--p-gap)!important;bottom:var(--p-gap)!important;width:min(400px,calc(100% - var(--p-side) - 40px))!important;max-height:none!important;transform:none!important}
+  /* карта: план — справа от панели, инструменты — капсулой внизу */
+  body.pg-plan.has-portal .mapwrap{left:calc(var(--p-side) + var(--p-gap) * 2)}
+  body.pg-plan.has-portal .tabbar{left:calc(var(--p-side) + var(--p-gap) * 2 + 16px);right:16px;max-width:520px;margin:0 auto}
+  body.pg-plan.has-portal .ptop{display:none}
+  html.t14sc body.has-portal:not(.pg-plan){height:100%;margin:0;border:0;border-radius:0;min-height:0}
+  html.t14sc body.has-portal:not(.pg-plan)::after{height:24px}
+}
+@media (min-width:1100px){:root{--p-side:280px;--p-gap:12px}}
+@media (min-width:1360px){:root{--p-gap:16px}}
+
+/* ===================================================================== Android-планшет: навигационная панель Material 3 */
+@media (min-width:701px){
+  html[data-plat="android"] .pside{top:0;bottom:0;left:0;border-radius:0 28px 28px 0;background:var(--m-rail);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:20px 12px}
+  html[data-plat="android"] .pside .plogo{padding:4px 16px 0;margin-bottom:18px}
+  html[data-plat="android"] .pside .pfab{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px;margin:0 4px 14px;width:max-content;max-width:100%;box-sizing:border-box;border:0;border-radius:16px;
+    background:var(--m-fab);color:var(--m-on-fab);font:700 15.5px var(--f-body);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  html[data-plat="android"] .pside .pfab svg{width:22px;height:22px}
+  html[data-plat="android"] .pside .pnav{min-height:52px;border-radius:26px;padding:0 16px;color:var(--p-fg2);font-size:15px}
+  html[data-plat="android"] .pside .pnav[aria-current="page"]{background:var(--m-active);color:var(--m-on-active);box-shadow:none}
+  html[data-plat="android"] .pside .pnav[aria-current="page"] .pi{color:var(--m-on-active)}
+  html[data-plat="android"] .pside .pnav:hover{background:var(--m-active);background:color-mix(in srgb,var(--m-active) 45%,transparent)}
+  html[data-plat="android"] .pside .pcap.pai-cap,html[data-plat="android"] .pside .pask{display:none}
+  html[data-plat="android"] body.has-portal:not(.pg-plan){padding-left:calc(var(--p-side) + 16px)}
+  html[data-plat="android"] body.pg-plan.has-portal .mapwrap{left:var(--p-side)}
+  html[data-plat="android"] body.has-portal .ptop{padding-top:calc(16px + env(safe-area-inset-top,0px));min-height:64px}
+  html[data-plat="android"] body.has-portal .ptop .pcrumb,html[data-plat="android"] body.has-portal .ptop .psearchb{display:none}
+  html[data-plat="android"] body.has-portal .ptop .pasrch{display:flex;align-items:center;gap:14px;flex:1;max-width:560px;height:56px;padding:0 20px;margin-right:auto;border:0;border-radius:28px;
+    background:var(--m-search);color:var(--p-fg2);font:400 16px var(--f-body);cursor:text;text-align:left;min-width:0}
+  html[data-plat="android"] body.has-portal .ptop .pasrch span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html[data-plat="android"] body.has-portal .ptop .pasrch svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+  html[data-plat="android"] body.has-portal .ptop .pbtn{height:48px;min-width:48px;border:0;background:var(--m-search);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--p-fg2)}
+  html[data-plat="android"] body.has-portal .ptop .pbtn.round{width:48px}
+  html[data-plat="android"] body.has-portal .ptop .pback{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--p-fg)}
+  html[data-plat="android"] body.has-portal .tabpanel{top:0!important;bottom:0!important;right:0!important;border-radius:28px 0 0 28px;border:0}
+  html[data-plat="android"] body.has-portal h1{font-size:40px;letter-spacing:-.01em}
+}
+/* Android-телефон: та же капсула, но сплошная, как панель навигации Material 3 */
+html[data-plat="android"] body .tabbar,html[data-plat="android"] .psrch{background:var(--m-rail);border:0;box-shadow:0 2px 10px rgba(0,0,0,.18);-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-plat="android"] body .tabbar>*[aria-current="page"],html[data-plat="android"] body .tabbar>*.on,html[data-plat="android"] body .tabbar>*[aria-expanded="true"]{background:var(--m-active);color:var(--m-on-active);box-shadow:none}
+
+/* ===================================================================== внутренние страницы: сгруппированные списки и KPI-плитки */
+html body .ios{min-width:0;max-width:min(800px,100%)}
+/* 12.11.2026, Т. В.: «на большом экране много пустого — и так во всех разделах»: на компьютере разделы по ширине экрана (было 800 px) */
+@media (min-width:1100px){html body .ios{max-width:min(1600px,100%)}.fhome{max-width:1600px}}
+html body.has-portal main.ios{width:100%}
+html body .ios .lead{font-size:15px;line-height:1.45}
+html body .igroup.hero,html body .hero.igroup{padding:16px 18px 16px}
+html body .hero .hnum{font-weight:700;letter-spacing:-.03em}
+html body .hero .hnum small{color:var(--p-fg2)}
+html body .hero .hst,html body .hst{gap:8px;border-top:0;padding-top:0;margin-top:14px}
+html body .hero .hst > div,html body .hst > div{background:var(--p-card2);border-radius:16px;padding:10px 12px;min-width:0}
+html body .hero .hst > div > span,html body .hst > div > span{color:var(--p-fg2)}
+html body .hst b.bad,html body .ival.bad{color:var(--t-bad)}
+html body .ival.ok{color:var(--t-ok)}
+html body .kpis div{background:var(--p-card);border-radius:18px}
+html body .chips2 span,html body .pchip{background:var(--p-soft);color:var(--p-fg2)}
+html body .chips2 b{color:var(--p-fg)}
+html body .ios table th{color:var(--p-fg2)}
+html body .ios :is(td,th){border-color:var(--p-line)}
+html body .note,html body .ifoot{color:var(--p-fg2)}
+html body .ios input[type="search"],html body .filt input,html body .search{background:var(--p-soft);color:var(--p-fg);border:0}
+html body .ios input::placeholder{color:var(--p-fg3)}
+html body details.rq,html body details.rep{border-color:var(--p-line)}
+
+/* ===================================================================== главная: пульс фабрики */
+.fhome{max-width:1240px;margin:0 auto;box-sizing:border-box;padding:4px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.fhome h1{margin:10px 4px 2px}
+.fhome .fh-sub{font:400 15px/1.4 var(--f-body);color:var(--p-fg2);margin:0 4px 6px}
+.fhome .fh-cap{display:flex;align-items:baseline;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin:20px 6px 8px}
+.fhome .fh-cap h2{margin:0;font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.03em;color:var(--p-fg3)}
+.fhome .fh-cap .fh-chain{font:400 12.5px/1.35 var(--f-body);color:var(--p-fg3);margin:0}
+.fhome .fh-ban{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:var(--p-r);background:var(--p-card);box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh);margin-top:14px}
+.fhome .fh-ban .fh-bi{flex:none;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--p-soft);background:color-mix(in srgb,var(--ic-home) 20%,transparent);color:var(--ic-home)}
+.fhome .fh-ban .fh-bi svg{width:24px;height:24px}
+.fhome .fh-ban b{display:block;font:700 18px/1.25 var(--f-display)}
+.fhome .fh-ban p{margin:3px 0 0;font:400 14px/1.45 var(--f-body);color:var(--p-fg2)}
+.fhome .fh-flow{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;margin-top:12px;padding:0;list-style:none}
+.fhome .fh-flow li{display:flex;align-items:center;gap:6px}
+.fhome .fh-flow li + li::before{content:"→";color:var(--p-fg3);font-size:14px}
+.fhome .fh-flow a,.fhome .fh-flow span.ch{display:inline-block;padding:6px 11px;border-radius:12px;background:var(--p-soft);background:color-mix(in srgb,var(--c) 17%,transparent);color:var(--c);font:700 13.5px/1.2 var(--f-body);text-decoration:none;white-space:nowrap}
+.fhome .pk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.fhome .pk-grid > li,.fhome .fh-secs > li{display:flex;min-width:0}
+.fhome .pk-grid > li > .pk,.fhome .fh-secs > li > .fs{flex:1}
+/* 02.11.2026: 7 плиток пульса — последняя без пары растягивается на всю строку (2 и 3 колонки), на широком экране 7 в ряд */
+.fhome #pulse > li:last-child:nth-child(odd){grid-column:1/-1}
+.fhome .pk{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;min-height:112px;box-sizing:border-box;padding:12px 14px 13px;border-radius:24px;background:var(--p-card);
+  box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh);color:var(--p-fg);text-decoration:none;transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1)}
+.fhome a.pk:active{transform:scale(.97)}
+.fhome .pk-t{display:flex;align-items:center;gap:6px;font:500 13px/1.25 var(--f-body);color:var(--p-fg2);min-width:0}
+.fhome .pk-t svg{flex:none;width:15px;height:15px;color:var(--c)}
+.fhome .pk-v{display:block;font:700 23px/1.15 var(--f-display);letter-spacing:-.02em;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.fhome .pk-v small{font:500 14px var(--f-body);color:var(--p-fg2);letter-spacing:0;margin-left:3px}
+.fhome .pk[data-tone="bad"] .pk-v{color:var(--t-bad)}
+.fhome .pk[data-tone="warn"] .pk-v{color:var(--t-warn)}
+.fhome .pk[data-tone="ok"] .pk-v{color:var(--t-ok)}
+.fhome .pk[data-tone="none"] .pk-v{color:var(--p-fg3)}
+.fhome .pk[data-tone="wait"] .pk-v{color:var(--p-fg3)}
+.fhome .pk-s{font:400 12.5px/1.35 var(--f-body);color:var(--p-fg2)}
+.fhome .pk-tag{align-self:flex-start;margin-top:auto;padding:3px 8px;border-radius:8px;background:var(--p-soft);color:var(--p-fg2);font:600 11.5px/1.2 var(--f-body)}
+/* 02.11.2026, Т. В.: выпуск по группам — у каждой группы свой % плана, без общего процента */
+.fhome .pk-gl{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:2px;font:500 11.5px/1.25 var(--f-body);font-variant-numeric:tabular-nums}
+.fhome .pk-gl > span{display:flex;align-items:baseline;justify-content:space-between;gap:6px;min-width:0}
+.fhome .pk-gl b{font-weight:500;color:var(--p-fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fhome .pk-gl i{font-style:normal;font-weight:700;color:var(--p-fg3);white-space:nowrap}
+.fhome .pk-gl [data-tone="ok"] i{color:var(--t-ok)}
+.fhome .pk-gl [data-tone="warn"] i{color:var(--t-warn)}
+.fhome .pk-gl [data-tone="bad"] i{color:var(--t-bad)}
+#pkProd .pk-s{order:3;margin-top:auto;padding-top:4px;font-size:11.5px;color:var(--p-fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 03.11.2026, Т. В. (опрос «Все одной высоты»): плитки пульса — одной высоты во всех строках; выпуск — группы в две колонки, подробно — в «Производстве» */
+.fhome #pulse{grid-auto-rows:1fr}
+#pkProd .pk-v{font-size:20px}
+#pkProd .pk-v small{font-size:12px}
+.fhome .pk-bar{display:flex;gap:3px;align-items:flex-end;height:22px;margin-top:auto;padding-top:4px}
+.fhome .pk-bar i{flex:1;border-radius:4px 4px 2px 2px;background:var(--c);opacity:.85;min-height:3px}
+.fhome .pk-bar i.cur{opacity:.45}
+/* требует внимания + карта */
+.fhome .fh-cols{display:grid;gap:0 16px}
+.fhome .fh-attn .igroup .ival{font-weight:700;font-size:16px}
+.fhome .fh-attn .ival[data-tone="bad"]{color:var(--t-bad)} .fhome .fh-attn .ival[data-tone="warn"]{color:var(--t-warn)} .fhome .fh-attn .ival[data-tone="ok"]{color:var(--t-ok)}
+.fhome .fh-attn .ival[data-tone="info"]{color:var(--c,var(--p-fg))}
+.fhome .fh-attn .irow .ititle{font-size:16px;font-weight:500}
+.fhome .fh-attn .irow .itile{width:32px;height:32px}
+.fhome .fh-attn .fh-ok{padding:16px 18px;color:var(--p-fg2);font:400 14.5px/1.45 var(--f-body)}
+.fhome .fh-map{display:block;border-radius:var(--p-r);background:var(--p-card);box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh);overflow:hidden;color:var(--p-fg);text-decoration:none}
+.fhome .fh-map .fm-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:14px 18px 8px}
+.fhome .fh-map .fm-h b{font:700 16px/1.2 var(--f-display)}
+.fhome .fh-map .fm-h nav{display:flex;gap:10px;font:400 13px var(--f-body)}
+.fhome .fh-map .fm-h nav a{color:var(--p-tint);text-decoration:none}
+.fhome .fh-map .fm-svg{display:block;margin:0 14px;border-radius:16px;overflow:hidden;background:var(--map-bg)}
+.fhome .fh-map svg{display:block;width:100%;height:auto;max-height:240px}
+.fhome .fh-map svg .mb{fill:var(--map-bld);stroke:var(--map-edge);stroke-width:.5;transition:fill var(--p-dur)}
+.fhome .fh-map svg a:hover .mb,.fhome .fh-map svg a:focus .mb{fill:var(--ic-map)}
+/* 02.11.2026, Т. В.: здания в цвете по назначению */
+.fhome .fh-map svg .mb.k-prod{fill:#8f6fd8;fill-opacity:.55}
+.fhome .fh-map svg .mb.k-wh{fill:#d9a03f;fill-opacity:.6}
+.fhome .fh-map svg .mb.k-adm{fill:#3f8fd9;fill-opacity:.5}
+.fhome .fh-map svg .mb.k-eng{fill:#d9584f;fill-opacity:.6}
+.fhome .fh-map svg .mb.k-new{fill:#4fae6a;fill-opacity:.45}
+.fhome .fm-lg{display:flex;flex-wrap:wrap;gap:4px 12px;margin:6px 0 0;font:500 11.5px/1.3 var(--f-body);color:var(--p-fg2)}
+.fhome .fm-lg span{display:inline-flex;align-items:center;gap:5px}
+.fhome .fm-lg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.fhome .fm-lg i.k-prod{background:#8f6fd8}.fhome .fm-lg i.k-wh{background:#d9a03f}.fhome .fm-lg i.k-adm{background:#3f8fd9}.fhome .fm-lg i.k-eng{background:#d9584f}.fhome .fm-lg i.k-new{background:#4fae6a}
+.fhome .fh-map svg .mp{fill:none;stroke:var(--map-edge);stroke-width:.8;stroke-dasharray:3 2;opacity:.8}
+.fhome .fh-map .fm-f{display:flex;align-items:center;gap:12px;padding:12px 18px 14px;color:var(--p-fg);text-decoration:none}
+.fhome .fh-map .fm-f span{flex:1;min-width:0}
+.fhome .fh-map .fm-f b{display:block;font:500 16px/1.25 var(--f-body)}
+.fhome .fh-map .fm-f small{display:block;font:400 13px/1.3 var(--f-body);color:var(--p-fg2);margin-top:2px}
+/* разделы: быстрый вход */
+.fhome .fh-secs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.fhome .fs{display:flex;flex-direction:column;gap:6px;min-height:96px;box-sizing:border-box;padding:12px 14px;border-radius:20px;background:var(--p-card);box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh);
+  color:var(--p-fg);text-decoration:none;min-width:0;border:0;font:inherit;text-align:left;cursor:pointer;width:100%;transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1)}
+.fhome .fs:active{transform:scale(.97)}
+.fhome .fs .fs-i{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--p-soft);background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.fhome .fs .fs-i svg{width:20px;height:20px}
+.fhome .fs b{font:700 15.5px/1.2 var(--f-display);overflow-wrap:anywhere}
+.fhome .fs small{font:400 12.5px/1.3 var(--f-body);color:var(--p-fg2)}
+.fhome .pnote{font:400 12.5px/1.45 var(--f-body);color:var(--p-fg2);margin:18px 6px 0}
+@media (min-width:700px){
+  .fhome .pk-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fhome #pulse > li:last-child:nth-child(odd){grid-column:auto}
+  .fhome #pulse > li:last-child:nth-child(3n+1){grid-column:1/-1}
+  .fhome .fh-secs{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:701px){.fhome{padding:0 24px 30px 20px}.fhome h1{margin-top:6px}}
+@media (min-width:1180px){
+  .fhome .pk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .fhome #pulse:has(> li:nth-child(7)){grid-template-columns:repeat(7,minmax(0,1fr))}
+  .fhome #pulse > li:last-child:nth-child(3n+1){grid-column:auto}
+  .fhome .pk-v{font-size:21px}
+  .fhome .fh-cols{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+  .fhome .fh-secs{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media (max-width:700px){.fhome .fh-ban{display:none}}
+@media (min-width:701px){.fhome .fh-cap .fh-chain{display:none}}
+@media (max-width:380px){.fhome .pk-v{font-size:20px}}
+
+/* ===================================================================== изделия и материалы */
+.pitems{max-width:1120px;margin:0 auto;box-sizing:border-box;padding:12px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px))}
+.pitems .pkicker{font:600 12px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--p-fg3);margin:10px 0 6px}
+.pitems h1{margin:0 0 8px}
+.pitems .plead{font:400 15px/1.45 var(--f-body);color:var(--p-fg2);margin:0 0 20px}
+.pitems h2{font:700 20px/1.25 var(--f-display);margin:28px 0 12px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(45%,250px),1fr));gap:12px}
+.pcard{display:flex;flex-direction:column;border-radius:24px;background:var(--p-card);overflow:hidden;color:var(--p-fg);text-decoration:none;box-shadow:inset 0 1px 0 var(--p-inset),var(--p-card-sh)}
+.pcard .pph{aspect-ratio:2/3;background:#f4f4f2;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pcard .pph img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard .pbody{padding:14px 16px 16px;display:grid;gap:4px}
+.pcard .pbody b{font:700 18px/1.2 var(--f-display)}
+.pcard .pbody small{font:400 13px/1.4 var(--f-body);color:var(--p-fg2)}
+.pcard .pbody .pmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pchip{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:999px;font:400 12px var(--f-body)}
+.pdlg{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:0}
+.pdlg[hidden]{display:none}
+.pdlg .pin{width:min(760px,100%);max-height:92vh;max-height:92dvh;overflow:auto;box-sizing:border-box;background:var(--p-sheet-s);border:1px solid var(--p-line);border-radius:28px 28px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));color:var(--p-fg)}
+.pdlg .phd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pdlg .phd h3{margin:0 auto 0 0;font:700 22px/1.2 var(--f-display)}
+.pdlg .pcols{display:grid;gap:16px}
+.pdlg .pph{border-radius:20px;background:#f4f4f2;aspect-ratio:4/5;max-height:56vh;max-height:56dvh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pdlg .pph img{height:100%;width:100%;object-fit:contain}
+.pdlg dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font:400 14px/1.4 var(--f-body)}
+.pdlg dt{color:var(--p-fg2)}
+.pdlg dd{margin:0}
+.pdlg .pnote{margin-top:12px}
+.pnote{font:400 12.5px/1.45 var(--f-body);color:var(--p-fg2);margin:18px 2px 0}
+@media (min-width:760px){.pdlg{align-items:center;padding:20px}.pdlg .pin{border-radius:28px}.pdlg .pcols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+
+/* всплывающие сообщения и листы снизу (вход, версия, помощник) — та же материя */
+html body .t14toast{background:var(--p-sheet);color:var(--p-fg);border:1px solid var(--p-glass-edge);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur)}
+html body .isheet{background:var(--p-sheet);color:var(--p-fg);border:1px solid var(--p-glass-edge);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur);box-shadow:inset 0 1px 0 var(--p-glass-rim),var(--p-shadow)}
+html body .isheet .igroup{background:var(--p-card)}
+html body a.back,html body button.back{background:var(--p-glass);border-color:var(--p-glass-edge);color:var(--p-tint)}
+
+/* ===================================================================== разделы по образцу главной (assets/hub.js, 28.10.2026) */
+.hub-off{display:none!important}
+.fhome.hub [hidden]{display:none!important}
+.fhome.hub{max-width:none;margin:12px 0 4px;padding:0}
+.fhome.hub .fh-cap:first-child{margin-top:8px}
+.fhome.hub .pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fhome.hub .pk{min-height:104px}
+.fhome.hub .pk-v{font-size:22px}
+.fhome.hub .pk-v small{font-size:13px}
+.fhome.hub .fh-cols{grid-template-columns:minmax(0,1fr)}
+.fhome.hub .fh-secs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fhome.hub .fs{min-height:88px}
+.fhome.hub .fh-attn .irow .ititle{font-size:15.5px}
+.fhome.hub .hub-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;margin:6px -4px 4px;padding:8px 4px;background:var(--p-bg,transparent);
+  background:color-mix(in srgb,var(--p-bg,#000) 82%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.fhome.hub .hub-back{flex:none;display:inline-flex;align-items:center;gap:4px;padding:7px 12px 7px 10px;border-radius:14px;background:var(--p-soft);color:var(--p-tint);font:600 14px/1.2 var(--f-body);text-decoration:none;white-space:nowrap}
+.fhome.hub .hub-back::before{content:"";width:8px;height:8px;border-left:2.2px solid currentColor;border-bottom:2.2px solid currentColor;transform:rotate(45deg);margin-right:2px}
+.fhome.hub .hub-chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-width:0;padding:2px 0}
+.fhome.hub .hub-chips::-webkit-scrollbar{display:none}
+.fhome.hub .hub-chips a{flex:none;padding:7px 11px;border-radius:14px;background:var(--p-card);box-shadow:inset 0 1px 0 var(--p-inset);color:var(--p-fg2);font:500 13.5px/1.2 var(--f-body);text-decoration:none;white-space:nowrap}
+.fhome.hub .hub-chips a.on{background:var(--c,var(--p-tint));background:color-mix(in srgb,var(--p-tint) 22%,var(--p-card));color:var(--p-fg);font-weight:600}
+@media (min-width:600px){
+  .fhome.hub .pk-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fhome.hub .fh-secs{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+/* 01.11.2026, пользователь (фото «Продажи», «Склад» на iPad: «а тут пусто»): «Требует внимания» слева и узкие подразделы справа давали
+   пустоту под коротким списком — теперь подразделы идут под ним во всю ширину */
+@media (min-width:1100px){
+  .fhome.hub .fh-cols{grid-template-columns:minmax(0,1fr)}
+  .fhome.hub .fh-secs{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+}
+/* главная: «Разделы» — в правой колонке под картой, компактными плитками в два ряда */
+@media (min-width:1180px){
+  .fhome:not(.hub) .fh-cols .fh-secs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .fhome:not(.hub) .fh-cols .fs{min-height:0;display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:10px;row-gap:1px;align-items:center;padding:10px 12px;border-radius:16px}
+  .fhome:not(.hub) .fh-cols .fs .fs-i{grid-row:span 2;width:30px;height:30px}
+  .fhome:not(.hub) .fh-cols .fs b{font-size:14.5px}
+  .fhome:not(.hub) .fh-cols .fs small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+
+/* 29.10.2026: панель карточки на плане (план здания, «Сдвинуть» — администратору) */
+.edpanel{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
+.edpanel .edbtn{border:0;border-radius:12px;padding:8px 12px;background:var(--p-soft,rgba(120,120,128,.12));color:var(--p-tint,#0a7cff);font:600 14px/1.2 var(--f-body,inherit);cursor:pointer}
+.edpanel .edbtn[aria-pressed="true"]{background:var(--p-tint,#0a7cff);color:#fff}
+/* 29.10.2026: плавающая «Назад» на карте (шапка там скрыта) */
+body.pg-plan .pback.pfloat{position:fixed;z-index:6;top:calc(12px + env(safe-area-inset-top,0px));left:max(14px,env(safe-area-inset-left,0px));display:inline-flex;align-items:center;gap:2px;height:40px;padding:0 14px 0 8px;border-radius:20px;background:var(--p-glass);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur);border:1px solid var(--p-glass-edge);box-shadow:var(--p-shadow);color:var(--p-tint);font:600 15px/1 var(--f-body);cursor:pointer}
+body.pg-plan .pback.pfloat svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* 30.10.2026, пользователь (скриншот iPad: «Назад» налезал на «Фактический обзор» и погоду карты): при боковом меню «Назад» на карте не нужен — навигация в меню; плавающая кнопка остаётся только на телефоне */
+@media (min-width:701px){body.pg-plan.has-portal .pback.pfloat{display:none}}
+
+/* 01.11.2026, пользователь (скриншот iPad 30.10): «На всю страницу без бокового меню!» — кнопка ⤢ на плане (body.pfull) */
+body.pg-plan.pfull .pside{display:none!important}
+body.pg-plan.pfull.has-portal .mapwrap{left:0!important}
+body.pg-plan.pfull.has-portal .tabbar{left:16px!important;right:16px!important}
+/* 01.11.2026, пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц» — таблица периодов в разделах
+   «Производство», «Продажи», «Склад», «ОМТС» (hub.js → .hub-per). Узкий экран: первая колонка закреплена, таблица листается вбок */
+.fhome .hub-per{padding:4px 0 6px}
+.fhome .hub-per .fh-ok{padding:16px 18px;margin:0;color:var(--p-fg2);font:400 14.5px/1.45 var(--f-body)}
+.fhome .hp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fhome table.hp{border-collapse:collapse;width:100%;min-width:520px;font:400 14px/1.3 var(--f-body);font-variant-numeric:tabular-nums}
+.fhome .hp th,.fhome .hp td{padding:9px 10px;text-align:right;vertical-align:top;border-bottom:1px solid var(--p-line)}
+.fhome .hp tbody tr:last-child th,.fhome .hp tbody tr:last-child td{border-bottom:0}
+.fhome .hp tbody.hp-more{border-top:1px solid var(--p-line)}
+.fhome .hp thead th{font:600 12.5px/1.25 var(--f-body);color:var(--p-fg2);white-space:nowrap}
+.fhome .hp thead th small,.fhome .hp td small,.fhome .hp tbody th small{display:block;font:400 12px/1.3 var(--f-body);color:var(--p-fg3);margin-top:2px}
+.fhome .hp tbody th{text-align:left;font:500 14px/1.3 var(--f-body);color:var(--p-fg);min-width:118px;max-width:170px}
+.fhome .hp th:first-child{position:sticky;left:0;z-index:1;background:var(--p-card);padding-left:16px}
+.fhome .hp td b{font:650 16px/1.2 var(--f-display);letter-spacing:-.01em;white-space:nowrap}
+.fhome .hp td b small{display:inline;font-size:12.5px;color:var(--p-fg3)}
+.fhome .hp td[data-tone="bad"] b{color:var(--t-bad)} .fhome .hp td[data-tone="warn"] b{color:var(--t-warn)} .fhome .hp td[data-tone="ok"] b{color:var(--t-ok)}
+.fhome .hp td:last-child{padding-right:16px}
+.fhome .hp .hp-no{color:var(--p-fg3)}
+.fhome .hp .hp-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.fhome .hp-tog{display:block;margin:6px 16px 4px;padding:7px 12px;border:0;border-radius:12px;background:var(--p-soft);color:var(--c,var(--p-fg));font:600 13.5px/1.2 var(--f-body);cursor:pointer}
+.fhome .hp-note{margin:6px 16px 8px;font:400 12.5px/1.45 var(--f-body);color:var(--p-fg3)}
+@media (max-width:440px){.fhome table.hp{font-size:13px;min-width:470px}.fhome .hp th,.fhome .hp td{padding:8px 7px}.fhome .hp tbody th{min-width:104px;font-size:13.5px}.fhome .hp td b{font-size:15px}}
+.fhome .hp-seg{display:none}
+@media (max-width:900px){   /* iPad вертикально: колонка контента узкая (боковое меню) — тоже по одному периоду */
+  .fhome .hp-seg{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
+  .fhome .hp-seg button{flex:none;border:0;border-radius:14px;padding:7px 12px;font:600 13.5px/1.2 var(--f-body);background:var(--p-soft);color:var(--p-fg2);cursor:pointer}
+  .fhome .hp-seg button[aria-pressed="true"]{background:var(--ic-items,#0877D8);color:#fff}
+  .fhome table.hp,.fhome table.hp{min-width:0}
+  .fhome .hp[data-sel="0"] tr > :not(:first-child):not(:nth-child(2)),.fhome .hp[data-sel="1"] tr > :not(:first-child):not(:nth-child(3)),
+  .fhome .hp[data-sel="2"] tr > :not(:first-child):not(:nth-child(4)),.fhome .hp[data-sel="3"] tr > :not(:first-child):not(:nth-child(5)){display:none}
+  .fhome .hp tbody th{min-width:0;max-width:none;width:52%}
+  .fhome .hp td{padding-right:16px}
+}
+/* 03.11.2026, правки Т. В. (п. 2: З6, С8). (1) Переход по ссылке в подраздел: заголовок не уходит под шапку — отступ под липкую шапку (~62px).
+   (2) Сетка карточек — по ширине колонки контента: с 701px слева боковое меню (~260–300px), и при 3–6 колонках по ширине окна карточки
+   на iPad становились узкими и «рассыпались». Контент до ~600px (iPad вертикально) — 2 колонки, до ~1030px — 3, шире — 6 на главной. */
+[id],.ihdr,h1,h2,details{scroll-margin-top:76px}
+@media (min-width:701px) and (max-width:900px){
+  .fhome .pk-grid,.fhome.hub .pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fhome #pulse > li:last-child:nth-child(3n+1){grid-column:auto}
+  .fhome #pulse > li:last-child:nth-child(odd){grid-column:1/-1}
+  .fhome .fh-secs,.fhome.hub .fh-secs{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:901px) and (max-width:1339px){
+  .fhome .pk-grid,.fhome.hub .pk-grid,.fhome #pulse:has(> li:nth-child(7)){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fhome #pulse > li:last-child:nth-child(odd){grid-column:auto}
+  .fhome #pulse > li:last-child:nth-child(3n+1){grid-column:1/-1}
+  .fhome .pk-v{font-size:22px}
+  .fhome:not(.hub) .fh-cols{grid-template-columns:minmax(0,1fr)}
+  .fhome .fh-secs,.fhome:not(.hub) .fh-cols .fh-secs{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* 12.11.2026: «Структура отдела» внизу разделов (site.js sxPart) — те же карточки, что в «Структуре» */
+.sx-part .og-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:6px;align-items:start}
+.sx-part .og-grid>.igroup{margin:0}
+.sx-part .og-h{display:flex;align-items:baseline;gap:8px;padding:12px 16px 8px}
+.sx-part .og-h b{font:650 16px/1.25 var(--f-display);letter-spacing:-.01em}
+.sx-part .og-h span{margin-left:auto;color:var(--ios-2);font-size:13px;white-space:nowrap}
+.sx-part .og-m{color:var(--ios-2);font-size:13px;padding:0 16px 10px;overflow-wrap:anywhere}
+.sx-part .og-sub{padding:10px 16px 4px;border-top:.5px solid var(--ios-sep);color:var(--ios-2);font:600 12.5px var(--f-body);text-transform:uppercase;letter-spacing:.03em}
+.sx-part .who{display:flex;flex-direction:column;gap:2px;padding:10px 16px;border-top:.5px solid var(--ios-sep)}
+.sx-part .who .wn{font-weight:600}
+.sx-part .who .wr,.sx-part .who .wx{color:var(--ios-2);font-size:13.5px}
+.sx-part .who .wx{font-size:12.5px}
+.sx-part .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sx-part .acts a{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--ios-blue) 13%,transparent);color:var(--ios-blue);font:600 13.5px var(--f-body);text-decoration:none;font-variant-numeric:tabular-nums}
+.sx-part .acts a.ml{background:var(--ios-fill);color:inherit;font-weight:500}
+.sx-part .og-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 4px}
+.sx-part .og-tools a{padding:7px 13px;border-radius:999px;background:var(--ios-fill);color:inherit;text-decoration:none;font:600 14px var(--f-body)}
+.sx-part .og-search{flex:1 1 260px;min-width:0;box-sizing:border-box;padding:9px 14px;border-radius:12px;border:.5px solid var(--ios-sep);background:var(--ios-fill);color:inherit;font:15px var(--f-body)}
+.sx-part .og-fn{margin:4px 0 0;padding-left:18px;color:var(--ios-2);font-size:13px}
+.sx-part .og-fn li{margin:1px 0}
+.sx-part .og-top{max-width:420px;margin:6px auto 0}
+.sx-part .og-det summary{list-style:none;cursor:pointer;padding:10px 16px;border-top:.5px solid var(--ios-sep)}
+.sx-part .og-det summary::-webkit-details-marker{display:none}
+.sx-part .og-det summary b{font-weight:600}
+.sx-part .og-det summary span{display:block;color:var(--ios-2);font-size:13.5px}
+.sx-part .og-det .og-body{padding:0 16px 12px;font-size:14px}
+.sx-part .og-det .og-body p{margin:6px 0}
+.sx-part .og-chip{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:999px;background:var(--ios-fill);color:var(--ios-2);font-size:12px}
+.sx-part .og-tbl td,.sx-part .og-tbl th{text-align:left;vertical-align:top;white-space:normal;min-width:120px}
+.sx-part .sx-k{margin:6px 0 2px}
+.sx-part .og-scheme{margin-top:4px}
+.sx-part .og-root{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;position:relative;padding-bottom:24px}
+.sx-part .og-root>.igroup{flex:0 1 340px;margin:0}
+.sx-part .og-root::after{content:'';position:absolute;left:50%;bottom:0;height:24px;border-left:2px solid color-mix(in srgb,var(--ic-docs) 55%,transparent)}
+.sx-part .og-root:empty{display:none}
+.sx-part .og-root:empty+.og-kids{border-top:0;padding-top:0}
+.sx-part .og-kids{border-top:2px solid color-mix(in srgb,var(--ic-docs) 55%,transparent);border-radius:16px 16px 0 0;padding-top:14px;margin-top:0}
+.sx-part .og-node{background:color-mix(in srgb,var(--ic-docs) 14%,var(--ios-card,transparent))}
+.sx-part .og-warn .og-h b{color:var(--t-warn,#ff9f0a)}
+.sx-part .who.hd{box-shadow:inset 3px 0 0 var(--ic-docs)}
+.sx-part .who.off{opacity:.55}
+.sx-part .acts span.tg{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:var(--ios-fill);color:var(--ios-2);font:500 12.5px var(--f-body)}
+.sx-part .acts .wn{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--t-warn,#ff9f0a) 18%,transparent);color:var(--t-warn,#ff9f0a);font:600 12.5px var(--f-body)}
+.sx-part .og-fold>summary,.sx-part .og-more>summary{cursor:pointer;padding:9px 16px;border-top:.5px solid var(--ios-sep);color:var(--ios-blue);font:600 14px var(--f-body);list-style:none}
+.sx-part .og-fold>summary::-webkit-details-marker,.sx-part .og-more>summary::-webkit-details-marker{display:none}
+.sx-part .og-more>summary{padding:6px 0 0;border:0;font-size:13.5px}
+.sx-part .og-more .og-body{padding:6px 0 2px}
+.sx-part .og-tools a[data-og]{cursor:pointer}
+.sx-part{margin-top:18px}
+html body .sx-part{width:100%;box-sizing:border-box;align-self:center;margin-left:auto;margin-right:auto}
