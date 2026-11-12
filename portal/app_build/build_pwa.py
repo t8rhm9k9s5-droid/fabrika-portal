@@ -80,7 +80,7 @@ for page in glob.glob(f'{OUT}/*.html'):
     # 28.10.2026: ссылки на fonts.googleapis.com вырезались только до первого <script>, а с 28.10 страницы начинаются со скрипта темы —
     # plan.html, archive.html и index.html снова ждали Google Fonts (блокирующий <link>, без интернета — долгий белый экран). Вырезаем везде,
     # кроме содержимого <script> (в index.html ссылка внутри строки JS для «сайта одним файлом» — там она с media="print", безвредна).
-    rest = ''.join(p if p[:7].lower() == '<script' else GF.sub('', p) for p in re.split(r'(<script\b[\s\S]*?</script\s*>)', rest, flags=re.I))   # 12.11 CodeQL: и <SCRIPT>
+    rest = ''.join(p if p[:7].lower() == '<script' else GF.sub('', p) for p in re.split(r'(<script\b[\s\S]*?</script[^>]*>)', rest, flags=re.I))   # 12.11 CodeQL: и <SCRIPT>
     head = GF.sub('', head)
     head = head.replace('</head>', HEAD + '</head>', 1)
     head = head.replace('<body>', '<body><link rel="stylesheet" href="fonts/fonts.css"><script src="assets/pwa.js"></script><script src="assets/app.js"></script>', 1)

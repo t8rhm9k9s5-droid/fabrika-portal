@@ -330,7 +330,7 @@
   function inP(d, p) { return d >= p.a && d <= p.b; }
   function sgn(v) { return v == null ? '' : (v > 0 ? '+' : '') + n(v); }
   function perHTML(T, P) {
-    if (!T || !T.rows || !T.rows.length) return '<p class="fh-ok">' + esc((T && T.msg) || 'Данных по дням пока нет.') + '</p>';
+    if (!T || !T.rows || !T.rows.length) return '<p class="fh-ok">' + esc(T.msg || 'Данных по дням пока нет.') + '</p>';
     function td(c) {
       c = c || {};
       return '<td' + (c.tone ? ' data-tone="' + c.tone + '"' : '') + '>' + (c.v == null || c.v === '' ? '<span class="hp-no">—</span>' : '<b>' + c.v + '</b>') + (c.s ? '<small>' + esc(c.s) + '</small>' : '') + '</td>';

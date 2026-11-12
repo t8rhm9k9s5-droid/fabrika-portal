@@ -589,9 +589,9 @@
           }).then(function (x) {
             out.className = 'pai-a'; out.textContent = (x && x.a) || 'Нет ответа.';
             // 28.10.2026: ссылки на страницы портала в ответе — кликабельные, с названием раздела
-            (function () { var NM = {}; PORTAL.concat(SUBS).forEach(function (p) { NM[p[0]] = p[1]; }); NM['index.html'] = 'Модель 3D';
+            (function () { var NM = {}; var HR = {}; PORTAL.concat(SUBS).forEach(function (p) { NM[p[0]] = p[1]; HR[p[0]] = './' + p[0]; }); NM['index.html'] = 'Модель 3D'; HR['index.html'] = './index.html';
               var txt = out.textContent, rx = /\b([a-z_]+\.html)(#[\w%-]+)?/g, m, last = 0, frag = document.createDocumentFragment();
-              while ((m = rx.exec(txt))) { if (!NM[m[1]]) continue; frag.appendChild(document.createTextNode(txt.slice(last, m.index))); var a = document.createElement('a'); a.setAttribute('href', './' + m[0]); a.textContent = '«' + NM[m[1]] + '»'; frag.appendChild(a); last = m.index + m[0].length; }
+              while ((m = rx.exec(txt))) { if (!NM[m[1]]) continue; frag.appendChild(document.createTextNode(txt.slice(last, m.index))); var a = document.createElement('a'); a.setAttribute('href', HR[m[1]] + (m[2] ? '#' + (function (x) { try { return encodeURIComponent(decodeURIComponent(x)); } catch (e) { return ''; } })(m[2].slice(1)) : ''));   /* 12.11 CodeQL: адрес — из списка страниц портала */ a.textContent = '«' + NM[m[1]] + '»'; frag.appendChild(a); last = m.index + m[0].length; }
               if (last) { frag.appendChild(document.createTextNode(txt.slice(last))); out.textContent = ''; out.appendChild(frag); } })();
             if (x && x.name) { var by = el('small', 'pai-by'); by.textContent = 'Ответил: ' + x.name + (via && via !== x.name ? ' (' + via + ' был перегружен)' : ''); out.appendChild(document.createElement('br')); out.appendChild(by); }
           }, function (e) {

@@ -237,7 +237,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     // 11.11.2026, Т. В.: «отчёты по онлайн-продажам поставь на второе место во всём разделе продажи» — сразу после «Офисов продаж»
     if (ONLINE) { var _oc = {}, _ot = 0; ONLINE.arts.forEach(function (a) { var v = a.s[0] + a.s[1] + a.s[2]; _oc[a.ch] = (_oc[a.ch] || 0) + v; _ot += v; });
       var _thr = ONLINE.thr || 0.1, _low = (ONLINE.prices || []).filter(function (p) { return p.p && p.r && p.p / p.r - 1 < -_thr; }).length, _ns = {}; (ONLINE.prices || []).forEach(function (p) { _ns[p.s] = 1; });
-      h += '<p class="ihdr" id="onlh">Онлайн-продажи</p><div class="igroup"><a class="irow" href="#online"><span class="ic"><span class="ibody"><span class="ititle">Онлайн-продажи: ' + rub(_ot) + ' за ' + (ONLINE.months || []).join('–') + '</span><span class="isub">' + Object.keys(_oc).map(function (k) { return esc(k.replace(' — наш магазин ООО «ПКС»', ' (наш)')) + ' ' + rub(_oc[k]); }).join(' · ') + ' · продавцов ' + Object.keys(_ns).length + ', ниже РРЦ ' + _low + (ONLINE.comp ? ' · конкуренты ' + ONLINE.comp.length : '') + '</span></span><span class="ichev"></span></span></a></div>'; }
+      h += '<p class="ihdr" id="onlh">Онлайн-продажи</p><div class="igroup"><a class="irow" href="#online"><span class="ic"><span class="ibody"><span class="ititle">Онлайн-продажи: ' + rub(_ot) + ' за ' + esc((ONLINE.months || []).join('–')) + '</span><span class="isub">' + Object.keys(_oc).map(function (k) { return esc(k.replace(' — наш магазин ООО «ПКС»', ' (наш)')) + ' ' + rub(_oc[k]); }).join(' · ') + ' · продавцов ' + Object.keys(_ns).length + ', ниже РРЦ ' + _low + (ONLINE.comp ? ' · конкуренты ' + ONLINE.comp.length : '') + '</span></span><span class="ichev"></span></span></a></div>'; }
     h += dayBlock();                                                      // 30.10.2026: продажи за день — ежедневные рассылки 1С
     h += opmBlock();                                                      // 30.10.2026: офисы продаж — октябрь 2026 (данные М. И. Сотрудник6)
     if (CALC && CALC.lines && Object.keys(CALC.lines).length) h += linesBlock();
@@ -547,7 +547,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   // ---------- 28.10.2026, пользователь: «это список ТЗ в работе» — выгрузка 1С «ТЗ в работе» (build/tz/tz_1c.json)
   var T1 = (function () { try { return JSON.parse(document.getElementById('tz1c-data').textContent || 'null'); } catch (e) { return null; } })();
   var T1ST = {kd: 'Коммерческий директор', pto: 'ПТО', peo: 'ПЭО', omts: 'ОМТС', price: 'Прайс'};
-  function tz1Oldest() { var L = (T1.list || []).filter(function (x) { return x.stage === 'у ПТО'; }).sort(function (a, b) { return (b.days || 0) - (a.days || 0); }); return L.length ? 'ТЗ №' + L[0].tz + ' (' + L[0].days + ' дн.)' : '—'; }
+  function tz1Oldest() { var L = (T1.list || []).filter(function (x) { return x.stage === 'у ПТО'; }).sort(function (a, b) { return (b.days || 0) - (a.days || 0); }); return L.length ? 'ТЗ №' + esc(L[0].tz) + ' (' + (+L[0].days || 0) + ' дн.)' : '—'; }
   function tz1Mail(x) {                                                   // то же ТЗ в общем реестре ТЗ (только 2026 г., номер ММ/N и дата заведения рядом)
     if (!TZ || !TZ.list || x.y !== 2026) return null;
     return TZ.list.filter(function (m) { return m.tz === x.tz && (!m.t0 || !x.t0 || Math.abs(new Date(m.t0) - new Date(x.t0)) < 20 * 864e5); })[0] || null;
@@ -778,7 +778,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     var M = O.months || ['авг', 'сен', 'окт'], chs = [];
     O.arts.forEach(function (a) { if (chs.indexOf(a.ch) < 0) chs.push(a.ch); });
     var sum = function (arr, i) { return arr.reduce(function (t, a) { return t + (a.s[i] || 0); }, 0); };
-    h += '<p class="lead">Отгрузки онлайн-клиентам и наш Ozon за ' + M.join(', ') + '; ' + esc(O.nov || '') + '. Цены у продавцов проверяются каждое рабочее утро; полная таблица — в Google Таблице «Фабрикант — онлайн-продажи».</p>';
+    h += '<p class="lead">Отгрузки онлайн-клиентам и наш Ozon за ' + esc(M.join(', ')) + '; ' + esc(O.nov || '') + '. Цены у продавцов проверяются каждое рабочее утро; полная таблица — в Google Таблице «Фабрикант — онлайн-продажи».</p>';
     h += '<p class="ihdr">Каналы</p><div class="igroup"><div class="mtx"><table style="min-width:0"><thead><tr><th>канал</th>' + M.map(function (m) { return '<th>' + esc(m) + '</th>'; }).join('') + '<th>итого</th><th>' + esc(M[2]) + ' к ' + M[0] + '</th></tr></thead><tbody>' +
       chs.map(function (c) { var A = O.arts.filter(function (a) { return a.ch === c; }), v = [0, 1, 2].map(function (i) { return sum(A, i); });
         return '<tr><td>' + esc(c) + '</td>' + v.map(function (x) { return '<td>' + rub(x) + '</td>'; }).join('') + '<td><b>' + rub(v[0] + v[1] + v[2]) + '</b></td><td>' + (v[0] ? Math.round(100 * (v[2] / v[0] - 1)) + '%' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div></div>';

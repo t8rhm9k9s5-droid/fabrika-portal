@@ -40,7 +40,7 @@ def page_text(name):
     try: s = open(B + name, encoding='utf-8').read()
     except Exception: return '', ''
     t = re.search(r'<title>(.*?)</title>', s, re.S)
-    s = re.sub(r'<script\b.*?</script\s*>|<style\b.*?</style\s*>|<svg\b.*?</svg\s*>', ' ', s, flags=re.S | re.I)   # 12.11 CodeQL: и <SCRIPT>, </script >
+    s = re.sub(r'<script\b.*?</script[^>]*>|<style\b.*?</style[^>]*>|<svg\b.*?</svg[^>]*>', ' ', s, flags=re.S | re.I)   # 12.11 CodeQL: и <SCRIPT>, </script >
     v = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', s))).strip()
     return (t.group(1).strip() if t else ''), v
 

@@ -110,7 +110,7 @@
     var chips = '<div class="mchips" role="group" aria-label="Месяц">' + ms.map(function(m){ return '<button type="button" data-m="' + m + '" aria-pressed="' + (m === CUR) + '">' + MS[+m.slice(5) - 1] + '</button>'; }).join('') + '</div>';
     var hasPlan = (D.plans || []).indexOf(CUR) >= 0 || PDO;
     // 28.10.2026, пользователь: «у тебя или день потерялся» — сколько рабочих дней уже прошло (по дату последнего отчёта) и за какие отчёта нет
-    var wdD = M.wd_done || M.wd, lastD = M.last ? M.last.slice(8, 10) + '.' + M.last.slice(5, 7) : '', miss = M.miss || [];
+    var wdD = +(M.wd_done || M.wd) || 0, lastD = M.last ? esc(M.last.slice(8, 10) + '.' + M.last.slice(5, 7)) : '', miss = M.miss || [];
     var missT = PDO || !miss.length || D.state === 'запас' ? '' : '<span>нет отчёта ПДО за ' + (miss.length <= 10 ? '<b>' + miss.map(function(x){ return (x < 10 ? '0' : '') + esc(x + '.' + CUR.slice(5)); }).join(', ') + '</b>' : '<b>' + miss.length + '</b> раб. дн.') + '</span>';
     // 04.11.2026: группы изделий — как на плитке главной (единый источник assets/metrics.js, «Шеффилд» в «Кресла руководителя»); вторая проверка —
     //   свои строки месяца, сложенные по тем же группам, дают те же проценты; расхождение — число из единого источника с пометкой и запись в журнал
@@ -125,8 +125,8 @@
         grp = '<span data-m="prod" data-mv="' + PM.ok + '" data-md="' + esc(PM.date || '') + '"' + (VR.ok ? '' : ' data-fixed="1"') + '>по группам изделий: <b>' + PM.ok + '</b> из <b>' + PM.ng + '</b> ≥ 90% плана (как на главной' + (VR.ok ? '' : ', сверено') + ')</span>';
       }
     } catch (e) { grp = ''; }
-    el.innerHTML = chips + '<div class="pfsum">' + grp + '<span>' + MN[+CUR.slice(5) - 1] + ': отчёты за <b>' + (M.days || 0) + '</b> из <b>' + (wdD || '—') + '</b> рабочих дней' +
-      (wdD && M.wd && wdD < M.wd ? ' по ' + lastD + ' (всего в месяце ' + M.wd + ')' : '') + '</span>' + missT + '<span>' +
+    el.innerHTML = chips + '<div class="pfsum">' + grp + '<span>' + MN[+CUR.slice(5) - 1] + ': отчёты за <b>' + (+M.days || 0) + '</b> из <b>' + (wdD || '—') + '</b> рабочих дней' +
+      (wdD && M.wd && wdD < M.wd ? ' по ' + lastD + ' (всего в месяце ' + (+M.wd || 0) + ')' : '') + '</span>' + missT + '<span>' +
       (PDO ? 'план и факт месяца — «План-факт» ПДО' : hasPlan ? 'план — за ' + dn + ' дн. с отчётами' : 'плана за этот месяц пока нет') + '</span></div>' +
       '<div class="pfscroll"><table class="ptab"><thead><tr><th>Строка</th><th>Факт</th><th>План</th><th>%</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<p class="pfnote">' + (PDO ? 'План и факт — из отчёта ПДО «План-факт» за месяц; строки без него — сумма дневных отчётов выпуска.' : 'Факт — сумма дневных отчётов ПДО «Отчёт выпуска производства» (дневная + ночная смена) за дни, по которым отчёт есть; январь — май — «Ведомость по заказам на производство» из 1С. План — план месяца, пересчитанный на те же дни.') + '</p>' + ytd + pdoTable(PF);

@@ -201,7 +201,7 @@ for la in np.arange(math.ceil(latmin / 0.001) * 0.001, latmax, 0.001):
     p1, p2 = svgxy(lonmin - 0.01, la), svgxy(lonmax + 0.01, la)
     lx, ly = svgxy(lonmin, la)
     grat.append(f'<line class="grat" x1="{p1[0]:.2f}" y1="{p1[1]:.2f}" x2="{p2[0]:.2f}" y2="{p2[1]:.2f}"/>')
-    grat.append(f'<text class="gratlab" x="{max(lx,0)+1.5:.2f}" y="{ly-1:.2f}">{la:.3f}°</text>'.replace('.', ',', 1) if False else f'<text class="gratlab" x="{max(lx,0)+1.5:.2f}" y="{ly-1:.2f}">{la:.3f}° с.ш.</text>')
+    grat.append(f'<text class="gratlab" x="{max(lx,0)+1.5:.2f}" y="{ly-1:.2f}">{la:.3f}° с.ш.</text>')
 for lo in np.arange(math.ceil(lonmin / 0.002) * 0.002, lonmax, 0.002):
     p1, p2 = svgxy(lo, latmax + 0.01), svgxy(lo, latmin - 0.01)
     tx, ty = svgxy(lo, latmax)
