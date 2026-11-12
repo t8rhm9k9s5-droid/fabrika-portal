@@ -1,0 +1,138 @@
+<title>Фабрика — остатки ОП</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+:root{--bg:#f2f2f7;--fg:#000}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.hero{padding:16px 16px 14px}
+.hero .hnum{font:700 40px/1.05 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hero .hnum small{font:600 20px var(--f-display);color:var(--ios-2);letter-spacing:0;margin-left:4px}
+.hero .hsub{color:var(--ios-2);font-size:14px;margin-top:4px}
+.hero .hst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px;padding-top:12px;border-top:.5px solid var(--ios-sep)}
+.hero .hst > div > span{display:block;font-size:12.5px;color:var(--ios-2)}
+.hero .hst b{display:block;font:600 19px/1.2 var(--f-display);font-variant-numeric:tabular-nums;margin-top:2px}
+.up{color:var(--ios-green)} .down{color:#ff3b30}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]) .down{color:#ff453a}}
+html:root[data-theme="dark"] .down{color:#ff453a}
+.chart{padding:12px 12px 8px}
+.chart svg{display:block;width:100%;height:150px}
+.chart .cap{display:flex;justify-content:space-between;color:var(--ios-2);font-size:12.5px;margin-top:4px}
+.srch{position:relative;margin-top:16px}
+.srch input{width:100%;height:38px;border:0;border-radius:12px;background:var(--ios-fill);color:var(--ios-label);font:400 17px var(--f-body);padding:0 12px 0 34px;outline:none}
+.srch input::placeholder{color:var(--ios-2)}
+.srch svg{position:absolute;left:10px;top:10px;width:18px;height:18px;color:var(--ios-2)}
+.spark{width:64px;height:22px;flex:none;margin-left:8px}
+.ival .dd{display:block;font-size:12.5px;text-align:right}
+details > .irow .ichev{transition:transform .2s}
+details[open] > .irow .ichev{transform:rotate(90deg)}
+.rows{padding:0 16px 8px 16px}
+.rows .drow{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:.5px solid var(--ios-sep);font-size:14.5px}
+.rows .drow .vn{flex:1;min-width:0;overflow-wrap:anywhere}
+.rows .drow .vn small{display:block;color:var(--ios-2);font-size:12.5px}
+.rows .drow .vq{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:52px;text-align:right}
+.rows .drow .vd{font-size:13px;white-space:nowrap;min-width:46px;text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--ios-2);font-size:13px;margin:10px 4px 0}
+.empty{color:var(--ios-2);text-align:center;padding:30px 16px}
+</style>
+<div class="ios" id="stores">
+  <p class="eyebrow">Фабрика</p>
+  <div id="view"><p class="empty">Загружаю остатки…</p></div>
+</div>
+<script id="stores-data" type="application/json">{"base":[{"date":"2026-10-26","cities":{"moscow":{"total":3378.5,"models":{"Альфа кресло":12,"Амби кресло":1,"Анри G":19,"Анри бар стул":5,"Анри стул BOX2":2,"Анри стул BOX4":8,"Атлант кресло":21,"Атлант кресло PL-1":30,"Атлантис кресло":1,"Балун W кресло":11,"Балун бар":5,"Балун полубар":6,"Барон кресло Hoff(Рисмер кресло)":18,"Бекеро подстолье (компл)":0.5,"Бета кресло":5,"Биг кресло":89,"Бизон диван 2-х мест.":1,"Бизон кресло":4,"Бонд стул":1,"Бони кресло":5,"Бун кресло":32,"В-100 кресло":2,"Венус стул":1,"Гольф стул BOX1":10,"Джуко":5,"Изо стул":1000,"Изо стул (металлокаркас с покрытием)":2,"Изо стул PL":22,"Кв. столешница 100х100 1 кат.(товар)":18,"Кв. столешница 80х80 1 кат.(товар)":1,"Коко G стул":4,"Кольт кресло":1,"Комфорт кресло":12,"Комфорт Люкс кресло":1,"Логика кресло":133,"Лопата движковая AL(Д16АТ) снеговая 600х430":3,"Мангуст кресло":22,"Марк кресло":10,"Марс стул":43,"Мартин стул BOX":5,"Меган стул":5,"Менеджер кресло":70,"Микс G":8,"Микс бар стул":5,"Микс полубар стул":4,"Микс стул BOX2":14,"Милан кресло":4,"Мокко G":1,"Мокко стул BOX":5,"Москва стул BOX":5,"Ник стул BOX4":4,"Омега стул":2,"Осло G":10,"Осло стул":6,"Осло стул BOX2":50,"Пилот Люкс кресло (NEW)":2,"Поли стул BOX4":8,"Пр. столешница 110х70 1 кат.(товар)":31,"Престиж Лайт кресло":3,"Престиж+ кресло":254,"Пронто кресло":5,"Пятилучие Пунто PP (d=600)":1,"Ричи стул BOX4":24,"Самба BOX4 стул":270,"Самба G кресло":2,"Самба G М кресло":30,"Самба М BOX2 стул":10,"Самба М BOX4 стул":237,"Самба СТ (М) BOX4 стул":4,"Самба СТ BOX4 стул":11,"Самба стул (металлокаркас с покрытием)":5,"Сандра кресло":1,"Сидение Изо (внешнее пластик черный)":11,"Сидение стула Изо":3,"Сидение стула Марко":3,"Силуэт подстолье":3,"Сильвия BOX5 стул":221,"Сильвия АРМ стул":5,"Синти G кресло":1,"Сирена стул":10,"Спинка стула Изо":5,"Стандарт стул":81,"Стандарт+ стул":148,"Старк кресло":4,"Стаффорд кресло":3,"Стинг кресло":17,"Стул Изо":25,"Стул Сильвия":1,"Табурет Сигма":19,"Тери стул BOX 4":4,"Турин стул":6,"Тюльпан стул":1,"Феликс G":9,"Феликс бар стул":5,"Феликс полубар стул":7,"Феликс стул BOX2":24,"Чери А кресло":71,"Чери Биг кресло":8,"Чери В кресло":2,"Эвелина стул":5,"Эмир кресло":4},"other":[["Подлокотник с пюпитром (к-т)",10]],"wh":"Офис продаж Москва Денежниково"},"nizhny-novgorod":{"total":2795,"models":{"Альфа кресло":36,"Атлант кресло":42,"Атлант кресло PL-1":88,"Биг кресло":31,"Бизон диван 2-х мест.":2,"Бизон кресло":2,"Бун кресло":46,"В-100 диван 2-х мест.":1,"В-100 кресло":2,"Газ-патрон (шт)":1,"Демос урна":38,"Домик урна":9,"Ева кресло":2,"Ева М кресло":3,"Изо стул":1254,"Комфорт кресло":50,"Логика кресло":21,"Марго кресло":1,"Марк кресло":1,"Милан диван 2-х мест.":5,"Милан кресло":5,"Несси диван 2-х мест.":1,"Несси кресло":2,"Орион кресло":1,"Осло стул":4,"Престиж+ кресло":54,"Рой кресло":4,"Самба BOX4 стул":111,"Самба G кресло":8,"Самба G М кресло":35,"Самба М BOX4 стул":3,"Сандра кресло":9,"Сильвия BOX4 стул":7,"Сильвия BOX5 стул":66,"Спред кресло":43,"Стандарт стул":672,"Стандарт+ стул":13,"Стаффорд кресло":1,"Степ кресло":13,"Чери А кресло":58,"Чери Биг кресло":30,"Чери В кресло":15,"Эвелина стул":2,"Юпитер кресло":1},"other":[["Кресло Бит NF-6010",2]],"wh":"Офис продаж Сотрудник Имя"},"samara":{"total":3624,"models":{"Алекс кресло":3,"Альфа кресло":19,"Анри G":24,"Анри стул BOX4":95,"Атлант кресло":52,"Атлант кресло PL-1":36,"Атлантис кресло":14,"Балун бар":9,"Бекеро подстолье (компл)":6,"Биг кресло":56,"Бун кресло":81,"В-100 диван 2-х мест.":3,"В-100 диван 3-х мест.":7,"Венус стул (металлокаркас с покрытием)":34,"Гольф стул BOX4":43,"Домик урна":9,"Изо стул":1776,"Изо стул PL":61,"Комфорт кресло":14,"Логика кресло":5,"Марс стул":105,"Менеджер кресло":2,"Микс G":9,"Милан диван 2-х мест.":4,"Милан диван 3-х мест.":9,"Милан кресло":2,"Орион кресло":2,"Осло G":2,"Осло стул BOX2":16,"Пепельница УП-300 урна":1,"Пилот Люкс кресло (NEW)":1,"Престиж+ кресло":247,"Пронто кресло":1,"Рисмер кресло":7,"Самба BOX4 стул":130,"Самба G кресло":12,"Самба N стул BOX4":2,"Самба М BOX4 стул":16,"Сандра диван 2-х мест.":4,"Сандра диван 3-х мест.":4,"Сандра кресло":4,"Сидение стула Стандарт":3,"Сильвия BOX4 стул":163,"Сильвия АРМ стул":57,"Сирена стул":3,"Спред кресло":1,"Стандарт стул":176,"Стандарт+ стул":86,"Стаффорд кресло":5,"Степ кресло":31,"Стул Аскона (ASCONA BLACK)":7,"Стул Изо":2,"Табурет КОМФОРТ":35,"Фабрикант стул":5,"Феликс G":25,"Феликс стул BOX2":44,"Чери А кресло":25,"Чери Биг кресло":14,"Чери В кресло":6,"Энигма II кресло":9},"other":[],"wh":"Офис продаж Самара"},"ryazan":{"total":6295,"models":{"CHILLY MAX":10,"Emerson кресло Hoff(Бун кресло)":1,"Gain Стул BOX4 Hoff(Polan)":28,"Maison кресло Hoff(Чери А кресло)":1,"Mia стул":4,"Алекс кресло":142,"Альфа кресло":146,"Амби кресло":15,"Анри G":176,"Анри стул BOX2":7,"Анри стул BOX4":64,"Аскона стул":15,"Атлант кресло":30,"Атлант кресло PL-1":32,"Атлантис кресло":4,"Балун W кресло":4,"Балун бар":3,"Банкетка, 1100мм":3,"Бари стул BOX":4,"Бергамо стул":3,"Бёрн стул BOX2":25,"Биг кресло":32,"Бизон кресло":1,"Бонд PLZ кресло":1,"Бонд стул":5,"Бони кресло":1,"Бун кресло":340,"В-100 кресло":2,"Гольф стул":1,"Дельта кресло":13,"Джоккер стул BOX4":72,"Диван Куба 2 МП":4,"Дион Бар пуф":3,"Ева NET кресло":1,"Ева кресло":16,"Ева Р кресло":3,"Изо стул":569,"Изо стул PL":32,"Карго (шт)":21,"Коко W стул":1,"Кольт кресло":9,"Компакт кресло":3,"Комфорт кресло":95,"Кресло кассира высокое на роликах (Магнит)":13,"Кресло кассира КС-10":10,"Кресло Престиж (PRESTIGE GTP )":1,"Логика кресло":136,"Марс стул":41,"Менеджер кресло":1,"Микки диван":4,"Микс G":10,"Микс стул BOX2":30,"Милан BOX диван 3-х мест.":1,"Милан диван 2-х мест.":3,"Милан диван 3-х мест.":2,"Нерон стул":57,"Несси кресло":2,"Ник стул BOX4":20,"Норис В стул":2,"Норис стул":1,"Окси G":106,"Орион кресло":14,"Осло G":82,"Осло S BOX2 стул":44,"Осло стул":73,"Осло стул BOX2":270,"Остин стул":2,"Пилот кресло":37,"Пилот Люкс кресло (NEW)":35,"Поли стул BOX4":4,"Пр. столешница 120х80 1 кат. (товар)":6,"Престиж Лайт кресло":99,"Престиж+ кресло":102,"Регал HL кресло (Л)":25,"Регал кресло":12,"Рисмер кресло":6,"Ричи стул BOX2":4,"Ричи стул BOX4":180,"Рокки кресло":2,"Салар подстолье Н 445 (металлокаркас с покрытием)":42,"Салар подстолье Н 725 (металлокаркас с покрытием)":8,"Самба BOX2 стул":51,"Самба BOX4 стул":138,"Самба BOX4 стул УС":16,"Самба G кресло":8,"Самба G М кресло":72,"Самба N стул BOX1":1,"Самба В40":73,"Самба М BOX4 стул":15,"Самба М N стул BOX1":1,"Самба СТ (М) BOX2":1,"Самба СТ BOX1 стул":1,"Сандра диван 2-х мест.":2,"Сандра диван 3-х мест.":1,"Сандра кресло":3,"Секция стульев многоместная Сабрина":1,"Сильвия BOX4 стул":152,"Сирена стул":16,"София СТ стул":1,"Спред кресло":8,"Стандарт стул":1255,"Степ кресло":2,"Стол на 2 персоны":3,"Стол на 4 персоны":1,"Стол письменный Сканди":1,"Стол письменный Сканди Dark":1,"Стол письменный Сканди White":1,"Страсбург стул":2,"Стул Оливер (Стул груп)":2,"Стул Оливер Square (Стул груп)":2,"Стул посетительский Слайс":74,"Табурет Сигма":3,"Тед G кресло Сh&Ch":1,"Торро табурет ВОХ 2":99,"Тренд М стул":1,"Трис G стул":17,"Тумба офисная выкатная 430х550х570 ПВХ ТАНДЕР (товар)":3,"Тумба прикроватная Сканди":1,"Тумба прикроватная Сканди Dark":1,"Тумба прикроватная Сканди White":1,"Тумба приставная ТПМ-3":9,"Турин бар":2,"Турин полубар":26,"Турин стул":1,"Фабрикант стул":28,"Феликс G":239,"Феликс стул BOX2":151,"Фред BOX2 кресло":4,"Чери А кресло":195,"Чери Биг кресло":3,"Шокко стул":1,"Эвелина стул":5,"Эконом урна":5,"Энигма I кресло":9,"Энигма II кресло":61,"Юпитер кресло":3,"Ява стул":5},"other":[["Бутылочница Квадро",79],["Стул Фортуна",2],["Тумба подкатная",6]],"wh":""},"ekaterinburg":{"total":14628,"models":{"Альфа кресло":5,"Анри G":2,"Анри стул BOX1":1,"Анри стул BOX2":2,"Анри стул BOX4":1134,"Атлант кресло":54,"Атлант кресло PL-1":18,"Атлантис кресло":8,"Банкетка 800x300x450":2,"Биг кресло":45,"Бизон кресло":4,"Бун кресло":40,"В-100 диван 2-х мест.":1,"В-100 кресло":2,"Гольф стул BOX4":6,"Изо стул":884,"Комфорт кресло":18,"Комфорт Люкс кресло":1,"Кресло кассира КС-2":1,"Логика кресло":1,"Марк кресло":4,"Марс стул":2,"Милан кресло":1,"Несси кресло":4,"Ник стул BOX2":2,"Ник стул BOX4":6,"Орион кресло":5,"Осло стул BOX2":8,"Пилот Люкс кресло (NEW)":20,"Престиж+ кресло":27,"Рисмер кресло":5,"Самба BOX2 стул":2,"Самба BOX4 стул":43,"Самба G кресло":16,"Самба СТ BOX4 стул":6,"Сандра диван 2-х мест.":2,"Сандра кресло":4,"Силуэт подстолье":42,"Сильвия BOX5 стул":72,"Сирена стул":8,"Смарт кресло":4,"Стандарт стул":364,"Стаффорд кресло":1,"Степ кресло":1,"Фабрикант стул":23,"Феликс стул BOX2":2,"Чери А кресло":35,"Чери Биг кресло":8,"Чери В кресло":5},"other":[["Каталог (шт)",20],["Краска аэрозольная черная",4],["МФУ Kyocera M2135DN (шт)",1],["Скотч (м)",5400],["Стрейч-пленка (м)",6252]],"wh":"Офис продаж Екатеринбург"},"saint-petersburg":{"total":0,"models":{},"other":[],"wh":""},"krasnodar":{"total":3553,"models":{"Алекс кресло":4,"Альфа кресло":35,"Амби кресло":3,"Анри G":31,"Анри бар стул":4,"Анри стул BOX4":83,"Атлант кресло":36,"Атлант кресло PL-1":21,"Атлантис кресло":2,"Афина стул":13,"Афина стул (металлокаркас с покрытием)":1,"Биг кресло":117,"Бизон диван 2-х мест.":1,"Бун кресло":136,"В-100 диван 2-х мест.":3,"В-100 диван 3-х мест.":7,"Венус бар стул (металлокаркас с покрытием)":5,"Венус стул":4,"Гольф стул BOX4":9,"Изо стул":2008,"Изо стул PL":1,"Каталония G":3,"Кольт кресло":2,"Комфорт кресло":20,"Кора стул":1,"Крепление под пюпитр п/ф (металлокаркас с покрытием)":8,"Лилиана Лайт стул (металлокаркас с покрытием)":1,"Лилиана стул (металлокаркас с покрытием)":1,"Логика кресло":9,"Марс стул":3,"Милан диван 2-х мест.":7,"Милан диван 3-х мест.":7,"Москва G стул":1,"Ник стул BOX4":3,"Орион кресло":6,"Осло G":2,"Основание стола обеденного Лофт 710х500 (металлокаркас с покрытием)":2,"Пилот Люкс кресло (NEW)":16,"Плато сидения с ручкой (краш.)":5,"Престиж Лайт кресло":3,"Престиж+ кресло":123,"Регал кресло":1,"Рисмер кресло":1,"Рой кресло":1,"Ронд подстолье":20,"Самба BOX2 стул":1,"Самба BOX4 стул":116,"Самба G кресло":33,"Самба М BOX4 стул":18,"Самба СТ BOX1 стул":2,"Сандра диван 2-х мест.":9,"Сандра диван 3-х мест.":9,"Сигнал G стул":3,"Сидение стула Лилиана":5,"Сидение стула Марко":2,"Сиденье стула Венус":69,"Сильвия BOX5 стул":25,"Сирена стул":1,"Спред кресло":10,"Стандарт стул":259,"Степ кресло":2,"Стул Стандарт (SEVEN BLACK)":1,"Стул Эми":1,"Том диван 3-х мест.":1,"Трис G стул":17,"Турин стул":7,"Феликс G":30,"Хокер табурет":20,"Чери А кресло":28,"Чери Биг кресло":17,"Чери В кресло":1,"Чико табурет":3,"Чили стул BOX2":4},"other":[["Бумага писчая (шт)",5],["Крепление под пюпитр",2],["Мешки д/мусора (шт)",60],["Перчатки резиновые (пар)",10],["Ручка канцелярская (шт)",10],["Столик пюпитра",2]],"wh":"Офис продаж Краснодар"},"simferopol":{"total":1454,"models":{"Альфа кресло":39,"Анри стул BOX4":61,"Атлант кресло":28,"Атлант кресло PL-1":6,"Атлантис кресло":17,"Балун бар":3,"Бета кресло":4,"Биг кресло":7,"Бизон диван 3-х мест.":2,"Бун кресло":28,"В-100 диван 2-х мест.":3,"В-100 диван 3-х мест.":1,"Газ-патрон (шт)":10,"Демос урна":7,"Джерси кресло":1,"Изо G BOX2 кресло":17,"Изо G г/п PL кресло":5,"Изо стул":401,"Коко W стул":30,"Комфорт кресло":27,"Лира диван":3,"Логика кресло":52,"Марко Бар стул":55,"Марко стул":3,"Менеджер кресло":2,"Моника диван 2-х мест.":1,"Моника диван 3-х мест.":2,"Накладка Самба М":2,"Нега диван 2-х мест.":1,"Нега диван 3-х мест.":3,"Несси диван 2-х мест.":1,"Опора урна переносная":1,"Оптима урна":1,"Орион кресло":6,"Осло G":6,"Пепельница УП-150 урна":7,"Престиж+ кресло":39,"Регал кресло":1,"Самба BOX4 стул":98,"Самба G кресло":20,"Самба G М кресло":2,"Сандра диван 2-х мест.":3,"Сандра диван 3-х мест.":2,"Сиденье стула Венус":59,"Сиденье табурета Чико":2,"Сильвия BOX4 стул":10,"Сильвия BOX5 стул":29,"Сирена стул":4,"Спред кресло":3,"Стандарт стул":15,"Стаффорд кресло":25,"Степ кресло":11,"Табурет КОМФОРТ":3,"Тюльпан стул":6,"Тюльпан стул (металлокаркас с покрытием)":1,"Фабрикант стул":48,"Феликс G":18,"Феликс стул BOX2":12,"Чери А кресло":54,"Чери Биг кресло":14,"Чери В кресло":8,"Чико табурет":4,"Эконом урна":8,"Экстра табурет":7},"other":[["Бумага писчая (шт)",1],["Винт барашек большой (шт)",18],["Зарядное устройство (шт)",1],["Картридж (шт)",3],["Каталог (шт)",20],["Образцы кожи иск.(комп)",60],["Плато сидения с ручкой (краш.)",2]],"wh":"Офис продаж Симферополь"},"almaty":{"total":1721,"models":{"Альфа кресло":10,"Анри G":14,"Анри бар стул":1,"Анри стул BOX4":52,"Аскона стул":29,"Аскона стул Мебельная ТК-1(черный), CH":40,"Атлант кресло":13,"Атлант кресло PL-1":6,"Бета кресло (Ткань, TW, № 9 (черный), Ткань, S, №11 черный, Кожа иск., ECO, №16Н(черный), ТГ, кр. А":9,"Биг кресло Мебельная ТК-1(черный), ТГ, PL-1, PL 680, ролик ст.":28,"Бун кресло":54,"Бун кресло (Ткань, TW, № 9 (черный), Ткань, S, №11 черный, Кожа иск., DO, №350 (черный) , г/п 100, Т":12,"Изо стул":699,"Изо стул СТ":112,"Комфорт кресло (пластик WH, Ткань, Simple, Единорожки, ПВМ, PL 600, чарли, ролик белый прорезиненный":1,"Логика кресло":16,"Марс стул":250,"Менеджер кресло":6,"Ник стул BOX4":52,"Пилот кресло":17,"Пилот Люкс кресло":49,"Престиж+ кресло":17,"Самба BOX4 стул":2,"Самба G М кресло (Кожа иск., DO, №350 (черный) , ТГ, кр. Альфа(600)CH, подл. Самба CH, ролик ст.":5,"Самба СТ BOX2 стул (Кожа иск., DO, №122 (св. бежевый), Бук (1007), CH":8,"Самба СТ BOX4 стул":27,"Сандра диван 2-х мест.":5,"Сандра диван 3-х мест.":10,"Сильвия BOX5 стул":108,"Спред кресло":9,"Степ кресло":14,"Тета кресло (Ткань, TW, № 9 (черный), Ткань, S, №11 черный, Кожа иск., ECO, №16Н(черный), ТГ, PL 68":1,"Тибу кресло (Ткань, TW, № 9 (черный), Ткань, S, №11 черный, Кожа иск., DO, №350 (черный) , г/п 100,":1,"Тренд М стул":11,"Фабрикант стул":14,"Феликс стул BOX2":10,"Чери Биг кресло (Кожа иск., DO, №350 (черный) , Ткань, Мебельная, ТК-1 (черный), ТГ, PL 680, PL-1, р":9},"other":[],"wh":"ТОО Фабрикант"}}}]}</script>
+<script>
+(function(){
+  var D = JSON.parse(document.getElementById('stores-data').textContent);
+  var NAMES = {'moscow':'Москва','nizhny-novgorod':'Сотрудник Имя','samara':'Самара','ryazan':'Рязань','ekaterinburg':'Екатеринбург','saint-petersburg':'Санкт-Петербург','krasnodar':'Краснодар','simferopol':'Симферополь','almaty':'Алматы'};
+  var ORDER = Object.keys(NAMES);
+  // расходники офиса (скотч, каталоги, бумага…) в итоги мебели не входят
+  var CONS = /^(Каталог|Скотч|Стрейч|Краска аэрозольная|МФУ|Бумага|Картридж|Мешки|Перчатки|Ручка канцелярская|Зарядное устройство|Винт барашек|Образцы)/i;
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var n = function(x){ x = Math.round(x * 10) / 10; return String(x).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
+  var dl = function(x){ if (!x) return '<span style="color:var(--ios-2)">0</span>'; return '<span class="' + (x > 0 ? 'up' : 'down') + '">' + (x > 0 ? '+' : '−') + n(Math.abs(x)) + '</span>'; };
+  var MON = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var day = function(s){ var p = s.split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; };
+  // история по дням: {date, cities:{code:{models:{модель:кол-во}, other:[], total}}}; данные сервера — поверх встроенных
+  var hist = {}; D.base.forEach(function(h){ hist[h.date] = h; });
+  var last = null, updated = null, live = false;
+  function models(c){ var m = {}; Object.keys(c.models || {}).forEach(function(k){ if (!CONS.test(k)) m[k] = c.models[k]; }); return m; }
+  function sum(m){ var s = 0; for (var k in m) s += m[k]; return s; }
+  function spark(vals){ if (vals.length < 2) return ''; var mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals), w = 64, h = 22, k = mx - mn || 1;
+    var pts = vals.map(function(v, i){ return (i * w / (vals.length - 1)).toFixed(1) + ',' + (h - 2 - (v - mn) / k * (h - 4)).toFixed(1); }).join(' ');
+    return '<svg class="spark" viewBox="0 0 64 22"><polyline fill="none" stroke="var(--ios-blue)" stroke-width="1.6" points="' + pts + '"/></svg>'; }
+  function chart(days, vals){
+    if (days.length < 2) return '<div class="chart"><p class="note" style="margin:4px">Динамика появится со второго дня: снимок берётся раз в сутки (первый — ' + day(days[0]) + ').</p></div>';
+    var W = 600, H = 150, mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals), pad = (mx - mn) * .15 || mx * .05 || 1; mx += pad; mn = Math.max(0, mn - pad);
+    var X = function(i){ return 8 + i * (W - 16) / (days.length - 1); }, Y = function(v){ return 8 + (mx - v) / (mx - mn) * (H - 24); };
+    var p = vals.map(function(v, i){ return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' ');
+    var dots = vals.map(function(v, i){ return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="2.6" fill="var(--ios-blue)"><title>' + day(days[i]) + ': ' + n(v) + ' шт</title></circle>'; }).join('');
+    return '<div class="chart"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"><polyline fill="none" stroke="var(--ios-blue)" stroke-width="2" vector-effect="non-scaling-stroke" points="' + p + '"/>' + dots + '</svg>' +
+      '<div class="cap"><span>' + day(days[0]) + '</span><span>всего мебели, шт</span><span>' + day(days[days.length - 1]) + '</span></div></div>';
+  }
+  function render(){
+    var days = Object.keys(hist).sort(), dLast = days[days.length - 1], dPrev = days.length > 1 ? days[days.length - 2] : null;
+    var H = hist[dLast], P = dPrev ? hist[dPrev] : null;
+    var totals = days.map(function(d){ var s = 0, h = hist[d]; for (var c in h.cities) s += sum(models(h.cities[c])); return s; });
+    var tot = totals[totals.length - 1], tPrev = totals.length > 1 ? totals[totals.length - 2] : null;
+    var nModels = {}; for (var c in H.cities) for (var k in models(H.cities[c])) nModels[k] = 1;
+    var q = (document.getElementById('sq') || {}).value || '';
+    var h = '<h1>Остатки ОП</h1>' +
+      '<div class="igroup hero" style="margin-top:14px"><div class="hnum">' + n(tot) + '<small>шт</small></div>' +
+      '<div class="hsub">Офисы продаж и склады, мебель без расходников · на ' + day(dLast) + (live && updated ? ', ' + updated : '') + '</div>' +
+      '<div class="hst"><div><span>за день</span><b>' + (tPrev == null ? '—' : dl(tot - tPrev)) + '</b></div><div><span>складов</span><b>' + Object.keys(H.cities).filter(function(c){ return sum(models(H.cities[c])) > 0; }).length + '</b></div><div><span>моделей</span><b>' + Object.keys(nModels).length + '</b></div></div></div>' +
+      '<div class="igroup" style="margin-top:12px">' + chart(days, totals) + '</div>' +
+      '<div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="sq" type="search" placeholder="Модель, например «Изо» или «Самба»" value="' + esc(q) + '"></div>';
+    if (q.trim()) h += search(q.trim().toLowerCase(), days, H, P);
+    else {
+      h += '<h4 style="margin:18px 4px 8px">Склады</h4><div class="igroup">';
+      ORDER.forEach(function(c){
+        var cc = H.cities[c]; if (!cc) return;
+        var m = models(cc), s = sum(m), pm = P && P.cities[c] ? models(P.cities[c]) : null, ds = pm ? s - sum(pm) : null;
+        var ser = days.map(function(d){ return hist[d].cities[c] ? sum(models(hist[d].cities[c])) : 0; });
+        var list = Object.keys(m).sort(function(a, b){ return m[b] - m[a]; });
+        var other = (cc.other || []).concat(Object.keys(cc.models || {}).filter(function(k){ return CONS.test(k); }).map(function(k){ return [k, cc.models[k]]; }));
+        var det = live && last && last.cities[c] ? last.cities[c].items : null;
+        h += '<details><summary class="irow" style="list-style:none;cursor:pointer"><span class="itile" style="--c:#ff9f0a;font:600 13px var(--f-body)">' + ({'moscow':'МС','nizhny-novgorod':'НН','samara':'СМ','ryazan':'РЗ','ekaterinburg':'ЕК','saint-petersburg':'СП','krasnodar':'КР','simferopol':'СФ','almaty':'АЛ'}[c] || '') + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(NAMES[c]) + '</span>' +
+          '<span class="isub" style="display:block;color:var(--ios-2);font-size:12.5px">' + esc(cc.wh || (c === 'ryazan' ? 'склады Рязани' : '')) + (s ? ' · ' + list.length + ' моделей' : ' · пусто') + '</span></span>' + spark(ser) +
+          '<span class="ival">' + n(s) + '<span class="dd">' + (ds == null ? '' : dl(ds)) + '</span></span><span class="ichev"></span></span></summary><div class="rows">';
+        list.forEach(function(k){
+          var dk = pm ? m[k] - (pm[k] || 0) : null, vars = det ? det.filter(function(it){ return it[0] === k && it[1]; }) : [];
+          h += '<div class="drow"><span class="vn">' + esc(k) + (vars.length ? '<small>' + vars.map(function(it){ return esc(it[1]) + ' — ' + n(it[2]); }).join('<br>') + '</small>' : '') + '</span><span class="vq">' + n(m[k]) + '</span><span class="vd">' + (dk == null ? '' : dl(dk)) + '</span></div>';
+        });
+        if (pm) Object.keys(pm).filter(function(k){ return !(k in m); }).forEach(function(k){ h += '<div class="drow"><span class="vn">' + esc(k) + ' <small>распродано</small></span><span class="vq">0</span><span class="vd">' + dl(-pm[k]) + '</span></div>'; });
+        if (other.length) h += '<div class="drow"><span class="vn"><small>Расходники офиса (в итог не входят): ' + other.map(function(o){ return esc(o[0]) + ' — ' + n(o[1]); }).join('; ') + '</small></span></div>';
+        h += '</div></details>';
+      });
+      h += '</div>';
+    }
+    h += '<p class="note">Источник — <a href="https://fabrikant.su/stock" target="_blank" rel="noopener">fabrikant.su/stock</a> (выгрузка 1С на сайте компании). Снимок — раз в сутки, после 07:00 МСК; ' +
+      (live ? 'дней в истории: ' + days.length + '.' : 'сервер сейчас недоступен — показан снимок, встроенный в сайт.') + ' Рязань здесь — как на сайте компании; на странице «Склад» — по отчётам 1С склада.</p>';
+    document.getElementById('view').innerHTML = h;
+    var inp = document.getElementById('sq');
+    if (inp){ inp.addEventListener('input', function(){ var pos = inp.selectionStart; render(); var i2 = document.getElementById('sq'); i2.focus(); try { i2.setSelectionRange(pos, pos); } catch (e) {} }); }
+  }
+  function search(q, days, H, P){
+    var found = {}; days.forEach(function(d){ var hh = hist[d]; for (var c in hh.cities){ var m = models(hh.cities[c]); for (var k in m) if (k.toLowerCase().indexOf(q) >= 0) found[k] = 1; } });
+    var ks = Object.keys(found).sort(); if (!ks.length) return '<p class="empty">Ничего не нашлось</p>';
+    var h = '<h4 style="margin:18px 4px 8px">Найдено моделей: ' + ks.length + '</h4><div class="igroup">';
+    ks.slice(0, 60).forEach(function(k){
+      var ser = days.map(function(d){ var s = 0, hh = hist[d]; for (var c in hh.cities){ var v = (hh.cities[c].models || {})[k]; if (v) s += v; } return s; });
+      var by = ORDER.filter(function(c){ return H.cities[c] && (H.cities[c].models || {})[k]; }).map(function(c){ return NAMES[c] + ' ' + n(H.cities[c].models[k]); });
+      var cur = ser[ser.length - 1], prev = ser.length > 1 ? ser[ser.length - 2] : null;
+      h += '<div class="irow"><span class="ic"><span class="ibody"><span class="ititle">' + esc(k) + '</span><span class="isub" style="display:block;color:var(--ios-2);font-size:12.5px">' + (by.length ? esc(by.join(' · ')) : 'сейчас нет ни на одном складе') + '</span></span>' + spark(ser) +
+        '<span class="ival">' + n(cur) + '<span class="dd">' + (prev == null ? '' : dl(cur - prev)) + '</span></span></span></div>';
+    });
+    return h + '</div>' + (ks.length > 60 ? '<p class="note">Показаны первые 60 — уточните запрос.</p>' : '');
+  }
+  render();
+  // свежие данные с хостинга (раз в сутки сервер сам забирает файлы с fabrikant.su)
+  if (location.protocol === 'https:') fetch('st/so.php', {cache: 'no-store'}).then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.json(); }).then(function(J){
+    (J.hist || []).forEach(function(h){ var cs = {}; for (var c in h.cities) cs[c] = {models: h.cities[c].models, total: h.cities[c].total, other: [], wh: ''}; hist[h.date] = {date: h.date, cities: cs}; });
+    last = J.last || null; live = true;
+    if (last){ for (var c in last.cities){ if (hist[last.date] && hist[last.date].cities[c]) hist[last.date].cities[c].wh = last.cities[c].wh; } }
+    if (J.updated){ var t = new Date(J.updated); updated = 'обновлено в ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0'); }
+    render();
+  }).catch(function(){ render(); });
+})();
+</script>

@@ -1,0 +1,86 @@
+<!-- ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
+     Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
+     Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+     Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. -->
+
+<p class="ihdr" id="salescap">Продажи, выпуск и план по линиям</p>
+<div class="igroup sc"><div class="chips2" id="sc-tabs" role="tablist"></div><div id="sc-body" class="pfbody" style="padding:4px 16px 12px"></div>
+<details class="scr"><summary>Правило пересчёта: структура отдела продаж → мощность производства</summary><div class="scr-b">
+<p>Отдел продаж считает по номенклатурным группам (стулья, кресла, мягкая мебель), производство — по линиям. Одна группа расходится на несколько линий: «Стулья» — на 8, «Кресла» — на 6, поэтому коэффициенты не годятся — только по позициям.</p>
+<ol><li><b>Один источник</b> — реквизит карточки номенклатуры 1С «Вид номенклатуры сбыт»; группа отдела продаж для мощности не используется.</li>
+<li><b>Вид сбыта → линия → участок</b>: уч. 6 — Изо, Стандарты, КаБаРе, Сильвия; уч. 3 — Самба, Анри, Мягкая мебель; уч. 4 — Кресла руководителя, Операторские кресла, Бун; уч. 5 — ГКИ Одди (полуфабрикат, отдельно от готовых изделий). Таблицу утверждают ПДО и ПЭО.</li>
+<li><b>Вид сбыта обязателен</b> в новой карточке номенклатуры (сейчас без вида — 40 шт на 0,16 млн ₽).</li>
+<li><b>Покупной товар</b> («ТОВАР» в названии) — отдельный вид «Покупное», в мощность не входит.</li>
+<li><b>Изделия на металлокаркасе</b> (торговое оборудование, столы, подстолья, перегородки) — вид сбыта участка металлокаркасов; сейчас 0,57 млн ₽ вне структуры.</li>
+<li><b>Единица — штука готового изделия</b>; комплекты и многоместные секции — по правилу ПДО.</li>
+<li><b>Услуги, доставка, материалы на продажу</b> (шпон, фанера) — вне мощности.</li></ol>
+<p><b>Вопросы ПДО и ПЭО</b>: Анри G (кресло, 1 721 шт) — уч. 3 или 4? Кресла кассира КС-2/КС-3 и табурет Хокер — линия Стандартов? Самба G — уч. 3? Стулья Феликс, Осло, Бонд, Флекс с видом «Кресла руководителя» — верно? Трис, Кристенсен, Сирена — «Операторские кресла»? Стул ВЕЕ (Пчела) и барные Geometry — уч. 6 или металлокаркасов? Банкетки — мягкая мебель? КаБаРе продано 249% выпуска — часть моделей на другой линии или продажа со склада? ГКИ Одди — нужна строка выпуска в дневном отчёте ПДО. Многоместные секции — одно изделие или по местам?</p>
+<p><b>Каждый день</b>: 1С присылает в 08:00 «Продажи» и «Ведомость по заказам покупателей» с группировкой по виду сбыта — портал пересчитывает блок сам.</p>
+</div></details></div>
+<p class="ifoot" id="sc-foot"></p>
+<style>
+.sc table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+.sc th,.sc td{padding:7px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--p-line,rgba(128,128,128,.25))}
+.sc th{font-weight:500;color:var(--p-fg2,inherit);font-size:12.5px;white-space:normal;vertical-align:bottom}
+.sc th:first-child,.sc td:first-child{text-align:left;position:sticky;left:0;background:var(--p-card,var(--ios-group,#fff));z-index:1;white-space:normal;min-width:130px}
+.sc td small{display:block;color:var(--p-fg3,#888);font-size:11.5px;white-space:normal}
+.sc .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sc .hi{color:var(--t-bad,#C33D32);font-weight:600}.sc .ok{color:var(--t-ok,#34c759)}
+.sc tr.tot td{font-weight:600;border-bottom:0}
+.sc details.scr{border-top:1px solid var(--p-line,rgba(128,128,128,.25));padding:10px 16px 12px}.sc details.scr summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--ios-blue,#0a84ff)}.sc .scr-b{font-size:13.5px;line-height:1.45}.sc .scr-b ol{padding-left:20px;margin:8px 0}.sc .scr-b li{margin:4px 0}
+.sc .note{font-size:12.5px;color:var(--p-fg3,#888);margin:10px 0 0;white-space:normal}
+.sc #sc-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 4px}.sc #sc-tabs span{display:inline-flex;align-items:center;gap:4px;min-height:34px;padding:0 12px;border-radius:17px;font-size:13px}.sc #sc-tabs b{font-weight:600}
+</style>
+<script id="salescap-data" type="application/json">{"order": ["2026-11", "2026-10"], "months": {"2026-10": {"label": "октябрь", "whole": true, "sales_to": "31.10", "rows": [{"v": "Изо", "line": "Изо", "a": 6, "q": 26646, "s": 35875840.84, "oin": 22315.0, "oend": 13793.0}, {"v": "Стандарт", "line": "Стандарты", "a": 6, "q": 8908, "s": 11295282.81, "oin": 7786.0, "oend": 6716.0}, {"v": "Самба", "line": "Самба", "a": 3, "q": 5751, "s": 19507700.15, "oin": 4688.0, "oend": 4014.0}, {"v": "ГКЗ", "line": "ГКИ Одди", "a": 5, "q": 4800, "s": 1896000.0, "oin": 4200.0, "oend": 6130.0}, {"v": "Анри", "line": "Анри", "a": 3, "q": 4504, "s": 12441162.11, "oin": 2123.0, "oend": 2576.0}, {"v": "Кр.руков.", "line": "Кресла руководителя", "a": 4, "q": 3621, "s": 17475468.28, "oin": 3804.0, "oend": 5058.0}, {"v": "КаБаРе", "line": "КаБаРе", "a": 6, "q": 2949, "s": 4251501.63, "oin": 3176.0, "oend": 3513.0}, {"v": "Операт.кр.", "line": "Операторские кресла", "a": 4, "q": 1858, "s": 5690790.62, "oin": 1979.0, "oend": 1630.0}, {"v": "Сильвия", "line": "Сильвия", "a": 6, "q": 1353, "s": 3341398.0, "oin": 1010.0, "oend": 1522.0}, {"v": "Бун", "line": "Бун", "a": 4, "q": 643, "s": 4166347.7, "oin": 547.0, "oend": 474.0}, {"v": "М.мебель", "line": "Мягкая мебель", "a": 3, "q": 365, "s": 4841398.6, "oin": 187.0, "oend": 269.0}], "other": {"(не указан)": [46, 381396.0], "Комплект.": [2610, 565368.2], "Материалы": [178, 129470.0], "Прочее": [598, 2282215.99], "Услуги": [16, 381530.0]}, "tot": [64845.53, 124522870.93], "plan": {"Изо": 30800, "Стандарты": 9636, "КаБаРе": 3080, "Сильвия": 2200, "Кресла руководителя": 7260, "Операторские кресла": 5148, "Анри": 4514, "Бун": 449, "Мягкая мебель": 449, "ГКИ Одди": 5280}, "plan_kind": "month", "out": {"Изо": 22672, "Стандарты": 6471, "Анри": 3198, "Самба": 3898, "КаБаРе": 999, "Сильвия": 705, "Кресла руководителя": 1951, "Операторские кресла": 1665, "Бун": 341, "Мягкая мебель": 229}, "out_days": 17, "out_wd": 19, "out_last": "2026-10-27", "wd": 22, "ord_src": "1С «Ведомость по заказам покупателей», октябрь 2026, группировка «Вид номенклатуры сбыт» (файл от пользователя 28.10.2026)", "ord_asof": "2026-10-28"}, "2026-11": {"label": "ноябрь", "whole": false, "sales_to": "02.11", "rows": [{"v": "Изо", "line": "Изо", "a": 6, "q": 100, "s": 127341.3}, {"v": "Самба", "line": "Самба", "a": 3, "q": 15, "s": 54000.0}, {"v": "Сильвия", "line": "Сильвия", "a": 6, "q": 15, "s": 34200.0}, {"v": "Анри", "line": "Анри", "a": 3, "q": 10, "s": 25888.0}, {"v": "Кр.руков.", "line": "Кресла руководителя", "a": 4, "q": 9, "s": 67840.0}, {"v": "Бун", "line": "Бун", "a": 4, "q": 2, "s": 16014.6}, {"v": "Стандарт", "line": "Стандарты", "a": 6, "q": 0, "s": 0}, {"v": "ГКЗ", "line": "ГКИ Одди", "a": 5, "q": 0, "s": 0}, {"v": "КаБаРе", "line": "КаБаРе", "a": 6, "q": 0, "s": 0}, {"v": "Операт.кр.", "line": "Операторские кресла", "a": 4, "q": 0, "s": 0}, {"v": "М.мебель", "line": "Мягкая мебель", "a": 3, "q": 0, "s": 0}], "other": {}, "tot": [151.0, 325283.9], "pday": {"Изо": 1450, "Стандарты": 410, "КаБаРе": 125, "Сильвия": 80, "Кресла руководителя": 330, "Операторские кресла": 200, "Самба": 250, "Анри": 220, "Бун": 25, "Мягкая мебель": 20, "ГКИ": 1450, "ГКИ Одди": 210}, "wd": 21, "wd_to_sales": 1, "out": null, "out_days": 0, "out_wd": 0, "out_last": null}}, "src": "1С «Продажи в разрезе мощностей производства» за октябрь и ноябрь (02.11 15:52)"}</script>
+<script>
+(function(){
+  var D = JSON.parse(document.getElementById('salescap-data').textContent), el = document.getElementById('sc-body'), tabs = document.getElementById('sc-tabs');
+  var LIVE = null, CUR = D.order[0];
+  function n(x){ return x == null ? '—' : Math.round(x).toLocaleString('ru-RU'); }
+  function m2(x){ return x == null ? '—' : (x / 1e6).toFixed(2).replace('.', ','); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function dm(s){ return s ? s.slice(8, 10) + '.' + s.slice(5, 7) : ''; }
+  function pct(a, b){ return a != null && b ? Math.round(a / b * 100) + '%' : '—'; }
+  // выпуск и план месяца: pf.bin (хостинг) → {out: {линия: шт}, plan: {линия: шт за месяц}, days, wd, wd_done, last}; «Шеффилд» → «Кресла руководителя»
+  function liveMonth(ym){
+    var M = LIVE && LIVE.months && LIVE.months[ym]; if (!M) return null;
+    var O = {}, Pm = {};
+    Object.keys(M.lines || {}).forEach(function(k){ var t = k === 'Шеффилд' ? 'Кресла руководителя' : k, l = M.lines[k];
+      if (l.f != null) O[t] = (O[t] || 0) + l.f; if (l.p) Pm[t] = (Pm[t] || 0) + l.p; });
+    var pv = LIVE.planv && LIVE.planv[ym]; if (pv && pv.lines && !Object.keys(Pm).length) Object.keys(pv.lines).forEach(function(k){ var t = k === 'Шеффилд' ? 'Кресла руководителя' : k; Pm[t] = (Pm[t] || 0) + pv.lines[k]; });
+    return { out: O, plan: Pm, days: M.days, wd: M.wd, wd_done: M.wd_done, last: M.last };
+  }
+  function render(){
+    var M = D.months[CUR], L = liveMonth(CUR), oct = CUR === '2026-10';
+    tabs.innerHTML = D.order.map(function(ym){ var x = D.months[ym], on = ym === CUR;
+      return '<a href="#salescap" data-scm="' + ym + '" role="tab" aria-selected="' + on + '" style="text-decoration:none;color:inherit"><span' + (on ? ' style="outline:2px solid var(--ios-blue)"' : '') + '><b>' + x.label.charAt(0).toUpperCase() + x.label.slice(1) + '</b> · ' + (x.whole ? 'весь месяц' : 'продажи на ' + x.sales_to) + '</span></a>'; }).join('');
+    var OUT = L ? L.out : M.out, days = L ? L.days : M.out_days, wdd = L ? L.wd_done : M.out_wd, wd = (L && L.wd) || M.wd, last = L ? L.last : M.out_last;
+    // план: октябрь — за месяц и на дни с отчётами; ноябрь — план в сутки × рабочие дни по дату последнего отчёта (без отчётов — по дату продаж)
+    function planM(line){ if (L && L.plan[line]) return L.plan[line]; if (M.plan) return M.plan[line]; if (M.pday && M.pday[line]) return M.pday[line] * wd; return null; }
+    var wdTo = (L && L.wd_done) || (oct ? M.out_wd : M.wd_to_sales);
+    function planTo(line){ var p = planM(line); return p != null && wd ? p / wd * wdTo : null; }
+    var Q = 0, S = 0, O = 0, PT = 0, I = 0, E = 0;
+    var body = M.rows.map(function(r){
+      var o = OUT ? OUT[r.line] : null, pt = planTo(r.line), k = o ? r.q / o : null, cls = k == null ? '' : k > 1.15 ? 'hi' : k < 0.85 ? 'ok' : '';
+      var ex = o != null && pt ? o / pt : null, ecl = ex == null ? '' : ex < 0.85 ? 'hi' : ex >= 1 ? 'ok' : '';
+      Q += r.q; S += r.s; if (o) O += o; if (pt) PT += pt; if (oct) { I += r.oin || 0; E += r.oend || 0; }
+      return '<tr><td>' + esc(r.v) + '<small>' + esc(r.line) + ' · уч. ' + r.a + '</small></td><td>' + n(r.q) + '</td><td>' + m2(r.s) + '</td><td>' + n(o) + '</td><td>' + n(pt) + '</td><td class="' + ecl + '">' + pct(o, pt) + '</td><td class="' + cls + '">' + (k == null ? '—' : k.toFixed(2).replace('.', ',')) + '</td>' +
+        (oct ? '<td>' + n(r.oin) + '</td><td>' + n(r.oend) + '</td>' : '') + '</tr>';
+    }).join('');
+    var oth = Object.keys(M.other || {}).map(function(k){ return [k, M.other[k]]; }).sort(function(a, b){ return b[1][1] - a[1][1]; }).map(function(x){ return esc(x[0]) + ' ' + m2(x[1][1]) + ' млн ₽ (' + n(x[1][0]) + ' шт)'; }).join(', ');
+    el.innerHTML = '<div class="scroll"><table><thead><tr><th>Вид сбыта (линия)</th><th>Продано, шт</th><th>Продано, млн ₽</th><th>Выпуск, шт' + (days ? ' · ' + days + ' дн.' : '') + '</th><th>План, шт' + (wdTo ? ' · ' + wdTo + ' р. д.' : '') + '</th><th>Выпуск / план</th><th>Продано / выпуск</th>' +
+      (oct ? '<th>Заказано в октябре, шт</th><th>Не отгружено, шт</th>' : '') + '</tr></thead><tbody>' + body +
+      '<tr class="tot"><td>Итого по линиям</td><td>' + n(Q) + '</td><td>' + (S / 1e6).toFixed(1).replace('.', ',') + '</td><td>' + n(O || null) + '</td><td>' + n(PT || null) + '</td><td>' + pct(O || null, PT) + '</td><td></td>' + (oct ? '<td>' + n(I) + '</td><td>' + n(E) + '</td>' : '') + '</tr></tbody></table></div>' +
+      '<p class="note">Продано — ' + esc(D.src) + ', ' + M.label + (M.whole ? ' целиком' : ' на ' + M.sales_to) + ': всего ' + n(M.tot[0]) + ' шт, ' + (M.tot[1] / 1e6).toFixed(1).replace('.', ',') + ' млн ₽' + (oth ? '; вне мощности производства: ' + oth : '') + '. ' +
+      'Выпуск — дневные отчёты ПДО' + (days ? ' за ' + days + ' из ' + wdTo + ' рабочих дней' + (last ? ' по ' + dm(last) : '') : ': за ' + M.label + ' отчётов ещё нет') + '. ' +
+      'План — утверждённый план ПДО' + (oct ? ' на октябрь' : ' на ноябрь (в сутки × ' + wd + ' р. д.; «Шеффилд» — в «Креслах руководителя»)') + ', пропорционально рабочим дням' + (wdTo ? ' (' + wdTo + ' из ' + wd + ')' : '') + '. ' +
+      'Выпуск / план: красным — меньше 85%. Продано / выпуск: красным — продано больше выпуска на 15% и больше (продажи идут из остатка склада или вид сбыта не совпадает с линией).' +
+      (oct ? ' Заказано и не отгружено — ' + esc(M.ord_src) + ' на ' + esc(M.ord_asof) + '.' : '') + ' Строки — по убыванию проданных штук.</p>';
+  }
+  tabs.addEventListener('click', function(e){ var a = e.target.closest('[data-scm]'); if (!a) return; e.preventDefault(); CUR = a.getAttribute('data-scm'); render(); });
+  render();
+  function live(){ if (window.T14Live && T14Live.bin) T14Live.bin('pf.bin').then(function(p){ if (p && p.months) { LIVE = p; render(); } }); }
+  if (window.T14Live) live(); else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', live); else setTimeout(live, 0);
+  var f = document.getElementById('sc-foot'); if (f) f.innerHTML = 'Продажи по дням и по типам товаров — <a href="sales.html#s1c">«Продажи» → «Продажи 1С»</a>. Правило пересчёта структуры отдела продаж в структуру мощности и вопросы ПДО и ПЭО — в блоке «Правило пересчёта».';
+})();
+</script>
