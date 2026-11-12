@@ -779,7 +779,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     O.arts.forEach(function (a) { if (chs.indexOf(a.ch) < 0) chs.push(a.ch); });
     var sum = function (arr, i) { return arr.reduce(function (t, a) { return t + (a.s[i] || 0); }, 0); };
     h += '<p class="lead">Отгрузки онлайн-клиентам и наш Ozon за ' + esc(M.join(', ')) + '; ' + esc(O.nov || '') + '. Цены у продавцов проверяются каждое рабочее утро; полная таблица — в Google Таблице «Фабрикант — онлайн-продажи».</p>';
-    h += '<p class="ihdr">Каналы</p><div class="igroup"><div class="mtx"><table style="min-width:0"><thead><tr><th>канал</th>' + M.map(function (m) { return '<th>' + esc(m) + '</th>'; }).join('') + '<th>итого</th><th>' + esc(M[2]) + ' к ' + M[0] + '</th></tr></thead><tbody>' +
+    h += '<p class="ihdr">Каналы</p><div class="igroup"><div class="mtx"><table style="min-width:0"><thead><tr><th>канал</th>' + M.map(function (m) { return '<th>' + esc(m) + '</th>'; }).join('') + '<th>итого</th><th>' + esc(M[2]) + ' к ' + esc(M[0]) + '</th></tr></thead><tbody>' +
       chs.map(function (c) { var A = O.arts.filter(function (a) { return a.ch === c; }), v = [0, 1, 2].map(function (i) { return sum(A, i); });
         return '<tr><td>' + esc(c) + '</td>' + v.map(function (x) { return '<td>' + rub(x) + '</td>'; }).join('') + '<td><b>' + rub(v[0] + v[1] + v[2]) + '</b></td><td>' + (v[0] ? Math.round(100 * (v[2] / v[0] - 1)) + '%' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
     chs.forEach(function (c) {

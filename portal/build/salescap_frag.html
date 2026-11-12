@@ -39,7 +39,7 @@
   function n(x){ return x == null ? '—' : Math.round(x).toLocaleString('ru-RU'); }
   function m2(x){ return x == null ? '—' : (x / 1e6).toFixed(2).replace('.', ','); }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function dm(s){ return s ? s.slice(8, 10) + '.' + s.slice(5, 7) : ''; }
+  function dm(s){ return s ? esc(s.slice(8, 10) + '.' + s.slice(5, 7)) : ''; }
   function pct(a, b){ return a != null && b ? Math.round(a / b * 100) + '%' : '—'; }
   // выпуск и план месяца: pf.bin (хостинг) → {out: {линия: шт}, plan: {линия: шт за месяц}, days, wd, wd_done, last}; «Шеффилд» → «Кресла руководителя»
   function liveMonth(ym){
@@ -64,7 +64,7 @@
       var o = OUT ? OUT[r.line] : null, pt = planTo(r.line), k = o ? r.q / o : null, cls = k == null ? '' : k > 1.15 ? 'hi' : k < 0.85 ? 'ok' : '';
       var ex = o != null && pt ? o / pt : null, ecl = ex == null ? '' : ex < 0.85 ? 'hi' : ex >= 1 ? 'ok' : '';
       Q += r.q; S += r.s; if (o) O += o; if (pt) PT += pt; if (oct) { I += r.oin || 0; E += r.oend || 0; }
-      return '<tr><td>' + esc(r.v) + '<small>' + esc(r.line) + ' · уч. ' + r.a + '</small></td><td>' + n(r.q) + '</td><td>' + m2(r.s) + '</td><td>' + n(o) + '</td><td>' + n(pt) + '</td><td class="' + ecl + '">' + pct(o, pt) + '</td><td class="' + cls + '">' + (k == null ? '—' : k.toFixed(2).replace('.', ',')) + '</td>' +
+      return '<tr><td>' + esc(r.v) + '<small>' + esc(r.line) + ' · уч. ' + esc(r.a) + '</small></td><td>' + n(r.q) + '</td><td>' + m2(r.s) + '</td><td>' + n(o) + '</td><td>' + n(pt) + '</td><td class="' + ecl + '">' + pct(o, pt) + '</td><td class="' + cls + '">' + (k == null ? '—' : k.toFixed(2).replace('.', ',')) + '</td>' +
         (oct ? '<td>' + n(r.oin) + '</td><td>' + n(r.oend) + '</td>' : '') + '</tr>';
     }).join('');
     var oth = Object.keys(M.other || {}).map(function(k){ return [k, M.other[k]]; }).sort(function(a, b){ return b[1][1] - a[1][1]; }).map(function(x){ return esc(x[0]) + ' ' + m2(x[1][1]) + ' млн ₽ (' + n(x[1][0]) + ' шт)'; }).join(', ');
