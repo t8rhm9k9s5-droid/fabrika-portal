@@ -630,7 +630,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
         for nm, sha in pl.get('sha') or []:
             if not sha or not nm.lower().endswith('.pdf'): continue
             fp = os.path.join(L, 'arch', 'files', sha + '.pdf')
-            if os.path.exists(fp): pdo.append({'t': pl['t'], 'n': nm, 'p': fp})
+            if os.path.exists(fp) or ('pdo3|' + sha) in cache: pdo.append({'t': pl['t'], 'n': nm, 'p': fp, 'sha': sha})   # 12.11: файл удалён через 3 дня — разбор из кэша
     pdo_s = []
     for kind in ('факт', None):
         cand = [x for x in pdo if (kind in x['n'].lower() if kind else 'факт' not in x['n'].lower())]
@@ -647,8 +647,12 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
         mo = MONTHS_RU.get(mm.group(1).lower()) if mm else None
         if not mo: continue
         ym = '%s-%02d' % (mm.group(2), mo)
-        ck = 'pdo2|%s|%d' % (x['n'], os.path.getsize(x['p']))
+        ck = 'pdo3|' + x['sha']                                   # 12.11.2026: ключ — по содержимому (sha), не по размеру файла
         P = cache.get(ck)
+        if P is None and os.path.exists(x['p']):
+            P = cache.get('pdo2|%s|%d' % (x['n'], os.path.getsize(x['p'])))   # прежний ключ — перенести без повторного разбора
+            if P is not None: cache[ck] = P
+        if P is None and not os.path.exists(x['p']): continue
         if P is None:
             try: P = parse_pdo_xy(x['p'])
             except Exception as e: P = {}

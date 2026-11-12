@@ -234,6 +234,7 @@ def run(L, log, jload, jsave, publish, iso):
     idx = os.path.join(L, 'state', 'arch_index.jsonl')
     if not os.path.exists(idx): return {'state': 'нет архива itm@'}
     files = {k: [] for k, _, _ in KINDS}
+    cache = jload('omts_cache2.json', {})            # 12.11.2026: старые вложения робот удаляет через 3 дня — точка ряда берётся из кэша
     for ln in open(idx, encoding='utf-8'):
         try: r = json.loads(ln)
         except Exception: continue
@@ -244,9 +245,8 @@ def run(L, log, jload, jsave, publish, iso):
                 ext = os.path.splitext((a.get('n') or '').lower())[1]
                 if ext in ('.xls', '.xlsx') and a.get('p') and (k != 'pok' or 'покупн' in (a.get('n') or '').lower()):
                     p = os.path.join(L, 'arch', 'files', a['sha'] + ext)
-                    if os.path.exists(p): files[k].append((r.get('t') or '', p, a.get('n')))
+                    if os.path.exists(p) or os.path.basename(p) in cache: files[k].append((r.get('t') or '', p, a.get('n')))
             break
-    cache = jload('omts_cache2.json', {})
     out = {'t': iso(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))), 'kinds': []}
     sample = {}
     for k, title, _ in KINDS:

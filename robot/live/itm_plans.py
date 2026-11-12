@@ -81,7 +81,20 @@ def run(L, CFG, log, jload, jsave, publish, budget=BUDGET):
     if IT.off(): res['state'] = IT.off_text(); return res
     today = IT._now().strftime('%Y-%m-%d')
     if st.get('final') and not st.get('dirty'):                    # 12.11.2026: разовая проверка выполнена — ящик больше не открывать
-        res.update({'state': 'выполнено однократно %s — ящик не открывается' % st['final'], 'msgs': len(st['msgs'])}); return res
+        # 12.11.2026, Т. В.: «файлы максимум 2–3 дня, дальше удаляются с хостинга роботом» — вложения «Планов» и их части в st/
+        try: age = (IT._now().date() - datetime.datetime.strptime(st['final'][:10], '%Y-%m-%d').date()).days
+        except Exception: age = 0
+        if age >= 3 and not st.get('cleaned'):
+            import shutil
+            shutil.rmtree(os.path.join(L, 'plans', 'files'), ignore_errors=True)
+            sd = os.path.join(CFG.get('site') or os.path.join(os.path.dirname(L), 'www', 'techfabrikant.ru'), 'st')   # как SITE в live.py
+            for f in os.listdir(sd) if os.path.isdir(sd) else []:
+                if re.match(r'^exp_pln_[\w]+\.bin$', f):
+                    try: os.remove(os.path.join(sd, f))
+                    except Exception: pass
+            st['cleaned'] = IT._now().strftime('%Y-%m-%dT%H:%M'); jsave('itm_plans.json', st)
+            log('Планы itm@: файлы удалены через 3 дня')
+        res.update({'state': 'выполнено однократно %s — ящик не открывается%s' % (st['final'], '; файлы удалены %s' % st['cleaned'] if st.get('cleaned') else ''), 'msgs': len(st['msgs'])}); return res
     pw = IT.password(L)
     if not pw: res['state'] = 'нет пароля itm@'; return res
     root = os.path.join(L, 'plans', 'files'); os.makedirs(root, exist_ok=True)

@@ -37,6 +37,61 @@ def _ext(n):
     return e if re.match(r'^\.[a-z0-9]{1,5}$', e) else ''
 
 
+# 12.11.2026, Т. В.: «файлы сами у себя не собирал и не мусорил… максимум 2–3 дня, дальше удаляются с хостинга роботом».
+# Реестр (state/arch_index.jsonl: дата, от кого, тема, вложения) остаётся навсегда; сами вложения в arch/files — KEEP_DAYS дня.
+# Не трогаются: KEEP_LAST последних писем каждой рассылки (отправитель + тема без чисел и месяцев) — по ним портал показывает
+# «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
+# Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
+KEEP_DAYS = 3
+KEEP_LAST = 2
+PRUNE_DRY = True
+_MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
+
+
+def _skey(r):
+    s = re.sub(r'^(?:\s*(?:re|fw|fwd|отв|пересл)\s*:\s*)+', '', (r.get('s') or '').lower())
+    s = _MON.sub('M', re.sub(r'\d+', '#', s))
+    return (r.get('fr') or '') + '|' + re.sub(r'\s+', ' ', s).strip()
+
+
+def prune(L, log, jload, jsave, keep_days=KEEP_DAYS):
+    """раз в сутки: вложения старше keep_days удаляются (кроме последних писем каждой рассылки); реестр остаётся"""
+    st = jload('arch_prune.json', {}) or {}
+    today = IT._now().strftime('%Y-%m-%d')
+    if st.get('day') == today and st.get('dry') == PRUNE_DRY: return st.get('last')
+    root = os.path.join(L, 'arch', 'files'); idx = os.path.join(L, 'state', 'arch_index.jsonl')
+    if not os.path.isdir(root): return None
+    groups = {}
+    if os.path.exists(idx):
+        for ln in open(idx, encoding='utf-8'):
+            try: r = json.loads(ln)
+            except Exception: continue
+            ks = [a['sha'] + _ext(a.get('n') or '') for a in r.get('a') or [] if a.get('sha')]
+            if ks: groups.setdefault(_skey(r), []).append((r.get('t') or '', ks))
+    keep = set()
+    for g in groups.values():
+        for _t, ks in sorted(g)[-KEEP_LAST:]: keep.update(ks)
+    lim = time.time() - keep_days * 86400; n = b = total = 0
+    for f in os.listdir(root):
+        p = os.path.join(root, f)
+        try: sz = os.path.getsize(p)
+        except Exception: continue
+        if f.endswith('.tmp') or f in keep or os.path.getmtime(p) >= lim: total += sz; continue
+        n += 1; b += sz
+        if PRUNE_DRY: total += sz; continue
+        try: os.remove(p)
+        except Exception: total += sz
+    if not PRUNE_DRY:
+        for name in ('arch.json', 'arch_1c.json'):                # потолок ARCH_CAP — по фактическому месту
+            s = jload(name, None)
+            if s: s['bytes'] = total; jsave(name, s)
+    last = {'t': IT._now().strftime('%Y-%m-%dT%H:%M'), 'dry': PRUNE_DRY, 'files': n, 'mb': round(b / 1048576, 1),
+            'left_mb': round(total / 1048576, 1), 'kept_last': len(keep), 'groups': len(groups)}
+    st.update({'day': today, 'dry': PRUNE_DRY, 'last': last}); jsave('arch_prune.json', st)
+    log('архив вложений: %s %d файлов, %.1f МБ; осталось %.1f МБ' % ('удалилось бы' if PRUNE_DRY else 'удалено', n, b / 1048576, total / 1048576))
+    return last
+
+
 def run(L, CFG, ingest, log, jload, jsave, budget=110, limit=150):
     return run_box(L, ingest, log, jload, jsave, IT.HOST, (CFG.get('itm_mail') or 'user5@example.org').lower(), IT.password(L),
                    lambda fl: [(raw, name) for raw, name, flags in fl if FOLDERS.match(name.strip())], 'arch.json', None, 'itm@', budget, limit)
@@ -69,6 +124,8 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
     if stname != 'arch.json':                                 # общий потолок места на диске — по основному архиву
         try: st['bytes'] = max(st.get('bytes') or 0, (jload('arch.json', {}) or {}).get('bytes') or 0)
         except Exception: pass
+    try: res['prune'] = prune(L, log, jload, jsave)            # 12.11.2026: файлы — не дольше KEEP_DAYS дней
+    except Exception as e: res['prune'] = {'err': e.__class__.__name__}
     root = os.path.join(L, 'arch', 'files'); os.makedirs(root, exist_ok=True)
     try: os.chmod(os.path.join(L, 'arch'), 0o700)
     except Exception: pass
