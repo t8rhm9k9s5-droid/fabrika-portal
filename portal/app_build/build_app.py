@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Android app «Фабрика»: the offline site (/home/claude/site_zip) inside a WebView shell.
    python3 build_app.py online|lite|full  ->  /home/claude/app_build/out/Terekhina14.apk (online), Terekhina14_lite.apk, Terekhina14_full.apk
@@ -13,7 +13,7 @@ B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
 VARIANT = sys.argv[1] if len(sys.argv) > 1 else 'lite'
 VERSION_CODE, VERSION_NAME = 3, '3.0'                    # 3.0: «Фабрика» — new name and icon (22.10.2026)
-ONLINE_URL, ONLINE_HOST = 'https://bostimur.github.io/t14/', 'bostimur.github.io'
+ONLINE_URL, ONLINE_HOST = 'https://owner.github.io/t14/', 'owner.github.io'
 WORK = f'{B}/work_{VARIANT}'
 WWW = f'{WORK}/assets/www'
 APKTOOL = f'{B}/tools/apktool_2.9.3.jar'

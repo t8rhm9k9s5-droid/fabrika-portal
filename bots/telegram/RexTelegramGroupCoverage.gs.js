@@ -1,7 +1,7 @@
 /* Existing webhook only. Owner action-time approval obtained for six event types. */
 function rexgi_enableGroupUpdates() {
-  if (Session.getActiveUser().getEmail() !== 'user@example.org' ||
-      Session.getEffectiveUser().getEmail() !== 'user@example.org') throw Error('Owner required');
+  if (Session.getActiveUser().getEmail() !== 'user1@example.org' ||
+      Session.getEffectiveUser().getEmail() !== 'user1@example.org') throw Error('Owner required');
   var p = PropertiesService.getScriptProperties(), token = p.getProperty('TG_TOKEN'), sec = p.getProperty('tg_hook');
   var allowed = ['message','callback_query','edited_message','my_chat_member'];
   if (typeof token !== 'string' || !/^\d{5,20}:[A-Za-z0-9_-]{20,200}$/.test(token) ||
@@ -40,8 +40,8 @@ function rexgi_enableGroupUpdates() {
 }
 
 function rexgi_readCoverageStatus() {
-  if (Session.getActiveUser().getEmail() !== 'user@example.org' ||
-      Session.getEffectiveUser().getEmail() !== 'user@example.org') throw Error('Owner required');
+  if (Session.getActiveUser().getEmail() !== 'user1@example.org' ||
+      Session.getEffectiveUser().getEmail() !== 'user1@example.org') throw Error('Owner required');
   var p=PropertiesService.getScriptProperties(),token=p.getProperty('TG_TOKEN');
   if(typeof token!=='string'||!/^\d{5,20}:[A-Za-z0-9_-]{20,200}$/.test(token)) throw Error('Existing token unavailable');
   function read(method) {

@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — ТК ГЛОНАСС (AutoGRAPH API), машины компании, только чтение и только для владельца (29.10.2026, пользователь:
 «надо подключить»; документация https://online.tkglonass.ru/ServiceAPI/index.html, версия 2026.2.1.4).
@@ -43,7 +43,7 @@ KEYFILE = 'glonass'
 MSK = datetime.timezone(datetime.timedelta(hours=3))
 
 
-# REDACTED_B64 ключ
+# REDACTED_B64_1 ключ
 KEY_NAMES = ('glonass', 'glonass.txt', 'Glonass', 'Glonass.txt', 'GLONASS', 'GLONASS.txt', 'glonass.ini', 'glonass.cfg', 'глонасс', 'глонасс.txt')
 
 
@@ -107,7 +107,7 @@ def file_token(L):
     return ''
 
 
-# REDACTED_B64 запросы
+# REDACTED_B64_1 запросы
 class GlonassError(Exception):
     def __init__(self, msg, code=0):
         Exception.__init__(self, msg)
@@ -206,7 +206,7 @@ class Session:
                 raise GlonassError(self.mask(e), e.code)
 
 
-# REDACTED_B64 терпимый разбор
+# REDACTED_B64_1 терпимый разбор
 def _num(v):
     if isinstance(v, bool) or v is None: return None
     if isinstance(v, (int, float)): return float(v)
@@ -343,7 +343,7 @@ def total_h(tot, pats, no):
     return (_hours(v, k), k) if k else (None, None)
 
 
-# REDACTED_B64 отрезки рейса (стоянки, простои, геозоны)
+# REDACTED_B64_1 отрезки рейса (стоянки, простои, геозоны)
 KIND_KEYS = ('Name', 'Alias', 'Type', 'Kind', 'StageName', 'Stage', 'Status')
 SKIP_KEYS = ('Total', 'PointStart', 'PointEnd', 'Params', 'Properties')
 IDLE_RE = re.compile(r'idle|простой|простои|холост', re.I)
@@ -477,7 +477,7 @@ def _trip_addr_end(t):
     return None
 
 
-# REDACTED_B64 геозоны
+# REDACTED_B64_1 геозоны
 def _find_pts(o, depth=0):
     """первый список точек (≥3) где-то внутри геозоны; параллельные массивы Lat[] и Lng[] — тоже"""
     if depth > 4: return None
@@ -565,7 +565,7 @@ def zone_of(p, zones):
     return best[1] if best else None
 
 
-# REDACTED_B64 части: справочники, где сейчас, день
+# REDACTED_B64_1 части: справочники, где сейчас, день
 def _vrn(props):
     """госномер из Properties [{Name, Value}]"""
     best = None
@@ -793,7 +793,7 @@ def day_data(S, ref, ids, day, deadline):
     return rows, hits, dbg, vrn
 
 
-# REDACTED_B64 адрес рядом
+# REDACTED_B64_1 адрес рядом
 NEAR_M, GEO_MAX = 300, 400
 
 
@@ -817,7 +817,7 @@ def near_fill(items, cache):
         else: c.pop('addr', None)
 
 
-# REDACTED_B64 треки: забрать, проверить, убрать сбои сигнала (30.10.2026)
+# REDACTED_B64_1 треки: забрать, проверить, убрать сбои сигнала (30.10.2026)
 # 30.10.2026 треки: пользователь: «В разделе транспорт нужно забирать треки из ГЛОНАСС и проверять их, и сбои сигнала убирать, там есть
 # что машина ехала-ехала и раз на 100 км правее оказалась и потом обратно или при стоянке перемещения!!!!». В gl.bin 29.10 «Газон NEXT»:
 # 864,1 км при 1,24 ч в движении (697 км/ч — так не бывает). GetTrack(session, schemaID, IDs, SD, ED) → {ID: [RTrackInfo{DT[], Speed[],
@@ -1315,13 +1315,13 @@ def tracks_pub(pub, st):
     return pub
 
 
-# REDACTED_B64 неработающие трекеры — отчёт раз в день (29.10.2026)
+# REDACTED_B64_1 неработающие трекеры — отчёт раз в день (29.10.2026)
 # Пользователь: «так же отчет каждый день по не рабочим устройствам». Утром (с DEV_AT МСК), один раз в сутки, только если такие есть:
 # письмо DEV_TO (через очередь хостинга → бот, Gmail от itm@) и копия владельцу в MAX. Неработающий — нет связи дольше DEV_OLD_H часов
 # или связь есть, но нет скорости и координат (GPS). Письмо логистам и АТП об этом — 29.10 (тред «ГЛОНАСС и список автопарка…»).
 DEV_AT, DEV_OLD_H = '08:30', 2
-DEV_TO = ['user@example.org']                              # 30.10.2026: за трекеры отвечает Сотрудник А. В. (Камаева, ls@); пользователь: «mav@, копия auto@»
-DEV_CC = ['user@example.org']                             # Сотрудник С. В. (АТП) — в копии; логистам (ls@) сводка больше не идёт
+DEV_TO = ['user2@example.org']                              # 30.10.2026: за трекеры отвечает Сотрудник1 А. В. (Камаева, ls@); пользователь: «mav@, копия auto@»
+DEV_CC = ['user9@example.org']                             # Сотрудник34 С. В. (АТП) — в копии; логистам (ls@) сводка больше не идёт
 
 
 def _ago(h):
@@ -1374,8 +1374,8 @@ def dev_report(st, now, notify, log, save=None):
     return st['dev']
 
 
-# REDACTED_B64 трекеры: молчат / стоят / с ошибками (04.11.2026)
-# Т. В. Сотрудник (бэклог после переноса ботов, п. 4): «ежедневный отчёт по неработающим трекерам ГЛОНАСС». По каждой машине:
+# REDACTED_B64_1 трекеры: молчат / стоят / с ошибками (04.11.2026)
+# Т. В. Сотрудник1 (бэклог после переноса ботов, п. 4): «ежедневный отчёт по неработающим трекерам ГЛОНАСС». По каждой машине:
 #   • молчит  — нет данных дольше N РАБОЧИХ часов (silent_h, 6 ч; work — 07:00–19:00, пн–пт, без праздников mx_ctl.HOLIDAYS):
 #               ночь и выходные машина может стоять со «спящим» трекером — это не поломка;
 #   • стоит   — трекер на связи, машина не едет (≠ «молчит»: связь есть);
@@ -1389,7 +1389,7 @@ def dev_report(st, now, notify, log, save=None):
 TRK_CFG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'glonass_trk_cfg.json')
 TRK_DEF = {'silent_h': 6, 'work': ['07:00', '19:00'], 'work_days': [0, 1, 2, 3, 4], 'holidays': [],
            'report_at': '09:05', 'quiet_from': '19:00', 'send': False, 'old_report': True,
-           'to': ['user@example.org', 'user@example.org'], 'cc': ['user@example.org'], 'greet': 'Коллеги',   # 05.11: Т. В. 04.11 ~21:30 — «auto@ и ls@»
+           'to': ['user9@example.org', 'user32@example.org'], 'cc': ['user5@example.org'], 'greet': 'Коллеги',   # 05.11: Т. В. 04.11 ~21:30 — «auto@ и ls@»
            'repair': {}, 'skip': [], 'jump_n': 3, 'jump_km': 20, 'bad_share': 0.1, 'stale_min': 30,
            'mass_share': 0.8, 'abroad_km': 1000, 'week_h': 168}
 TRK_ST = ('silent', 'err', 'repair', 'stand', 'ok', 'skip')             # порядок в списке
@@ -1684,7 +1684,7 @@ def trk_report_text(rows, sm, now, cfg):
         L += ['', 'Отмечены «в ремонте» (в отчёт не входят): ' + '; '.join('%s — %s' % (nm(r), r['why'][0].lower() + r['why'][1:].rstrip('.')) for r in rep) + '.']
     L += ['', 'Где машины сейчас — портал «Фабрика» → «Транспорт», блок «Трекеры».',
           'Отчёт приходит по рабочим дням в %s и только когда есть молчащие трекеры или трекеры с ошибками.' % cfg['report_at'] +
-          (' Т. В. Сотрудник — в копии.' if any(str(x).lower() == 'user@example.org' for x in cc) else '')]
+          (' Т. В. Сотрудник1 — в копии.' if any(str(x).lower() == 'user5@example.org' for x in cc) else '')]
     subj = 'ГЛОНАСС: молчат %d из %d трекеров%s — %s' % (len(sil), sm['total'], (', с ошибками %d' % len(err)) if err else '', day)
     return {'subj': subj, 'text': '\n'.join(L), 'to': to, 'cc': cc, 'n': len(sil), 'e': len(err)}
 
@@ -1724,7 +1724,7 @@ def trackers_pub(pub, st, today):
     return pub
 
 
-# REDACTED_B64 прогон
+# REDACTED_B64_1 прогон
 def _due(st, part, every, now_ts):
     last = st.get('ts_' + part) or 0
     return now_ts - last >= (every if st.get('ok_' + part, True) else min(every, RETRY))

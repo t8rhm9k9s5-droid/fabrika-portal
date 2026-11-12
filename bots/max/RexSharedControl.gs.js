@@ -683,7 +683,7 @@ function rch_createPorts_(config,fetchOnce,readToken) {
  * All state and gateway keys remain in Script Properties; no secrets in output.
  */
 var RXB_ACTIONS_=['status.read','chats.list','messages.read','groups.list','message.send','message.reply','queue.pause','queue.resume'];
-var RXB_OWNER_='user@example.org';
+var RXB_OWNER_='user1@example.org';
 function rxb_fail_(){throw Error('control unavailable');}
 function rxb_obj_(v){return !!v&&typeof v==='object'&&!Array.isArray(v);}
 function rxb_exact_(v,keys){return rxb_obj_(v)&&Object.keys(v).length===keys.length&&keys.every(function(k){return Object.prototype.hasOwnProperty.call(v,k);});}
@@ -777,7 +777,7 @@ function rexctl_handleEnvelope_(envelope){
   var providers=rxb_providers_(p,c,e,clock);
   providers.readApproval(e.request.authorization_ref,e.actor_id);
   var ports=rch_createPorts_({enabled:true,max_origin:c.max_origin,allowed_targets:c.allowed_targets,max_owner_dialog:e.request.bot==='max'&&e.request.target_id==='678987782'?rxb_ownerMaxDialog_(p,c):undefined},function(url,options){return UrlFetchApp.fetch(url,options);},function(bot){return rxb_token_(p,bot);});
-  if(c.telegram_mode==='legacy_bridge')ports.telegram={sendMessage:function(input){return rxb_telegramOnce_(c,e.request,input);}};
+  if(c.telegram_mode==='legacy_bridge')ports.telegram={sendMessage:function(input){return rxb_telegramOnce_();}};
   var reads=rxb_reads_(c,p,clock,function(url,options){return UrlFetchApp.fetch(url,options);});
   var server=rca_create_({enabled:true,journal:c.journal,bot_ids:c.bot_ids,principals:c.principals,status_max_age_ms:60000},providers,ports,clock,reads);
   rxb_claimNonce_(p,e,clock);

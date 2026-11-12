@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — ежедневные опросы исполнителей в группе MAX «Коммерческий отдел» и проверка формы ответов (29.10.2026).
 Пользователь (28.10.2026 23:10): «создать шаблон в виде опроса в Макс этих исполнителей ежедневно утром в 8:55 вопросы, 16:55 мск отчёт
@@ -17,31 +17,31 @@
  4) 10:00 / 17:30 — одно напоминание «⏳ Нет ответа на опрос: …»; после 18:00 — список неответивших для утреннего отчёта владельцу.
  В группу — только 08:00–20:00 МСК. Пока mx_poll_cfg.json → "on": false, ничего не отправляется: что было бы отправлено, пишется
  в poll.json → dry (тексты утверждает пользователь). Запрещённые адресаты — mx_poll_cfg.json → ban (проверка перед каждой отправкой);
- владельцу бота (Т. В. Сотрудник) опросы и напоминания не шлются. Ничего не удаляется и не правится.
+ владельцу бота (Т. В. Сотрудник1) опросы и напоминания не шлются. Ничего не удаляется и не правится.
  Состояние — ~/.fabrika_max/poll.json (0600); для портала — st/poll.bin (10 дней: ответил / не ответил / некорректно, % по исполнителям)."""
 import datetime, html, json, os, re
 try:
     import leaders as LD     # 03.11.2026: руководству бот вопросов не задаёт (leaders.json)
-except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник …»), чтобы не падал весь участок
+except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник2 …»), чтобы не падал весь участок
     import re as _re
     class LD:
         @staticmethod
         def is_lead(name=None, uid=None, mail=None, owner_uid=None, people=None):
             if uid not in (None, '') and owner_uid not in (None, '') and str(uid) == str(owner_uid): return 'владелец'
-            if str(mail or '').lower() in ('user@example.org', 'user@example.org'): return 'владелец'
-            return 'владелец' if _re.match(r'^\s*Сотрудник(?![а-яё])', str(name or ''), _re.I) else ''
+            if str(mail or '').lower() in ('user5@example.org', 'user4@example.org'): return 'владелец'
+            return 'владелец' if _re.match(r'^\s*Сотрудник2(?![а-яё])', str(name or ''), _re.I) else ''
         @staticmethod
-        def mails(): return {'user@example.org', 'user@example.org'}
+        def mails(): return {'user5@example.org', 'user4@example.org'}
 import mx_ctl as MC
 
 MSK = MC.MSK
 GROUP_TITLE = MC.GROUP_TITLE
 CFG_FILE = None                                   # тесты подменяют путь к mx_poll_cfg.json
-OWNER_RE = re.compile(r'^\s*Сотрудник(?![а-яё])', re.I)
+OWNER_RE = re.compile(r'^\s*Сотрудник2(?![а-яё])', re.I)
 WD_RU = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 HEAD_RANK = ['начальник', 'руководитель', 'директор', 'главн']
 HEAD_RE = re.compile(r'^\s*(начальник|руководитель|директор|главн)', re.I)
-ITM = 'user@example.org'
+ITM = 'user5@example.org'
 
 # --- форма вечернего отчёта
 DATE_RX = re.compile(r'(?<![\d.,])(\d{1,2})[.,/](\d{1,2})(?:[.,/](\d{2,4}))?(?![\d])')
@@ -99,7 +99,7 @@ def words(s): return re.findall(r'[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё\-]
 
 
 def _sn_eq(w, sn):
-    """слово имени = фамилия (и женская / мужская форма: Имя — Имя)"""
+    """слово имени = фамилия (и женская / мужская форма: Имя27 — Имя27)"""
     return bool(w and sn) and (w == sn or w == sn + 'а' or (sn.endswith('а') and w == sn[:-1]))
 
 
@@ -132,7 +132,7 @@ def match_entry(p, uid, name):
     ws = words(name)
     if not sn or len(sn) < 3 or not any(_sn_eq(w, sn) for w in ws): return False
     fio = str(p.get('fio') or '').split()
-    if len(fio) >= 2 and fio[1].lower().replace('ё', 'е') not in ws and len(ws) >= 2: return False   # «Сотрудник Сотрудник» ≠ «Сотрудник Сотрудник»
+    if len(fio) >= 2 and fio[1].lower().replace('ё', 'е') not in ws and len(ws) >= 2: return False   # «Сотрудник3 Сотрудник1» ≠ «Сотрудник1 Сотрудник49»
     return True
 
 
@@ -154,7 +154,7 @@ def person(cfg, org, name=None, uid=None):
             if v and _sn_eq(w, (v[0].split() or [''])[0].lower().replace('ё', 'е')): fios.setdefault(v[0], e)
         if len(fios) == 1:
             f, e = list(fios.items())[0]
-            # инициал имени, если он есть в MAX («Сотрудник Сотрудник» ↔ «Сотрудник И. П.»)
+            # инициал имени, если он есть в MAX («Сотрудник43 Сотрудник42» ↔ «Сотрудник42 И. П.»)
             ini = [x for x in ws if x != w]
             if ini and len(f.split()) > 1 and not any(x[0] == f.split()[1][0].lower().replace('ё', 'е') for x in ini): continue
             hit = (e, org[e]); break
@@ -164,7 +164,7 @@ def person(cfg, org, name=None, uid=None):
 
 
 def first_name(name, fio=None):
-    """имя для обращения: из полного ФИО (fio: «Сотрудник Сотрудник Отчество» → «Сотрудник»), иначе первое слово имени в MAX («Сотрудник Сотрудник Фабрикант Самара» → «Сотрудник»)"""
+    """имя для обращения: из полного ФИО (fio: «Сотрудник42 Сотрудник43 Отчество23» → «Сотрудник43»), иначе первое слово имени в MAX («Сотрудник45 Сотрудник44 Фабрикант Самара» → «Сотрудник45»)"""
     f = str(fio or '').split()
     if len(f) >= 2 and re.match(r'^[А-ЯЁ][а-яё]+$', f[1]): return f[1]
     w = str(name or '').split(' (@')[0].split()
@@ -188,7 +188,7 @@ def head_of(cfg, org, dep, own_mail):
     return best[1] if best else None
 
 
-# REDACTED_B64 форма ответов
+# REDACTED_B64_1 форма ответов
 def dates_of(text):
     """даты дд.мм (и «5 ноября») в тексте → [(позиция, 'дд.мм')]"""
     out = []
@@ -237,7 +237,7 @@ def check_evening(text, author='', q_req=False):
 
 
 # 30.10.2026, пользователь: «в отчёт писать вопросы на совещание в головной офис (если вопросов нет — писать нет вопросов) — совещание утром
-#   следующего дня; вопросы из вечерних отчётов мне, Сотрудник, Сотрудник + если кто-то конкретно отмечен — ему тоже его вопрос, к 8:45»
+#   следующего дня; вопросы из вечерних отчётов мне, Сотрудник6, Сотрудник16 + если кто-то конкретно отмечен — ему тоже его вопрос, к 8:45»
 Q_HEAD = re.compile(r'^[ \t]*(?:[-•*▪️]\s*)?(?:\d+[.)]\s*)?(?:❓\s*)?вопрос\w*(?:[ \t]+(?:на|в|к|для|по)\b[^:\n]{0,60}?)?[ \t]*(?:[:—–-][ \t]*|$)', re.I | re.M)
 NOQ = re.compile(r'(?<![а-яё])(нет\s+вопрос\w*|вопрос\w*\s+нет|без\s+вопрос\w*|вопрос\w*\s+отсутству\w*)(?![а-яё])', re.I)
 Q_END = re.compile(r'^[ \t]*(?:[-•*]\s*)?(?:нужна помощь|план на завтра|план\s*:|итог\w*\s*:|отгрузк\w* на завтра)', re.I)
@@ -294,7 +294,7 @@ def check_morning(text, has_over):
     return miss
 
 
-# REDACTED_B64 отправка (с учётом on / dry, тихих часов)
+# REDACTED_B64_1 отправка (с учётом on / dry, тихих часов)
 def dry(st, t, kind, to, text, extra=None):
     rec = {'t': t.strftime('%Y-%m-%dT%H:%M'), 'kind': kind, 'to': str(to), 'text': (text or '')[:300]}
     if extra: rec.update(extra)
@@ -344,7 +344,7 @@ def members(token, cid, res):
     return out
 
 
-# REDACTED_B64 исполнители
+# REDACTED_B64_1 исполнители
 def executors(cfg, ctl, names, today, owner_uid, bot_uid):
     """→ {key: {'uid', 'n', 'over': N, 'src'}}; key — str(uid) или 'n:Имя' (id в группе неизвестен); без владельца, бота и ban"""
     ex = {}
@@ -387,7 +387,7 @@ def poll_text(kind, ex, t, cfg):
         if cfg.get('morning_q'):                            # 30.10.2026, пользователь: «Начинаем с утренних вопросов в 8:45. Они хотя бы должны написать сами вопросы»
             return ('❓ <b>Вопросы на совещание в головной офис, %s</b>\n\n%s\n\nОтветьте, пожалуйста, <b>ответом (reply) на это сообщение до %s</b>: '
                     'ваши вопросы списком (1), 2), …) или «нет вопросов». Вопрос к конкретному человеку — отметьте его (@) или напишите фамилию.\n'
-                    'В %s вопросы уйдут Сотрудник Отчество, М. И. Сотрудник и К. В. Сотрудник, отмеченным — их вопрос отдельно.'
+                    'В %s вопросы уйдут Сотрудник81 Отчество42, М. И. Сотрудник6 и К. В. Сотрудник16, отмеченным — их вопрос отдельно.'
                     % (day, '\n'.join(lines), cfg.get('morning_due') or '08:45', cfg.get('q_digest_at') or '08:45'))
         return ('📋 <b>Утренний опрос, %s</b>\n\n%s\n\nОтветьте, пожалуйста, <b>ответом (reply) на это сообщение до %s</b>:\n'
                 '1) Вопросы к руководству / коллегам (или «вопросов нет»);\n'
@@ -424,7 +424,7 @@ def ans_key(m, rec, cfg):
     return u
 
 
-# REDACTED_B64 run
+# REDACTED_B64_1 run
 def run(L, CFG, log, jload, jsave, publish, iso, mail_send=None):
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     mcfg = jl(os.path.join(M, 'config.json'))
@@ -553,7 +553,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, mail_send=None):
             jsave0600(stp, st)                              # 30.10.2026 аудит P10
     try: fwd_digest(ctx, cfg, st, t, today, tod, mail_send, stp)
     except Exception as e: res['fwd_err'] = '%s %s' % (e.__class__.__name__, str(e)[:120])
-    # 3б) 30.10.2026: вопросы на совещание из вечерних отчётов — к 08:45 следующего рабочего дня владельцу, Сотрудник, Сотрудник и отмеченным
+    # 3б) 30.10.2026: вопросы на совещание из вечерних отчётов — к 08:45 следующего рабочего дня владельцу, Сотрудник6, Сотрудник16 и отмеченным
     try: q_digest(ctx, cfg, org, st, t, today, tod, wd, mail_send, stp)
     except Exception as e: res['q_err'] = '%s %s' % (e.__class__.__name__, str(e)[:120])
     # 4) после 18:00 — кто не ответил (для утреннего отчёта владельцу)
@@ -643,7 +643,7 @@ def repeat_evening(ctx, cfg, st, D, times, t, today, tod, wd, stp):
 def iso_(t): return t.strftime('%Y-%m-%dT%H:%M')
 
 
-Q_TO_DEF = ['user@example.org', 'user@example.org', 'user@example.org']     # Т. В. Сотрудник, М. И. Сотрудник, К. В. Сотрудник
+Q_TO_DEF = ['user5@example.org', 'user8@example.org', 'user16@example.org']     # Т. В. Сотрудник1, М. И. Сотрудник6, К. В. Сотрудник16
 
 
 def q_people(org, cfg, today, skip):
@@ -678,7 +678,7 @@ def q_marked(item, ments, names, cfg, org, people, today, skip):
 
 
 def q_digest(ctx, cfg, org, st, t, today, tod, wd, mail_send, stp):
-    """к q_digest_at (08:45) рабочего дня: вопросы на совещание → одно письмо q_digest_to (владелец, Сотрудник, Сотрудник) + каждому отмеченному — его вопрос
+    """к q_digest_at (08:45) рабочего дня: вопросы на совещание → одно письмо q_digest_to (владелец, Сотрудник6, Сотрудник16) + каждому отмеченному — его вопрос
     (копия руководителю отдела, кроме запрещённых). Источники: 30.10.2026 (пользователь: «Начинаем с утренних вопросов в 8:45. Они хотя бы должны написать
     сами вопросы») — ответы на утренний опрос «❓ Вопросы на совещание» (morning_q) за сегодня; и вопросы из вечерних отчётов прошлых дней (ещё не разосланные).
     Кто утром ничего не написал — отдельной строкой. Нет почты робота (mail_send) — ждём следующего прогона; on=false — dry."""
@@ -701,7 +701,7 @@ def q_digest(ctx, cfg, org, st, t, today, tod, wd, mail_send, stp):
     if ctx['on'] and mail_send is None:
         ctx['res']['q_err'] = 'нет mail_send (новый live.py ещё не встал) — сводка вопросов ждёт'; return
     to = [x.lower() for x in (cfg.get('q_digest_to') or Q_TO_DEF)]
-    skip = set(to) | {'user@example.org'}
+    skip = set(to) | {'user42@example.org'}
     names = st.get('names') or {}
     people = q_people(org, cfg, today, skip)
     lines, noq, none, personal, silent = [], [], [], {}, []
@@ -802,7 +802,7 @@ def fwd_digest(ctx, cfg, st, t, today, tod, mail_send, stp):
     text = ('Пересылки в группу MAX «Коммерческий отдел» за неделю (%s–%s): %d.\n\n%s\n\n'
             'Пересылки ИЗ группы в другие чаты боту не видны (MAX об этом не сообщает).\n— бот «Фабрикант»'
             % (MC.ddmm(since), MC.ddmm(wk), len(rows), '\n'.join(lines)))
-    q_send(ctx, mail_send, 'mail:fwd', 'Пересылки в «Коммерческий отдел» за неделю — %d' % len(rows), text, cfg.get('fwd_to') or ['user@example.org'], [])
+    q_send(ctx, mail_send, 'mail:fwd', 'Пересылки в «Коммерческий отдел» за неделю — %d' % len(rows), text, cfg.get('fwd_to') or ['user5@example.org'], [])
     jsave0600(stp, st)
 
 

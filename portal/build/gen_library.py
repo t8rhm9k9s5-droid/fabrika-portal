@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Page «Документы» (22.10.2026): one place for the documents of the company and of the site, in the iOS «Настройки» look.
   Компания — Сертификаты (the expiry is highlighted), Прайс-листы (the current one on top, the old ones under «Прошлые»),
@@ -12,10 +12,10 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = json.load(open('/home/claude/library/library.json', encoding='utf-8'))
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник16 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
-        ('marketing', 'Имя: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -63,10 +63,10 @@ PUB = json.load(open('/home/claude/library/fabrikant_su.json', encoding='utf-8')
 #   не было адресата. Решение пользователя (опрос): адресат и срок на портале; договоры, ЭДО, акты рекламации и политика ПДн — юристу,
 #   каталог, гарантии и сертификаты (замена файлов на сайте) — маркетологу (письмо 26.10, срок 30.10, ответа нет). Служебные пометки
 #   проверки («WebFetch…») из текста убраны — сотрудникам они не нужны.
-PUB_TO = {'agreements': 'юрист Сотрудник Н. Я.', 'edo': 'юрист Сотрудник Н. Я.', 'claims': 'юрист Сотрудник Н. Я.', 'policy': 'юрист Сотрудник Н. Я.',
-          'catalogs': 'маркетолог Сотрудник Д. Р.', 'warranty': 'маркетолог Сотрудник Д. Р.', 'certs': 'маркетолог Сотрудник Д. Р.'}
-PUB_ST = {'маркетолог Сотрудник Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
-          'юрист Сотрудник Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник придержано (ищем её письмо с прайсом)
+PUB_TO = {'agreements': 'юрист Сотрудник25 Н. Я.', 'edo': 'юрист Сотрудник25 Н. Я.', 'claims': 'юрист Сотрудник25 Н. Я.', 'policy': 'юрист Сотрудник25 Н. Я.',
+          'catalogs': 'маркетолог Сотрудник33 Д. Р.', 'warranty': 'маркетолог Сотрудник33 Д. Р.', 'certs': 'маркетолог Сотрудник33 Д. Р.'}
+PUB_ST = {'маркетолог Сотрудник33 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
+          'юрист Сотрудник25 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник33 придержано (ищем её письмо с прайсом)
 def _pub_clean(x):
     x = re.sub(r'\s*\((?:WebFetch|бинарные данные)[^)]*\)', '', x)
     x = re.sub(r'^Файл (\.\w+) не прочитан\s*—\s*', r'Файл \1 в старом формате — ', x)
@@ -255,7 +255,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function howRows(){ return how().replace(/^<p class="ihdr">[^<]*<\\/p><div class="igroup howto">/, '').replace(/<\\/div>$/, ''); }
   function how(){
     return '<p class="ihdr">Как добавить документ</p><div class="igroup howto">' +
-      '<div class="irow static">' + tile('#007aff', 'mail') + '<span class="ic"><span class="ibody"><span class="ititle">Письмом</span><span class="isub">На user@example.org с темой «Фабрика: документ», файл во вложении. В тексте — раздел и срок действия, если есть.</span></span></span></div>' +
+      '<div class="irow static">' + tile('#007aff', 'mail') + '<span class="ic"><span class="ibody"><span class="ititle">Письмом</span><span class="isub">На user1@example.org с темой «Фабрика: документ», файл во вложении. В тексте — раздел и срок действия, если есть.</span></span></span></div>' +
       '<div class="irow static">' + tile('#8e8e93', 'gear') + '<span class="ic"><span class="ibody"><span class="ititle">В «Управлении»</span><span class="isub">Для администраторов: «Ещё» → «Управление» → «Загрузить документ».</span></span></span></div></div>';
   }
   // 27.10.2026, пользователь: «документы с сайта fabrikant.su разложи по меню, уже существующему» — каждый документ в своём разделе
@@ -282,7 +282,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   var TYPES = [
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
-    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},   // 11.11.2026, Сотрудник К. В.
+    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},   // 11.11.2026, Сотрудник16 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -362,7 +362,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function cleanSubj(s){ return String(s || '').replace(/^\\s*((re|fwd?|fw|ответ|пересл\\.?)\\s*(\\[\\d+\\])?\\s*:\\s*)+/i, '').trim() || '(без темы)'; }
   // 02.11.2026, ночное задание пользователя: «убрать … ссылки что это прислано с моей почты» — у документа показывается автор (Фамилия И. О.
   //   по справочнику), а не почтовый адрес; адрес владельца, строки пересылки и сопроводительный текст письма ему — не выводятся
-  var OWN_RX = /(itm@fabrikant\\.su|bostimur@gmail\\.com|1c@techfabrikant\\.ru)/i;
+  var OWN_RX = /(itm@fabrikant\\.su|owner@gmail\\.com|1c@techfabrikant\\.ru)/i;
   function who2(e){ return OWN_RX.test(String(e || '')) ? '' : ((D.mbx && D.mbx[e]) || ''); }
   function cleanX(x){ return String(x || '').split('\\n').filter(function(l){ return !(OWN_RX.test(l) && /(^|\\s)(от|from|кому|to|отправлено|sent)(\\s|:)|пересыл|forward|wrote|пишет|написал/i.test(l)); }).join('\\n').trim(); }
   function offTxt(s){   // предложения без «почты itm@»; инициалы («Т. В.») — не конец предложения
@@ -400,7 +400,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник16, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -515,7 +515,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     }
     if (k === 'prices' && its.length) {
       // 29.10.2026: «extra» в library.json — дополнительный вариант для клиентов (PDF от 01.10), не прошлый прайс: свой блок под действующим
-      //   (решение Т. В. Сотрудник: «Добавить PDF, Excel — действующий»); действующий и «Прошлые» — по дате среди остальных, как раньше
+      //   (решение Т. В. Сотрудник1: «Добавить PDF, Excel — действующий»); действующий и «Прошлые» — по дате среди остальных, как раньше
       var pex = its.filter(function(i){ return i.extra; }), pcur = its.filter(function(i){ return !i.extra; }); if (!pcur.length) { pcur = pex; pex = []; }
       h += '<p class="ihdr">Действующий</p><div class="igroup">' + docRow(pcur[0], c) + '</div>';
       if (pex.length) h += '<p class="ihdr">Для клиентов</p><div class="igroup">' + pex.map(function(i){ return docRow(i, c); }).join('') + '</div>';
@@ -532,7 +532,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_2 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -596,7 +596,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_2 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';

@@ -1,6 +1,6 @@
 /* Owner-only, read-only inventory. No bot calls, queue reads or token output. */
 function rexctl_telegramInventory() {
-  var owner = 'user@example.org';
+  var owner = 'user1@example.org';
   if (Session.getActiveUser().getEmail() !== owner ||
       Session.getEffectiveUser().getEmail() !== owner) throw Error('owner required');
   var p = PropertiesService.getScriptProperties();

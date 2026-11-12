@@ -1,7 +1,7 @@
 /* Owner-only read-only MAX membership audit; no sends or configuration changes. */
 function rexgiMaxCoverage() {
-  if (Session.getActiveUser().getEmail() !== 'user@example.org' ||
-      Session.getEffectiveUser().getEmail() !== 'user@example.org') throw Error('Owner required');
+  if (Session.getActiveUser().getEmail() !== 'user1@example.org' ||
+      Session.getEffectiveUser().getEmail() !== 'user1@example.org') throw Error('Owner required');
   var p=PropertiesService.getScriptProperties(),c=rxb_config_(p,false);
   var page=rxb_maxGroupPage_(c,p,{bot:'max',target_id:'max-groups',payload:{limit:10}},
     function(url,options){return UrlFetchApp.fetch(url,options);});

@@ -1,9 +1,9 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — обмен робота хостинга с ботами Google через Диск 1c@ (05.11.2026, шаг 4 переноса ботов в Google 1c@).
-Т. В. Сотрудник 04.11: «Бот работает независимо, только на G-драйве». Решения Р1 (данные сайта ботам — через папку Диска 1c@
+Т. В. Сотрудник1 04.11: «Бот работает независимо, только на G-драйве». Решения Р1 (данные сайта ботам — через папку Диска 1c@
 «Фабрика — портал/Для ботов»), Р2 (данные ботов для портала — на Диск, робот показывает), Р4 (оповещения робота через Диск → бот пишет
 Т. В. в Telegram).
 
@@ -261,7 +261,7 @@ def _drafts(L, st, dr_id, res, deadline, log):
     return n
 
 
-# REDACTED_B64 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
+# REDACTED_B64_1 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
 def queue_alert(L, subject, text, critical=False):
     """оповещение владельцу → state/bots_alerts.json (на Диск — следующим прогоном; бот Telegram пишет Т. В.). Повтор того же текста за час — не дублируется."""
     h = _sha(str(text).encode('utf-8'))[:16]                            # повтор — по тексту: alert() зовёт и mail_send, и max_send с одним текстом
@@ -291,7 +291,7 @@ def queue_mail(L, subject, text, to, cc=None, att=None, html=None, reply_to=None
     if skipped: body += '\n\n(вложения не переданы боту — слишком большие: %s)' % ', '.join(skipped)[:300]
     now = time.time()
     rec = {'id': 'rm-%d-%s' % (int(now), _sha((str(subject) + body + ','.join(to or [])).encode('utf-8'))[:8]), 't': _iso(now), 'ts': int(now),
-           'subject': str(subject or '')[:200], 'text': body[:20000], 'to': list(to or []), 'cc': list(cc or []), 'reply_to': reply_to or 'user@example.org'}
+           'subject': str(subject or '')[:200], 'text': body[:20000], 'to': list(to or []), 'cc': list(cc or []), 'reply_to': reply_to or 'user5@example.org'}
     if html: rec['html'] = str(html)[:40000]
     if atts: rec['att'] = atts
     def fn(items):
@@ -305,7 +305,7 @@ def install(live, L, CODE):
     """вызывается из live.py при загрузке модуля (строка перед LANES): при флаге bots_off max_send/mail_send робота не шлют сами —
     оповещения и письма уходят ботам через Диск. Без флага ничего не меняется. → True, если подменено."""
     if not off(CODE): return False
-    alert_to = [str(x).lower() for x in (getattr(live, 'CFG', {}) or {}).get('alert_to') or ['user@example.org']]
+    alert_to = [str(x).lower() for x in (getattr(live, 'CFG', {}) or {}).get('alert_to') or ['user5@example.org']]
     def max_send(text):
         return queue_alert(L, str(text).split('\n')[0][:150], text)
     def mail_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=None):

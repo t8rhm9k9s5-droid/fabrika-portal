@@ -18,7 +18,7 @@ function mx_dialog(u, m) {
   var mm = text.match(/^\/owner(?:@\S+)?\s+(\d{6})\s*$/);
   if (mm) {
     if (p.getProperty('OWNER_CODE')) { ownerBind_(uid, mm[1]); return; }                       // код выдан ownerCode() из редактора — проверка в Relay.gs (замечание 09)
-    mx_sendUser(uid, 'Код не выдан или уже использован. Код владельца создаёт Т. В. Сотрудник в редакторе скрипта (ownerCode).'); return;
+    mx_sendUser(uid, 'Код не выдан или уже использован. Код владельца создаёт Т. В. Сотрудник1 в редакторе скрипта (ownerCode).'); return;
   }
   if (own && uid === own && type === 'message_created') {
     var gm = text.match(MX_OWNER_CMD);
@@ -28,7 +28,7 @@ function mx_dialog(u, m) {
   }
   // 11.11.2026: ответ на вопрос бота по контрольным точкам в личке — в контроль сроков (TimersCtl), до зеркала и помощника
   if (type === 'message_created' && typeof tm_ctlDmAnswer_ === 'function' && tm_ctlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;
-  if (/^\/owner\b/.test(text)) { mx_sendUser(uid, own && own === uid ? 'Вы — владелец бота: пересылаю обращения к вам из групп.' : 'Код владельца выдаёт Т. В. Сотрудник (функция ownerCode в редакторе). Напишите: /owner 123456'); return; }
+  if (/^\/owner\b/.test(text)) { mx_sendUser(uid, own && own === uid ? 'Вы — владелец бота: пересылаю обращения к вам из групп.' : 'Код владельца выдаёт Т. В. Сотрудник1 (функция ownerCode в редакторе). Напишите: /owner 123456'); return; }
   var mirror = mx_mirrorOn();
   if (/^(\/|\/menu|\/commands|\/команды|меню|команды)$/i.test(text)) { mx_cmdMenu(uid); return; }
   if (mirror) {                                                                                  // зеркало Telegram-бота — тот же формат, что hook.php → op maxupd
@@ -84,7 +84,7 @@ function mx_dialogSelf(uid, user, text, m) {
     var mid = String(((m || {}).body || {}).mid || ''), now = uid === mx_ownerUid() || mx_isLeader(name, uid);
     // GPT A5: модуль cp_ не принял → событие в Outbox (досылка тиком) — обещание «передал» выполнимо; не записалось и туда — честно сказать человеку
     var ok = mx_pushOut({ src: 'max', who: name + ' (id ' + uid + ')', chat: String(uid), id: 'max:dm:' + (mid || Date.now()), text: text.slice(0, 3000) + (mx_attNote(m) ? '\n' + mx_attNote(m) : '') + '\n(ответ: op dm uid=' + uid + ')' }, now);
-    mx_sendUser(uid, ok ? 'Принял, передал — ответ придёт сюда.' : 'Не получилось передать сообщение — напишите, пожалуйста, ещё раз чуть позже или позвоните +7 000 000-00-00.');
+    mx_sendUser(uid, ok ? 'Принял, передал — ответ придёт сюда.' : 'Не получилось передать сообщение — напишите, пожалуйста, ещё раз чуть позже или позвоните +7 000 000-00-14.');
     return;
   }
   mx_dialogGuest(uid, user, text, m);
@@ -92,7 +92,7 @@ function mx_dialogSelf(uid, user, text, m) {
 /** Справка о компании (раз в 12 ч на человека) + письмо маркетологам при 'dialog' в mail_types — для посторонних и когда push не настроен (как на хостинге). */
 function mx_dialogGuest(uid, user, text, m) {
   if (!mx_hello(uid)) return;
-  var hc = mx_sendUser(uid, 'Здравствуйте! Это бот «Фабрикант».\n\nМебель для офиса и дома, цены и наличие: <a href="https://fabrikant.su">fabrikant.su</a>, +7 000 000-00-00.\nВаше сообщение мы получили — менеджер ответит в рабочее время.');
+  var hc = mx_sendUser(uid, 'Здравствуйте! Это бот «Фабрикант».\n\nМебель для офиса и дома, цены и наличие: <a href="https://fabrikant.su">fabrikant.su</a>, +7 000 000-00-14.\nВаше сообщение мы получили — менеджер ответит в рабочее время.');
   if (ok_(hc[0]) && (mx_set('mail_types') || []).indexOf('dialog') >= 0)
     mx_commentMail({ chat: '', post: '', mid: '', sender: user, text: text, ts: (m || {}).timestamp || 0, url: '' }, 'question', '', 'личное сообщение боту — ответ справкой');
 }

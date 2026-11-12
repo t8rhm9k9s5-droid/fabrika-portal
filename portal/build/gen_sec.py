@@ -28,7 +28,7 @@ if x:
         rows = [list(r) for r in ws.iter_rows(values_only=True)]
         cols = cols or [str(c) for c in rows[0]]
         sheets.append({'name': ws.title, 'rows': [[('' if c is None else (int(c) if isinstance(c, float) and c.is_integer() else c)) for c in r] for r in rows[1:] if any(c not in (None, '') for c in r)]})
-    parts['sim'] = {'src': 'Список Сотрудник А. В. (МТС, 11.11.2026), разбит по разделам; ответ А. В. 11.11: номера уволенных — в блокировке или с переадресацией, в справочник — только Грачёв',
+    parts['sim'] = {'src': 'Список Сотрудник1 А. В. (МТС, 11.11.2026), разбит по разделам; ответ А. В. 11.11: номера уволенных — в блокировке или с переадресацией, в справочник — только Грачёв',
                     'cols': cols, 'sheets': sheets, 'note': 'На проверке у Т. В. и А. В. Номера — только здесь (закрыто), в общий справочник не вносятся.'}
 for k, v in parts.items():
     t = seal_obj(dict(v, t=__import__('datetime').datetime.now().strftime('%Y-%m-%dT%H:%M')), KEY)

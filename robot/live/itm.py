@@ -1,15 +1,15 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-"""«Фабрика» — помощник рабочего ящика user@example.org (Mail.ru), 27.10.2026.
+"""«Фабрика» — помощник рабочего ящика user5@example.org (Mail.ru), 27.10.2026.
 Пользователь: «мне нужен 2 вариант» (помощник в рабочих ящиках), ящик — itm@; «уведомления о важном, черновики ответов, проверять содержимое
 и использовать на сайте необходимое, чтобы минимизировать использование gmail-ящика»; «и учить его новым функциям».
 Уведомления — в Telegram, только пользователю; черновики — на письма лично ему (itm@ в «Кому») с вопросом или просьбой (правило по умолчанию,
 дальше — чему научит пользователь в боте: /pochta).
 
 Запуск — из live.py (cron хостинга раз в 10 минут), без Claude:
- 1) IMAP imap.mail.ru:993, логин cfg.json → itm_mail (по умолчанию user@example.org), пароль для внешнего приложения Mail.ru —
+ 1) IMAP imap.mail.ru:993, логин cfg.json → itm_mail (по умолчанию user5@example.org), пароль для внешнего приложения Mail.ru —
     файл ~/.fabrika_live/itm_app_password (создаёт и вписывает только пользователь). Папки открываются ТОЛЬКО для чтения (EXAMINE, BODY.PEEK):
     письма не помечаются прочитанными, ничего не удаляется, не перемещается и не отправляется. Единственная запись в ящик — новый черновик
     в «Черновики» (IMAP APPEND); с 29.10 ответ, который владелец выбрал или написал в боте (send=1), уходит с itm@ сам (mail_q.py),
@@ -40,10 +40,10 @@ QUOTE_CUT = re.compile(r'^\s*(>|От кого:|From:|-{3,}\s*(Original|Исхо�
                        r'(Пн|Вт|Ср|Чт|Пт|Сб|Вс|Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-zа-я]*,\s+\d{1,2}\s)', re.I | re.M)
 MAX_NOTES, MAX_DREQ, FIRST_DAYS = 60, 12, 5
 # 11.11.2026, Т. В.: «проверь доступ на отправку и приём почты itm@ — как подтвердишь, отмени пересылку на 1c@».
-# Проверка связи: письмо с user@example.org на itm@ с темой «Проверка связи itm@ <КОД>» → хостинг принял его по IMAP и ставит
-# ответ с itm@ (SMTP Mail.ru, очередь mail_q) на user@example.org «Re: Проверка связи itm@ <КОД>». Один ответ на код.
+# Проверка связи: письмо с user1@example.org на itm@ с темой «Проверка связи itm@ <КОД>» → хостинг принял его по IMAP и ставит
+# ответ с itm@ (SMTP Mail.ru, очередь mail_q) на user1@example.org «Re: Проверка связи itm@ <КОД>». Один ответ на код.
 TEST_RX = re.compile(r'^\s*Проверка связи itm@ ([A-Z0-9][A-Z0-9-]{3,19})\s*$')
-TEST_FROM = 'user@example.org'
+TEST_FROM = 'user1@example.org'
 
 
 def _now(): return datetime.datetime.now(MSK)
@@ -219,26 +219,26 @@ def authentic(msg, frm):
 def report_hdr(frm, subj):
     """по одному заголовку: может ли это быть отчёт (тогда письмо скачивается целиком)"""
     s = clean(subj).lower().replace('ё', 'е')
-    return ((frm == 'user@example.org' and 'отчет' in s) or (frm in ('user@example.org', 'user@example.org')) or
-            (frm == 'user@example.org') or (frm in ('user@example.org', 'user@example.org') and ('остатки' in s)) or frm == 'user@example.org')
+    return ((frm == 'user28@example.org' and 'отчет' in s) or (frm in ('user14@example.org', 'user13@example.org')) or
+            (frm == 'user3@example.org') or (frm in ('user5@example.org', 'user4@example.org') and ('остатки' in s)) or frm == 'user30@example.org')
 
 
 def report_like(frm, subj, names):
     """те же отчёты, что live.py искал в Gmail (QUERY)"""
     s, low = subj.lower(), [n.lower() for n in names]
-    if not names: return frm in ('user@example.org', 'user@example.org') and 'гальваник' in s   # 03.11.2026: ПЭО «выпуска в 1С нет» — без вложения
-    if frm == 'user@example.org' and 'отчет' in s.replace('ё', 'е'): return True
-    if frm in ('user@example.org', 'user@example.org') and ('гальваник' in s or any('гальваник' in n for n in low)): return True
-    if frm == 'user@example.org' and any(k in s for k in ('складские остатки', 'жилпромсервис отчеты', 'пкс свободные остатки', 'продажи в разрезе')): return True   # 30.10: + продажи за день
-    if frm in ('user@example.org', 'user@example.org') and any(k in s for k in ('пкс свободные остатки', 'складские остатки')): return True
-    if frm == 'user@example.org' and any(k in s for k in ('реестр рекламаций', 'тз в работе')): return True       # 03.11.2026: рассылки 1С для rep_1c.py (02.11) — без этого письма не доходили до разбора
-    if frm in ('user@example.org', 'user@example.org', 'user@example.org', 'user@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user@example.org (А. Сотрудник пишет оттуда)
-    if frm == 'user@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник — отчёт 1С «Продажи» за месяц по дням (в 1c@)
-    if frm in ('user@example.org', 'user@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
-    if frm in ('user@example.org', 'user@example.org', 'user@example.org', 'user@example.org', 'user@example.org', 'user@example.org') and \
+    if not names: return frm in ('user14@example.org', 'user13@example.org') and 'гальваник' in s   # 03.11.2026: ПЭО «выпуска в 1С нет» — без вложения
+    if frm == 'user28@example.org' and 'отчет' in s.replace('ё', 'е'): return True
+    if frm in ('user14@example.org', 'user13@example.org') and ('гальваник' in s or any('гальваник' in n for n in low)): return True
+    if frm == 'user3@example.org' and any(k in s for k in ('складские остатки', 'жилпромсервис отчеты', 'пкс свободные остатки', 'продажи в разрезе')): return True   # 30.10: + продажи за день
+    if frm in ('user5@example.org', 'user4@example.org') and any(k in s for k in ('пкс свободные остатки', 'складские остатки')): return True
+    if frm == 'user3@example.org' and any(k in s for k in ('реестр рекламаций', 'тз в работе')): return True       # 03.11.2026: рассылки 1С для rep_1c.py (02.11) — без этого письма не доходили до разбора
+    if frm in ('user33@example.org', 'user22@example.org', 'user5@example.org', 'user4@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user22@example.org (А. Сотрудник1 пишет оттуда)
+    if frm == 'user34@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник5 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
+    if frm in ('user34@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник5 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
+    if frm in ('user3@example.org', 'user34@example.org', 'user30@example.org', 'user35@example.org', 'user5@example.org', 'user4@example.org') and \
             any(n.endswith('.xlsx') for n in low) and (any(k in s for k in ('запасы гп', 'товары на складах')) or any('товары на складах' in n or ('запас' in n and 'гп' in n) for n in low)):
-        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник 02.11; ежедневно — В. В. Сотрудник на 1c@) → stock_mv.py
-    return frm == 'user@example.org' and any(n.endswith('.zip') for n in low)
+        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник5 на 1c@) → stock_mv.py
+    return frm == 'user30@example.org' and any(n.endswith('.zip') for n in low)
 
 
 def att_names(msg):
@@ -415,7 +415,7 @@ def run_gas(L, CFG, st, res, me, log, jsave):
         try:
             d = json.load(open(p, encoding='utf-8')); req = st.setdefault('dreq', {}).get(d.get('id'))
             if req and d.get('send') and (d.get('text') or '').strip():
-                r = send_reply(me, CFG.get('itm_name') or 'Сотрудник Сотрудник', d, req)
+                r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                 if not str(r).startswith('ok'): raise RuntimeError(str(r))
                 res['sent'] = res.get('sent', 0) + 1; st['ddone'] = (st.get('ddone') or [])[-300:] + [d['id']]; st['dreq'].pop(d['id'], None)
                 st.setdefault('sent_log', []).append({'t': _now().strftime('%Y-%m-%dT%H:%M'), 'id': d['id'], 'to': req.get('n') or req['f'], 's': (req.get('s') or '')[:120]})
@@ -443,7 +443,7 @@ def selftest(st, h, folder, log):
     import mail_q as MQ
     r = MQ.enqueue('Re: Проверка связи itm@ ' + code,
                    'Письмо «Проверка связи itm@ %s» получено хостингом с imap.mail.ru (папка «%s») %s МСК.\n'
-                   'Этот ответ отправлен с user@example.org через smtp.mail.ru (очередь писем хостинга).' % (code, folder[:40], t),
+                   'Этот ответ отправлен с user5@example.org через smtp.mail.ru (очередь писем хостинга).' % (code, folder[:40], t),
                    to=[TEST_FROM], headers=({'In-Reply-To': mid, 'References': mid} if mid else None), meta={'kind': 'selftest', 'id': code})
     done[code] = {'rx': _now().strftime('%Y-%m-%dT%H:%M'), 'q': str(r)[:60], 'f': folder[:40]}
     st['selftest'] = dict(sorted(done.items(), key=lambda kv: kv[1].get('rx', ''))[-20:])
@@ -452,7 +452,7 @@ def selftest(st, h, folder, log):
 
 def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
     """→ статус для status.json: {t, mail, reports, notes, dreq, drafts, err}"""
-    me = (CFG.get('itm_mail') or 'user@example.org').lower()
+    me = (CFG.get('itm_mail') or 'user5@example.org').lower()
     st = jload('itm.json', {'folders': {}, 'notes': [], 'dreq': {}, 'ddone': []})
     res = {'t': _now().strftime('%Y-%m-%dT%H:%M'), 'reports': 0, 'new': 0, 'drafts': 0}
     if only_1c():                                          # 30.10.2026: itm@ не читается и не пишется (ни отчёты, ни черновики, ни карточки бота)
@@ -480,7 +480,7 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
             try:
                 d = json.load(open(p, encoding='utf-8')); req = st['dreq'].get(d.get('id'))
                 if req and d.get('send') and (d.get('text') or '').strip():          # 29.10.2026: ответ выбрал / написал владелец — отправить, не в «Черновики»
-                    r = send_reply(me, CFG.get('itm_name') or 'Сотрудник Сотрудник', d, req)
+                    r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                     if not str(r).startswith('ok'): raise RuntimeError(str(r))
                     res['sent'] = res.get('sent', 0) + 1; st['ddone'] = (st.get('ddone') or [])[-300:] + [d['id']]; st['dreq'].pop(d['id'], None)
                     st.setdefault('sent_log', []).append({'t': _now().strftime('%Y-%m-%dT%H:%M'), 'id': d['id'], 'to': req.get('n') or req['f'], 's': (req.get('s') or '')[:120]})
@@ -488,15 +488,15 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
                     log('itm: ответ поставлен на отправку —', (req.get('s') or '')[:60], '→', req.get('n') or req['f'])
                 elif req and dbox and (d.get('text') or '').strip():
                     typ, _ = M.append('"%s"' % dbox, '(\\Draft \\Seen)', imaplib.Time2Internaldate(time.time()),
-                                      make_draft(me, CFG.get('itm_name') or 'Сотрудник Сотрудник', d, req))
+                                      make_draft(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req))
                     if typ != 'OK': raise RuntimeError('APPEND ' + str(typ))
                     res['drafts'] += 1; st['ddone'] = (st.get('ddone') or [])[-300:] + [d['id']]; st['dreq'].pop(d['id'], None)
                     log('itm: черновик в «Черновики» —', (req.get('s') or '')[:60])
                 os.replace(p, os.path.join(ddone, fn))
             except Exception as e: log('  ! itm черновик', fn, e.__class__.__name__, e)
-        try: res['scopied'] = copy_sent(M, fl, L, st, me, CFG.get('itm_name') or 'Сотрудник Сотрудник', log)
+        try: res['scopied'] = copy_sent(M, fl, L, st, me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', log)
         except Exception as e: log('  ! itm копия в «Отправленные»:', e.__class__.__name__, e)
-        try: res['old_sent'] = send_old_drafts(M, fl, L, st, me, CFG.get('itm_name') or 'Сотрудник Сотрудник', log); res['old_diag'] = st.get('old_diag')
+        try: res['old_sent'] = send_old_drafts(M, fl, L, st, me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', log); res['old_diag'] = st.get('old_diag')
         except Exception as e: log('  ! itm старые черновики:', e.__class__.__name__, e); res['old_diag'] = {'err': '%s: %s' % (e.__class__.__name__, str(e)[:120])}
         # 1–3) новые письма во всех папках, кроме спама, корзины, отправленных и черновиков — только чтение
         first = not st.get('folders')
@@ -564,14 +564,14 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
                             rt.pop(str(u), None); res['quar'] = res.get('quar', 0) + 1
                             res.setdefault('quar_list', []).append('itm@ %s uid %s «%s»: %s %s' % (name[:30], u, clean(msg['Subject'])[:80], e.__class__.__name__, str(e)[:80]))
                             st.setdefault('quar', []).append({'f': raw, 'u': u, 't': res['t']}); st['quar'] = st['quar'][-100:]
-                elif not quiet and frm != me and frm != 'user@example.org' and not is_robot(msg, frm):
+                elif not quiet and frm != me and frm != 'user4@example.org' and not is_robot(msg, frm):
                     note, req = card(msg, name, me)
                     st['notes'] = [n for n in st['notes'] if n['id'] != note['id']][-(MAX_NOTES - 1):] + [note]
                     if req and req['id'] not in (st.get('ddone') or []): st['dreq'][req['id']] = req
                     if TD:                                  # 11.11.2026: лично ему (в «Кому») — ждёт решения, непрочитанным; в копии — прочитано + в папку
                         to_me = me in [a.lower() for _, a in email.utils.getaddresses([str(x) for x in msg.get_all('To', [])])]
                         TD.note(st, raw, u, 'wait' if to_me else 'person', frm, clean(msg['Subject']), note['id'])
-                elif TD and not quiet and frm != me and frm != 'user@example.org' and is_robot(msg, frm):
+                elif TD and not quiet and frm != me and frm != 'user4@example.org' and is_robot(msg, frm):
                     TD.note(st, raw, u, 'robot', frm, clean(msg['Subject']))
                 fs['last'] = max(int(fs.get('last') or 0), u)
             st['folders'][raw] = fs

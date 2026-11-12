@@ -132,7 +132,7 @@ function mx_opDelete(q) {
   return { ok: true, res: out };
 }
 
-// REDACTED_B64 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
+// REDACTED_B64_2 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
 function mx_pollId(s) { s = String(s || ''); return /^[A-Za-z0-9_.-]{1,32}$/.test(s) ? s : ''; }
 function mx_pollGet(id) { id = mx_pollId(id); if (!id) return null; var p = jget_('polls', id + '.json', null); return p && p.id ? p : null; }
 function mx_pollMsk(t) { return mx_msk('dd.MM HH:mm', new Date(Number(t) * 1000)); }
@@ -171,7 +171,7 @@ function mx_pollPublish(cid, title, P) {
   var sent = 0, err = '';
   if (!cur.intro_mid) {
     var txt = '<b>Опрос: ' + h_(cur.title) + '</b>' + (cur.intro ? '\n' + h_(cur.intro) : '') + '\n\nВопросов: ' + cur.q.length + '. Под каждым — три варианта, нажмите один; передумали — нажмите другой.' +
-              '\nОтветы с именами видит только Сотрудник Отчество — в группе их не видит никто.\nОтвечать до ' + mx_pollMsk(cur.deadline) + ' МСК.';
+              '\nОтветы с именами видит только Сотрудник2 Отчество1 — в группе их не видит никто.\nОтвечать до ' + mx_pollMsk(cur.deadline) + ' МСК.';
     var r0 = mx_sendChat(cid, txt); if (!ok_(r0[0])) return { ok: false, sent: 0, n: cur.q.length, err: 'MAX ' + r0[0] };
     var im = String((((r0[1] || {}).message || {}).body || {}).mid || '-');
     jrmw_('polls', name, null, function (x) { x.intro_mid = im; return x; });
@@ -239,7 +239,7 @@ function mx_pollSummary(p) {
   return L.join('\n');
 }
 
-// REDACTED_B64 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
+// REDACTED_B64_2 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
 function mx_tgErr(d) { return { ok: false, error_code: 400, description: String(d) }; }
 function mx_tgUid(chat) { var c = Number(chat) || 0; return c >= MX_ID_BASE ? c - MX_ID_BASE : 0; }
 /** HTML Telegram → HTML MAX: теги, которых в MAX нет, убираем, текст оставляем. */
@@ -356,7 +356,7 @@ function mx_tgcallRaw(method, p) {
   return mx_tgErr('метод ' + method + ' в MAX не поддерживается');
 }
 
-// REDACTED_B64 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
+// REDACTED_B64_2 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
 /** Копия «Фабрика — портал/Перенос MAX <id>» (max_move.py) → листы и файлы этого проекта: группы, настройки, владелец, зеркало, опросы, справка,
     журнал обращений, история групп (hist/<cid>.json и history_all.json → Диск «история»). Повторный запуск ничего не дублирует. → {ok, done:[…], skipped:[…]}. */
 function mx_importState(id) {
@@ -400,7 +400,7 @@ function mx_importState(id) {
     if (!/^max\/hist\/-?\d+\.json$/.test(nm) && nm !== 'max/history_all.json') return;
     if (Date.now() - t0 > 270000) { late = true; return; }           // не влезаем в 6 минут — остальное при повторном запуске (повтор ничего не дублирует)
     var h = J(nm); if (!h || !h.msgs) return;
-    var cid = nm === 'max/history_all.json' ? String(h.cid || '-100000000000') : nm.replace(/^max\/hist\/|\.json$/g, ''), title = String(h.title || mx_groupTitle(cid));
+    var cid = nm === 'max/history_all.json' ? String(h.cid || '-100000000003') : nm.replace(/^max\/hist\/|\.json$/g, ''), title = String(h.title || mx_groupTitle(cid));
     nh += mx_histImport(cid, title, Object.keys(h.msgs).map(function (k) { return h.msgs[k]; }), key);
   });
   if (nh) done.push('history: ' + nh);

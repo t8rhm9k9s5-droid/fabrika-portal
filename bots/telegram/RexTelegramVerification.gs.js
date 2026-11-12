@@ -1,6 +1,6 @@
 /* Owner-only read check. No sends, webhook changes, queue reads or trigger writes. */
 function rex_verifyTelegram() {
-  var owner = 'user@example.org';
+  var owner = 'user1@example.org';
   if (String(Session.getActiveUser().getEmail()).toLowerCase() !== owner || String(Session.getEffectiveUser().getEmail()).toLowerCase() !== owner) throw Error('Verification unavailable');
   var out = {ok:false, bot:'telegram', checked_at_seconds:Math.floor(Date.now()/1000)};
   try {

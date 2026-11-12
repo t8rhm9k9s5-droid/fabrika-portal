@@ -1,22 +1,22 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-"""«Фабрика» — контроль писем на user@example.org (30.10.2026).
+"""«Фабрика» — контроль писем на user41@example.org (30.10.2026).
 
-Пользователь: «user@example.org — на особый контроль письма с этого адреса … по всем запросам должны быть ответы и результаты —
-вопросы по ним Сотрудник, Сотрудник и Сотрудник»; опрос — «Робот: напоминание и вам сводка».
+Пользователь: «user41@example.org — на особый контроль письма с этого адреса … по всем запросам должны быть ответы и результаты —
+вопросы по ним Сотрудник6, Сотрудник16 и Сотрудник19»; опрос — «Робот: напоминание и вам сводка».
 
 Запуск — из live.py (участок bots, cron хостинга раз в 10 минут), пересчёт раз в 25 минут в рабочее время и к сводке.
- • Почта — ящик user@example.org (Mail.ru, только чтение: EXAMINE, BODY.PEEK; общий замок IT.imap_lock): сюда приходят копии писем
+ • Почта — ящик user5@example.org (Mail.ru, только чтение: EXAMINE, BODY.PEEK; общий замок IT.imap_lock): сюда приходят копии писем
    группы sales@ (тема с меткой «[sales]»). Режим read="1c" (code/mail_cfg.json) — ящик 1c@ (Gmail «Вся почта»), куда Mail.ru
    пересылает письма itm@; read="gas" — почта хостингом не читается, контроль ждёт.
- • Сотрудник — письмо внешнего адреса (не fabrikant.su / fabrikant.pro / techfabrikant.ru, не робот и не рассылка) через sales@:
+ • Сотрудник4 — письмо внешнего адреса (не fabrikant.su / fabrikant.pro / techfabrikant.ru, не робот и не рассылка) через sales@:
    первое письмо переписки или новое письмо клиента с вопросом или просьбой после нашего ответа. Реклама и предложения услуг — не запрос.
- • Ответ — письмо сотрудника (наши домены) в той же переписке позже запроса, где в получателях клиент или user@example.org
+ • Ответ — письмо сотрудника (наши домены) в той же переписке позже запроса, где в получателях клиент или user41@example.org
    (ответ «всем» или пересылка ответа на sales@). Пересылка коллегам без клиента и sales@ — не ответ (в сводке: «переслано …»).
  • Рабочее время — пн–пт 09:00–18:00 МСК, без праздников (mx_ctl.HOLIDAYS). Нет ответа 4 рабочих часа — одно письмо-напоминание
-   М. И. Сотрудник, К. В. Сотрудник, Ю. А. Сотрудник (sales_ctl_cfg.json → to) со всеми такими запросами; 8 рабочих часов — повторно.
+   М. И. Сотрудник6, К. В. Сотрудник16, Ю. А. Сотрудник19 (sales_ctl_cfg.json → to) со всеми такими запросами; 8 рабочих часов — повторно.
    Больше двух напоминаний по одному запросу нет — дальше он только в сводке владельцу.
  • Сводка владельцу (owner, itm@) — в рабочий день в digest_at (08:50): запросы без ответа, вчерашние новые и отвеченные
    (время ответа в рабочих часах). Нет ни открытых, ни вчерашних — письма нет.
@@ -29,27 +29,27 @@ import datetime, email, email.policy, email.utils, hashlib, imaplib, json, os, r
 import itm as IT
 try:
     import leaders as LD     # 03.11.2026: руководству бот вопросов не задаёт (leaders.json)
-except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник …»), чтобы не падал весь участок
+except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник2 …»), чтобы не падал весь участок
     import re as _re
     class LD:
         @staticmethod
         def is_lead(name=None, uid=None, mail=None, owner_uid=None, people=None):
             if uid not in (None, '') and owner_uid not in (None, '') and str(uid) == str(owner_uid): return 'владелец'
-            if str(mail or '').lower() in ('user@example.org', 'user@example.org'): return 'владелец'
-            return 'владелец' if _re.match(r'^\s*Сотрудник(?![а-яё])', str(name or ''), _re.I) else ''
+            if str(mail or '').lower() in ('user5@example.org', 'user4@example.org'): return 'владелец'
+            return 'владелец' if _re.match(r'^\s*Сотрудник2(?![а-яё])', str(name or ''), _re.I) else ''
         @staticmethod
-        def mails(): return {'user@example.org', 'user@example.org'}
+        def mails(): return {'user5@example.org', 'user4@example.org'}
 from mx_ctl import HOLIDAYS
 
 MSK = IT.MSK
-SALES = 'user@example.org'
+SALES = 'user41@example.org'
 TAG = re.compile(r'\[\s*sales\s*\]', re.I)
 EVERY = 25 * 60
 CFG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sales_ctl_cfg.json')
 DEF = {'on': True, 'from': '2026-10-31', 'hours': 4, 'second': 8, 'work': ['09:00', '18:00'], 'window_days': 21,
-       'to': ['user@example.org', 'user@example.org', 'user@example.org'],
-       'greet': 'Сотрудник Отчество, Сотрудник Отчество, Сотрудник Отчество',
-       'owner': 'user@example.org', 'digest_at': '08:50', 'skip_from': [], 'skip_domains': []}
+       'to': ['user8@example.org', 'user16@example.org', 'user15@example.org'],
+       'greet': 'Сотрудник13 Отчество7, Сотрудник21 Отчество11, Сотрудник38 Отчество12',
+       'owner': 'user5@example.org', 'digest_at': '08:50', 'skip_from': [], 'skip_domains': []}
 PFX = re.compile(r'^\s*((re|fw|fwd|отв|ответ|пересл|пересылка|ha|aw|wg)\s*(\[\d+\])?\s*:\s*|\[\s*sales\s*\]\s*)+', re.I)
 REPLY = re.compile(r'^\s*(\[\s*sales\s*\]\s*)?(re|отв|ответ|aw)\s*(\[\d+\])?\s*:', re.I)
 ASK = re.compile(r'\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|направьте|пришлите|вышлите|выставьте|предоставьте|ответьте|уточните|'
@@ -139,9 +139,9 @@ def own(a): return (a or '').split('@')[-1] in IT.OWN_DOMAINS
 
 
 def robot(h, frm):
-    """робот или рассылка: служебные ящики, Auto-Submitted, bulk/list, отписка; 1С (user@example.org). Метка группы sales@ — не рассылка."""
+    """робот или рассылка: служебные ящики, Auto-Submitted, bulk/list, отписка; 1С (user3@example.org). Метка группы sales@ — не рассылка."""
     loc = frm.split('@')[0]
-    if IT.ROBOT_LOCAL.match(loc) or frm.endswith(('@e.mail.ru', '@corp.mail.ru', '@id.mail.ru')) or frm == 'user@example.org': return True
+    if IT.ROBOT_LOCAL.match(loc) or frm.endswith(('@e.mail.ru', '@corp.mail.ru', '@id.mail.ru')) or frm == 'user3@example.org': return True
     if str(h.get('Auto-Submitted', 'no')).lower() not in ('no', ''): return True
     if str(h.get('Precedence', '')).lower() in ('bulk', 'junk'): return True
     return bool(h.get('List-Unsubscribe'))
@@ -170,11 +170,11 @@ def box(L, CFG):
         import itm_arch as IA
         pw = IA.pw_1c(L)
         if not pw: return None, 'нет пароля 1c@'
-        return ('imap.gmail.com', (CFG.get('mail_1c') or 'user@example.org').lower(), pw, '1c'), ''
+        return ('imap.gmail.com', (CFG.get('mail_1c') or 'user1@example.org').lower(), pw, '1c'), ''
     if IT.gas(): return None, IT.OFF
     pw = IT.password(L)
     if not pw: return None, 'нет пароля для внешнего приложения itm@'
-    return (IT.HOST, (CFG.get('itm_mail') or 'user@example.org').lower(), pw, 'itm'), ''
+    return (IT.HOST, (CFG.get('itm_mail') or 'user5@example.org').lower(), pw, 'itm'), ''
 
 
 def search(M, sd, st):
@@ -361,9 +361,9 @@ def remind(ctx, cfg, req, now, mail_send):
         if body: body.append('')
         body.append('Повторно — нет ответа больше %d рабочих часов:' % (h2 // 60))
         body += [line(i, r, now, cfg) for i, (_, r) in enumerate(second, len(first) + 1)]
-    text = ('%s, добрый день.\n\nПисьма на user@example.org — на особом контроле: ответ клиенту в течение %d рабочих часов, '
-            'с user@example.org в копии.\n\n%s\n\nОтвечая клиенту, ставьте user@example.org в копию — тогда запрос закроется. '
-            'Если ответ уже ушёл без копии — перешлите его на user@example.org.\n— бот «Фабрикант» (контроль sales@)'
+    text = ('%s, добрый день.\n\nПисьма на user41@example.org — на особом контроле: ответ клиенту в течение %d рабочих часов, '
+            'с user41@example.org в копии.\n\n%s\n\nОтвечая клиенту, ставьте user41@example.org в копию — тогда запрос закроется. '
+            'Если ответ уже ушёл без копии — перешлите его на user41@example.org.\n— бот «Фабрикант» (контроль sales@)'
             % (cfg.get('greet') or 'Коллеги', h1 // 60, '\n'.join(body)))
     subj = 'sales@: %d %s без ответа клиенту' % (len(items), 'запрос' if len(items) == 1 else 'запроса' if len(items) < 5 else 'запросов')
     to = [a for a in (cfg.get('to') or DEF['to']) if str(a).strip().lower() not in LD.mails()]   # 03.11.2026: руководству напоминаний нет
@@ -409,11 +409,11 @@ def digest(ctx, cfg, req, now, mail_send):
             for r in sorted(ans_y, key=lambda r: r['ans']['t']):
                 lines.append('  • %s — «%s» — ответил(а) %s в %s' % (r['n'], re.sub(r'^\s*\[\s*sales\s*\]\s*', '', r['s'])[:90], r['ans']['n'], ddmm(r['ans']['t'])))
         lines += ['', 'Новых запросов за %s: %d.' % (y[8:10] + '.' + y[5:7], len(new_y))]
-        text = ('Контроль писем на user@example.org на %s.\n\n%s\n\nНапоминания уходят М. И. Сотрудник, К. В. Сотрудник и Ю. А. Сотрудник '
+        text = ('Контроль писем на user41@example.org на %s.\n\n%s\n\nНапоминания уходят М. И. Сотрудник6, К. В. Сотрудник16 и Ю. А. Сотрудник19 '
                 'через %d и %d рабочих часов без ответа.\n— бот «Фабрикант» (контроль sales@)'
                 % (now.strftime('%d.%m %H:%M'), '\n'.join(lines), h1 // 60, int(cfg.get('second') or 8)))
         subj = 'sales@ на %s: без ответа — %d' % (now.strftime('%d.%m'), len(opn))
-        if not send(ctx, mail_send, 'mail:sales_digest', subj, text, [cfg.get('owner') or 'user@example.org'], []): return
+        if not send(ctx, mail_send, 'mail:sales_digest', subj, text, [cfg.get('owner') or 'user5@example.org'], []): return
         ctx['res']['digest'] = len(opn)
     st.setdefault('dg', []).append(day); st['dg'] = st['dg'][-30:]
 

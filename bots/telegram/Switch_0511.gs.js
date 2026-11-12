@@ -6,7 +6,7 @@
  *  sw_modeOn()   — минута T: MODE = google, TRK_REPORT = on.
  *  sw_modeOff()  — откат (switch_0511.md R4): снять MODE и TRK_REPORT с отметкой удаления (копия свойств их не вернёт).
  *  sw_show()     — какие свойства режима есть (без значений). */
-var SW_MAX_APP_URL = 'https://script.google.com/macros/s/REDACTED/exec';
+var SW_MAX_APP_URL = 'https://script.google.com/macros/s/REDACTED_2/exec';
 function sw_show() {
   var p = PropertiesService.getScriptProperties();
   var o = {}; ['MODE', 'TRK_REPORT', 'MAX_APP_URL', 'K_CMD', 'AU_SHEET_ID', 'CLAUDE_FIRE_URL', 'CLAUDE_FIRE_TOKEN', 'SVC_SHEET_ID'].forEach(function (k) {

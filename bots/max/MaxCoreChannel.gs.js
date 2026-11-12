@@ -106,17 +106,17 @@ function mx_emails(a) {
   (Array.isArray(a) ? a : String(a || '').split(',')).forEach(function (e) { e = String(e || '').trim().toLowerCase(); if (/^[a-z0-9._%+-]+@fabrikant\.su$/.test(e) && !seen[e]) { seen[e] = 1; out.push(e); } });
   return out;
 }
-function mx_rcptCount(to, cc) { var a = { 'user@example.org': 1 }; to.concat(cc).forEach(function (e) { a[e] = 1; }); return Object.keys(a).length; }
+function mx_rcptCount(to, cc) { var a = { 'user5@example.org': 1 }; to.concat(cc).forEach(function (e) { a[e] = 1; }); return Object.keys(a).length; }
 /** Письмо от 1c@ (MailApp): replyTo itm@, itm@ всегда в копии (Р3); квота проверяется; ошибка — в журнал, false. */
 function mx_mail(to, cc, subject, html) {
   to = mx_emails(to); cc = mx_emails(cc).filter(function (x) { return to.indexOf(x) < 0; });
-  if (to.indexOf('user@example.org') < 0 && cc.indexOf('user@example.org') < 0) cc.push('user@example.org');
+  if (to.indexOf('user5@example.org') < 0 && cc.indexOf('user5@example.org') < 0) cc.push('user5@example.org');
   if (!to.length) return false;
   var need = to.length + cc.length, q = 100;
   try { q = MailApp.getRemainingDailyQuota(); } catch (x) {}
   if (q < need) { mx_log('mail', 'квота писем Google: осталось ' + q + ', нужно ' + need); return false; }
   try {
-    MailApp.sendEmail({ to: to.join(','), cc: cc.join(','), replyTo: 'user@example.org', name: 'Бот «Фабрикант» (MAX)', subject: String(subject).slice(0, 180), htmlBody: String(html).slice(0, 20000) });
+    MailApp.sendEmail({ to: to.join(','), cc: cc.join(','), replyTo: 'user5@example.org', name: 'Бот «Фабрикант» (MAX)', subject: String(subject).slice(0, 180), htmlBody: String(html).slice(0, 20000) });
     mx_log('mail', 'письмо: ' + to.length + ' адресатов, тема «' + String(subject).slice(0, 40) + '»'); return true;
   } catch (x) { mx_log('err', 'письмо не ушло: ' + mx_errText(x)); return false; }
 }

@@ -2,18 +2,18 @@
    ≤ MX_GRP_FWD_HOUR в час из группы, новые группы выключены), журнал обращений для отчёта «без ответа», push к Claude (обращение к Т. В.,
    брак/рекламация/претензия/срок/конфликт, вопрос без ответа > 30 мин в рабочее время), автономность (au_* шага 5: рекламация, запрос цены, спор).
    Перенос mx_group / mx_addressed / mx_grp_log из hook.php. Тихие часы 19:00–07:00 — только история и уведомления владельцу, события для Claude
-   копятся в листе mx_defer до утра (кроме слов об аварии — MX_RX_URGENT); руководителям бот вопросов не задаёт; Имя/Джановой лично — ничего.
+   копятся в листе mx_defer до утра (кроме слов об аварии — MX_RX_URGENT); руководителям бот вопросов не задаёт; Имя27/Джановой лично — ничего.
    Работает только из mx_handle (режим google). */
 
 var MX_RX_RECL = /брак|дефект|сломал|слома|трещин|скол|царапин|порва|разош|не работает|не фиксир|рекламац|претенз|возврат|замен/i;   // bot_rules.scenarios.recl.detect_rx
 var MX_RX_PRICE = /цен[аыу]|стоимост|почем|почём|сколько стоит|скидк|дешевл|последн\w* цен|прайс|₽|руб/i;                       // …price.detect_rx
 var MX_RX_DISPUTE = /спор|конфликт|отказ\w* (от|принять|оплат)|не (хотят|хочет) (принимать|платить|оплачивать)|вернуть деньги|возврат денег|неустойк|штраф|суд|юрист|претенз|требу\w* замен|не соответству|не то,? что заказ/i;
 var MX_RX_CLAUDE = /брак|рекламац|претензи|срок|конфликт|не успева|просроч|жалоб/i;   // слова, при которых событие группы уходит Claude (push_cmd.md)
-var MX_SNAB_CID = '-100000000000';   // 10.11.2026 (Т. В.: «если есть накладная — сразу»): фото/файл в «Снабжение _Производство» → Claude расшифровывает сразу (не чаще раза в 10 мин; пачку фото Claude берёт целиком)
+var MX_SNAB_CID = '-100000000002';   // 10.11.2026 (Т. В.: «если есть накладная — сразу»): фото/файл в «Снабжение _Производство» → Claude расшифровывает сразу (не чаще раза в 10 мин; пачку фото Claude берёт целиком)
 var MX_RX_URGENT = /авари|пожар|затоп|прорв|сработал\w* сигнализ|охран\w* сообщ|срочно/i;   // явная авария — Claude и в тихие часы (RULES: «тогда Т. В. в Telegram»)
 var MX_RX_QUESTION = /\?|^(как|где|когда|почему|зачем|можно ли|есть ли|подскажите|скажите|кто|какой|какая|какие|сколько)\b/i;
 
-// REDACTED_B64 реестр групп (лист groups: cid, title, on, appr, channel, t0, t)
+// REDACTED_B64_2 реестр групп (лист groups: cid, title, on, appr, channel, t0, t)
 /** Все группы: { cid: {title, on, appr, channel} } (память запуска). */
 function mx_groups() {
   if (!MX_MEM.groups) {
@@ -75,7 +75,7 @@ function mx_findGroup(q) {
   return hit.length ? [hit[0], G[hit[0]].title] : null;
 }
 
-// REDACTED_B64 сообщение в группе
+// REDACTED_B64_2 сообщение в группе
 function mx_group(m, u) {
   var rc = m.recipient || {}, cid = String(rc.chat_id || ''), s = m.sender || {}, uid = Number(s.user_id || 0), b = m.body || {};
   var g = mx_groupGet(cid);
@@ -98,7 +98,7 @@ function mx_group(m, u) {
   var quiet = mx_quiet(), leader = mx_isLeader(name, uid), banned = mx_isBanned(name);
   var det = mx_detect(text, mx_hasMedia(m)), auto = '';
   if (det.kind && !quiet && !leader && !banned) det = mx_aiCheck(det, text, title, name, mx_hasMedia(m), mid);   // 10.11 Т. В.: слова — только повод, решает GPT
-  if (det.kind && !quiet && !leader && !banned) {                               // автономность: не в тихие часы, не руководству, не Имя/Джановой
+  if (det.kind && !quiet && !leader && !banned) {                               // автономность: не в тихие часы, не руководству, не Имя27/Джановой
     try {
       if (det.kind === 'recl' && !mx_hasMedia(m)) {                            // 10.11 Т. В.: шаблон про акт РК 01 — только при фото/видео; без фото — в группу ничего, Т. В. — в Telegram
         if (!why && mx_count('grp:' + cid + ':' + mx_hourKey(), MX_GRP_FWD_HOUR)) mx_notifyOwner(m, title, name, 'похоже на рекламацию (без фото) — бот в группе не отвечал');
@@ -170,7 +170,7 @@ function mx_addressed(m, owner) {
   if (owner && (b.markup || []).some(function (mk) { return mk.type === 'user_mention' && Number(mk.user_id) === owner; })) return 'упоминание';
   if (owner && lk && lk.type === 'reply' && Number((lk.sender || {}).user_id) === owner) return 'ответ на ваше сообщение';
   var t = mx_text(m), re = String(mx_set('owner_names') || '');
-  if (t && re) { try { if (new RegExp(re, 'u').test(t)) return 'обращение по имени'; } catch (x) { if (/(^|[^А-Яа-яЁё])(Сотрудник|Т\.\s?В\.)(?![А-Яа-яЁё])/.test(t)) return 'обращение по имени'; } }
+  if (t && re) { try { if (new RegExp(re, 'u').test(t)) return 'обращение по имени'; } catch (x) { if (/(^|[^А-Яа-яЁё])(Сотрудник2|Т\.\s?В\.)(?![А-Яа-яЁё])/.test(t)) return 'обращение по имени'; } }
   return '';
 }
 /** Уведомление Т. В. в Telegram (op maxown — как hook.php сегодня) и пересылка в его личные MAX (link forward, иначе — текстом). */
@@ -196,7 +196,7 @@ function mx_grpLog(o) {
   } catch (x) { mx_log('err', 'журнал обращений: ' + mx_errText(x)); }
 }
 
-// REDACTED_B64 push к Claude по событиям группы
+// REDACTED_B64_2 push к Claude по событиям группы
 /** Последние n сообщений группы из буфера истории — строками «HH:mm Имя: текст». */
 function mx_groupCtx(cid, n) {
   var R = mx_histRecent(cid, n || 10);
@@ -221,7 +221,7 @@ function mx_groupPush(cid, title, m, name, why) {
 /** Тихие часы: то же событие — в лист mx_defer, утром mx_deferFlush отдаст его Claude одной пачкой с остальными. */
 function mx_groupDefer(cid, title, m, name, why) { return (mx_pushOn() || String(cid) === MX_SNAB_CID) ? mx_deferAdd(mx_groupEv(cid, title, m, name, why)) : false; }
 
-// REDACTED_B64 вопросы без ответа (> 30 мин в рабочее время → Claude)
+// REDACTED_B64_2 вопросы без ответа (> 30 мин в рабочее время → Claude)
 function mx_questionAdd(cid, mid, ts, uid, name, text) {
   if (!mx_pushOn() || !mid) return;
   try { mx_appendObj('mx_questions', { cid: cid, mid: mid, ts: ts || Date.now(), uid: uid, name: name, text: mx_maskPhones(text).slice(0, 500), status: 'open', t: new Date() }); }
@@ -275,7 +275,7 @@ function mx_questionsTick() {
   }
 }
 
-// REDACTED_B64 автономность (au_* шага 5; без модуля — только обнаружение для push)
+// REDACTED_B64_2 автономность (au_* шага 5; без модуля — только обнаружение для push)
 /** Что за ситуация: au_detect шага 5, иначе — те же регулярные выражения из bot_rules.json. → {kind, words}. */
 function mx_detect(text, hasMedia) {
   if (typeof au_detect === 'function') { try { var d = au_detect(text, !!hasMedia); if (d && typeof d === 'object') return { kind: d.kind || null, words: d.words || [] }; } catch (x) { mx_log('err', 'au_detect: ' + mx_errText(x)); } }
@@ -299,7 +299,7 @@ function mx_autoRecl(cid, title, m, name, det) {
   mx_log('auto', 'рекламация в «' + title + '»: ответ отправлен, наблюдение записано');
   return 'рекламация (акт РК 01, сроки, ГК)';
 }
-/** Сотрудник цены: прайс (au_priceLookup) → Т. В. в Telegram с кнопками (au_priceMessage); в группе бот цену не обещает. */
+/** Сотрудник4 цены: прайс (au_priceLookup) → Т. В. в Telegram с кнопками (au_priceMessage); в группе бот цену не обещает. */
 function mx_autoPrice(cid, title, m, name, uid, det) {
   if (typeof au_priceLookup !== 'function' || typeof au_priceMessage !== 'function') return '';
   var mid = String((m.body || {}).mid || '');
@@ -309,7 +309,7 @@ function mx_autoPrice(cid, title, m, name, uid, det) {
   if (!mx_count('price:' + cid + ':' + mx_hourKey(), MX_PRICE_HOUR)) { mx_log('auto', 'запрос цены в «' + title + '»: больше ' + MX_PRICE_HOUR + ' за час — Т. В. не беспокоим'); return ''; }
   var id = String(res.id || mid || Date.now());
   try { mx_appendObj('mx_price', { id: id, cid: cid, g: title, mid: mid, uid: uid, name: name, t: new Date() }); } catch (x) { mx_log('err', 'цены (запись): ' + mx_errText(x)); }
-  var head = '💰 Сотрудник цены — «' + h_(title) + '», ' + h_(name) + ', ' + mx_msk('HH:mm', new Date(Number(m.timestamp) || Date.now())) + '\n';
+  var head = '💰 Сотрудник4 цены — «' + h_(title) + '», ' + h_(name) + ', ' + mx_msk('HH:mm', new Date(Number(m.timestamp) || Date.now())) + '\n';
   var ok = mx_tgOwner(head + msg.text, msg.buttons || [], { cid: cid, g: title, mid: mid, uid: uid, name: name, why: 'запрос цены', id: id });
   mx_log('auto', 'запрос цены в «' + title + '»: ' + (ok ? 'Т. В. уведомлён в Telegram' : 'уведомить Т. В. не удалось'));
   return ok ? 'запрос цены — Т. В. в Telegram' : '';

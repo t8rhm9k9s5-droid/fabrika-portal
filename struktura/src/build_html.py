@@ -177,7 +177,7 @@ HTML = f"""<!DOCTYPE html>
   <div class="lead-block"><div class="row lead-row">{leadership_html}</div>{secretary_html}</div>
   <div class="tier-label">Директора направлений</div>
   <div class="row">{directors_html}</div>
-  <div class="tier-label" id="areas">Производственные участки · директор по производству Сотрудник В. В. · {len(AREAS)} участков, ≈ {AREAS_STAFF} чел.</div>
+  <div class="tier-label" id="areas">Производственные участки · директор по производству Сотрудник23 В. В. · {len(AREAS)} участков, ≈ {AREAS_STAFF} чел.</div>
   <div class="areas">{areas_html}</div>
   <p class="areas-note">Численность приблизительная, по схеме участков. Мастера и телефоны сверены с оргструктурой.</p>
   <div class="tier-label">Отделы</div>

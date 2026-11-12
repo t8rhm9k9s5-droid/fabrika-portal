@@ -1,7 +1,7 @@
 /* «Фабрика» — общий модуль Autonomy.gs (шаг 5 ночи 05.11.2026): боты сами — рекламация, запрос цены, спор с клиентом, тихие часы,
    руководители, маскирование контактов для внешних ИИ. Т. В. 04.11 ~19:40: «боты — максимально автономные … набиваем память»;
    ~19:50 — спор с клиентом: сначала спросить, какой договор подписан. Один и тот же файл в обоих проектах Apps Script 1c@
-   (Telegram «Фабрика — уведомления», MAX «Фабрика — бот MAX»). Префикс au_. Подпись ответов — от имени Т. В. Сотрудник.
+   (Telegram «Фабрика — уведомления», MAX «Фабрика — бот MAX»). Префикс au_. Подпись ответов — от имени Т. В. Сотрудник1.
    Зависимости: службы Google (PropertiesService, CacheService, DriveApp, SpreadsheetApp, LockService, Utilities), свойства скрипта и
    общий модуль KbFind.gs (bf_json — bot_rules.json, price_now.json, recl.bin из «Для ботов»; kb_norm — ключи слов). Функций MAX/TG
    (Store.gs, mx_*, tm_*, g4_*) здесь нет. Сообщения, письма и кнопки модуль НЕ отправляет — только готовит тексты; отправку делает вызывающий.
@@ -19,7 +19,7 @@
    Добавлено проверкой 2 (05.11): au_isHoliday(dateMs) — один источник праздников для обоих проектов; au_sign(nowMs) — подпись (днём Т. В.,
    ночью и в праздники — голос бота); au_setup() — создать общую таблицу из редактора и показать её id. */
 
-var AU_SIGN = 'Т. В. Сотрудник';                   // подпись от имени владельца (RULES 04.11 ~18:15)
+var AU_SIGN = 'Т. В. Сотрудник1';                   // подпись от имени владельца (RULES 04.11 ~18:15)
 var AU_SIGN_BOT = 'Бот «Фабрика» (по правилам компании)';   // голос бота в личках в тихие часы 19–07 и праздники (проверка 2, 05.11): ночью от имени Т. В. не пишем
 var AU_SHEET_NAME = 'Фабрика — боты — автономность';
 var AU_QUIET_FROM = 19, AU_QUIET_TO = 7;          // тихие часы МСК для групп и сотрудников (RULES 04.11 ~18:15; au_settings quiet_from/quiet_to)
@@ -30,9 +30,9 @@ var AU_PRICE_TTL_DAYS = 14;                       // запрос цены бе�
 var AU_OWNER_PCT = 5;                             // скидка больше — «нужно ваше решение» (price_now.discount_owner_pct)
 var AU_SET_TTL = 600;                             // кэш настроек листа, секунд
 var AU_LOG_KEEP = 1500;
-var AU_ITM = 'user@example.org', AU_PTO = 'user@example.org';
-var AU_PEO_TO = ['user@example.org'], AU_PEO_CC = ['user@example.org', 'user@example.org'];
-var AU_LAWYER = 'Сотрудник Н. Я., user@example.org';
+var AU_ITM = 'user5@example.org', AU_PTO = 'user11@example.org';
+var AU_PEO_TO = ['user13@example.org'], AU_PEO_CC = ['user14@example.org', 'user5@example.org'];
+var AU_LAWYER = 'Сотрудник25 Н. Я., user12@example.org';
 var AU_SHEETS = {
   au_recl_watch: ['id', 't', 'bot', 'group', 'chat', 'mid', 'client', 'defect', 'manager', 'due', 'status', 'checked', 'reminded', 'note'],
   au_price: ['id', 't', 'status', 'bot', 'chat', 'group', 'manager', 'client', 'item_id', 'position', 'basis', 'city', 'price', 'requested', 'dev_pct', 'qty', 'acted'],
@@ -56,13 +56,13 @@ var AU_GENERIC = { 'стул': 1, 'кресл': 1, 'диван': 1, 'стол': 
 var AU_SYN = { 'велюр': 'velur', 'веллюр': 'velur', 'экокож': 'eco', 'эко': 'eco', 'наппа': 'nappa', 'хуго': 'hugo', 'альянс': 'allianc', 'бум': 'boom' };
 // руководители (RULES 03.11, leaders.json): бот вопросов не задаёт — помогает сроками и пунктами. Лист au_settings: leader / not_leader добавляют и убирают.
 var AU_LEADERS = [
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник М', 'Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник Отчество', 'Т. В. Сотрудник'], mail: ['user@example.org', 'user@example.org'], uniq: false },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Отчество'], mail: ['user@example.org'], uniq: true },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Отчество'], mail: ['user@example.org'], uniq: true },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Отчество'], mail: ['user@example.org'], uniq: false },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Отчество'], mail: ['user@example.org'], uniq: true },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Отчество'], mail: ['user@example.org'], uniq: true },
-  { fio: 'Сотрудник Сотрудник Отчество', names: ['Сотрудник Сотрудник', 'Сотрудник Сотрудник'], mail: ['user@example.org'], uniq: false }
+  { fio: 'Сотрудник1 Сотрудник2 Отчество1', names: ['Сотрудник2 М', 'Сотрудник2 Сотрудник1', 'Сотрудник1 Сотрудник2', 'Сотрудник2 Отчество1', 'Т. В. Сотрудник1'], mail: ['user5@example.org', 'user4@example.org'], uniq: false },
+  { fio: 'Сотрудник18 Сотрудник80 Отчество34', names: ['Сотрудник80 Сотрудник18', 'Сотрудник80 Отчество34'], mail: ['user39@example.org'], uniq: true },
+  { fio: 'Сотрудник10 Сотрудник13 Отчество28', names: ['Сотрудник13 Сотрудник10', 'Сотрудник13 Отчество28'], mail: ['user35@example.org'], uniq: true },
+  { fio: 'Сотрудник23 Сотрудник24 Отчество1', names: ['Сотрудник24 Сотрудник23', 'Сотрудник24 Отчество1'], mail: ['user36@example.org'], uniq: false },
+  { fio: 'Сотрудник19 Сотрудник38 Отчество12', names: ['Сотрудник38 Сотрудник19', 'Сотрудник38 Отчество12'], mail: ['user15@example.org'], uniq: true },
+  { fio: 'Сотрудник16 Сотрудник21 Отчество11', names: ['Сотрудник21 Сотрудник16', 'Сотрудник21 Отчество11'], mail: ['user16@example.org'], uniq: true },
+  { fio: 'Сотрудник1 Сотрудник49 Отчество26', names: ['Сотрудник49 Сотрудник1', 'Сотрудник1 Сотрудник49'], mail: ['user22@example.org'], uniq: false }
 ];
 var AU_MEMO = { rules: undefined, price: undefined, set: undefined, ss: null, items: null };
 
@@ -255,7 +255,7 @@ function au_isLeader(nameOrId) {
   for (var j = 0; j < extra.length; j++) if (extra[j].fio.split(' ').length > 1 && hit(extra[j])) return true;
   return false;
 }
-/** Имя и Джановой лично бот ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans, лист au_settings ban). */
+/** Имя27 и Джановой лично бот ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans, лист au_settings ban). */
 function au_isBanned_(name) {
   var s = au_nrm_(name); if (!s) return false;
   if (/(^|\s)(попов|джанов)/.test(s)) return true;
@@ -506,7 +506,7 @@ function au_reclWatchCheck(nowMs) {
       if (no) { au_updateById_('au_recl_watch', id, { status: 'closed', checked: new Date(nowMs), note: 'в реестре: № ' + no }); au_log_('recl_watch', id + ' закрыто: рекламация в реестре'); continue; }
       if (st === 'open') {
         var txt = tpl.replace('<Имя Отчество>', au_address_(w.manager)).replace('<клиент>', w.client ? String(w.client) : 'по сообщению в группе').replace('<дефект>', w.defect ? String(w.defect) : 'дефект по фото').replace('<дата>', au_dmy_(au_msk_(t).date));
-        if (!/^Т\. В\. Сотрудник/.test(txt)) txt = AU_SIGN + ' — ' + txt;
+        if (!/^Т\. В\. Сотрудник1/.test(txt)) txt = AU_SIGN + ' — ' + txt;
         if (au_isLeader(w.manager)) txt = AU_SIGN + ' — ' + au_address_(w.manager) + ', добрый день! Рекламации ' + (w.client || 'по сообщению от ' + au_dmy_(au_msk_(t).date)) + (w.defect ? ' (' + w.defect + ')' : '') + ' в реестре 1С пока не вижу — если нужна помощь с актом или регистрацией, подключимся.';
         if (!au_updateById_('au_recl_watch', id, { status: 'reminded', checked: new Date(nowMs), reminded: new Date(nowMs), due: au_due_(nowMs), note: 'напоминание менеджеру' })) continue;   // записи уже нет
         out.push({ group: String(w.group || ''), chat: String(w.chat || ''), id: id, key: 'au:recl:' + id + ':chat', text: txt });
@@ -637,7 +637,7 @@ function au_priceLookup(text, ctx) {
   } catch (e) { out.note = (out.note ? out.note + '; ' : '') + 'запрос не записан (кнопки могут не сработать): ' + au_err_(e); au_log_('price', 'запись запроса: ' + au_err_(e)); }
   return out;
 }
-/** Клиент из текста: «для ООО «Ромашка»», «клиент ИП Имя». */
+/** Клиент из текста: «для ООО «Ромашка»», «клиент ИП Имя1». */
 function au_clientOf_(text) {
   var m = /(?:для|клиент[ау]?|заказчик[ау]?|покупател[ья])\s*[:—-]?\s*((?:ооо|ип|зао|оао|ао|пао|гк|тд)\s*[«"]?[^»"\n,;:()]{2,60}[»"]?|[«"][^»"\n]{2,60}[»"])/i.exec(String(text || ''));
   return m ? m[1].replace(/\s+/g, ' ').trim() : '';
@@ -645,11 +645,11 @@ function au_clientOf_(text) {
 function au_html_(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function au_pct_(z) { var s = (Math.abs(z) % 1 === 0 ? String(Math.abs(z)) + ',0' : String(Math.abs(z)).replace('.', ',')); return (z < 0 ? '−' : z > 0 ? '+' : '') + s + ' %'; }
 /** Сообщение Т. В. в Telegram (HTML) с кнопками по результату au_priceLookup: {text, buttons:[{label, data:'au:price:peo|ok|no:<id>'}]}.
-    ctx (необязательно) = {group, name, time} — заголовок «Сотрудник цены — …» (MAX добавляет свой заголовок сам). */
+    ctx (необязательно) = {group, name, time} — заголовок «Сотрудник4 цены — …» (MAX добавляет свой заголовок сам). */
 function au_priceMessage(res, ctx) {
   if (!au_mode_() || !res) return { text: '', buttons: [] };
   var P = au_price_() || {}, L = [], c = ctx || {};
-  if (c.group || c.name) L.push('Сотрудник цены — ' + au_html_([c.group ? '«' + c.group + '»' : '', c.name, c.time].filter(String).join(', ')));
+  if (c.group || c.name) L.push('Сотрудник4 цены — ' + au_html_([c.group ? '«' + c.group + '»' : '', c.name, c.time].filter(String).join(', ')));
   if (!res.found) { L.push('Позиция по прайсу не найдена: ' + au_html_(res.note || '')); return { text: L.join('\n'), buttons: [] }; }
   L.push('Позиция: ' + au_html_(res.item.position) + ' (прайс ' + au_dmy_(String(P.date || '')) + ', ' + au_html_(res.item.id) + ')');
   if (res.variants && res.variants.length > 1) L.push('Подходят несколько исполнений:\n' + res.variants.map(function (v) { return '• ' + au_html_(v.position) + (v.price ? ' — ' + au_fmtMoney_(v.price) + ' ₽' : '') + ' (' + v.id + ')'; }).join('\n'));
@@ -665,7 +665,7 @@ function au_priceMessage(res, ctx) {
   L.push('Прайс действует для договоров поставки до 09.09.2026; для новых договоров цена может отличаться.');
   var btn = (au_scen_('price').buttons || []), lab = function (i, d) { return String(btn[i] || d); };
   return { text: L.join('\n'), buttons: res.id ? [
-    { label: lab(0, 'Сотрудник в ПЭО на расчёт новой цены'), data: 'au:price:peo:' + res.id },
+    { label: lab(0, 'Сотрудник4 в ПЭО на расчёт новой цены'), data: 'au:price:peo:' + res.id },
     { label: lab(1, 'Скидка возможна'), data: 'au:price:ok:' + res.id },
     { label: lab(2, 'Нет'), data: 'au:price:no:' + res.id }] : [] };
 }
@@ -691,18 +691,18 @@ function au_priceAction(data) {
   out.chat = String(rec.chat || ''); out.group = String(rec.group || ''); out.manager = String(rec.manager || '');
   var kind = /^(peo|ok|no)$/.test(String(rec.status)) ? String(rec.status) : out.kind;     // принятое решение (при повторе — первое)
   out.decided = kind;
-  var NAMES = { peo: 'Сотрудник в ПЭО', ok: 'Скидка возможна', no: 'Нет' };
+  var NAMES = { peo: 'Сотрудник4 в ПЭО', ok: 'Скидка возможна', no: 'Нет' };
   if (!first) { out.done = true; out.ownerText = 'По этому запросу уже выбрано: «' + (NAMES[kind] || kind) + '».'; }
   var P = au_price_() || {}, sc = au_scen_('price'), who = au_address_(rec.manager), pos = String(rec.position || ''), basis = String(rec.basis || '') || '—', city = String(rec.city || '');
   var X = rec.price !== '' && rec.price != null ? Number(rec.price) : null, Y = rec.requested !== '' && rec.requested != null ? Number(rec.requested) : null, Z = rec.dev_pct !== '' && rec.dev_pct != null ? Number(rec.dev_pct) : null;
   var client = String(rec.client || '') || 'по сообщению в группе' + (rec.group ? ' «' + rec.group + '»' : ''), qty = rec.qty ? String(rec.qty) : 'не указано', basisTxt = basis + (city ? ' (' + city + ')' : '');
   if (kind === 'peo') {
     var PL = sc.peo_letter || {}, to = Array.isArray(PL.to) && PL.to.length ? PL.to : AU_PEO_TO, cc = Array.isArray(PL.cc) && PL.cc.length ? PL.cc : AU_PEO_CC;
-    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя Отчество', addr = au_address_(peoName);
+    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя6 Отчество30', addr = au_address_(peoName);
     out.mail = { to: to.slice(), cc: cc.slice(), subject: 'Расчёт цены: ' + pos + ', базис ' + basis,
       body: addr + ', добрый день!\nПросим, пожалуйста, рассчитать цену для клиента ' + client + (rec.manager ? ' (менеджер ' + rec.manager + (rec.group ? ', «' + rec.group + '»' : '') + ')' : '') + ': ' + pos + ', количество ' + qty + ', базис ' + basisTxt + '.' +
         (X ? ' Сейчас по прайсу ' + au_dmy_(String(P.date || '')) + ' — ' + au_fmtMoney_(X) + ' ₽ с НДС' : ' Цены прайса на этом базисе нет') + (Y ? ', клиент просит ' + au_fmtMoney_(Y) + ' ₽' + (Z !== null ? ' (' + au_pct_(Z) + ')' : '') : '') + '.\n' +
-        'Если получится, ответ — на ' + AU_ITM + '.\nСпасибо!\n\nзапрос Сотрудник Отчество Сотрудник через ИИ-ассистента' };
+        'Если получится, ответ — на ' + AU_ITM + '.\nСпасибо!\n\nзапрос Сотрудник2 Отчество2 Сотрудник1 через ИИ-ассистента' };
     out.groupText = AU_SIGN + ' — ' + who + ': по ' + pos + (rec.client ? ' для ' + rec.client : '') + ' запросил расчёт цены в ПЭО' + (Y ? ' (просят ' + au_fmtMoney_(Y) + ' ₽)' : '') + ' — как ответят, сообщу.';
     if (first) out.ownerText = 'Письмо в ПЭО подготовлено: ' + to.join(', ') + ' (копия ' + cc.join(', ') + ').';
   } else if (kind === 'ok') {
@@ -731,7 +731,7 @@ function au_disputeReply(step, ctx) {
   if (step === 1 && !contract && !notOurs && ctx.ours !== true) {                     // первый вопрос (MAX зовёт step 1, Telegram — 0; ответ человека с юрлицом → сразу шаги)
     return sign + ' — ' + who + ', добрый день! Чтобы подсказать точно, уточните, пожалуйста: с клиентом подписан наш типовой договор поставки (какое юрлицо — ЖПС, ПКС или ФТС; поставка (сбыт) или поставка и монтаж; номер и дата) или договор клиента / другой?';
   }
-  var money = AU_RX_MONEY.test(t) ? '\nДеньги, скидки, признание вины и сроки сверх договора не обещаем — это решение Т. В. Сотрудник; вопрос ему передан.' : '';
+  var money = AU_RX_MONEY.test(t) ? '\nДеньги, скидки, признание вины и сроки сверх договора не обещаем — это решение Т. В. Сотрудник1; вопрос ему передан.' : '';
   if (step >= 3 && !contract && !notOurs && ctx.ours !== true) return '';                // третий ответ без договора — добавить нечего, диалог окончен
   if (notOurs) {
     var gk = au_joinGk_([au_gk_('513'), au_gk_('474')]);
@@ -753,10 +753,10 @@ function au_disputeReply(step, ctx) {
     L.push(num() + 'Мы вправе запросить товар на проверку или экспертизу — по всему заявленному количеству' + au_withPts_(cp, ['inspection_return_buyer_cost', 'expertise_whole_qty_notice', 'expertise_cost_whole_qty']) +
       '; неверно оформленный акт вправе не рассматривать' + au_withPt_(cp, 'may_reject_answer_10wd') + '; замена — при доставке на наш склад и сохранённом товарном виде' + au_withPts_(cp, ['delivery_to_our_wh', 'return_terms']) + '.');
     if (AU_RX_DELAY.test(t) && au_pt_(cp, 'delay_penalty')) L.push(num() + 'По сроку поставки: неустойка за просрочку — 0,01 % в день, не больше 10 % (' + au_pt_(cp, 'delay_penalty') + ')' + (au_pt_(cp, 'liability_cap_5pct') ? '; общий предел ответственности — 5 % (' + au_pt_(cp, 'liability_cap_5pct') + ')' : '') + '; выходные и праздники в рабочие дни не входят.');
-    if (AU_RX_PAY.test(t) && au_pt_(cp, 'prepay_100')) L.push(num() + 'Оплата — по условиям договора: предоплата 100 %' + au_withPt_(cp, 'prepay_100') + '; отсрочки и скидки — только по решению Т. В. Сотрудник.');
+    if (AU_RX_PAY.test(t) && au_pt_(cp, 'prepay_100')) L.push(num() + 'Оплата — по условиям договора: предоплата 100 %' + au_withPt_(cp, 'prepay_100') + '; отсрочки и скидки — только по решению Т. В. Сотрудник1.');
   }
   L.push(num() + 'Всё фиксируем письменно: письмо клиента, фото, акт' + (works ? ', акт работ и УПД' : ', УПД') + '; пришёл акт — регистрируем рекламацию в 1С и отправляем на ' + AU_PTO + ' (Р-КО-01).');
-  L.push(num() + 'До заключения ПТО брак не признаём и замену, скидку, деньги или сроки сверх договора не обещаем — это решение Т. В. Сотрудник.');
+  L.push(num() + 'До заключения ПТО брак не признаём и замену, скидку, деньги или сроки сверх договора не обещаем — это решение Т. В. Сотрудник1.');
   L.push('Если клиент пришлёт свой вариант договора или протокол разногласий — передайте, пожалуйста, мне и юристу (' + lawyer + ').');
   return L.join('\n');
 }

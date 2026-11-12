@@ -1,7 +1,7 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-"""«Фабрика» — выгрузка почты портального ящика user@example.org для разбора Claude (12.11.2026).
-Т. В. 12.11: «разбери почту за последние 2 недели на ящике user@example.org. Проверь все файлы, сложи в облако, проанализируй их сам,
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+"""«Фабрика» — выгрузка почты портального ящика user1@example.org для разбора Claude (12.11.2026).
+Т. В. 12.11: «разбери почту за последние 2 недели на ящике user1@example.org. Проверь все файлы, сложи в облако, проанализируй их сам,
 потом уже клади на портал»; «файлы максимум могут лежать 2–3 дня, дальше они должны удаляться с хостинга роботом».
 
 По команде code/exp_1c_cmd.json {"id": "...", "since": "29-Oct-2026"} (каждый id — один раз), из live.py, без Claude; Python 3.6:
@@ -88,14 +88,21 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
     try: os.chmod(os.path.join(L, 'exp1c'), 0o700)
     except Exception: pass
     t0 = time.time(); pending = False
-    login = (CFG.get('mail_1c') or 'user@example.org').lower()
+    login = (CFG.get('mail_1c') or 'user1@example.org').lower()
     M = imaplib.IMAP4_SSL('imap.gmail.com', 993, ssl_context=ssl.create_default_context())
     try:
         M.login(login, pw)
-        fl = [(raw, name) for raw, name, flags in IT.folders(M) if '\\all' in [f.lower() for f in flags]] or [('[Gmail]/All Mail', 'All Mail')]
-        raw, name = fl[0]
-        typ, _ = M.select('"%s"' % raw, readonly=True)
-        if typ != 'OK': res['state'] = 'папка «Вся почта» не открылась'; return res
+        allf = IT.folders(M)                                   # флаги — строка в нижнем регистре (itm.folders)
+        fl = [(raw, name) for raw, name, flags in allf if '\\all' in flags.split()]
+        fl += [('[Gmail]/All Mail', 'All Mail'), ('[Gmail]/&BBIEQQRP- &BD8EPgRHBEIEMA-', 'Вся почта')]
+        typ = 'NO'
+        for raw, name in fl:
+            try: typ, _ = M.select('"%s"' % raw, readonly=True)
+            except Exception: typ = 'NO'
+            if typ == 'OK': break
+        if typ != 'OK':
+            res['state'] = 'папка «Вся почта» не открылась'; res['folders'] = [n for _, n, _ in allf][:30]; return res
+        res['folder'] = name
         typ, data = M.uid('SEARCH', None, 'SINCE', st['since'])
         uids = sorted(int(u) for u in (data[0] or b'').split()) if typ == 'OK' else []
         res['total'] = len(uids)

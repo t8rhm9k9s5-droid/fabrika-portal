@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Pages «Чат» and «Управление» (22.10.2026), in the iOS look. Both talk to the «Фабрика» Google Apps Script through assets/acct.js
 (personal logins). In the claude.ai version (no server there) they say where they work.
@@ -112,7 +112,7 @@ body.pg-chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
       if (!c || !c.url) return show(A.inApp() ? ['Нет связи с сервером', 'Проверьте интернет и откройте раздел ещё раз.'] : ['Чат работает в приложении «Фабрика»', 'Откройте сайт с паролем на телефоне и войдите по личному логину.']);
       if (!p || !A.tok()) return show(['Нужен личный вход', 'В чате видно, кто пишет, — поэтому писать можно только со своим логином.'], ['Личный вход', function () { UI.account(); }]);
       show(['Загружаю…']);
-      load().then(poll, function (e) { show([/подтвержд/.test(e.message) ? 'Сотрудник ещё не подтвердили' : 'Не получилось открыть чат', e.message]); });
+      load().then(poll, function (e) { show([/подтвержд/.test(e.message) ? 'Сотрудник4 ещё не подтвердили' : 'Не получилось открыть чат', e.message]); });
     });
   }
   window.addEventListener('t14acct', start);
@@ -256,7 +256,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
   }
   function addPerson() {
     var s = UI.sheet('Новый человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
-    var nm = UI.field('Имя, фамилия', 'text', 'Имя Имя'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
+    var nm = UI.field('Имя, фамилия', 'text', 'Имя1 Имя1'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
     var role = UI.el('button', 'irow', '<span class="ic"><span class="ibody"><span class="ititle">Администратор</span><span class="isub">люди, уведомления, документы, чат</span></span><span class="isw"></span></span>'); role.type = 'button'; role.setAttribute('aria-pressed', 'false');
     role.addEventListener('click', function () { role.setAttribute('aria-pressed', String(role.getAttribute('aria-pressed') !== 'true')); });
     var g1 = UI.el('div', 'igroup iflds'), g2 = UI.el('div', 'igroup'), go = UI.btn('Создать вход', 'pri');
@@ -396,7 +396,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
       var mk = UI.field('Маркетологи (через запятую)', 'text'); mk.lastChild.value = (st.marketing || []).join(', ');
       var hd = UI.field('Руководитель (копия)', 'text', 'если есть'); hd.lastChild.value = (st.head || []).join(', ');
       pg.append(mk, hd); f.appendChild(pg);
-      f.appendChild(UI.el('p', 'ifoot', 'На ссылки и грубость бот не отвечает. Письма — о вопросах, ценах и жалобах; user@example.org — всегда в копии; адреса — только @fabrikant.su.'));
+      f.appendChild(UI.el('p', 'ifoot', 'На ссылки и грубость бот не отвечает. Письма — о вопросах, ценах и жалобах; user5@example.org — всегда в копии; адреса — только @fabrikant.su.'));
       var sp = function (v) { return v.split(',').map(function (x) { return x.trim(); }).filter(Boolean); };
       f.appendChild(act('Сохранить настройки', 'pri', function () {
         var o = { phrases: {}, marketing: sp(mk.lastChild.value), head: sp(hd.lastChild.value), cc: st.cc, mail_types: st.mail_types, mail_day_max: st.mail_day_max, comment_chats: st.comment_chats, staff_ids: st.staff_ids, owner_names: st.owner_names };

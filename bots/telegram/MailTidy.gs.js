@@ -1,16 +1,16 @@
-/* «Фабрика» — MailTidy.gs: разбор «Входящих» ящика user@example.org без Claude (12.11.2026).
+/* «Фабрика» — MailTidy.gs: разбор «Входящих» ящика user1@example.org без Claude (12.11.2026).
    Т. В. 12.11.2026: «написать скрипты, чтобы почта проверялась без твоего участия на всех трёх ящиках».
    Правила — как ручной разбор Claude 11–12.11 (RULES: разобранный тред — из «Входящих» в папку; копии из корпоративного ящика —
    прочитано и по папкам; что касается Т. В. — уведомление; ничего не удалять).
    Вызов — из g4_tick_ (раз в 10 мин; строка «typeof mt_tick»), сам решает не чаще MT_EVERY_MIN. Берутся только треды во «Входящих»,
    где последнее письмо старше MT_AGE_MIN (робот хостинга забирает отчёты из 1c@ по IMAP каждые 10 мин — по номерам, не по «прочитано»).
    Правило — по первому совпадению:
-     report — рассылки 1С (все письма треда от user@example.org)             → «1С — отчёты», прочитано, из «Входящих»;
+     report — рассылки 1С (все письма треда от user3@example.org)             → «1С — отчёты», прочитано, из «Входящих»;
      bot    — письма бота самому себе «Фабрика: команда/голос/промт/…»     → «Поручения», прочитано, из «Входящих» (их исполняет Claude);
      econ   — отчёты экономистов и ПДО с вложением (econom-*, peo@, imm@, pdo@, industry@) → «ИТМ/экономика» | «ИТМ/производство»,
               прочитано, из «Входящих» (выпуск, ведомость и гальванику забирает робот хостинга);
      svc    — служебные уведомления (no-reply, mailer-daemon, Google)     → «Служебные», прочитано, из «Входящих»;
-     copy   — копия письма из itm@ или bostimur@ (их адрес в «Кому/Копии», тред начат не нами, нет просьбы к порталу/Claude — MT_TASK)
+     copy   — копия письма из itm@ или owner@ (их адрес в «Кому/Копии», тред начат не нами, нет просьбы к порталу/Claude — MT_TASK)
               → «ИТМ» (+ «ИТМ/<папка>» по ITM_MAP/ITM_SKIP), прочитано,
               из «Входящих»: оригинал в itm@ разбирает робот хостинга (itm.py + itm_tidy), уведомления о личном — бот по /pochta;
      people — письма людей в 1c@ (ответы на наши запросы и прочее)        → ярлык («Служебные» для ответов на наши письма, иначе
@@ -19,7 +19,7 @@
    во «Входящих» непрочитанные дольше MT_STALE_H часов (значит, их никто не разобрал): одна сводка, до 8 строк.
    Журнал — свойство mt_log (последние 30 прогонов, только счётчики, без адресов и тем). Ручной запуск из редактора — mt_run(). */
 var MT_EVERY_MIN = 15, MT_AGE_MIN = 30, MT_STALE_H = 24, MT_MAX = 80, MT_BUDGET_MS = 50000;
-var MT_ME = 'user@example.org', MT_COPY = /itm@fabrikant\.su|bostimur@gmail\.com/i;   // копии из ящиков Т. В.: itm@ (правило mail.ru) и bostimur@ (фильтр Gmail, 12.11)
+var MT_ME = 'user1@example.org', MT_COPY = /itm@fabrikant\.su|owner@gmail\.com/i;   // копии из ящиков Т. В.: itm@ (правило mail.ru) и owner@ (фильтр Gmail, 12.11)
 var MT_TASK = /портал|в\s+раздел|загрузи|загрузить|выложи|на\s+сайт|добав\S*\s.{0,40}(раздел|портал|сайт)|claude|клод/i;   // просьба к порталу/Claude — не прятать
 var MT_BOT_SUBJ = /^\s*фабрика\s*:\s*(команда|голос|промт|документ|заявка|вопрос|правка|событие)/i;
 var MT_SVC_FROM = /(^|[.@])(no-?reply|noreply|mailer-daemon|postmaster)[^@]*@|@(accounts\.)?google\.com$|@googlemail\.com$/i;
@@ -48,7 +48,7 @@ function mt_classify_(th) {
     if (MT_BOT_SUBJ.test(String(first.getSubject() || ''))) return { k: 'bot', lab: ['Поручения'], read: true, arch: true };
     return null;
   }
-  if (others.every(function (f) { return f === 'user@example.org'; })) return { k: 'report', lab: ['1С — отчёты'], read: true, arch: true };
+  if (others.every(function (f) { return f === 'user3@example.org'; })) return { k: 'report', lab: ['1С — отчёты'], read: true, arch: true };
   if (others.every(function (f) { return MT_SVC_FROM.test(f); })) return { k: 'svc', lab: ['Служебные'], read: true, arch: true };
   var last = ms[ms.length - 1], lf = mt_addr_(last.getFrom()), att = false;
   try { att = last.getAttachments({ includeInlineImages: false }).length > 0; } catch (e) { att = false; }
@@ -58,7 +58,7 @@ function mt_classify_(th) {
   var toItm = ms.some(function (m) { return mt_addr_(m.getFrom()) !== MT_ME && MT_COPY.test(String(m.getTo()) + ',' + String(m.getCc())); });
   var toMe = ms.some(function (m) { return mt_addr_(m.getFrom()) !== MT_ME && (String(m.getTo()) + ',' + String(m.getCc())).toLowerCase().indexOf(MT_ME) >= 0; });
   var ask = false; try { ask = MT_TASK.test(String(last.getSubject() || '') + ' ' + String(last.getPlainBody() || '').slice(0, 1500)); } catch (e1) { ask = false; }
-  if (!ourThread && toItm && !toMe && !ask) {                               // копия письма itm@ / bostimur@ (пересылка), без просьбы к порталу
+  if (!ourThread && toItm && !toMe && !ask) {                               // копия письма itm@ / owner@ (пересылка), без просьбы к порталу
     var fo = mt_itmFolder_(lf);
     return { k: 'copy', lab: fo ? ['ИТМ', 'ИТМ/' + fo] : ['ИТМ'], read: true, arch: true };
   }

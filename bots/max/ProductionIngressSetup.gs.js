@@ -9,11 +9,11 @@ function lmhs_prepareProduction(){return lmhs_locked_(function(p){
   if(p.getProperty('MAX_HTTP_LEGACY_AUTO_ENABLED')!=='0'||JSON.stringify(lmhs_read_(p))!==JSON.stringify(c))throw Error('setup unknown');
   return {state:'production_config_disabled_verified',previous_canary_preserved:true};
 });}
-function lmhs_preflightProduction(){return lmhs_locked_(function(p){var c=lmhs_read_(p);lmhs_keys_(p);lmhs_target_(c);if(c.namespace!=='legacy_prod_20261107'||c.enabled!==false||p.getProperty('MAX_HTTP_LEGACY_AUTO_ENABLED')!=='0')throw Error('preflight state');lmhs_schema_(c);var d=mhl_dependencies_(c),r=d.readRow('REDACTED_HEX');var marker=!!(r&&String(r[2])==='ingress_probe_noop_v1'&&d.readBody(String(r[7]))==='{'+'"update_type":"ingress_probe_noop_v1","timestamp":1794000000000}');return {state:'production_preflight_ok',enabled:false,root_schema_verified:true,source_canary_key:'REDACTED_HEX',canary_marker_checked:true,canary_marker_present:marker};});}
+function lmhs_preflightProduction(){return lmhs_locked_(function(p){var c=lmhs_read_(p);lmhs_keys_(p);lmhs_target_(c);if(c.namespace!=='legacy_prod_20261107'||c.enabled!==false||p.getProperty('MAX_HTTP_LEGACY_AUTO_ENABLED')!=='0')throw Error('preflight state');lmhs_schema_(c);var d=mhl_dependencies_(c),r=d.readRow('REDACTED_HEX_14');var marker=!!(r&&String(r[2])==='ingress_probe_noop_v1'&&d.readBody(String(r[7]))==='{'+'"update_type":"ingress_probe_noop_v1","timestamp":1794000000000}');return {state:'production_preflight_ok',enabled:false,root_schema_verified:true,source_canary_key:'REDACTED_HEX_14',canary_marker_checked:true,canary_marker_present:marker};});}
 function lmhs_locked_(fn){var l=LockService.getScriptLock();if(!l.tryLock(1500))throw Error('setup busy');try{return fn(PropertiesService.getScriptProperties());}finally{l.releaseLock();}}
 function lmhs_read_(p){var c;try{c=JSON.parse(p.getProperty('MAX_HTTP_LEGACY_INGRESS_V1')||'null');}catch(e){throw Error('setup config');}if(!c||typeof c!=='object'||Array.isArray(c))throw Error('setup config');return c;}
 function lmhs_keys_(p){['MAX_HTTP_INGRESS_READ_KEY','MAX_HTTP_INGRESS_ACK_KEY'].forEach(function(k){if(!/^[A-Za-z0-9_-]{32,256}$/.test(p.getProperty(k)||''))throw Error('setup key unavailable');});}
-function lmhs_target_(c){if(c.v!==1||c.endpoint!=='https://max-durable-ingress-100000000000.us-central1.run.app'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID')throw Error('setup target');}
+function lmhs_target_(c){if(c.v!==1||c.endpoint!=='https://max-durable-ingress-100000000001.us-central1.run.app'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_2')throw Error('setup target');}
 function lmhs_schema_(c){if(typeof mx_isGoogle!=='function'||mx_isGoogle()!==true)throw Error('setup mode');mhl_dependencies_(c).verifyRootSchema();}
 /* Activation requires operator-confirmed live server namespace/root/kind and health.
  * No server call here; these guards cannot attest remote state. */
@@ -49,9 +49,9 @@ function lmhs_runPreflight(){return lmhs_boundedLog_(lmhs_preflightProduction);}
 function lmhs_runEnable(){return lmhs_boundedLog_(lmhs_enableProduction);}
 function lmhs_runDisable(){return lmhs_boundedLog_(lmhs_disableProduction);}
 
-function lws_owner_(){var e='user@example.org';if(String(Session.getActiveUser().getEmail()).toLowerCase()!==e||String(Session.getEffectiveUser().getEmail()).toLowerCase()!==e)throw Error('Unavailable');}
+function lws_owner_(){var e='user1@example.org';if(String(Session.getActiveUser().getEmail()).toLowerCase()!==e||String(Session.getEffectiveUser().getEmail()).toLowerCase()!==e)throw Error('Unavailable');}
 function lws_types_(){return ['bot_added','bot_removed','bot_started','chat_title_changed','message_callback','message_created','message_edited','message_removed','user_added','user_removed'];}
-function lws_target_(){return 'https://max-durable-ingress-100000000000.us-central1.run.app/max';}
+function lws_target_(){return 'https://max-durable-ingress-100000000001.us-central1.run.app/max';}
 function lws_req_(method,path,body){
  var token=tok_();if(typeof token!=='string'||!token)throw Error('Unavailable');
  var opt={method:method.toLowerCase(),muteHttpExceptions:true,followRedirects:false,validateHttpsCertificates:true,headers:{Authorization:token,Accept:'application/json'}};

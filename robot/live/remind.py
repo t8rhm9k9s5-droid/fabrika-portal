@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — напоминания о вопросах без ответа в группах MAX с ботом и эскалация невыполненных поручений (29.10.2026).
 Пользователь (28.10.2026 23:20): «Чаты и группы, в которых есть боты: бот обязан смотреть, что в чате есть вопрос и нет ответа; если нет
@@ -11,7 +11,7 @@
  1) История всех групп с ботом (groups.json → on, не каналы): GET /messages?count=100 раз в прогон → ~/.fabrika_max/hist/<chat_id>.json
     (60 дней, телефоны заменены на [тел.]); «Коммерческий отдел» — ещё и из history_all.json (max_hist.py). Раз в день — участники группы.
  2) Вопрос — сообщение не бота с «?» или просьбой (прошу / подскажите / сообщите / можно ли …) и адресатом: reply на сообщение человека,
-    упоминание, имя в начале («Сотрудник, …», «Имя Отчество, …»). Без адресата от владельца — вопрос группе (напоминания только
+    упоминание, имя в начале («Сотрудник13, …», «Имя5 Отчество22, …»). Без адресата от владельца — вопрос группе (напоминания только
     в группу, без писем); без адресата от других и вопросы владельцу — не берём (их делает unans.py).
  3) Ответ — любое сообщение адресата в той же группе после вопроса (группе — чьё-то сообщение ответом на вопрос или от 3 слов).
  4) Лестница напоминаний (будни, МСК, пока нет ответа; больше 10 рабочих дней → stale, в сводку владельцу):
@@ -28,16 +28,16 @@
 import datetime, hashlib, json, os, re
 try:
     import leaders as LD     # 03.11.2026: руководству бот вопросов не задаёт (leaders.json)
-except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник …»), чтобы не падал весь участок
+except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник2 …»), чтобы не падал весь участок
     import re as _re
     class LD:
         @staticmethod
         def is_lead(name=None, uid=None, mail=None, owner_uid=None, people=None):
             if uid not in (None, '') and owner_uid not in (None, '') and str(uid) == str(owner_uid): return 'владелец'
-            if str(mail or '').lower() in ('user@example.org', 'user@example.org'): return 'владелец'
-            return 'владелец' if _re.match(r'^\s*Сотрудник(?![а-яё])', str(name or ''), _re.I) else ''
+            if str(mail or '').lower() in ('user5@example.org', 'user4@example.org'): return 'владелец'
+            return 'владелец' if _re.match(r'^\s*Сотрудник2(?![а-яё])', str(name or ''), _re.I) else ''
         @staticmethod
-        def mails(): return {'user@example.org', 'user@example.org'}
+        def mails(): return {'user5@example.org', 'user4@example.org'}
 import mx_ctl as MC
 import mx_poll as MP
 import itm as IT
@@ -104,7 +104,7 @@ def hist_save(hp, H):
     os.chmod(hp + '.tmp', 0o600); os.replace(hp + '.tmp', hp)
 
 
-# REDACTED_B64 история групп
+# REDACTED_B64_1 история групп
 def fetch(token, groups, M, res, t):
     """все группы с ботом → {cid: {'title', 'msgs': [norm_msg по времени]}}; новое — в hist/<cid>.json (60 дней)"""
     hd = os.path.join(M, 'hist'); os.makedirs(hd, exist_ok=True)
@@ -153,7 +153,7 @@ def group_names(token, cid, msgs, st, day, res):
     return names
 
 
-# REDACTED_B64 вопросы и ответы
+# REDACTED_B64_1 вопросы и ответы
 def addressee(m, by_mid, names, bot):
     """→ (uid | 'group' | 'owner' | None, как): reply на сообщение человека → его автор; упоминание; имя в начале текста (единственный участник с таким именем)"""
     me = str(m.get('uid') or '')
@@ -225,7 +225,7 @@ def answers(st, G, owner, bot, t):
     return n
 
 
-# REDACTED_B64 письма
+# REDACTED_B64_1 письма
 def greet_name(cfg, org, mail, fallback):
     """обращение в письме: Имя Отчество из mx_poll_cfg.json (fio), иначе ФИО из оргструктуры, иначе имя в MAX"""
     ml = (mail or '').lower()
@@ -245,7 +245,7 @@ def q_mail(ctx, q, cfg, org, t, owner, mail_send, repeat):
     head = MP.head_of(cfg, org, q.get('dep'), q.get('mail'))
     if head and (MP.banned(cfg, today, mail=head) or head == q.get('mail')): head = None
     cc = [head] if head else []        # 29.10 07:50, пользователь: письма с itm@ — без копии itm@
-    who = 'Т. В. Сотрудник' if q.get('from_owner') else q['from']
+    who = 'Т. В. Сотрудник1' if q.get('from_owner') else q['from']
     greet = 'добрый вечер' if t.hour >= 17 else 'добрый день'
     subj = 'Вопрос без ответа в группе «%s» (%s)%s' % (q['g'], dmy(q['t']), ' — повторно' if repeat else '')
     text = ('%s, %s.\n\nВ группе «%s» %s в %s %s задал(а) вам вопрос, ответа в группе пока нет:\n«%s»\n\nПожалуйста, ответьте в группе.\n\n'
@@ -266,7 +266,7 @@ def send_mail(ctx, mail_send, kind, subj, text, to, cc):
     ctx['res'].setdefault('err', []).append('%s: %s' % (kind, str(r)[:100])); return None
 
 
-# REDACTED_B64 лестница напоминаний
+# REDACTED_B64_1 лестница напоминаний
 def ladder(ctx, st, cfg, org, t, owner, mail_send):
     today = t.date(); wd = MC.workday(today); h = t.hour; two = datetime.timedelta(hours=2); n = 0
     for q in st['q'].values():
@@ -294,7 +294,7 @@ def ladder(ctx, st, cfg, org, t, owner, mail_send):
     return n
 
 
-# REDACTED_B64 эскалация по пунктам контроля (ctl.json)
+# REDACTED_B64_1 эскалация по пунктам контроля (ctl.json)
 def _what(it): return re.sub(r'\s+', ' ', it.get('what') or '')[:200]
 
 
@@ -382,7 +382,7 @@ def escalate(ctx, st, cfg, org, ctl, names, owner, bot, t, mail_send, cid_comm):
             text = ('%s, добрый день.\n\n%s не выполнен%s, на напоминания бота в группе ответа нет. Исполнитель — %s%s, группа «Коммерческий отдел»:\n%s\n\n'
                     'Прошу принять решение: новый срок, замена исполнителя или снятие пункта — ответом на это письмо или в группе.\n\n'
                     'Это автоматическое письмо бота «Фабрикант» (портал «Фабрика»)%s.'
-                    % (greet_name(cfg, org, to[0], 'Сотрудник Отчество' if to[0] == ITM else to[0]), 'Поручение' if one else 'Поручения', 'о' if one else 'ы',
+                    % (greet_name(cfg, org, to[0], 'Сотрудник2 Отчество1' if to[0] == ITM else to[0]), 'Поручение' if one else 'Поручения', 'о' if one else 'ы',
                        nm, (' (%s)' % p['fio']) if p.get('fio') else '', _lines(d5), '; копия — руководителю' if cc else ''))
             subj = ('Невыполненное поручение — %s' % days_ru(d5[0][1])) if one else ('Невыполненные поручения (%d) — до %s' % (len(d5), days_gen(max(D for _, D in d5))))
             rec = send_mail(ctx, mail_send, 'mail:esc5', subj, text, to, cc)
@@ -397,11 +397,11 @@ LEAD_MAX_WD = 20                                  # 03.11.2026: просроче
 
 def _owner_fio(f):
     f = str(f or '')
-    return f == 'владелец' or ('Сотрудник' in f and 'Сотрудник' in f)
+    return f == 'владелец' or ('Сотрудник2' in f and 'Сотрудник1' in f)
 
 
 def lead_overdue(ctl, today, owner_uid=None):
-    """03.11.2026 (Т. В. Сотрудник, опрос: просроченные пункты Сотрудник и Сотрудник А. А. — «В мою утреннюю сводку»):
+    """03.11.2026 (Т. В. Сотрудник1, опрос: просроченные пункты Сотрудник16 и Сотрудник1 А. А. — «В мою утреннюю сводку»):
     пункты контрольных точек на людей из leaders.json (кроме самого владельца), которые бот больше не спрашивает (st='lead'),
     со сроком в прошлом → [(item, ФИО, рабочих дней просрочки)]. Не берём: пункт, где автор-руководитель записан ответственным
     за своё же поручение («жду до…» без адресата — ошибка, не поручение ему); просрочку больше LEAD_MAX_WD рабочих дней."""
@@ -443,7 +443,7 @@ def lead_digest(ctx, st, ctl, t, owner, mail_send):
         parts.append('%s:' % who)
         parts += ['  %d) «%s» — срок %s, просрочка %s%s' % (i, _what(it), MC.ddmm(it['due']), days_ru(D), _src(it)) for i, (it, D) in enumerate(by[who], 1)]
     subj = 'Просроченные пункты руководителей — на совещание %s' % MC.ddmm(day)
-    text = ('Сотрудник Отчество, добрый день.\n\nПо этим пунктам бот больше не задаёт вопросов (руководство и участники совещания, '
+    text = ('Сотрудник2 Отчество1, добрый день.\n\nПо этим пунктам бот больше не задаёт вопросов (руководство и участники совещания, '
             'leaders.json), а ответа нет — для обсуждения на совещании %s:\n\n%s\n\nПункты — из контрольных точек группы MAX '
             '«Коммерческий отдел». Письмо только вам.\n— бот «Фабрикант»' % (MC.ddmm(day), IT.mask('\n'.join(parts))))
     r = send_mail(ctx, mail_send, 'mail:leaddigest', subj, text, [ITM], [])
@@ -462,7 +462,7 @@ def overdue_summary(L=None, st=None, ctl=None, today=None):
     out = []
     for q in sorted((q for q in (st.get('q') or {}).values() if q.get('st') in ('open', 'stale')), key=lambda q: q['t']):
         d = (today - p_date(q['t'])).days
-        who = q['to_name'] if q.get('to_uid') else 'Коллеги (вопрос Т. В. Сотрудник)'
+        who = q['to_name'] if q.get('to_uid') else 'Коллеги (вопрос Т. В. Сотрудник1)'
         if q['st'] == 'stale': out.append('%s — вопрос %s в «%s» — без ответа больше %d рабочих дней, напоминания остановлены' % (who, MC.ddmm(q['t']), q['g'], MAX_WD))
         else: out.append('%s — вопрос %s в «%s» — напоминаний %d — без ответа %s%s' % (who, MC.ddmm(q['t']), q['g'], sum(1 for r in q.get('rem') or [] if not r.get('dry')), days_ru(d),
                                                                                   ' — почта не найдена' if q.get('no_mail') else ''))
@@ -477,7 +477,7 @@ def overdue_summary(L=None, st=None, ctl=None, today=None):
     return out
 
 
-# REDACTED_B64 run
+# REDACTED_B64_1 run
 def run(L, CFG, log, jload, jsave, publish, iso, mail_send=None):
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     mcfg = MP.jl(os.path.join(M, 'config.json'))

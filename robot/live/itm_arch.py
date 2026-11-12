@@ -1,8 +1,8 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-"""«Фабрика» — архив отчётов из ящика user@example.org (Mail.ru), 27.10.2026.
+"""«Фабрика» — архив отчётов из ящика user5@example.org (Mail.ru), 27.10.2026.
 Пользователь: «по почтовому боту — пусть переберёт особенно папки экономика и производство и ОМТС, там много отчётов, их можно собрать
 и систематизировать, период с 1 августа, чтобы собрать статистику».
 
@@ -29,7 +29,7 @@ MAX_MSG = 30 * 1024 * 1024
 #   (REREAD_V=1) прошёл мимо него, за 02.11 «выпуска в 1С нет» не легло. Теперь — по отправителю; лишние письма ПЭО отсекает itm.report_like
 #   (нужно «гальваник» в теме/имени файла — подстрокой, «11_Гальваника» подходит). Новая версия — повтор ещё раз.
 REREAD_V = 2
-REREAD = ['from:(user@example.org OR user@example.org) after:2026/11/01']
+REREAD = ['from:(user14@example.org OR user13@example.org) after:2026/11/01']
 
 
 def _ext(n):
@@ -38,11 +38,11 @@ def _ext(n):
 
 
 def run(L, CFG, ingest, log, jload, jsave, budget=110, limit=150):
-    return run_box(L, ingest, log, jload, jsave, IT.HOST, (CFG.get('itm_mail') or 'user@example.org').lower(), IT.password(L),
+    return run_box(L, ingest, log, jload, jsave, IT.HOST, (CFG.get('itm_mail') or 'user5@example.org').lower(), IT.password(L),
                    lambda fl: [(raw, name) for raw, name, flags in fl if FOLDERS.match(name.strip())], 'arch.json', None, 'itm@', budget, limit)
 
 
-# 28.10.2026, пользователь: ящик user@example.org (Google Workspace «TechFabrikant») — сюда 1С присылает отчёты; «к порталу: IMAP + пароль приложения».
+# 28.10.2026, пользователь: ящик user1@example.org (Google Workspace «TechFabrikant») — сюда 1С присылает отчёты; «к порталу: IMAP + пароль приложения».
 #   Пароль приложения — файл ~/.fabrika_live/imap_1c (делает пользователь в ISPmanager, никуда не выводится). Только чтение: «Входящие» (INBOX).
 def pw_1c(L):
     p = os.path.join(L, 'imap_1c')
@@ -53,7 +53,7 @@ def pw_1c(L):
 
 
 def run_1c(L, CFG, ingest, log, jload, jsave, budget=60, limit=120):
-    login = (CFG.get('mail_1c') or 'user@example.org').lower()
+    login = (CFG.get('mail_1c') or 'user1@example.org').lower()
     return run_box(L, ingest, log, jload, jsave, 'imap.gmail.com', login, pw_1c(L),
                    lambda fl: [(raw, name) for raw, name, flags in fl if raw.upper() == 'INBOX' or name.strip().lower() in ('inbox', 'входящие')][:1] or [('INBOX', 'INBOX')],
                    'arch_1c.json', 'ящик 1c@', '1c@', budget, limit)
@@ -64,7 +64,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
     res = {'t': IT._now().strftime('%Y-%m-%dT%H:%M'), 'new': 0, 'files': 0, 'reports': 0}
     if IT.off() and stname == 'arch.json': res['state'] = IT.off_text(); return res   # 29.10.2026: read="gas" (code/mail_cfg.json) — IMAP itm@ не открывается;
     # 1c@ (Google Workspace, imap.gmail.com) читается и в режиме gas — пользователь 29.10 ~18:00: «на почте 1c@ все данные только для сайта,
-    # если что то новое тоже бери в работу и думай куда интегрировать». Бот (bostimur@) ящик 1c@ не видит; зависала только отправка через mail.ru.
+    # если что то новое тоже бери в работу и думай куда интегрировать». Бот (owner@) ящик 1c@ не видит; зависала только отправка через mail.ru.
     if not pw: res['state'] = 'нет пароля ' + who; return res
     if stname != 'arch.json':                                 # общий потолок места на диске — по основному архиву
         try: st['bytes'] = max(st.get('bytes') or 0, (jload('arch.json', {}) or {}).get('bytes') or 0)

@@ -1,10 +1,10 @@
 /* «Фабрика — бот MAX» (Google 1c@) — Timers.gs: таймеры (триггеры по времени) вместо участка bots робота хостинга
    (шаг 3 переноса ботов в Google, ночь 05.11.2026; план fabrika/tasks/max_to_google_plan.md, задания tasks/night_briefs.md и night_contracts.md).
-   Т. В. Сотрудник: «На хостинге ничего с ботами связано быть не должно. Должно всё работать с Google-диска».
+   Т. В. Сотрудник1: «На хостинге ничего с ботами связано быть не должно. Должно всё работать с Google-диска».
 
    Что здесь: настройки (лист tm_settings), время МСК, праздники и тихие часы, руководители (бот вопросов не задаёт),
    состояние в JSON-файлах Диска («Фабрика — боты/MAX/tm/…», через Store.gs: jget_/jput_), отметки «отправлено» (лист tm_sent),
-   единственный выход в MAX — tm_send_ (API ядра шага 2: REDACTED_B64), публикация файлов для портала
+   единственный выход в MAX — tm_send_ (API ядра шага 2: REDACTED_B64_7), публикация файлов для портала
    в «От ботов» (bf_seal/bf_write шага 5: файлы владельца — ключ k_owner, остальные — ключ сайта), техтревоги владельцу (tm_alert_, раз в день),
    чтение новых сообщений групп из очереди max_in (Store.gs), диспетчер тиков tm_tickMinute/tm_tick с окнами по МСК, триггеры tm_setupTriggers/
    tm_removeTriggers и импорт состояния tm_importState. Остальные файлы: TimersPolls.gs (опросы), TimersCtl.gs (сроки, напоминания),
@@ -18,10 +18,10 @@
 var TM_VER = 'tm-1.0 (05.11.2026)';
 var TM_SUB = 'tm';                                                        // подпапка Диска: «Фабрика — боты/MAX/tm» — файлы состояния
 var TM_POLLS_SUB = 'polls';                                              // опросы с кнопками (пишет ядро, формат — lib.php polls/<id>.json)
-var TM_ITM = 'user@example.org';
-var TM_KOM_CID = '-100000000000';                                      // «Коммерческий отдел» (как KNOWN_GROUPS в Relay.gs; уточняется листом groups)
+var TM_ITM = 'user5@example.org';
+var TM_KOM_CID = '-100000000003';                                      // «Коммерческий отдел» (как KNOWN_GROUPS в Relay.gs; уточняется листом groups)
 var TM_KOM_RE = /коммерческ/i;
-var TM_OWNER_RE = /^\s*Сотрудник(?![а-яё])/i;
+var TM_OWNER_RE = /^\s*Сотрудник2(?![а-яё])/i;
 var TM_HOLIDAYS = ['2026-11-04', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03', '2027-01-04', '2027-01-05', '2027-01-06', '2027-01-07', '2027-01-08'];
 var TM_QUIET_FROM = 20, TM_QUIET_TO = 8;                                 // тихие часы уведомлений сотрудникам (опросы, напоминания, письма): 20:00–08:00 МСК (RULES 27–28.10, как quiet() в mx_poll.py/remind.py/live.py); владельцу — всегда.
                                                                          // НЕ путать с окном вмешательств от имени Т. В. в группах (au_isQuiet, 19:00–07:00) — проверка 1, 05.11
@@ -39,18 +39,18 @@ var TM_SHEETS = {
     mx_tmQueue(limit, budgetMs) → {ok, n} — минутная работа ядра (очередь, отложенные события, вопросы без ответа, выгрузка истории; бюджет — остаток минутного тика, ≤ 40 с; CHECK3 05.11).
     Нет функции — заглушка: ничего не уходит, итог {ok:false, stub:true}; имена при переименовании в ядре правятся только здесь. */
 var TM_CORE = { chat: 'mx_tmSendChat', user: 'mx_tmSendUser', 'delete': 'mx_tmDelete', members: 'mx_tmMembers', queue: 'mx_tmQueue' };
-var TM_ALERT_TO = 'user@example.org';                                    // техтревоги владельцу (письмо от 1c@) — можно и в тихие часы
+var TM_ALERT_TO = 'user5@example.org';                                    // техтревоги владельцу (письмо от 1c@) — можно и в тихие часы
 var TM_OWNER_BIN_RE = /^(ua|grp|mq|diag|rem|poll|gl|mo|grpp|mxsurvey)\.bin$|^exp_/;   // файлы только для владельца — ключ k_owner (как OWNER_BINS в live.py и BF_OWNER_RX)
 var TM_MEM = { files: {}, cfg: null, cfgT: 0, triggers: null, groups: null };   // память одного запуска: файлы состояния, настройки, триггеры ядра, группы
 var TM_QUOTA_DAY_MS = 3.5 * 3600e3;                                      // F4 C-B3: прогноз расхода триггеров MAX за сутки выше 3,5 ч (из 6 ч на аккаунт 1c@ вместе с Telegram) — техтревога
 
-// REDACTED_B64 режим, свойства
+// REDACTED_B64_2 режим, свойства
 function tm_props_() { return PropertiesService.getScriptProperties(); }
 function tm_on_() { return String(tm_props_().getProperty('MODE') || '').trim().toLowerCase() === 'google'; }
 function tm_log_(k, msg) { logRow_('tm:' + k, msg); }
 function tm_err_(e) { return String(e && e.message || e).slice(0, 200); }
 
-// REDACTED_B64 время МСК (без перевода часов: UTC+3)
+// REDACTED_B64_2 время МСК (без перевода часов: UTC+3)
 /** Date → части МСК: {date 'ГГГГ-ММ-ДД', h, m, hm 'ЧЧ:ММ', wd (0 — пн … 6 — вс), ms} */
 function tm_msk_(d) {
   var t = new Date((d instanceof Date ? d : new Date(d)).getTime() + 3 * 3600e3);
@@ -108,7 +108,7 @@ function tm_quiet_(now) {
 function tm_daysRu_(n) { n = Number(n) || 0; var a = n % 10, b = n % 100; return n + ' ' + (a === 1 && b !== 11 ? 'день' : a >= 2 && a <= 4 && !(b >= 12 && b <= 14) ? 'дня' : 'дней'); }
 function tm_daysGen_(n) { n = Number(n) || 0; return n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'дня' : 'дней'); }
 
-// REDACTED_B64 листы tm_*
+// REDACTED_B64_2 листы tm_*
 function tm_sheet_(name) {
   var s = ss_(), sh = s.getSheetByName(name);
   if (!sh) { sh = s.insertSheet(name); sh.appendRow(TM_SHEETS[name] || ['k', 'v']); }
@@ -123,7 +123,7 @@ function tm_findRow_(name, key) {
   var r = f.getRow(); return { row: r, vals: sh.getRange(r, 1, 1, sh.getLastColumn()).getValues()[0] };
 }
 
-// REDACTED_B64 настройки (лист tm_settings: k, v, note)
+// REDACTED_B64_2 настройки (лист tm_settings: k, v, note)
 /** значения по умолчанию — повторяют mx_poll_cfg.json, leaders.json, sales_ctl_cfg.json, mail_cmd.json хостинга; Т. В. правит лист */
 var TM_DEFAULTS = [
   ['owner_uid', '', 'id владельца бота в MAX (иначе — свойство OWNER_UID или импорт config.json)'],
@@ -132,9 +132,9 @@ var TM_DEFAULTS = [
   ['holidays', '', 'дополнительные нерабочие дни, через запятую: ГГГГ-ММ-ДД (производственный календарь; базовый список — в коде)'],
   ['remind_groups', 'all', 'напоминания о вопросах без ответа: all — все группы бота, kom — только «Коммерческий отдел»'],
   ['mail_on', '1', '1 — письма людям от 1c@ (ответ на itm@, копия itm@); 0 — писем нет, только записи dry в состоянии'],
-  ['mail_cmd_from', 'user@example.org, user@example.org, user@example.org', 'чьи письма на 1c@ — команды (push к Claude); подлинность — dkim/spf/dmarc pass'],
+  ['mail_cmd_from', 'user5@example.org, user2@example.org, user54@example.org', 'чьи письма на 1c@ — команды (push к Claude); подлинность — dkim/spf/dmarc pass'],
   ['mail_cmd_subjects', '^(?:(?:re|fw|fwd|отв)\\s*:\\s*)*Фабрика\\s*:\\s*(?:команда|голос|промт|документ|заявка)', 'темы писем-команд (регулярное выражение) — для всех из mail_cmd_from'],
-  ['mail_cmd_any', 'user@example.org, user@example.org', 'чьи письма на 1c@ — команды с любой темой (кроме пересланных и отчётов), как было на хостинге'],
+  ['mail_cmd_any', 'user5@example.org, user2@example.org', 'чьи письма на 1c@ — команды с любой темой (кроме пересланных и отчётов), как было на хостинге'],
   ['poll', '', 'JSON: настройки опросов поверх встроенных (on, morning, morning_due, evening, evening_due, executors, ban, heads, …)'],
   ['leaders', '', 'JSON-список руководителей поверх встроенного (fio, mail[], names[], uids[], unique_surname)'],
   ['ctl_manual', '[]', 'JSON: свои контрольные точки [{id, what, due, who, uid, recur, done}] — как ctl_manual.json на хостинге'],
@@ -198,15 +198,15 @@ function tm_komCid_() {
 }
 function tm_groupTitle_(cid) { var G = tm_groups_(); return (G[cid] && G[cid].title) || (cid === TM_KOM_CID ? 'Коммерческий отдел' : 'группа ' + cid); }
 
-// REDACTED_B64 руководители: бот вопросов не задаёт (leaders.json → встроенный список + лист)
+// REDACTED_B64_2 руководители: бот вопросов не задаёт (leaders.json → встроенный список + лист)
 var TM_LEADERS_DEF = [
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org', 'user@example.org'], names: ['Сотрудник М', 'Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник Отчество'], unique_surname: false, owner: true },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник Отчество'], unique_surname: true },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник Отчество'], unique_surname: true },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник Отчество'], unique_surname: false },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник Ю. А.', 'Сотрудник Сотрудник', 'Сотрудник Сотрудник'], unique_surname: true },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник Сотрудник', 'Сотрудник Сотрудник', 'Сотрудник К. В.'], unique_surname: true },
-  { fio: 'Сотрудник Сотрудник Отчество', mail: ['user@example.org'], names: ['Сотрудник А. А.', 'Сотрудник Сотрудник', 'Сотрудник Сотрудник'], unique_surname: false }
+  { fio: 'Сотрудник1 Сотрудник2 Отчество1', mail: ['user5@example.org', 'user4@example.org'], names: ['Сотрудник2 М', 'Сотрудник2 Сотрудник1', 'Сотрудник1 Сотрудник2', 'Сотрудник2 Отчество1'], unique_surname: false, owner: true },
+  { fio: 'Сотрудник18 Сотрудник80 Отчество34', mail: ['user39@example.org'], names: ['Сотрудник80 Сотрудник18', 'Сотрудник18 Сотрудник80', 'Сотрудник80 Отчество34'], unique_surname: true },
+  { fio: 'Сотрудник10 Сотрудник13 Отчество28', mail: ['user35@example.org'], names: ['Сотрудник13 Сотрудник10', 'Сотрудник10 Сотрудник13', 'Сотрудник13 Отчество28'], unique_surname: true },
+  { fio: 'Сотрудник23 Сотрудник24 Отчество1', mail: ['user36@example.org'], names: ['Сотрудник24 Сотрудник23', 'Сотрудник23 Сотрудник24', 'Сотрудник24 Отчество1'], unique_surname: false },
+  { fio: 'Сотрудник19 Сотрудник38 Отчество12', mail: ['user15@example.org'], names: ['Сотрудник19 Ю. А.', 'Сотрудник38 Сотрудник19', 'Сотрудник19 Сотрудник38'], unique_surname: true },
+  { fio: 'Сотрудник16 Сотрудник21 Отчество11', mail: ['user16@example.org'], names: ['Сотрудник21 Сотрудник16', 'Сотрудник16 Сотрудник21', 'Сотрудник16 К. В.'], unique_surname: true },
+  { fio: 'Сотрудник1 Сотрудник49 Отчество26', mail: ['user22@example.org'], names: ['Сотрудник1 А. А.', 'Сотрудник1 Сотрудник49', 'Сотрудник49 Сотрудник1'], unique_surname: false }
 ];
 function tm_n_(s) { return String(s == null ? '' : s).toLowerCase().replace(/ё/g, 'е').replace(/[^0-9a-zа-я]+/g, ' ').trim(); }
 /** основа фамилии/имени для падежей: машинский → машинск, мирова → миров, тимур → тимур */
@@ -242,8 +242,8 @@ function tm_nameHit_(p, toks) {
     if (other.length) return false;
     return p.unique;
   }
-  if (hasFirst && hasPat && !other.length) return true;                 // «Сотрудник Отчество»
-  if (hasFirst && inits.length && !other.length) return inits[0] === p.sur0;   // «Сотрудник М», «Сотрудник Р.»
+  if (hasFirst && hasPat && !other.length) return true;                 // «Сотрудник2 Отчество1»
+  if (hasFirst && inits.length && !other.length) return inits[0] === p.sur0;   // «Сотрудник2 М», «Сотрудник24 Р.»
   return false;
 }
 /** → ФИО руководителя ('' — не руководство) по имени в MAX, id или почте; владелец бота — тоже руководство.
@@ -267,7 +267,7 @@ function tm_isLeader_(name, uid, mail) {
 /** все почты руководства (нижний регистр) — убрать из получателей напоминаний */
 function tm_leaderMails_() { var s = {}; tm_leaders_().forEach(function (p) { p.mail.forEach(function (m) { s[m] = 1; }); }); return s; }
 
-// REDACTED_B64 состояние: JSON-файлы Диска «Фабрика — боты/MAX/tm» (Store.gs)
+// REDACTED_B64_2 состояние: JSON-файлы Диска «Фабрика — боты/MAX/tm» (Store.gs)
 /** файл читается с Диска один раз за запуск (память TM_MEM.files); записанное тем же запуском — уже в памяти */
 function tm_load_(name, def) {
   if (Object.prototype.hasOwnProperty.call(TM_MEM.files, name)) return TM_MEM.files[name] == null ? def : TM_MEM.files[name];
@@ -278,7 +278,7 @@ function tm_load_(name, def) {
 function tm_save_(name, obj) { TM_MEM.files[name] = obj; var ok = !!jput_(TM_SUB, name, obj); if (!ok) tm_log_('state', 'файл ' + name + ' не записан'); return ok; }
 function tm_memReset_() { TM_MEM.files = {}; TM_MEM.cfg = null; TM_MEM.triggers = null; TM_MEM.groups = null; }
 
-// REDACTED_B64 отметки «отправлено» (лист tm_sent) — идемпотентность
+// REDACTED_B64_2 отметки «отправлено» (лист tm_sent) — идемпотентность
 /** уже отправлялось? */
 function tm_sentHas_(id) { return !!tm_findRow_('tm_sent', id); }
 function tm_sentMark_(id, kind, to, mid, job) {
@@ -294,7 +294,7 @@ function tm_runMark_(job, key, res) {
   } catch (e) { tm_log_('runs', 'отметка ' + job + ': ' + tm_err_(e)); }
 }
 
-// REDACTED_B64 выход в MAX: ОДИН тонкий слой над ядром шага 2
+// REDACTED_B64_2 выход в MAX: ОДИН тонкий слой над ядром шага 2
 function tm_global_() { return this; }                                   // глобальный объект проекта (функции ядра ищутся по имени)
 function tm_core_(kind) { var fn = TM_CORE[kind] ? tm_global_()[TM_CORE[kind]] : null; return typeof fn === 'function' ? fn : null; }
 /** kind: 'chat' {cid, text, html?, reply?} · 'user' {uid, text, html?} · 'delete' {mid} · 'members' {cid} · 'queue' {limit?}.
@@ -340,7 +340,7 @@ function tm_mask_(x) {
 function tm_phoneMask_(x) { return String(x == null ? '' : x).replace(/(\+7|(?<!\d)8)[\s(-]*\d{3}[\s)-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}(?!\d)/g, '[тел.]'); }
 function tm_sha12_(s) { return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, Utilities.newBlob(String(s)).getBytes()).map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('').slice(0, 12); }
 
-// REDACTED_B64 публикация для портала: «От ботов» (bf_seal + bf_write общего модуля KbFind.gs)
+// REDACTED_B64_2 публикация для портала: «От ботов» (bf_seal + bf_write общего модуля KbFind.gs)
 /** какой ключ T14B1 для файла — как publish() в live.py: файлы владельца — k_owner ('owner'), остальные — ключ сайта k_live версии live_ver */
 function tm_keyFor_(name) {
   if (TM_OWNER_BIN_RE.test(String(name))) return 'owner';
@@ -375,9 +375,9 @@ function tm_bots_(name, def) {
   try { var v = bf_json(name); return v == null ? def : v; } catch (e) { return def; }
 }
 
-// REDACTED_B64 почта от 1c@ (контракт Р3: ответ — на itm@, копия itm@)
+// REDACTED_B64_2 почта от 1c@ (контракт Р3: ответ — на itm@, копия itm@)
 var TM_MAIL_DOMAINS = ['fabrikant.su', 'fabrikant.pro', 'techfabrikant.ru'];                  // письма бота — только своим адресам (контракт Р3 / бриф проверки, п. 13)
-var TM_MAIL_BAN = ['user@example.org', 'user@example.org', 'user@example.org'];       // Сотрудник (ПДО), Сотрудник (ПТО) и общий ящик ПТО: писем и напоминаний не писать (RULES 27.10) — на любом пути
+var TM_MAIL_BAN = ['user28@example.org', 'user29@example.org', 'user55@example.org'];       // Сотрудник51 (ПДО), Сотрудник52 (ПТО) и общий ящик ПТО: писем и напоминаний не писать (RULES 27.10) — на любом пути
 /** адрес годится для письма от бота: свой домен и не из запрета */
 function tm_mailOk_(a) { var d = String(a || '').split('@').pop(); return TM_MAIL_DOMAINS.indexOf(d) >= 0 && TM_MAIL_BAN.indexOf(String(a)) < 0; }
 /** письмо людям: только при mail_on=1 и не в тихие часы (владельцу — всегда); адресаты — только свои домены, без запрещённых. → 'ok' | 'dry' | 'quiet' | 'quota' | 'err: …' */
@@ -400,7 +400,7 @@ function tm_mail_(to, cc, subject, text, ownerOnly) {
   } catch (e) { tm_log_('mail', tm_err_(e)); return 'err: ' + tm_err_(e); }
 }
 
-// REDACTED_B64 сообщения групп из очереди max_in (Store.gs) → история tm/hist_<cid>.json
+// REDACTED_B64_2 сообщения групп из очереди max_in (Store.gs) → история tm/hist_<cid>.json
 /** событие MAX message_created → нормализованное сообщение (как norm_msg в mx_ctl.py) | null */
 function tm_normMsg_(u) {
   var m = u && u.message; if (!m) return null;
@@ -510,7 +510,7 @@ function tm_histGroups_() {
   return out;
 }
 
-// REDACTED_B64 диспетчер
+// REDACTED_B64_2 диспетчер
 /** контекст запуска: время МСК, бюджет, итоги */
 function tm_ctx_(scope) {
   tm_memReset_();
@@ -634,7 +634,7 @@ function tm_meter_(ctx) {
   } catch (e) { /* учёт не обязателен */ }
 }
 
-// REDACTED_B64 F4 C-A4 / C-B2: уведомления таймеров через Outbox (common/Outbox.gs, контракт tasks/fix_gpt_0511.md)
+// REDACTED_B64_2 F4 C-A4 / C-B2: уведомления таймеров через Outbox (common/Outbox.gs, контракт tasks/fix_gpt_0511.md)
 // Бизнес-решение (au_recl_watch reminded, qd_sent…) сохраняется сразу; уведомление — запись ob_out по ключу '<операция>:<адресат>' (отдельный адресат — отдельный
 // ключ) в статусе pending до подтверждённой доставки; доставляет ТОЛЬКО минутный тик (tm_obRun_ → ob_runner) — один исполнитель, без гонок.
 var TM_OB_KINDS = ['tm_chat', 'tm_user', 'tm_mail', 'tm_owner'];
@@ -717,7 +717,7 @@ function tm_nightly_(ctx) {
   return out;
 }
 
-// REDACTED_B64 триггеры (запускать из редактора при переключении; ночью НЕ запускать)
+// REDACTED_B64_2 триггеры (запускать из редактора при переключении; ночью НЕ запускать)
 var TM_TRIGGERS = [['tm_tickMinute', 1], ['tm_tick', 5]];
 /** Поставить триггеры времени (только при MODE === 'google'; повторный запуск — пересоздаёт свои). */
 function tm_setupTriggers() {
@@ -739,7 +739,7 @@ function tm_removeTriggers() {
   return n;
 }
 
-// REDACTED_B64 импорт состояния из копии шага 0 (после moveImport_ из Store.gs)
+// REDACTED_B64_2 импорт состояния из копии шага 0 (после moveImport_ из Store.gs)
 /** «Фабрика — боты/MAX/move/*.json» → состояние таймеров (tm/*.json, polls/*.json, настройки owner_uid/bot_uid/kom_cid).
     Повторный запуск ничего не портит: тот же файл копии (sha12 содержимого в tm/_import.json) пропускается. F4 B5 (catch-up): более свежий снимок
     (другое содержимое того же файла — mx_importState('<новый id>') ядра положил его в move/) — переносится, пока таймеры в Google ещё НЕ работали

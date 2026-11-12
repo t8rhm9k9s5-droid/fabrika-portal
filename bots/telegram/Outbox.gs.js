@@ -329,7 +329,7 @@ function ob_status() {
   } catch (e) { out.err = ob_err_(e); }
   return out;
 }
-/** Сотрудник F4 (tm_status, откат): счётчики без взятия записей в работу — то же, что ob_status(). */
+/** Сотрудник4 F4 (tm_status, откат): счётчики без взятия записей в работу — то же, что ob_status(). */
 function ob_stats() { return ob_status(); }
 /** Компакция (под замком, по ключам из свежего чтения): sent старше OB_KEEP_SENT_DAYS и dead/uncertain старше OB_KEEP_DEAD_DAYS удаляются
     (снизу вверх), их файлы payload — в корзину. pending/failed не трогаются. → число удалённых строк. */

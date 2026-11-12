@@ -1,5 +1,5 @@
 /* «Фабрика — бот MAX» — Relay.gs (03.11.2026). Полный перенос вебхука MAX с хостинга в этот скрипт.
-   Сотрудник, 02.11: «Перенеси его на диск тоже… чтобы команды уходили моментально» (опрос «Полностью на Google»); 03.11: «давай доделаем перенос бота».
+   Сотрудник2, 02.11: «Перенеси его на диск тоже… чтобы команды уходили моментально» (опрос «Полностью на Google»); 03.11: «давай доделаем перенос бота».
    Код.gs (api_, chats_, findChat_, norm_, check, readKom, listBotPosts, deleteBotPosts, readKomAll…) не меняется — здесь только новое.
    Как работает:
    1) Вебхук MAX → doPost этого веб-приложения (адрес + ?s=HOOK_SECRET; заголовки Apps Script не видит).
@@ -7,12 +7,12 @@
       ВСЁ остальное (пересылки, опросы poll:, комментарии, журнал групп, меню, ответы бота) уходит на хостинг max/hook.php
       с подписью ключом команд: X-Fabrika-Relay: <unix>:<hex HMAC-SHA256(K_CMD, "relay:"+t+":"+sha256hex(тело))> — хостинг это принимает.
    2) Команды Claude (POST t, d, s): s = hex HMAC-SHA256(K_CMD, "mx:"+t+":"+sha256hex(d)); d = {"op":"post|dm|read|chats", ...}.
-   Секреты — только в свойствах скрипта: MAX_TOKEN, K_CMD (вписывает Сотрудник), HOOK_SECRET (создаёт connectWebhook). В журнал не выводятся.
+   Секреты — только в свойствах скрипта: MAX_TOKEN, K_CMD (вписывает Сотрудник2), HOOK_SECRET (создаёт connectWebhook). В журнал не выводятся.
    GET /chats в MAX нет (404) — группы бота скрипт запоминает сам (свойство GROUPS) из событий вебхука и seedGroups(). */
 
 var SITE = 'https://techfabrikant.ru/';
 var OWNER_CMD = /^\s*в\s+(?:группу\s+)?([^:\n]{3,60}?)\s*:\s*(\S[\s\S]*)$/i;
-var KNOWN_GROUPS = { '-100000000000': 'Коммерческий отдел', '-100000000000': 'Производство' };
+var KNOWN_GROUPS = { '-100000000003': 'Коммерческий отдел', '-100000000004': 'Производство' };
 var HOOK_TYPES = ['message_created', 'message_callback', 'bot_started', 'bot_added', 'bot_removed', 'message_edited', 'message_removed',
                   'user_added', 'user_removed', 'chat_title_changed'];
 
@@ -53,9 +53,9 @@ function idsSave_(ids) {   // убрать старше 14 дней и лишн�
 }
 function sendChat_(cid, text) { return api_('POST', '/messages', { chat_id: cid }, { text: String(text).slice(0, 3990), format: 'html' }); }
 function sendUser_(uid, text) { return api_('POST', '/messages', { user_id: uid }, { text: String(text).slice(0, 3990), format: 'html' }); }
-function h_(s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+function h_(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }   // 12.11 CodeQL: и кавычки — h_ идёт и в атрибуты href
 
-// REDACTED_B64 группы бота (свойство GROUPS)
+// REDACTED_B64_2 группы бота (свойство GROUPS)
 /** { chat_id: {title, type} } — запомненные группы + то, что вдруг отдаст GET /chats. */
 function groups_() {
   var g = {}; try { g = JSON.parse(P_().getProperty('GROUPS') || '{}'); } catch (e) {}
@@ -104,7 +104,7 @@ function members_(cid) {
   return out;
 }
 
-// REDACTED_B64 команды Claude (подпись K_CMD)
+// REDACTED_B64_2 команды Claude (подпись K_CMD)
 function cmd_(e) {
   var k = kcmd_(); if (!k) return { ok: false, error: 'ключ команд не установлен' };
   var t = Number(e.parameter.t || 0), d = String(e.parameter.d || ''), s = String(e.parameter.s || '').toLowerCase();
@@ -161,7 +161,7 @@ function cmd_(e) {
   } finally { lock.releaseLock(); }
 }
 
-// REDACTED_B64 вебхук MAX
+// REDACTED_B64_2 вебхук MAX
 function hook_(e) {
   var sec = P_().getProperty('HOOK_SECRET'); if (!sec || !e || !e.parameter || e.parameter.s !== sec) return { ok: false };
   var raw = e.postData && e.postData.contents || '', u; try { u = JSON.parse(raw); } catch (x) { return { ok: true }; }
@@ -227,8 +227,8 @@ function doPost(e) {
 }
 function doGet(e) {if(e && e.parameter && e.parameter.page === 'owner-timers') return rcot_render_(); if(e && e.parameter && e.parameter.page === 'owner-control') return rcow_routeGet_(e);  if(e && e.parameter && e.parameter.page === 'rexapprove') return rxap_renderApproval_(); if(e && e.parameter && e.parameter.page === 'rexsetup') return rxa_renderSetup_(); return json_({ ok: true, bot: 'Фабрика — бот MAX' }); }
 
-// REDACTED_B64 настройка (запускать из редактора)
-var WEBAPP_URL_FIXED = 'https://script.google.com/macros/s/REDACTED/exec';   // адрес веб-приложения (…/exec) после развёртывания — вписывается сюда, если getUrl() из редактора отдаёт /dev
+// REDACTED_B64_2 настройка (запускать из редактора)
+var WEBAPP_URL_FIXED = 'https://script.google.com/macros/s/REDACTED_2/exec';   // адрес веб-приложения (…/exec) после развёртывания — вписывается сюда, если getUrl() из редактора отдаёт /dev
 function webappUrl_() {
   if (WEBAPP_URL_FIXED) return WEBAPP_URL_FIXED;
   var u = ''; try { u = ScriptApp.getService().getUrl() || ''; } catch (e) {}
@@ -288,7 +288,7 @@ function ownerBind_(uid, code) {
     return true;
   } finally { lk.releaseLock(); }
 }
-/** Одноразовый код владельца — Сотрудник отправляет боту в личку «/owner КОД» (действует 30 минут). */
+/** Одноразовый код владельца — Сотрудник2 отправляет боту в личку «/owner КОД» (действует 30 минут). */
 function ownerCode() { var c = String(Math.floor(100000 + Math.random() * 900000)), p = P_(); p.setProperty('OWNER_CODE', c); p.setProperty('OWNER_CODE_T', String(Date.now())); p.deleteProperty('OWNER_TRIES'); console.log('код владельца: ' + c); }
 /** Текущие подписки вебхука (адреса без секретов). */
 function hooks() {
@@ -309,7 +309,7 @@ function connectWebhook() {
   log_('вебхук переключён на скрипт');
   hooks();
 }
-/** Снять подписку этого скрипта (только по слову Сотрудник). Вернуть хостинг: портал → «Управление» → бот MAX → «Подключить вебхук». */
+/** Снять подписку этого скрипта (только по слову Сотрудник2). Вернуть хостинг: портал → «Управление» → бот MAX → «Подключить вебхук». */
 function disconnectWebhook() {
   var url = webappUrl_(), cur = api_('GET', '/subscriptions');
   (((cur[1] || {}).subscriptions) || []).map(function (s) { return String(s.url || ''); }).filter(function (o) { return url && o.indexOf(url) === 0; })

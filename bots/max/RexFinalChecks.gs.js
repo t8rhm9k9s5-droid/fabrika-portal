@@ -5,13 +5,13 @@
  */
 var RPFIN_BOT_='539375202',RPFIN_PREFIX_='REX_PIN_ONCE_20261108_';
 var RPFIN_TARGETS_=[
-  ['-100000000000','mid.ffffbe7b4ab8222b01a1afc366235dc9'],
-  ['-100000000000','mid.ffffbe7b3f3c222b01a1afc395485dc9'],
-  ['-100000000000','mid.ffffbe751df8222b01a1b043cd895dc9'],
-  ['-100000000000','mid.ffffbe7462e4222b01a1afc3acac5dc9'],
-  ['-100000000000','mid.ffffbe68c7a6222b01a1afc3cad85dc9'],
-  ['-100000000000','mid.ffffbe686738222b01a1afc37d5c5dc9'],
-  ['-100000000000','mid.ffffb7f0c9ae222b01a1afc3eb735dc9']
+  ['-100000000003','mid.ffffbe7b4ab8222b01a1afc366235dc9'],
+  ['-100000000004','mid.ffffbe7b3f3c222b01a1afc395485dc9'],
+  ['-100000000002','mid.ffffbe751df8222b01a1b043cd895dc9'],
+  ['-100000000006','mid.ffffbe7462e4222b01a1afc3acac5dc9'],
+  ['-100000000007','mid.ffffbe68c7a6222b01a1afc3cad85dc9'],
+  ['-100000000005','mid.ffffbe686738222b01a1afc37d5c5dc9'],
+  ['-100000000008','mid.ffffb7f0c9ae222b01a1afc3eb735dc9']
 ];
 function rpfin_context_(effects){
   var p=PropertiesService.getScriptProperties(),c=rxb_config_(p,effects===true);
@@ -118,7 +118,7 @@ function rexPinFinalShape20261108(){
 
 /* Owner-only observation. No network, setters, sheet creation, polling or queue drains. */
 function rex_healthProbe20261108() {
-  if (Session.getActiveUser().getEmail() !== 'user@example.org' || Session.getEffectiveUser().getEmail() !== 'user@example.org') throw Error('owner only');
+  if (Session.getActiveUser().getEmail() !== 'user1@example.org' || Session.getEffectiveUser().getEmail() !== 'user1@example.org') throw Error('owner only');
   var p = PropertiesService.getScriptProperties(), now = Date.now();
   var out = { observed_at: new Date(now).toISOString(), read_only: true, snapshot_atomic: false, mode_google: p.getProperty('MODE') === 'google', triggers: [], queues: {} };
   try { out.triggers = ScriptApp.getProjectTriggers().map(function (t) { var n = String(t.getHandlerFunction()); return /^[A-Za-z_][A-Za-z0-9_]{0,79}$/.test(n) ? n : '[invalid_handler]'; }).sort(); } catch (e) { out.triggers_unavailable = true; }

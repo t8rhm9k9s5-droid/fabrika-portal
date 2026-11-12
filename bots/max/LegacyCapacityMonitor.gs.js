@@ -9,7 +9,7 @@ function lmhm_timer_(ctx) {
     p=PropertiesService.getScriptProperties();m=JSON.parse(p.getProperty('MAX_HTTP_MONITOR_V1')||'null');
     if(!m||m.enabled!==true)return out;
     c=lmhi_config_();
-    if(!c||c.endpoint!=='https://max-durable-ingress-100000000000.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID'||typeof mx_isGoogle!=='function'||mx_isGoogle()!==true){out.state='monitor_target_blocked';return emit();}
+    if(!c||c.endpoint!=='https://max-durable-ingress-100000000001.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_2'||typeof mx_isGoogle!=='function'||mx_isGoogle()!==true){out.state='monitor_target_blocked';return emit();}
     var now=Math.floor(Date.now()/1000),slot=Math.floor(now/900),key='MAX_HTTP_MONITOR_SLOT_V1';
     if(!left(35000)){out.state='monitor_deferred';return emit();}
     lock=LockService.getScriptLock();if(!lock.tryLock(500)){lock=null;out.state='monitor_busy';return emit();}

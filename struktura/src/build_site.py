@@ -17,7 +17,7 @@ esc = lambda s: html.escape(s or "", quote=True)
 TOTAL_STAFF = AREAS_STAFF
 EDITION = "01.11"   # редакция страницы: шапка и подвал
 
-# REDACTED_B64 компоненты
+# REDACTED_B64_1 компоненты
 def contact_btn(value, kind):
     return (f'<button type="button" class="ct ct-{kind}" data-copy="{esc(value)}" title="Скопировать">'
             f'<span>{esc(value)}</span></button>')
@@ -101,7 +101,7 @@ def roles_section():
         out.append("</div>")
     return "".join(out)
 
-# REDACTED_B64 разделы
+# REDACTED_B64_1 разделы
 lead_cards = "".join(card(p, True) for p in LEADERSHIP)
 sec = SECRETARY
 sec_html = (f'<aside class="secnote" data-search="{esc((sec["name"] + " приёмная секретарь " + sec["role"] + " " + " ".join(sec["emails"] + sec["phones"])).lower())}">'
@@ -311,7 +311,7 @@ page = f"""<title>Оргструктура «Фабрикант»</title>
   <div class="row dir2">{dir_cards}</div>
 </section>
 <section id="areas">
-  <p class="eyebrow">Директор по производству · Сотрудник В. В.</p><h2>Производственные участки</h2>
+  <p class="eyebrow">Директор по производству · Сотрудник23 В. В.</p><h2>Производственные участки</h2>
   <p class="lead">{len(AREAS)} участков, стабильный состав ≈ {TOTAL_STAFF} человек. Численность приблизительная, по схеме участков. Мастера и телефоны сверены с оргструктурой.</p>
   <div class="prodtop">{card(ROMANOV_V, True)}{card(makarova, True)}</div>
   <h3 class="tier">Участки с мастерами и ответственными</h3>

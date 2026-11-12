@@ -1,5 +1,5 @@
 /* «Фабрика — бот MAX» — MaxCore.gs (05.11.2026, шаг 2 переноса ботов в Google 1c@): вход, очередь приёма, маршрутизация событий.
-   Т. В. Сотрудник 04.11: «2 бота, 3 бота, 10 ботов — все работают на этом аккаунте. И никто никуда на хостинг не лезет».
+   Т. В. Сотрудник1 04.11: «2 бота, 3 бота, 10 ботов — все работают на этом аккаунте. И никто никуда на хостинг не лезет».
    Перенос веток max/hook.php, post.php, relay.php хостинга в этот проект. Файлы ядра: MaxCore.gs (этот), MaxCoreGroups.gs (группы, автономность,
    push), MaxCoreChannel.gs (комментарии канала), MaxCorePrivate.gs (личные, зеркало, команды владельца), MaxCoreOps.gs (подписанные команды
    post/reply/dm/delete/tgcall/hist, опросы, импорт), MaxCoreHistory.gs (история всех групп на Диске). Хранение — Store.gs (листы служебной
@@ -17,7 +17,7 @@
    SVC_SHEET_ID (необязательно: иначе таблица SS_ID из Store.gs — «Фабрика — боты»).
    Тихие часы 19:00–07:00 МСК (RULES 04.11): бот в группах молчит, события для Claude откладываются до утра (лист mx_defer); история и
    уведомления владельцу об обращениях к нему — всегда. Руководителям (au_isLeader / список RULES 03.11) бот вопросов не задаёт;
-   Имя и Джановой лично не пишет. В режиме google обращений к techfabrikant.ru нет: список прежних мест и замен — STEP2_README.md. */
+   Имя27 и Джановой лично не пишет. В режиме google обращений к techfabrikant.ru нет: список прежних мест и замен — STEP2_README.md. */
 
 var MX_TRIES = 5;                                   // попыток обработки события из очереди max_in, дальше — dead
 var MX_STALE_MS = 6 * 60000;                        // событие «в работе» дольше 6 мин — считается зависшим (запуск упал), берётся снова
@@ -26,7 +26,7 @@ var MX_GRP_FWD_HOUR = 20;                           // H5: не больше о�
 var MX_PRICE_HOUR = 6;                              // запросов цены из одной группы за час — Т. В. в Telegram (дальше — только история и push)
 var MX_MAIL_PER_SENDER = 2;                         // H3: писем маркетологам от одного автора в сутки (МСК)
 var MX_ID_BASE = 7000000000000000;                  // id людей MAX в зеркале Telegram-скрипта: 7·10^15 + id (с Telegram не пересекаются)
-var MX_SIGN = 'Т. В. Сотрудник';                    // подпись автономных ответов от имени владельца (RULES 04.11 ~18:15)
+var MX_SIGN = 'Т. В. Сотрудник1';                    // подпись автономных ответов от имени владельца (RULES 04.11 ~18:15)
 var MX_SIGN_BOT = 'Бот «Фабрика» (по правилам компании)';   // голос бота в личке в тихие часы (без au_sign шага 5; проверка 2, 05.11)
 var MX_MEM = {};                                    // память одного запуска (кэш настроек, групп, user_id бота)
 
@@ -45,7 +45,7 @@ var MX_SHEETS = {
   mx_defer:     ['id', 'ts', 'cid', 'g', 'who', 'why', 'text', 'ctx', 't'] // события групп для Claude, пришедшие в тихие часы: push утром, одной пачкой
 };
 
-// REDACTED_B64 режим и вход
+// REDACTED_B64_2 режим и вход
 function mx_isGoogle() { return String(P_().getProperty('MODE') || '').trim().toLowerCase() === 'google'; }
 
 /** Вход для Relay.gs (режим google): подписанные команды (t, d, s), вызов Telegram-скрипта (op tgcall, формат relay.php) или вебхук MAX. */
@@ -123,7 +123,7 @@ function mx_tick(budgetMs, batch) {
   return n;
 }
 
-// REDACTED_B64 Outbox (модуль common/Outbox.gs шага F3, контракт fix_gpt_0511.md): неудавшиеся побочные действия
+// REDACTED_B64_2 Outbox (модуль common/Outbox.gs шага F3, контракт fix_gpt_0511.md): неудавшиеся побочные действия
 /** Положить действие в Outbox: key — '<операция>:<адресат>' (повтор того же key второй операции не создаёт), kind — mx_push | mx_tg | mx_user | mx_chat,
     payload — что повторить (mx_obHandlers). → true — записано (или уже было); false — модуля нет / не записалось (в журнал: действие потеряно). */
 function mx_outbox(key, kind, target, payload) {
@@ -183,7 +183,7 @@ function mx_removeTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'mx_queueTick') ScriptApp.deleteTrigger(t); });
 }
 
-// REDACTED_B64 API ядра для таймеров шага 3 (Timers.gs: TM_CORE → tm_send_)
+// REDACTED_B64_2 API ядра для таймеров шага 3 (Timers.gs: TM_CORE → tm_send_)
 /** Сообщение в группу: opt.html — текст уже в HTML MAX (иначе отправляется как есть, без разметки), opt.reply — mid, на который отвечаем.
     → {ok, mid, code, err}. Своё сообщение попадает в историю группы. */
 function mx_tmSendChat(cid, text, opt) {
@@ -233,7 +233,7 @@ function mx_handle(u) {
   mx_log('unknown', type);
 }
 
-// REDACTED_B64 журнал, настройки, листы
+// REDACTED_B64_2 журнал, настройки, листы
 /** Журнал (лист log через Store.gs): без токена MAX, без телефонов; k — область. Никогда не бросает исключение. */
 function mx_log(k, msg) { try { logRow_('mx:' + k, mx_maskPhones(mask_(String(msg))).slice(0, 500)); } catch (x) { console.log('mx_log: ' + x); } }
 function mx_errText(x) { return String(x && x.message || x).slice(0, 300); }
@@ -266,20 +266,20 @@ function mx_defaults() {
   return {
     phrases: {
       question: ['Спасибо за вопрос! Передали его специалисту — ответим здесь или в личных сообщениях.', 'Хороший вопрос! Уже уточняем у коллег и скоро ответим.', 'Спасибо, что спросили! Подготовим ответ и вернёмся к вам в ближайшее время.'],
-      price: ['Спасибо за интерес! Цены и наличие подскажет менеджер — напишите, пожалуйста, ваш город и количество, или позвоните +7 000 000-00-00.', 'Спасибо! Передали ваш запрос менеджеру — он свяжется с вами и рассчитает стоимость.', 'Спасибо за интерес к нашей мебели! Актуальные цены и условия пришлёт менеджер — оставьте, пожалуйста, контакт в личных сообщениях.'],
+      price: ['Спасибо за интерес! Цены и наличие подскажет менеджер — напишите, пожалуйста, ваш город и количество, или позвоните +7 000 000-00-14.', 'Спасибо! Передали ваш запрос менеджеру — он свяжется с вами и рассчитает стоимость.', 'Спасибо за интерес к нашей мебели! Актуальные цены и условия пришлёт менеджер — оставьте, пожалуйста, контакт в личных сообщениях.'],
       complaint: ['Нам очень жаль, что так вышло. Передали ваше сообщение ответственным — разберёмся и ответим.', 'Спасибо, что сообщили. Уже передали руководителю — свяжемся с вами, чтобы всё решить.', 'Приносим извинения за неудобства. Ваш комментарий получен и передан в работу.'],
       praise: ['Спасибо за тёплые слова! Нам очень приятно.', 'Спасибо! Передадим команде — это лучшая мотивация.', 'Благодарим за отзыв! Рады, что вам понравилось.'],
       general: ['Спасибо за ваш комментарий!', 'Спасибо, что вы с нами!', 'Спасибо за обратную связь — мы всё читаем.']
     },
-    marketing: ['user@example.org', 'user@example.org'],   // маркетологи (оргструктура)
+    marketing: ['user24@example.org', 'user23@example.org'],   // маркетологи (оргструктура)
     head: [],
-    cc: ['user@example.org'],
+    cc: ['user5@example.org'],
     mail_types: ['question', 'price', 'complaint'],               // о каких комментариях писать маркетологам ('dialog' — ещё и личные сообщения боту)
     mail_day_max: 40,                                               // адресатов в сутки (лимит Google — 100 на всю почту скрипта)
     comment_chats: [],                                              // чаты обсуждений каналов (комментарии как сообщения чата)
     staff_ids: [],                                                  // id сотрудников в MAX: на их комментарии бот не отвечает
     dm_allow: [],                                                   // id людей MAX, кому в личке можно отвечать по существу помимо участников включённых групп (mx_dmAllowed; op settings)
-    owner_names: '(?<![А-Яа-яЁё])(Сотрудник(а|у|ом|е)?(\\s+Отчество(а|у|ем|е)?)?|Т\\.\\s?В\\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])',
+    owner_names: '(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\\s+Отчество1(а|у|ем|е)?)?|Т\\.\\s?В\\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])',
     mirror: ''                                                      // зеркало Telegram-бота в личке: '' — включено, если есть TG_APP_URL; '0' — выключено
   };
 }
@@ -332,7 +332,7 @@ function mx_countersTrim() {
   } catch (x) { mx_log('err', 'счётчики (обрезка): ' + mx_errText(x)); }
 }
 
-// REDACTED_B64 время, тексты, люди
+// REDACTED_B64_2 время, тексты, люди
 function mx_msk(fmt, d) { return Utilities.formatDate(d || new Date(), 'Europe/Moscow', fmt); }
 function mx_hourKey() { return mx_msk('yyyy-MM-dd-HH'); }
 function mx_dayKey() { return mx_msk('yyyy-MM-dd'); }
@@ -361,9 +361,9 @@ function mx_workTime() {
 function mx_isLeader(name, uid) {
   if (typeof au_isLeader === 'function') { try { return !!(au_isLeader(name) || (uid && au_isLeader(String(uid)))); } catch (x) { mx_log('err', 'au_isLeader: ' + mx_errText(x)); } }
   var own = mx_ownerUid(); if (own && Number(uid) === own) return true;
-  return /(^|\s)(Сотрудник\s*М|Сотрудник\s+Отчество|Сотрудник\S*\s+Т(?![а-яё])|Сотрудник|Сотрудник|Сотрудник|Сотрудник\S*\s+Сотрудник|Сотрудник\s+Отчество|Сотрудник\S*\s+В\.\s*В\.|Сотрудник|Сотрудник|Сотрудник\s+А(ндрей|\.\s*А\.))/i.test(String(name || ''));
+  return /(^|\s)(Сотрудник2\s*М|Сотрудник2\s+Отчество1|Сотрудник1\S*\s+Т(?![а-яё])|Сотрудник18|Сотрудник80|Сотрудник10|Сотрудник23\S*\s+Сотрудник24|Сотрудник24\s+Отчество1|Сотрудник23\S*\s+В\.\s*В\.|Сотрудник19|Сотрудник16|Сотрудник1\s+А(ндрей|\.\s*А\.))/i.test(String(name || ''));
 }
-/** Имя и Джанова (не работают): лично им бот в MAX ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans). */
+/** Имя27 и Джанова (не работают): лично им бот в MAX ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans). */
 function mx_isBanned(name) { return /попов|джанов/i.test(String(name || '')); }
 function mx_maskPhones(s) { return String(s == null ? '' : s).replace(/(\+7|\b8)[\s(-]*\d{3}[\s)-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}\b/g, '[тел.]'); }
 function mx_text(m) { return String(((m || {}).body || {}).text || '').trim(); }
@@ -391,7 +391,7 @@ function mx_normMsg(m, rc) {
   return o;
 }
 
-// REDACTED_B64 MAX API (через api_ из Code.gs — токен только там)
+// REDACTED_B64_2 MAX API (через api_ из Code.gs — токен только там)
 function mx_botUid() {
   if (MX_MEM.me !== undefined) return MX_MEM.me;
   var ca = CacheService.getScriptCache(), v = ca.get('mx_me');
@@ -414,7 +414,7 @@ function mx_sendChat(cid, text, extra) {
 function mx_sendUser(uid, text, extra) { return api_('POST', '/messages', { user_id: uid }, mx_msgBody(text, extra)); }
 function mx_answerCb(cbid, text) { if (cbid) api_('POST', '/answers', { callback_id: cbid }, { notification: String(text).slice(0, 200) }); }
 
-// REDACTED_B64 вызовы Telegram-скрипта (вместо max/hook.php → GAS_URL и relay.php)
+// REDACTED_B64_2 вызовы Telegram-скрипта (вместо max/hook.php → GAS_URL и relay.php)
 /** Общий ключ с Telegram-скриптом: hex HMAC-SHA256(K_CMD как байты, 'fabrika-max-v1') — так же выводит v44l (maxKeyDerived_) и хостинг (max_key_sync.py). */
 function mx_maxKey() {
   if (MX_MEM.maxKey !== undefined) return MX_MEM.maxKey;
@@ -480,7 +480,7 @@ function mx_tgOwner(text, buttons, note) {
   return !!(r2 && r2.ok);
 }
 
-// REDACTED_B64 допуск к боту в личке (GPT A1, 05.11; правило Т. В. 28.10: «доступ только через моё согласование»)
+// REDACTED_B64_2 допуск к боту в личке (GPT A1, 05.11; правило Т. В. 28.10: «доступ только через моё согласование»)
 /** Кому в личке можно отвечать по существу (база знаний, автономность, передача команды Claude): владелец; uid из settings.dm_allow; участники
     ВКЛЮЧЁННЫХ групп бота (appr и on, не каналы) — список участников берётся из MAX и кэшируется (MX_STAFF_TTL). Fail-closed: список не получен
     (MAX не ответил, пусто) — отказ, а не разрешение; имя человека не проверяется (его можно подделать). → true/false. */
@@ -508,7 +508,7 @@ function mx_staff(refresh) {
   return S;
 }
 
-// REDACTED_B64 push к Claude (модуль cp_ шага 5; без него — ничего не шлём)
+// REDACTED_B64_2 push к Claude (модуль cp_ шага 5; без него — ничего не шлём)
 function mx_pushOn() { return typeof cp_push === 'function' && typeof cp_enabled === 'function' && !!cp_enabled(); }
 /** ev = {src, who, chat, id, text, ctx}; now — сразу (личная команда Т. В. или руководителя) или пачкой через cp_flush. → true, если принято модулем
     (повтор того же id модуль не шлёт второй раз). Текст и контекст — без телефонов. */

@@ -1,22 +1,22 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — вопросы сотрудников без ответа (28.10.2026).
 
 Пользователь (голосом, задача №18): «собрать список сотрудников и их вопросов за вчера без ответов, проверив почту, ботов, Макса и Телегу,
 с ФИО по новой структуре»; «Где мой ответ? На этот запрос в боте?» — отчёт собирает хостинг сам, бот показывает его владельцу
-(/bezotveta, голосом «вопросы без ответа»). Только для Т. В. Сотрудник: это его рабочий ящик.
+(/bezotveta, голосом «вопросы без ответа»). Только для Т. В. Сотрудник1: это его рабочий ящик.
 
 Запуск — из live.py (cron хостинга раз в 10 минут), пересчёт раз в 55 минут; дни — сегодня и два прошлых рабочих дня.
- 1) Почта user@example.org (Mail.ru, только чтение: EXAMINE, BODY.PEEK) — письма людей лично или в копии с вопросом или просьбой.
-    Ответ — письмо с itm@ или user@example.org (папка «Отправленные» или копия во «Входящих») со ссылкой на это письмо
+ 1) Почта user5@example.org (Mail.ru, только чтение: EXAMINE, BODY.PEEK) — письма людей лично или в копии с вопросом или просьбой.
+    Ответ — письмо с itm@ или user4@example.org (папка «Отправленные» или копия во «Входящих») со ссылкой на это письмо
     (In-Reply-To / References) или с той же темой этому человеку позже. Роботы, рассылки и отчёты не считаются.
- 2) MAX, группа «Коммерческий отдел» (история ~/.fabrika_max/history_all.json, max_hist.py): обращение к Сотрудник Отчество —
-    упоминание, ответ на его сообщение, имя («Сотрудник», «Т. В.»), — с вопросом. Ответ — его сообщение ответом (reply) на это или с упоминанием автора.
+ 2) MAX, группа «Коммерческий отдел» (история ~/.fabrika_max/history_all.json, max_hist.py): обращение к Сотрудник81 Отчество42 —
+    упоминание, ответ на его сообщение, имя («Сотрудник2», «Т. В.»), — с вопросом. Ответ — его сообщение ответом (reply) на это или с упоминанием автора.
     Другие группы — с 28.10 по журналу пересылок владельцу (~/.fabrika_max/grp_owner.jsonl, max/hook.php).
  3) Боты (Telegram и MAX, личные чаты) отвечают сами; открытые заявки и карточки писем дописывает скрипт бота.
-    Личные переписки Сотрудник Отчество в Telegram и MAX ботам недоступны.
+    Личные переписки Сотрудник2 Отчество2 в Telegram и MAX ботам недоступны.
 ФИО, должность и отдел — по оргструктуре (unans_org.json рядом с кодом: почта → [ФИО, должность, отдел]).
 → st/ua.bin (шифр T14B1, ключ k_live) и state/unans.json. Текст писем — без телефонов, почт, IP и кадастровых номеров, до 300 знаков.
 """
@@ -26,14 +26,14 @@ import itm as IT
 MSK = IT.MSK
 EVERY = 55 * 60
 from mx_ctl import HOLIDAYS                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
-OWNER_NAMES = re.compile(r'(?<![А-Яа-яЁё])(Сотрудник(а|у|ом|е)?(\s+Отчество(а|у|ем|е)?)?|Т\.\s?В\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])')
+OWNER_NAMES = re.compile(r'(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\s+Отчество1(а|у|ем|е)?)?|Т\.\s?В\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])')
 ASK = re.compile(r'\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|согласуете|направьте|предоставьте|пришлите|'
                  r'ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|'
                  r'как поступить|разрешите|одобрите|утвердите|посмотрите)(?![а-яё])', re.I)
 SUBJ_PFX = re.compile(r'^\s*((re|fw|fwd|отв|ответ|пересл|пересылка|ha)\s*(\[\d+\])?\s*:\s*)+', re.I)
 SKIP_Q = re.compile(r'^(спам|корзина|черновики|исходящие|spam|junk|trash|drafts|outbox|archive|архив)$', re.I)
 SENT_N = re.compile(r'^(отправленные|sent|sent items|sent messages)$', re.I)
-ME2 = ('user@example.org', 'user@example.org')
+ME2 = ('user5@example.org', 'user4@example.org')
 
 
 def _now(): return datetime.datetime.now(MSK)
@@ -75,7 +75,7 @@ def clean_text(txt, surname=''):
 
 
 def to_other(txt):
-    """обращение к другому человеку по имени («Юля, просим…») — письмо не Сотрудник Отчество"""
+    """обращение к другому человеку по имени («Юля, просим…») — письмо не Сотрудник81 Отчество42"""
     m = GREET.match(txt or '')
     return bool(m) and m.group(1).lower() not in NOT_NAMES
 
@@ -112,7 +112,7 @@ def ids(v): return set(re.findall(r'<[^<>\s]+>', str(v or '')))
 
 
 def mail(L, CFG, days, log, budget=100):
-    me = (CFG.get('itm_mail') or 'user@example.org').lower()
+    me = (CFG.get('itm_mail') or 'user5@example.org').lower()
     if IT.off(): return {'mail': IT.off_text()}, []               # 29.10.2026: read="gas" — почта itm@ не читается, остаются группы MAX
     pw = IT.password(L)
     if not pw: return {'err': 'нет пароля для внешнего приложения itm@'}, []
@@ -145,7 +145,7 @@ def mail(L, CFG, days, log, budget=100):
                 cc = [a.lower() for _, a in email.utils.getaddresses([str(x) for x in h.get_all('Cc', [])])]
                 try: t = email.utils.parsedate_to_datetime(h['Date']).astimezone(MSK)
                 except Exception: continue
-                if sent or frm in ME2 or frm == me:                     # письмо Сотрудник Отчество — чьё-то письмо отвечено
+                if sent or frm in ME2 or frm == me:                     # письмо Сотрудник2 Отчество2 — чьё-то письмо отвечено
                     replied |= ids(h['In-Reply-To']) | ids(h['References'])
                     mine.append((nsubj(h['Subject']), set(to + cc), t)); continue
                 if t.date().isoformat() not in days or (mid and mid in seen): continue
@@ -161,7 +161,7 @@ def mail(L, CFG, days, log, budget=100):
                 sur = (fname.split() or [''])[0] if fname and not re.search(r'[@.]', fname.split()[0] if fname.split() else '') else ''
                 txt = clean_text(txt, sur)
                 if not ASK.search(subj + '\n' + txt[:4000]): continue
-                if not direct and to_other(txt): continue          # в копии, а обращаются к другому («Юля, …») — не вопрос Сотрудник Отчество
+                if not direct and to_other(txt): continue          # в копии, а обращаются к другому («Юля, …») — не вопрос Сотрудник81 Отчество42
                 seen.add(mid)
                 cand.append({'src': 'mail', 'mid': mid, 't': t.strftime('%Y-%m-%dT%H:%M'), 'day': t.date().isoformat(), 'f': frm, 'n': fname[:80],
                              's': subj[:160], 'x': qtext(subj, txt), 'd': direct, 'fo': name[:40], 'ns': nsubj(subj)})
@@ -185,7 +185,7 @@ def mail(L, CFG, days, log, budget=100):
 
 
 def max_group(L, days):
-    """группа «Коммерческий отдел»: обращения к Сотрудник Отчество с вопросом, на которые он не ответил в группе"""
+    """группа «Коммерческий отдел»: обращения к Сотрудник81 Отчество42 с вопросом, на которые он не ответил в группе"""
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'err': 'нет настроек бота MAX'}, []
@@ -193,10 +193,10 @@ def max_group(L, days):
     try: H = json.load(open(os.path.join(M, 'history_all.json'), encoding='utf-8'))
     except Exception: return {'err': 'нет истории группы'}, []
     msgs = sorted((m for m in (H.get('msgs') or {}).values() if m.get('ts')), key=lambda m: m['ts'])
-    if not owner:                                       # /owner в боте MAX не привязан — Сотрудник Отчество по имени в истории группы
+    if not owner:                                       # /owner в боте MAX не привязан — Сотрудник2 Отчество1 по имени в истории группы
         ids = {}
         for m in msgs:
-            if not m.get('bot') and m.get('uid') and re.match(r'^\s*Сотрудник(\s|$)', m.get('name') or ''): ids[m['uid']] = ids.get(m['uid'], 0) + 1
+            if not m.get('bot') and m.get('uid') and re.match(r'^\s*Сотрудник2(\s|$)', m.get('name') or ''): ids[m['uid']] = ids.get(m['uid'], 0) + 1
         owner = int(max(ids, key=ids.get)) if ids else 0
     if not owner: return {'err': 'владелец в MAX не привязан, в группе его сообщений нет'}, []
     by = {m['mid']: m for m in msgs}
@@ -283,7 +283,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     for q in xq:
         v = None
         fam = [w for w in re.split(r'\s+', q['n']) if w]
-        for w in fam:                                        # «Сотрудник Имя» / «Имя Сотрудник» → по фамилии из оргструктуры
+        for w in fam:                                        # «Сотрудник40 Имя5» / «Имя5 Сотрудник40» → по фамилии из оргструктуры
             if w.lower() in names: v = names[w.lower()]; break
         items.append({'src': 'max', 'day': q['day'], 't': q['t'], 'fio': v[0] if v else q['n'], 'role': (v[1] if v and len(v) > 1 else ''),
                       'dep': (v[2] if v and len(v) > 2 else ''), 'new': not v, 'g': q['g'], 'why': q['why'], 'x': q['x']})

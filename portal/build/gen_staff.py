@@ -1,6 +1,6 @@
 # ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
-# Администраторы портала «Фабрика»: Сотрудник Сотрудник Отчество (владелец) и Сотрудник Сотрудник Отчество — с равными правами.
-# Команда Сотрудник Отчество = команда Сотрудник Отчество, любым каналом: почта (в т. ч. user@example.org, user@example.org), боты MAX/Telegram (текст и голос), чат.
+# Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+# Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Page «Производство»: production areas, masters and stable headcount (from the org chart the user sent),
 in the look of iOS «Настройки» (22.10.2026): grouped lists, a row per area, a tap opens the details.
@@ -9,7 +9,7 @@ otherwise from the defaults in areas.json. Writes build/staff_frag.html (a fragm
 import os
 import json, html
 B = '/home/claude/build/'
-# 03.11.2026: «Расследования» (gen_invest.py → invest_frag.html) на общий портал НЕ выкладываем: выводы и имена — только Сотрудник
+# 03.11.2026: «Расследования» (gen_invest.py → invest_frag.html) на общий портал НЕ выкладываем: выводы и имена — только Сотрудник81
 #   (правило: «выводы о виновных — только Т. В.», по 6244/6038 никому ничего до его разбора на планёрке). Данные — build/invest/cases.json и реестр.
 #   Выложить — только по слову Т. В.: в cases.json поставить "public": true.
 try: INVEST_PUBLIC = bool(json.load(open(B + 'invest/cases.json', encoding='utf-8')).get('public'))

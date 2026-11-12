@@ -4,7 +4,7 @@
  */
 function rctg_owner_() {
   var active=Session.getActiveUser().getEmail(),effective=Session.getEffectiveUser().getEmail();
-  if(active!=='user@example.org'||effective!=='user@example.org') rctg_fail_();
+  if(active!=='user1@example.org'||effective!=='user1@example.org') rctg_fail_();
 }
 var RCTG_KEY_ = 'REX_TELEGRAM_JOBS_OWNER_V1';
 function rctg_fail_() { throw new Error('Telegram jobs control rejected'); }
