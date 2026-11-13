@@ -9,7 +9,7 @@ import json, os, subprocess, sys
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 OUT = '/home/claude/site/plans'
-TMP = 'REDACTED_B64_4'
+TMP = 'REDACTED_B64_40'
 os.makedirs(OUT, exist_ok=True); os.makedirs(TMP, exist_ok=True)
 items = _cg1_read_json('/home/claude/build/docs_list.json')
 only = set(sys.argv[1:])

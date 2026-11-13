@@ -218,7 +218,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     if (!G || !G.m || !G.m.length) return '';
     var cur = G.cur || null, r = G.m[G.m.length - 1], m = r[0], p = r[1], f = r[2], part = cur && cur[0] === m && cur[1] < cur[2];
     var pt = part ? Math.round(p * cur[1] / cur[2]) : p, v = pt ? Math.round(f / pt * 100) : null;
-    var ym = String(G.src || '').slice(0, 7), DL = (G.d || []).filter(function (x) { return x[1] > 0; }), avg = DL.length ? DL.reduce(function (a, x) { return a + x[1]; }, 0) / DL.length : null;
+    var DL = (G.d || []).filter(function (x) { return x[1] > 0; }), avg = DL.length ? DL.reduce(function (a, x) { return a + x[1]; }, 0) / DL.length : null;
     var load = avg != null ? Math.round(avg / (G.norm || 165) * 100) : null;
     return '<span>Гальваника: <b>' + (v == null ? '—' : v + '%') + '</b> плана' + (load != null ? ' · загрузка <b>' + load + '%</b>' : '') + '</span>';
   }

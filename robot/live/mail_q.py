@@ -335,7 +335,7 @@ def work(send, log=lambda *a: None, budget=BUDGET, clock=time.time, only=None):
     return res
 
 
-# REDACTED_B64_1 send="bot": письма отправляет скрипт бота через Gmail (29.10.2026)
+# REDACTED_B64_37 send="bot": письма отправляет скрипт бота через Gmail (29.10.2026)
 # Формат — fabrika/notes/mail_via_gmail.md, «Интерфейс 1»; менять только вместе со скриптом бота.
 MO_ATT_MAX = 8 * 1024 * 1024                                       # вложений на письмо (байт): больше — письмо уходит без них, att_skipped
 MO_CAP = 12 * 1024 * 1024                                          # примерно байт писем в одном st/mo.bin; остальные — в следующий прогон
@@ -483,5 +483,6 @@ def bot_work(publish, default_to=None, log=lambda *a: None, clock=time.time):
 if __name__ == '__main__':
     sys.path.insert(0, HERE)
     if send_bot() or send_off(): sys.exit(0)                       # 29.10.2026: send="bot" — очередь отдаёт участок «mail»; 01.11: "off" — не слать
-    import live as LV                                              # те же настройки и цепочка SMTP, что у прогона
+    import importlib                                               # 13.11.2026: без статического import live — круга mail_q ↔ live нет
+    LV = importlib.import_module('live')                           # те же настройки и цепочка SMTP, что у прогона (ручной запуск)
     work(LV._smtp_send, LV.log)

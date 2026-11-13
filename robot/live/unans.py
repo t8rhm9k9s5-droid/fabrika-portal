@@ -292,7 +292,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     for q in xq:
         v = None
         fam = [w for w in re.split(r'\s+', q['n']) if w]
-        for w in fam:                                        # «Сотрудник40 Имя4» / «Имя4 Сотрудник40» → по фамилии из оргструктуры
+        for w in fam:                                        # «Сотрудник40 Имя5» / «Имя5 Сотрудник40» → по фамилии из оргструктуры
             if w.lower() in names: v = names[w.lower()]; break
         items.append({'src': 'max', 'day': q['day'], 't': q['t'], 'fio': v[0] if v else q['n'], 'role': (v[1] if v and len(v) > 1 else ''),
                       'dep': (v[2] if v and len(v) > 2 else ''), 'new': not v, 'g': q['g'], 'why': q['why'], 'x': q['x']})

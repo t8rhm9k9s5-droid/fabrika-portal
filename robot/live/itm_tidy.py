@@ -50,7 +50,7 @@ def _is_inbox(raw): return (raw or '').strip().strip('"').upper() == 'INBOX'
 def target(frm, subj):
     """→ путь папки списком, например ['Портал', 'ОМТС и снабжение'] или ['МП']"""
     try:
-        import itm_sort as S
+        import itm_rules as S
         c = S.classify(frm, subj)
         if c:
             t = S.TARGET.get(c)
@@ -67,7 +67,7 @@ def _delim(fl):
 
 
 def _box(path, fl):
-    import itm_sort as S
+    import itm_rules as S
     return _delim(fl).join(S.utf7_encode(x) for x in path)
 
 
@@ -124,7 +124,7 @@ def work(M, fl, st, log, md=None, L=None):
             M.uid('STORE', u, '+FLAGS.SILENT', '(\\Seen)'); res['seen'] += 1
             box = _box(path, fl)
             if has_move and _ensure(M, box, have):
-                import itm_sort as S
+                import itm_rules as S
                 typ, _ = S.uid_move(M, u, '"%s"' % box, True)
                 if typ == 'OK': res['moved'] += 1
             q['q'].pop(u, None)

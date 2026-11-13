@@ -1,3 +1,7 @@
+/* 13.11.2026, Т. В.: «ничего не должно быть прочитано и переложено в другую папку, пока не отработано и не учтено на портале».
+   Отчёты экономистов/ПДО (econ) и копии из ящиков Т. В. (copy) больше НЕ помечаются прочитанными и не уходят из «Входящих»: ярлык + «Портал: в работе».
+   Снимает их облачная проверка Claude 3 раза в день (tasks/mail1c_portal.md): после внесения на портал — «Учтено на портале», прочитано, из «Входящих».
+   Сами (прочитано и в папку) по-прежнему уходят только: рассылки 1С (их разбирает робот хостинга), служебные уведомления, письма бота самому себе. */
 /* «Фабрика» — MailTidy.gs: разбор «Входящих» ящика user1@example.org без Claude (12.11.2026).
    Т. В. 12.11.2026: «написать скрипты, чтобы почта проверялась без твоего участия на всех трёх ящиках».
    Правила — как ручной разбор Claude 11–12.11 (RULES: разобранный тред — из «Входящих» в папку; копии из корпоративного ящика —
@@ -52,15 +56,15 @@ function mt_classify_(th) {
   if (others.every(function (f) { return MT_SVC_FROM.test(f); })) return { k: 'svc', lab: ['Служебные'], read: true, arch: true };
   var last = ms[ms.length - 1], lf = mt_addr_(last.getFrom()), att = false;
   try { att = last.getAttachments({ includeInlineImages: false }).length > 0; } catch (e) { att = false; }
-  if (att && MT_ECON.test(lf) && others.every(function (f) { return f === lf; })) return { k: 'econ', lab: ['ИТМ/экономика'], read: true, arch: true };
-  if (att && MT_PROD.test(lf) && others.every(function (f) { return f === lf; })) return { k: 'econ', lab: ['ИТМ/производство'], read: true, arch: true };
+  if (att && MT_ECON.test(lf) && others.every(function (f) { return f === lf; })) return { k: 'econ', lab: ['ИТМ/экономика', 'Портал: в работе'], read: false, arch: false };
+  if (att && MT_PROD.test(lf) && others.every(function (f) { return f === lf; })) return { k: 'econ', lab: ['ИТМ/производство', 'Портал: в работе'], read: false, arch: false };
   var ourThread = mt_addr_(first.getFrom()) === MT_ME;
   var toItm = ms.some(function (m) { return mt_addr_(m.getFrom()) !== MT_ME && MT_COPY.test(String(m.getTo()) + ',' + String(m.getCc())); });
   var toMe = ms.some(function (m) { return mt_addr_(m.getFrom()) !== MT_ME && (String(m.getTo()) + ',' + String(m.getCc())).toLowerCase().indexOf(MT_ME) >= 0; });
   var ask = false; try { ask = MT_TASK.test(String(last.getSubject() || '') + ' ' + String(last.getPlainBody() || '').slice(0, 1500)); } catch (e1) { ask = false; }
   if (!ourThread && toItm && !toMe && !ask) {                               // копия письма itm@ / owner@ (пересылка), без просьбы к порталу
     var fo = mt_itmFolder_(lf);
-    return { k: 'copy', lab: fo ? ['ИТМ', 'ИТМ/' + fo] : ['ИТМ'], read: true, arch: true };
+    return { k: 'copy', lab: (fo ? ['ИТМ', 'ИТМ/' + fo] : ['ИТМ']).concat(['Портал: в работе']), read: false, arch: false };
   }
   var fo2 = mt_itmFolder_(lf);
   return { k: 'people', lab: ourThread ? ['Служебные'] : (fo2 ? ['ИТМ/' + fo2] : []), read: false, arch: false };

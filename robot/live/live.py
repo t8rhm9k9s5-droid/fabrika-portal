@@ -214,7 +214,7 @@ def jsave(n, v):
         except Exception as e: log('  ! .bak', n, e.__class__.__name__, e)
 
 
-# REDACTED_B64_1 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
+# REDACTED_B64_37 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
 # alert(key, text, critical=False): не чаще раза в 6 ч на ключ (state/alerts_sent.json, атомарно, под замком — участки параллельны);
 # некритичные с 20:00 до 08:00 МСК копятся и уходят в 08:00 одним сообщением (alert_flush — в конце каждого участка); критичные — сразу.
 # Каналы — прежние: max_send (владельцу в MAX) и mail_send (cfg.json → alert_to, как проверка 10:35). Новых адресатов нет.
@@ -300,7 +300,7 @@ def prev_workday(d):
     return d
 
 
-# REDACTED_B64_1 1) mail
+# REDACTED_B64_37 1) mail
 # 04.11.2026, Т. В. Сотрудник1: «user4@example.org — лично мой ящик… Почту ты пока читаешь, пока не перестанет туда служебная почта приходить.
 # Во всём остальном owner@ не используешь вообще». Поэтому: ЧТЕНИЕ отчётов из Gmail владельца (cfg.json → mail) — пока остаётся (OWNER_GMAIL_READ),
 # выключить — когда служебная почта перестанет туда приходить (False + пакет кода); ОТПРАВКА с Gmail владельца (запасной SMTP) — выключена совсем,
@@ -425,7 +425,7 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'sday:' + rec['kind'], 'date': rec['date'], 'file': fn})
                     continue
-                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник5) — все дни + сумма месяца
+                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник6) — все дни + сумма месяца
                 if mr:
                     sdj = jload('sales_day.json', {})
                     SDY.merge_month(sdj, mr, iso(sent), fn[:80])
@@ -439,7 +439,7 @@ def ingest_message(raw, recv):
         if low.endswith('.xlsx') and re.search(r'запас\w*\s*гп|товары\s+на\s+складах', fn + ' ' + subj, re.I):
             # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник10, используй его как базу… движение по складу в разрезе филиалов… склады брака
             #   внутри отчета… на главной — общее количество согласно того отчета»): 1С «Товары на складах» («Запасы ГП», ежедневно на 1c@ —
-            #   запрошено у В. В. Сотрудник5 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
+            #   запрошено у В. В. Сотрудник6 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
             try:
                 import stock_mv as SMV
                 rd = SMV.ingest(fn, data, iso(sent), jload, jsave, log)
@@ -572,7 +572,7 @@ def gas_inbox(recv, limit=30, budget=150):
     return res
 
 
-# REDACTED_B64_1 2) counting
+# REDACTED_B64_37 2) counting
 def stock_days(D, sraw, ds):
     """01.11.2026, пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц». parse_1c хранит историю
     остатков только за текущий месяц (wh_hist, free_hist) — копим её в state/stock_days.json: дата → {'w': склад → группа → шт, 'f': ПКС «Доступно»
@@ -636,7 +636,7 @@ def build_all():
     return parts
 
 
-# REDACTED_B64_1 3) status and publishing
+# REDACTED_B64_37 3) status and publishing
 def last_by_kind(recv):
     last = {}
     for r in recv:
@@ -670,7 +670,7 @@ REPORTS_X = [
     ('omts:zps', '1С «Жилпромсервис Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:fts', '1С «ФТС Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:pok', '1С «Покупные товары»', '08:30', 'same', 'mwf'),
-    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник5 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
+    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник6 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
 ]
 
 
@@ -779,7 +779,7 @@ def publish(name, obj):
     return True
 
 
-# REDACTED_B64_1 4) the 10:35 check
+# REDACTED_B64_37 4) the 10:35 check
 def max_send(text):
     """to the owner in MAX, if the MAX bot is set up (token and /owner in ~/.fabrika_max/config.json)"""
     try:
@@ -1039,7 +1039,7 @@ def watch_d(t, hb, alerts, status):
     return out
 
 
-# REDACTED_B64_1 run
+# REDACTED_B64_37 run
 # 29.10.2026, пользователь: «Работа хостинга не должна никак зависеть от почтовых рассылок… Хостинг — это портал в первую очередь…
 # нужны 2-3-10 процессов параллельных». cron раз в 10 минут запускает live.py → main() только РАЗДАЁТ работу: каждый участок —
 # отдельный процесс (python3 live.py --lane <имя>) со своим замком и пределом времени; завис один — остальные работают,
@@ -1160,7 +1160,7 @@ def sales_day_backfill():
     mk = jload('sales_day_bf.json', {}) or {}
     pos, size = int(mk.get('pos') or 0), os.path.getsize(idx)
     if pos > size or mk.get('v') != BF_V: pos = 0                       # 30.10.2026 ~18:50: v2 — отчёт «за месяц» (parse_month): архив перечитать один раз —
-                                                                          # письмо Сотрудник5 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
+                                                                          # письмо Сотрудник6 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
     if pos == size: return {'state': 'ok', 'n': 0}
     sdj, n = None, 0
     with open(idx, 'rb') as f:
@@ -1427,7 +1427,7 @@ def lane_reports():
     st_pub = {k: status.get(k) for k in ('t', 'mail', 'mail_t', 'expect', 'last', 'check_at', 'deploy', 'gas', 'itm', 'ozon', 'mail_q', 'mail_out',
                                          'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12')}   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
     st_pub['lanes'] = lanes_status()
-    st_pub['arch_prune'] = (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
+    st_pub['arch_prune'] = status.get('arch_prune') or (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
     st_pub['alert'] = a if a and (a.get('miss') or a.get('none')) else None
     try:                                                   # 13.11.2026, Т. В.: раз в сутки — целостность портала и документов по реестру (docs_check.py)
         import docs_check as DCK
@@ -1610,6 +1610,12 @@ def lane_history():
     except Exception as e:
         status['mx_export'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
         log('  ! выгрузка MAX:', e.__class__.__name__, e)
+    try:                                                   # 13.11.2026, Т. В.: лиды выставок — на особый контроль, ход работы публиковать (leads_prog.py → st/leads.bin, только счётчики)
+        import leads_prog as LP
+        status['leads'] = LP.run(L, log, jload, jsave, publish)
+    except Exception as e:
+        status['leads'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
+        log('  ! лиды выставок:', e.__class__.__name__, e)
     return status
 
 
@@ -1627,6 +1633,12 @@ def lane_ozon():
     except Exception as e:
         status['ozon_day'] = {'state': 'ошибка', 'err': (str(e)[:160] or e.__class__.__name__)}
         log('  ! ozon вчера/сегодня:', e.__class__.__name__, e)
+    try:                                                   # 13.11.2026, Т. В.: «давай подключим mp stat» — MPStats (WB и Ozon) раз в сутки → st/mps.bin; токен — ~/.fabrika_live/mpstats
+        import mpstats as MPS
+        status['mpstats'] = MPS.run(L, log, jload, jsave, publish, iso)
+    except Exception as e:
+        status['mpstats'] = {'state': 'ошибка', 'err': (str(e)[:160] or e.__class__.__name__)}
+        log('  ! mpstats:', e.__class__.__name__, e)
     _warn_alert('ozon', status)                            # 30.10.2026 аудит P15: было не пусто, стало пусто — прежние данные оставлены, владельцу — сообщение
     return status
 

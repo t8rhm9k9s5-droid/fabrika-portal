@@ -57,11 +57,11 @@ var AU_SYN = { 'велюр': 'velur', 'веллюр': 'velur', 'экокож': '
 // руководители (RULES 03.11, leaders.json): бот вопросов не задаёт — помогает сроками и пунктами. Лист au_settings: leader / not_leader добавляют и убирают.
 var AU_LEADERS = [
   { fio: 'Сотрудник1 Сотрудник2 Отчество1', names: ['Сотрудник2 М', 'Сотрудник2 Сотрудник1', 'Сотрудник1 Сотрудник2', 'Сотрудник2 Отчество1', 'Т. В. Сотрудник1'], mail: ['user5@example.org', 'user4@example.org'], uniq: false },
-  { fio: 'Сотрудник18 Сотрудник80 Отчество34', names: ['Сотрудник80 Сотрудник18', 'Сотрудник80 Отчество34'], mail: ['user39@example.org'], uniq: true },
+  { fio: 'Сотрудник17 Сотрудник80 Отчество34', names: ['Сотрудник80 Сотрудник17', 'Сотрудник80 Отчество34'], mail: ['user39@example.org'], uniq: true },
   { fio: 'Сотрудник10 Сотрудник13 Отчество28', names: ['Сотрудник13 Сотрудник10', 'Сотрудник13 Отчество28'], mail: ['user35@example.org'], uniq: true },
   { fio: 'Сотрудник23 Сотрудник24 Отчество1', names: ['Сотрудник24 Сотрудник23', 'Сотрудник24 Отчество1'], mail: ['user36@example.org'], uniq: false },
-  { fio: 'Сотрудник19 Сотрудник38 Отчество12', names: ['Сотрудник38 Сотрудник19', 'Сотрудник38 Отчество12'], mail: ['user15@example.org'], uniq: true },
-  { fio: 'Сотрудник16 Сотрудник21 Отчество11', names: ['Сотрудник21 Сотрудник16', 'Сотрудник21 Отчество11'], mail: ['user16@example.org'], uniq: true },
+  { fio: 'Сотрудник18 Сотрудник38 Отчество12', names: ['Сотрудник38 Сотрудник18', 'Сотрудник38 Отчество12'], mail: ['user15@example.org'], uniq: true },
+  { fio: 'Сотрудник19 Сотрудник21 Отчество11', names: ['Сотрудник21 Сотрудник19', 'Сотрудник21 Отчество11'], mail: ['user16@example.org'], uniq: true },
   { fio: 'Сотрудник1 Сотрудник49 Отчество26', names: ['Сотрудник49 Сотрудник1', 'Сотрудник1 Сотрудник49'], mail: ['user22@example.org'], uniq: false }
 ];
 var AU_MEMO = { rules: undefined, price: undefined, set: undefined, ss: null, items: null };
@@ -698,7 +698,7 @@ function au_priceAction(data) {
   var client = String(rec.client || '') || 'по сообщению в группе' + (rec.group ? ' «' + rec.group + '»' : ''), qty = rec.qty ? String(rec.qty) : 'не указано', basisTxt = basis + (city ? ' (' + city + ')' : '');
   if (kind === 'peo') {
     var PL = sc.peo_letter || {}, to = Array.isArray(PL.to) && PL.to.length ? PL.to : AU_PEO_TO, cc = Array.isArray(PL.cc) && PL.cc.length ? PL.cc : AU_PEO_CC;
-    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя5 Отчество30', addr = au_address_(peoName);
+    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя6 Отчество30', addr = au_address_(peoName);
     out.mail = { to: to.slice(), cc: cc.slice(), subject: 'Расчёт цены: ' + pos + ', базис ' + basis,
       body: addr + ', добрый день!\nПросим, пожалуйста, рассчитать цену для клиента ' + client + (rec.manager ? ' (менеджер ' + rec.manager + (rec.group ? ', «' + rec.group + '»' : '') + ')' : '') + ': ' + pos + ', количество ' + qty + ', базис ' + basisTxt + '.' +
         (X ? ' Сейчас по прайсу ' + au_dmy_(String(P.date || '')) + ' — ' + au_fmtMoney_(X) + ' ₽ с НДС' : ' Цены прайса на этом базисе нет') + (Y ? ', клиент просит ' + au_fmtMoney_(Y) + ' ₽' + (Z !== null ? ' (' + au_pct_(Z) + ')' : '') : '') + '.\n' +

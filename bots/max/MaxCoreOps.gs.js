@@ -132,7 +132,7 @@ function mx_opDelete(q) {
   return { ok: true, res: out };
 }
 
-// REDACTED_B64_2 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
+// REDACTED_B64_38 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
 function mx_pollId(s) { s = String(s || ''); return /^[A-Za-z0-9_.-]{1,32}$/.test(s) ? s : ''; }
 function mx_pollGet(id) { id = mx_pollId(id); if (!id) return null; var p = jget_('polls', id + '.json', null); return p && p.id ? p : null; }
 function mx_pollMsk(t) { return mx_msk('dd.MM HH:mm', new Date(Number(t) * 1000)); }
@@ -239,7 +239,7 @@ function mx_pollSummary(p) {
   return L.join('\n');
 }
 
-// REDACTED_B64_2 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
+// REDACTED_B64_38 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
 function mx_tgErr(d) { return { ok: false, error_code: 400, description: String(d) }; }
 function mx_tgUid(chat) { var c = Number(chat) || 0; return c >= MX_ID_BASE ? c - MX_ID_BASE : 0; }
 /** HTML Telegram → HTML MAX: теги, которых в MAX нет, убираем, текст оставляем. */
@@ -356,7 +356,7 @@ function mx_tgcallRaw(method, p) {
   return mx_tgErr('метод ' + method + ' в MAX не поддерживается');
 }
 
-// REDACTED_B64_2 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
+// REDACTED_B64_38 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
 /** Копия «Фабрика — портал/Перенос MAX <id>» (max_move.py) → листы и файлы этого проекта: группы, настройки, владелец, зеркало, опросы, справка,
     журнал обращений, история групп (hist/<cid>.json и history_all.json → Диск «история»). Повторный запуск ничего не дублирует. → {ok, done:[…], skipped:[…]}. */
 function mx_importState(id) {

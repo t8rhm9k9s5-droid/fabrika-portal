@@ -148,23 +148,52 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник11 Имя2', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник11 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
     _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Офис продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
     print('график отгрузки:', _e); _SHIP = None
-# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник19 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
+# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник18 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
 try:
     _spl = sorted(_gl.glob('/home/claude/build/ship_plan/2*.json'))
     if _spl and _SHIP is not None:
         _pl = _cg1_read_json(_spl[-1], encoding='utf-8')
+        try:                                               # 13.11.2026, Т. В.: «для портала посмотри и заодно сделай аналитику» — итоги недели к прошлой
+            import re as _re2, collections as _co2
+            _pv = _cg1_read_json(_spl[-2], encoding='utf-8') if len(_spl) > 1 else None
+            def _ords(P):
+                o = {}
+                for d in (P or {}).get('days', []):
+                    for c in d.get('clients', []):
+                        for x in c.get('orders', []): o.setdefault(x['no'], [0, c['n']]); o[x['no']][0] += x.get('s') or 0
+                return o
+            _cl, _it, _iq, _mu = _co2.Counter(), _co2.Counter(), _co2.Counter(), [0, 0]
+            for d in _pl.get('days', []):
+                for c in d.get('clients', []):
+                    _cl[c['n']] += c.get('s') or 0
+                    for o in c.get('orders', []):
+                        if _re2.search('обязательно', o.get('st') or '', _re2.I): _mu[0] += o.get('s') or 0; _mu[1] += 1
+                        for i in o.get('items', []): _it[i['n']] += i.get('s') or 0; _iq[i['n']] += i.get('q') or 0
+            _T = _pl.get('total') or {}; _S = _T.get('s') or 1
+            _oa, _ob = _ords(_pl), _ords(_pv)
+            _car = [k for k in _oa if k in _ob]
+            _int = sum(v for k, v in _cl.items() if _re2.match(r'(Офис продаж|Склад)', k))
+            _exp = [k for k in _cl if _re2.search(r'\((Беларусь|Армения|Казахстан|Узбекистан|Кыргызстан|Киргизия|Таджикистан)', k)]
+            _pl['an'] = {'s': _T.get('s'), 'q': _T.get('q'), 'avg': round((_T.get('s') or 0) / (_T.get('q') or 1)),
+                         'prev': ({'s': _pv['total']['s'], 'q': _pv['total']['q'], 'from': _pv.get('from'), 'to': _pv.get('to')} if _pv and _pv.get('total') else None),
+                         'clients': len(_cl), 'orders': len(_oa), 'top_cl': [[k, round(v)] for k, v in _cl.most_common(8)],
+                         'top5': round(100.0 * sum(v for k, v in _cl.most_common(5)) / _S, 1),
+                         'top_it': [[k, round(v), int(_iq[k])] for k, v in _it.most_common(8)],
+                         'must': [round(_mu[0]), _mu[1]], 'int': round(_int), 'exp': [[k, round(_cl[k])] for k in _exp],
+                         'car': [len(_car), round(sum(_oa[k][0] for k in _car))], 'new_cl': len(set(_cl) - {c['n'] for d in (_pv or {}).get('days', []) for c in d.get('clients', [])})}
+        except Exception as _e2: print('аналитика плана отгрузки:', _e2)
         for _dd in _pl.get('days', []):
             for _c in _dd.get('clients', []):
                 for _o in _c.get('orders', []):
                     for _it in _o.get('items', []): _it.pop('ch', None)
         _SHIP['plan'] = _pl
 except Exception as _e: print('план отгрузки:', _e)
-# 11.11.2026, Сотрудник16 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
+# 11.11.2026, Сотрудник19 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
@@ -180,7 +209,7 @@ try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
     _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
-# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник16 из папки «Планы» itm@)
+# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник19 из папки «Планы» itm@)
 try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -243,7 +272,7 @@ except Exception as _e:
     print('отзывы ВИ:', _e); _virj = 'null'
 assert frags['sales.html'].count('__VIREV__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__VIREV__', _virj, 1)
-# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник6 02.11, build/sales_op/spb_clients.json)
+# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник5 02.11, build/sales_op/spb_clients.json)
 try: _spbj = _js.dumps(_cg1_read_json('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('клиенты СПб:', _e); _spbj = 'null'
 assert frags['sales.html'].count('__SPB__') == 1
@@ -252,7 +281,7 @@ frags['sales.html'] = frags['sales.html'].replace('__SPB__', _spbj, 1)
 try: _tz1 = _js.dumps(_cg1_read_json('/home/claude/build/tz/tz_1c.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('ТЗ 1С:', _e); _tz1 = 'null'
 frags['sales.html'] = frags['sales.html'].replace('__TZ1C__', _tz1, 1)
-# 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник6 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
+# 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник5 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
 # план продаж по менеджерам октябрь → ноябрь с группами производства (build/sales_op/2026-10.json). Нет файла — пустой объект, блок не показывается
 _sopp = '/home/claude/build/sales_op/2026-10.json'
 def _sop_clean(d):
@@ -342,6 +371,31 @@ for _n in frags:
     if _n != 'index.html' and 'assets/site.js' not in frags[_n]:
         print('оболочка портала добавлена:', _n)
         frags[_n] += '\n<script src="assets/edits.js"></script>\n<script src="assets/site.js"></script>\n'
+# 13.11.2026, Т. В.: подсветка нового за сутки (вид D — тёплая заливка), пока не открыто; гаснет в полночь. Список — из library.json /
+# dogovory.json / econ.json (received / date = сегодня) и build/fresh_manual.json (то, что Claude внёс в данные страниц). Клиент — fresh_client.js
+import datetime as _fdt, json as _fjs
+_FDAY = (_fdt.datetime.utcnow() + _fdt.timedelta(hours=3)).strftime('%Y-%m-%d')
+_FCAT = {'catalogs': ['docs', 'items'], 'prices': ['docs', 'items'], 'memo': ['docs'], 'cards': ['docs'], 'regs': ['docs'], 'forms': ['docs'], 'reports': ['fin', 'sales'],
+         'other': ['quality'], 'certs': ['quality'], 'recl': ['quality'], 'hr': ['people'], 'econ': ['fin', 'prod'], 'marketing': ['docs'], 'brand': ['docs']}
+_FI = []
+try:
+    for _it in (_cg1_read_json('/home/claude/library/library.json', encoding='utf-8') or {}).get('items', []):
+        if (_it.get('received') or '') == _FDAY and _it.get('file'):
+            _ff = 'library/' + _it['file'].split('/', 1)[1] if _it['file'].startswith('raw/') else _it['file']
+            for _r in _FCAT.get(_it.get('cat'), ['docs']):
+                _FI.append({'k': 'l-%s-%s' % (_r, _ff), 'r': _r, 'cat': _it.get('cat'), 'file': _ff, 't': _it.get('title', '')[:80]})
+                _FI.append({'k': 'lc-%s-%s' % (_r, _it.get('cat')), 'r': _r, 'href': 'library.html#' + _it.get('cat', ''), 't': 'Документы: новое в разделе'})
+except Exception as _fe: print('подсветка: library.json —', _fe)
+try:
+    for _it in (_cg1_read_json('/home/claude/build/fresh_manual.json', encoding='utf-8') or {}).get('items', []):
+        if _it.get('day') == _FDAY: _FI.append({k: _it[k] for k in ('k', 'r', 'href', 't') if k in _it})
+except Exception as _fe: print('подсветка: fresh_manual.json —', _fe)
+_seenk = set(); _FI = [x for x in _FI if not (x['k'] in _seenk or _seenk.add(x['k']))]
+with open(os.path.join(SITE, 'assets', 'fresh.js'), 'w', encoding='utf-8') as _ff1:
+    _ff1.write('window.FRESH=' + _fjs.dumps({'day': _FDAY, 'items': _FI}, ensure_ascii=False) + ';\n' + _cg1_read_file('/home/claude/build/fresh_client.js', encoding='utf-8'))
+for _n in frags:
+    if _n != 'index.html' and 'assets/fresh.js' not in frags[_n]: frags[_n] += '\n<script src="assets/fresh.js"></script>\n'
+print('подсветка нового: %d записей на %s' % (len(_FI), _FDAY))
 def _ddmm(s): return (s[8:10] + '.' + s[5:7]) if s and len(s) >= 10 else 'нет данных'
 def _nn(x): return '{:,}'.format(x).replace(',', ' ') if isinstance(x, int) else 'нет данных'
 try: _br = _cg1_read_json('/home/claude/build/stock_brief.json', encoding='utf-8')
@@ -359,7 +413,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник5) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник6) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

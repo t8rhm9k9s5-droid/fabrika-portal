@@ -9,7 +9,7 @@ var SS_ID = 'REDACTED_ID_2';      // служебная таблица бото�
 var BOT_DIR = 'Фабрика — боты', MAX_DIR = 'MAX', MOVE_PARENT = 'Фабрика — портал';
 var STORE_PROP_MAX = 8000;                                               // 08: запас до лимита Google 9 КБ на значение
 
-// REDACTED_B64_2 свойства: только маленькое
+// REDACTED_B64_38 свойства: только маленькое
 function utf8len_(s) { return Utilities.newBlob(String(s)).getBytes().length; }
 /** Записать маленькое значение в свойства; больше STORE_PROP_MAX байт — отказ (false), а не исключение посреди обработки. */
 function propSet_(k, v) {
@@ -18,7 +18,7 @@ function propSet_(k, v) {
   try { PropertiesService.getScriptProperties().setProperty(k, s); return true; } catch (e) { logRow_('err', 'свойство ' + k + ': ' + e); return false; }
 }
 
-// REDACTED_B64_2 таблица
+// REDACTED_B64_38 таблица
 var SHEETS = {
   max_in:   ['key', 't', 'type', 'status', 'tries', 'err', 'done_t', 'body'],           // 03: очередь входящих MAX
   post_ids: ['id', 't', 'status', 'cid', 'title', 'mid', 'err'],                         // 05: публикации pending/sent/failed
@@ -54,7 +54,7 @@ function logRow_(k, msg) {
   } catch (e) { console.log('log: ' + e + ' · ' + k + ' ' + msg); }
 }
 
-// REDACTED_B64_2 03: очередь входящих
+// REDACTED_B64_38 03: очередь входящих
 /** Записать событие до ответа MAX. → {ok, dup} ; ok=false — записать не удалось (вызывающий отвечает MAX ошибкой → MAX повторит).
     05.11 (GPT A4): тело НЕ режется — длиннее ячейки (ST_CELL_MAX) → файл на Диске «Фабрика — боты/MAX/inbox/<key>.json», в ячейке ссылка
     'file:<key>' (читать — st_inBody); файл не записался → ok:false (MAX повторит), а не ложный успех с испорченным JSON. */
@@ -93,7 +93,7 @@ function st_inScan(test, limit) {
 function inDone_(row) { setCols_('max_in', row, { status: 'done', done_t: new Date() }); }
 function inFail_(row, tries, err, final) { setCols_('max_in', row, { status: final ? 'dead' : 'fail', tries: tries, err: String(err).slice(0, 300) }); }
 
-// REDACTED_B64_2 05: публикации
+// REDACTED_B64_38 05: публикации
 /** Зарезервировать номер ПОСЛЕ проверки группы. → 'ok' | 'dup' (уже sent или pending) | 'err'. failed можно повторить тем же id. */
 function postReserve_(id, cid, title) {
   var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 'err';
@@ -111,7 +111,7 @@ function postMark_(id, status, mid, err) {
   setCols_('post_ids', r.row, { status: status, mid: mid || '', err: err || '' }); return true;
 }
 
-// REDACTED_B64_2 Диск: JSON-файлы состояния
+// REDACTED_B64_38 Диск: JSON-файлы состояния
 function folder_(path) {                                           // 'Фабрика — боты/MAX/state' — от корня Моего диска, создаётся
   var f = DriveApp.getRootFolder();
   String(path).split('/').filter(String).forEach(function (n) { var it = f.getFoldersByName(n); f = it.hasNext() ? it.next() : f.createFolder(n); });
@@ -137,7 +137,7 @@ function jrmw_(sub, name, def, fn) {
   finally { lock.releaseLock(); }
 }
 
-// REDACTED_B64_2 шифр T14B1 (как seal() на хостинге), ключ K_CMD
+// REDACTED_B64_38 шифр T14B1 (как seal() на хостинге), ключ K_CMD
 function kcmdBytes_() {
   var k = String(PropertiesService.getScriptProperties().getProperty('K_CMD') || '').trim().toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(k)) return null;
@@ -158,7 +158,7 @@ function t14open_(key, s) {
   return Utilities.newBlob(out).getDataAsString('UTF-8');
 }
 
-// REDACTED_B64_2 шаг 0 → Google: приём копии с хостинга
+// REDACTED_B64_38 шаг 0 → Google: приём копии с хостинга
 /** Перенести копию «Фабрика — портал/Перенос MAX <id>» → «Фабрика — боты/MAX/move/<имя>.json» (расшифровано, без секретов — их там и нет).
     Сверка sha256 по manifest. Повторный запуск продолжает с того, что не перенесено. → {ok, done, left, bad}.
     05.11 (GPT B4): файл считается перенесённым только если его sha в manifest совпадает с перенесённым (st.done[name].sha) — новая копия

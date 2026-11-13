@@ -88,7 +88,7 @@ METRICS = [
     "Загрузка участков: выпуск по участкам и сменам, включая ночные, против принятых заказов.",
 ]
 
-# REDACTED_B64_1 xlsx-шаблон
+# REDACTED_B64_37 xlsx-шаблон
 def build_xlsx():
     F = "Arial"
     H = Font(name=F, bold=True, size=10, color="FFFFFF"); B = Font(name=F, size=10); T = Font(name=F, size=14, bold=True)
@@ -130,7 +130,7 @@ def build_xlsx():
         sheet(f"Справочник {d['title']}", d["cols"], f"Справочник: {d['title']}", "Один раз, потом при изменениях.", [])
     wb.save(OUT_XLSX); print("saved", OUT_XLSX)
 
-# REDACTED_B64_1 страница
+# REDACTED_B64_37 страница
 def form_card(f):
     head = "".join(f'<th class="{"key" if c in KEY else ""}">{esc(c)}</th>' for c in f["cols"])
     body = "".join("<tr>" + "".join(f"<td>{esc(v)}</td>" for v in row) + "</tr>" for row in f["ex"])
@@ -257,7 +257,7 @@ footer{padding-block:26px 40px;color:var(--muted);font-size:12.5px}
   <div class="box"><div class="tw"><table class="have"><thead><tr><th>Отчёт</th><th>Что было</th><th>Чего не хватает</th></tr></thead><tbody>{have}</tbody></table></div></div>
 </section>
 </main>
-<footer><div class="wrap">ГК «Фабрикант» · формы выгрузок для 1С-программистов (Сотрудник5 В. В., Сотрудник50 М. И.) · проект, октябрь 2026</div></footer>
+<footer><div class="wrap">ГК «Фабрикант» · формы выгрузок для 1С-программистов (Сотрудник6 В. В., Сотрудник50 М. И.) · проект, октябрь 2026</div></footer>
 """
     with open(OUT_HTML, "w", encoding="utf-8") as _cg1_forms_output:
         _cg1_forms_output.write(page)

@@ -22,7 +22,7 @@ var TM_UA_OWNER = /(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\s+
 var TM_UA_ASK = /\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|согласуете|направьте|предоставьте|пришлите|ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|как поступить|разрешите|одобрите|утвердите|посмотрите)(?![а-яё])/i;
 var TM_SUBJ_PFX = /^\s*((re|fw|fwd|отв|ответ|пересл|пересылка|ha)\s*(\[\d+\])?\s*:\s*)+/i;
 
-// REDACTED_B64_2 общее: адреса, заголовки, тело
+// REDACTED_B64_38 общее: адреса, заголовки, тело
 /** «Имя <адрес>» → адрес в нижнем регистре */
 function tm_addr_(s) { var m = /<([^<>\s]+@[^<>\s]+)>/.exec(String(s || '')); var a = m ? m[1] : (String(s || '').match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/) || [''])[0]; return String(a).trim().toLowerCase(); }
 function tm_addrs_(s) { var out = []; String(s || '').split(',').forEach(function (x) { var a = tm_addr_(x); if (a) out.push(a); }); return out; }
@@ -79,7 +79,7 @@ function tm_colSet_(name) {
   return s;
 }
 
-// REDACTED_B64_2 1) письма-команды → cp_push (минутный тик)
+// REDACTED_B64_38 1) письма-команды → cp_push (минутный тик)
 var TM_MAILCMD_FIRST_MS = 3600e3;                                        // первый запуск: письма не старше часа (старые разобрал робот хостинга — дубли Claude не нужны)
 var TM_MAILCMD_LAG_MS = 180e3;                                           // запас к водяному знаку времени (письмо могло прийти чуть «из прошлого»)
 var TM_MAILCMD_PAGE = 50, TM_MAILCMD_MAX = 400;                          // F4 C-A5: поиск постранично; больше TM_MAILCMD_MAX нитей в окне — окно времени делится пополам
@@ -172,7 +172,7 @@ function tm_mailOne_(x, subjRe, anyFrom, logRow, res, hold, now) {
   return 'pushed';
 }
 
-// REDACTED_B64_2 2) вопросы без ответа (раз в 55 минут)
+// REDACTED_B64_38 2) вопросы без ответа (раз в 55 минут)
 /** сегодня и n прошлых рабочих дней → ['ГГГГ-ММ-ДД', …] */
 function tm_workDays_(today, n) { var out = [today], d = today; while (out.length < n + 1) { d = tm_addDays_(d, -1); if (tm_workday_(d)) out.push(d); } return out; }
 function tm_nsubj_(s) { return String(s || '').replace(TM_SUBJ_PFX, '').replace(/\s+/g, ' ').trim().toLowerCase(); }
@@ -269,7 +269,7 @@ function tm_unans_(ctx) {
   return { mail: ms.open, max: xs.open, n: items.length };
 }
 
-// REDACTED_B64_2 3) контроль sales@ (раз в 25 минут)
+// REDACTED_B64_38 3) контроль sales@ (раз в 25 минут)
 var TM_SALES_DEF = { on: true, from: '2026-10-31', hours: 4, second: 8, work: ['09:00', '18:00'], window_days: 21, to: ['user8@example.org', 'user16@example.org', 'user15@example.org'],
                      greet: 'Сотрудник13 Отчество7, Сотрудник21 Отчество11, Сотрудник38 Отчество12', owner: TM_ITM, digest_at: '08:50', skip_from: [], skip_domains: [] };
 function tm_salesCfg_() { var o = JSON.parse(JSON.stringify(TM_SALES_DEF)), over = tm_cfgJson_('sales', {}); if (over && typeof over === 'object') Object.keys(over).forEach(function (k) { o[k] = over[k]; }); return o; }

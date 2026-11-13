@@ -13,7 +13,7 @@ var MX_SNAB_CID = '-100000000002';   // 10.11.2026 (Т. В.: «если есть
 var MX_RX_URGENT = /авари|пожар|затоп|прорв|сработал\w* сигнализ|охран\w* сообщ|срочно/i;   // явная авария — Claude и в тихие часы (RULES: «тогда Т. В. в Telegram»)
 var MX_RX_QUESTION = /\?|^(как|где|когда|почему|зачем|можно ли|есть ли|подскажите|скажите|кто|какой|какая|какие|сколько)\b/i;
 
-// REDACTED_B64_2 реестр групп (лист groups: cid, title, on, appr, channel, t0, t)
+// REDACTED_B64_38 реестр групп (лист groups: cid, title, on, appr, channel, t0, t)
 /** Все группы: { cid: {title, on, appr, channel} } (память запуска). */
 function mx_groups() {
   if (!MX_MEM.groups) {
@@ -75,7 +75,7 @@ function mx_findGroup(q) {
   return hit.length ? [hit[0], G[hit[0]].title] : null;
 }
 
-// REDACTED_B64_2 сообщение в группе
+// REDACTED_B64_38 сообщение в группе
 function mx_group(m, u) {
   var rc = m.recipient || {}, cid = String(rc.chat_id || ''), s = m.sender || {}, uid = Number(s.user_id || 0), b = m.body || {};
   var g = mx_groupGet(cid);
@@ -196,7 +196,7 @@ function mx_grpLog(o) {
   } catch (x) { mx_log('err', 'журнал обращений: ' + mx_errText(x)); }
 }
 
-// REDACTED_B64_2 push к Claude по событиям группы
+// REDACTED_B64_38 push к Claude по событиям группы
 /** Последние n сообщений группы из буфера истории — строками «HH:mm Имя: текст». */
 function mx_groupCtx(cid, n) {
   var R = mx_histRecent(cid, n || 10);
@@ -221,7 +221,7 @@ function mx_groupPush(cid, title, m, name, why) {
 /** Тихие часы: то же событие — в лист mx_defer, утром mx_deferFlush отдаст его Claude одной пачкой с остальными. */
 function mx_groupDefer(cid, title, m, name, why) { return (mx_pushOn() || String(cid) === MX_SNAB_CID) ? mx_deferAdd(mx_groupEv(cid, title, m, name, why)) : false; }
 
-// REDACTED_B64_2 вопросы без ответа (> 30 мин в рабочее время → Claude)
+// REDACTED_B64_38 вопросы без ответа (> 30 мин в рабочее время → Claude)
 function mx_questionAdd(cid, mid, ts, uid, name, text) {
   if (!mx_pushOn() || !mid) return;
   try { mx_appendObj('mx_questions', { cid: cid, mid: mid, ts: ts || Date.now(), uid: uid, name: name, text: mx_maskPhones(text).slice(0, 500), status: 'open', t: new Date() }); }
@@ -275,7 +275,7 @@ function mx_questionsTick() {
   }
 }
 
-// REDACTED_B64_2 автономность (au_* шага 5; без модуля — только обнаружение для push)
+// REDACTED_B64_38 автономность (au_* шага 5; без модуля — только обнаружение для push)
 /** Что за ситуация: au_detect шага 5, иначе — те же регулярные выражения из bot_rules.json. → {kind, words}. */
 function mx_detect(text, hasMedia) {
   if (typeof au_detect === 'function') { try { var d = au_detect(text, !!hasMedia); if (d && typeof d === 'object') return { kind: d.kind || null, words: d.words || [] }; } catch (x) { mx_log('err', 'au_detect: ' + mx_errText(x)); } }

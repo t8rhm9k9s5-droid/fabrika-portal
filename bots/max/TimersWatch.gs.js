@@ -10,11 +10,11 @@
 
 var TM_SURVEY_KEEP = 60, TM_SURVEY_CHUNK = 3800;
 var TM_STAFF_QUIET_DAYS = 45;
-var TM_STAFF_HEADS = { 'ОП Рязань': ['Сотрудник19 Ю. А.', 'user15@example.org'], 'Сеть офисов продаж': ['Сотрудник6 М. И.', 'user8@example.org'], 'e-commerce': ['Сотрудник1 А. А.', 'user22@example.org'],
-                       'Fabrikant UZ': ['Сотрудник16 К. В.', 'user16@example.org'], 'Имя3': ['Сотрудник1 Т. В.', ''], 'Руководство': ['Сотрудник1 Т. В.', ''] };
+var TM_STAFF_HEADS = { 'ОП Рязань': ['Сотрудник18 Ю. А.', 'user15@example.org'], 'Сеть офисов продаж': ['Сотрудник5 М. И.', 'user8@example.org'], 'e-commerce': ['Сотрудник1 А. А.', 'user22@example.org'],
+                       'Fabrikant UZ': ['Сотрудник19 К. В.', 'user16@example.org'], 'Имя4': ['Сотрудник1 Т. В.', ''], 'Руководство': ['Сотрудник1 Т. В.', ''] };
 var TM_STAFF_IGNORE = /попов|джанова|фабрикант|бот|claude/i;
 
-// REDACTED_B64_2 итоги опросов владельцу
+// REDACTED_B64_38 итоги опросов владельцу
 /** опросы из папки polls (JSON по формату lib.php), менявшиеся за последние TM_SURVEY_KEEP дней (старые файлы не читаются — экономия Диска) */
 function tm_pollsAll_() {
   var out = [], lo = Date.now() - TM_SURVEY_KEEP * 864e5;
@@ -75,7 +75,7 @@ function tm_survey_(ctx) {
   return res;
 }
 
-// REDACTED_B64_2 проверка штата (понедельник, с 09:00, раз в неделю)
+// REDACTED_B64_38 проверка штата (понедельник, с 09:00, раз в неделю)
 function tm_staffNorm_(n) { return String(n || '').toLowerCase().replace(/ё/g, 'е').replace(/[^а-яa-z]/g, ''); }
 /** имя из MAX → человек из списка отдела или null */
 function tm_staffMatch_(name, people) {
@@ -159,7 +159,7 @@ function tm_staffWatch_(ctx) {
   return { changes: r.changes.length, quiet: r.quiet.length, n: r.snap.names.length };
 }
 
-// REDACTED_B64_2 выгрузки переписки групп по заданию (tm_settings → export_jobs)
+// REDACTED_B64_38 выгрузки переписки групп по заданию (tm_settings → export_jobs)
 function tm_export_(ctx) {
   var jobs = (tm_cfgJson_('export_jobs', []) || []).filter(function (j) { return j && j.id && j.g && j.from && j.to; });
   if (!jobs.length) return 'нет заданий';
@@ -185,7 +185,7 @@ function tm_export_(ctx) {
   res.n = rows.length; return res;
 }
 
-// REDACTED_B64_2 обещанные визиты и звонки (ночью; перенос max_hist.promises)
+// REDACTED_B64_38 обещанные визиты и звонки (ночью; перенос max_hist.promises)
 var TM_PR_VISIT = /(?<![а-яё])(заед(у|ем)|доед(у|ем)|при[её]д(у|ем)|подъед(у|ем)|выед(у|ем)|съез(жу|дим)|по[её]д(у|ем)|посещу|посетим|встречусь|встретимся|буд(у|ем)\s+у)(?![а-яё])/i;
 var TM_PR_VISIT_N = /(?<![а-яё])(встреч[аиу]|визит[а-яё]*|выезд[а-яё]*|посещени[а-яё]*)(?![а-яё])/i;
 var TM_PR_CALL = /(?<![а-яё])(позвон(ю|им)|созвон(юсь|имся)|набер(у|[её]м)|перезвон(ю|им)|свяж(усь|емся)|обзвон(ю|им)|отзвон(юсь|имся)|сделаю\s+звонок)(?![а-яё])/i;
@@ -279,7 +279,7 @@ function tm_promises_(ctx) {
   return { promises: P.length, st: cnt };
 }
 
-// REDACTED_B64_2 рекламации: напоминания менеджерам через 2 рабочих дня (Autonomy.gs шага 5)
+// REDACTED_B64_38 рекламации: напоминания менеджерам через 2 рабочих дня (Autonomy.gs шага 5)
 /** 08:30 рабочего дня, раз в день. F4 C-A4: au_reclWatchCheck сразу отмечает наблюдения (reminded/escalated) — поэтому каждое напоминание ставится
     операцией Outbox ('recl:<день>:<группа+текст>' — свой ключ на адресата) и доставляется минутным тиком с повторами до подтверждения; отказ MAX не теряет
     напоминание, а отметка «работа дня выполнена» (tm_daily_) означает «решение принято», не «доставлено». Владельцу — одна операция (Telegram → личные → письмо). */
@@ -305,7 +305,7 @@ function tm_reclWatch_(ctx) {
   return { reminders: list.length, sent: sent, queued: wait, errs: errs, owner: toOwner.length };
 }
 
-// REDACTED_B64_2 ротация листов tm_* (ночью)
+// REDACTED_B64_38 ротация листов tm_* (ночью)
 function tm_rotate_() {
   var out = {};
   [['tm_sent', 3000], ['tm_mail_log', 2000]].forEach(function (x) {

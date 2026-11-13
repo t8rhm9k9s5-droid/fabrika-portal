@@ -9,7 +9,7 @@
 // Адресаты — только @fabrikant.su, @techfabrikant.ru и адреса из свойства CM_EXTRA (через запятую). Отправка — от имени itm@ (псевдоним),
 // если он настроен. Не больше CM_DAY_LIMIT писем в сутки. В журнал g4_log — только тема и число адресатов, без текста.
 var CM_DAY_LIMIT = 80, CM_MAX_ATT = 20 * 1024 * 1024;
-var CM_EXTRA_DEF = ['user81@example.org'];   // Т. В. 11.11: письма Сотрудник16 — всегда на оба адреса (rkv@ и личный)
+var CM_EXTRA_DEF = ['user81@example.org'];   // Т. В. 11.11: письма Сотрудник19 — всегда на оба адреса (rkv@ и личный)
 
 function cm_post_(q) {
   var sg = g4_sigCheck_(q, ['cm']);

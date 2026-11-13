@@ -22,7 +22,7 @@
   function bin(name) { return (window.T14Live && T14Live.bin) ? T14Live.bin(name).catch(function () { return null; }) : Promise.resolve(null); }
   function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(); }
   var MN = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник5) + рассылки
+  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник6) + рассылки
   // за день (хостинг: sales.bin → sday). Пришёл отчёт «за месяц» — сумма дней (на время последнего письма); свежее сборки — берём с хостинга.
   function revLive(R, SD) {
     if (!R || !R.v || !R.v.length || !SD || !SD.days) return R;
@@ -57,7 +57,7 @@
     if (R.asof && R.to && String(R.asof).slice(0, 10) > String(R.to).slice(0, 10)) return ' по ' + dd(R.to) + ' (рассылка ' + dd(R.asof) + ' ' + String(R.asof).slice(11, 16) + ')';
     return R.asof ? ' на ' + dd(R.asof) + ' ' + String(R.asof).slice(11, 16) : (R.to ? ' по ' + dd(R.to) : ''); }
 
-  // REDACTED_B64_1 движок
+  // REDACTED_B64_37 движок
   var CFG = null, ST = { ctx: null, root: null, busy: false, tiles: [], cur: null, scrollTo: null };
   function kpiHTML(k) {
     var tag = k.href ? 'a' : 'div';
@@ -254,7 +254,7 @@
   }
   window.T14Hub = { reveal: function (el) { var t = tileOf(el); if (t) { if (el.id) location.hash = '#' + el.id; else location.hash = '#s-' + t.id; } }, remount: mount };
 
-  // REDACTED_B64_1 общие расчёты (как на главной)
+  // REDACTED_B64_37 общие расчёты (как на главной)
   var PFL = ['Изо', 'Стандарты', 'Сильвия', 'КаБаРе', 'Кресла руководителя', 'Операторские кресла', 'Бун', 'Самба', 'Анри', 'Мягкая мебель', 'ГКЗ', 'Накладки Самба', 'ГКИ Одди', 'ГКИ', 'Шеффилд'];
   // 02.11.2026, Т. В.: выпуск — по группам изделий, у каждой свой % плана; общего процента по разнородным изделиям нет. «Шеффилд» — в группе
   // «Кресла руководителя» (мощность, план, факт; решение Т. В. 02.11). Как на главной (build/home_frag.html, PFG).
@@ -298,7 +298,7 @@
     return { m: last[0], v: pc(last[2], mp), f: last[2], p: mp, ytd: pc(F, P), norm: G.norm };
   }
 
-  // REDACTED_B64_1 вчера · прошлая неделя · месяц (01.11.2026)
+  // REDACTED_B64_37 вчера · прошлая неделя · месяц (01.11.2026)
   // Пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц». Опрос 01.11: разделы «Производство», «Продажи»,
   // «Склад» и «ОМТС»; неделя — календарная пн–вс; месяц — прошлый календарный целиком и текущий с 1-го; «вчера» — последний рабочий день
   // (в понедельник — пятница, после праздника — день до него). Выходные и праздники — как в build_output.HOLIDAYS (производственный календарь).
@@ -359,7 +359,7 @@
   });
   try { ST.hpMore = localStorage.getItem('t14.hpmore') === '1'; } catch (e) { }
 
-  // REDACTED_B64_1 разделы
+  // REDACTED_B64_37 разделы
   var page = (location.pathname.split('/').pop() || '').toLowerCase();
   var C = {};
 
@@ -539,14 +539,14 @@
     kpis: [{ id: 'onl', t: 'Онлайн · наши модели в интернете', ic: 'store', href: '#online' }, { id: 'rev', t: 'Продажи и план', ic: 's_sales', href: '#s-opm' }, { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf' },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl' }, { id: 'prom', t: 'Визиты, звонки, отчёты', ic: 'phone', href: '#prom' },
       { id: 'mp', t: 'Ozon · месяц и день', ic: 'box', href: '#mp' }, { id: 'rv', t: 'Отзывы маркетплейсов', ic: 'chat', href: '#mp' }],
-    // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник6, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
+    // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник5, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
     tiles: [{ id: 'ops', t: 'Офисы продаж', ic: 'store', intro: true, hdr: [/^офисы продаж(?! —)/] },
       { id: 's1c', t: 'Продажи 1С · типы и мощности', ic: 's_sales', opt: true, hdr: [/^продажи за день/, /^продажи 1/] },
       { id: 'opm', t: 'Офисы продаж · октябрь', ic: 's_sales', opt: true, hdr: [/^офисы продаж — /] },
       { id: 'days', t: 'Сдача отчётов по дням', ic: 'toc', hdr: [/^сдача отчетов/] },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl', hdr: [/^рекламации/] },
       { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf', hdr: [/^буфер/] },
-      { id: 'mp', t: 'Маркетплейсы · Ozon', ic: 'store', href: '#mp', hdr: [/^маркетплейсы/] },
+      { id: 'mp', t: 'Маркетплейсы · Ozon и Wildberries', ic: 'store', href: '#mp', hdr: [/^маркетплейсы/] },
       { id: 'prod', t: 'Заказы на производство', ic: 's_prod', href: '#prod', hdr: [/^заказы на производство/] },
       { id: 'tz', t: 'ТЗ в работе и расчёты', ic: 'file', href: '#tz1c', hdr: [/^тз в работе/, /^тз и расчеты/] },
       { id: 'peo', t: 'Расчёты ПЭО', ic: 'docs', href: '#peo', hdr: [/^расчеты пэо/] },
@@ -617,7 +617,7 @@
       } else if (TZ && TZ.open) { var op = Array.isArray(TZ.open) ? TZ.open.length : TZ.open; if (op) att.push({ href: '#tzlist', ic: 'file', t: 'ТЗ без расчёта ПЭО', s: 'отправлены в ПТО, расчёта ПЭО ещё нет', v: n(op), tone: 'warn' }); tl.push({ id: 'tz', s: n(TZ.n) + ' ТЗ с 01.01 · без расчёта ' + n(op) }); }
       var C2 = x.PF && x.PF.calc; if (C2 && C2.peo && C2.peo.n) tl.push({ id: 'peo', s: n(C2.peo.n) + ' расчётов с 01.01' });
       tl.push({ id: 'ops', s: ops.length + ' ' + pl(ops.length, 'офис', 'офиса', 'офисов') + ' · отчёты в группе MAX и почте' });
-      var SO = x.SOP && x.SOP.sales_oct && x.SOP.sales_oct.total, PO = x.SOP && x.SOP.plan_oct;   // 30.10.2026: офисы продаж — октябрь (данные М. И. Сотрудник6)
+      var SO = x.SOP && x.SOP.sales_oct && x.SOP.sales_oct.total, PO = x.SOP && x.SOP.plan_oct;   // 30.10.2026: офисы продаж — октябрь (данные М. И. Сотрудник5)
       if (SO && SO.sum != null) tl.push({ id: 'opm', s: 'продажи ' + (SO.sum / 1e6).toFixed(2).replace('.', ',') + ' млн ₽' + (PO && PO.total ? ' · ' + (SO.sum / PO.total * 100).toFixed(1).replace('.', ',') + '% плана' : '') + ' · недели, план по менеджерам' });
       var SDs = (S.sday && S.sday.days) ? S.sday : x.SD, SDd = SDs && SDs.days, SDk = SDd ? Object.keys(SDd).sort() : [];   // 30.10.2026: продажи за день — рассылки 1С (хостинг: sales.bin → sday)
       if (x.SD && x.SD.days && SDk.length && Object.keys(x.SD.days).sort().pop() > SDk[SDk.length - 1]) { SDd = x.SD.days; SDk = Object.keys(SDd).sort(); }

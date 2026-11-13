@@ -99,6 +99,21 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
         return '<tr><td>' + esc(s.n) + '</td><td>≈ ' + n(s.vol) + ' м³</td><td>раз в ' + esc(s.every) + ' дн.</td><td>' + (nx ? '≈ ' + nx.getDate() + ' ' + MON[nx.getMonth()] + '<small>если откачка отсюда</small>' : '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
+  // 13.11.2026, Т. В.: «счётчики — разбери все файлы и положи на портале» — ведомости электроэнергии, газ, вода за январь–октябрь 2026
+  var R = D.res;
+  if (R && R.months) {
+    var MS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+    var th = function (x) { return x == null ? '—' : esc(String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')); };
+    var mx = Math.max.apply(null, R.elec.own), mg = Math.max.apply(null, R.gas);
+    var bar = function (v, m, c) { return '<span style="display:inline-block;height:8px;border-radius:4px;background:' + c + ';width:' + Math.max(2, Math.round(70 * v / m)) + 'px;vertical-align:middle;margin-left:6px"></span>'; };
+    h += '<p class="ihdr">Энергоресурсы по месяцам · 2026</p><div class="igroup gtab"><table><thead><tr><th>Месяц</th><th class="l">Электроэнергия, свои, кВт·ч</th><th class="l">в т. ч. гальваника</th><th class="l">субабоненты</th><th class="l">фидер № 8</th><th class="l">Газ, м³</th><th class="l">Вода, м³</th></tr></thead><tbody>' +
+      R.months.map(function (m, i) { return '<tr><td>' + MS[+m.slice(5) - 1] + '</td><td class="l">' + th(R.elec.own[i]) + bar(R.elec.own[i], mx, '#ff9500') + '</td><td class="l">' + th(R.elec.galv[i]) + '</td><td class="l">' + th(R.elec.sub[i]) + '</td><td class="l">' + th(R.elec.feed[i]) + '</td><td class="l">' + th(R.gas[i]) + bar(R.gas[i], mg, '#007aff') + '</td><td class="l">' + th(R.water[i]) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    h += '<div class="igroup"><p class="gnote"><b>Что видно:</b><br>' + (R.an || []).map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';
+    h += '<p class="ihdr">Электросчётчики · ' + MS[+R.last_m.slice(5) - 1] + '</p><div class="igroup gtab"><table><thead><tr><th>Присоединение</th><th class="l">коэф.</th><th class="l">начало</th><th class="l">конец</th><th class="l">расход, кВт·ч</th></tr></thead><tbody>' +
+      R.last.map(function (x) { return '<tr><td>' + esc(x.n) + '<small>№ ' + esc(x.sn) + (x.g === 'sub' ? ' · субабонент' : x.g === 'feed' ? ' · общий ввод' : '') + '</small></td><td class="l">' + th(x.k) + '</td><td class="l">' + (x.p0 == null ? '—' : n(x.p0)) + '</td><td class="l">' + (x.p1 == null ? '—' : n(x.p1)) + '</td>' + (x.v == null ? '<td class="l no">нет показаний</td>' : '<td class="l">' + th(x.v) + '</td>') + '</tr>'; }).join('') +
+      '</tbody></table></div><p class="pfoot">' + esc(R.src || '') + '</p>';
+  }
   h += '<p class="ihdr">Счётчики · ' + (D.meters || []).length + '</p><div class="igroup gtab"><table><thead><tr><th>Прибор</th><th class="l">Последнее</th><th class="l">За ' + MONN[pm] + '</th></tr></thead><tbody>' +
     (D.meters || []).map(function (m) {
       return '<tr><td>' + esc(m.n) + '<small>' + esc(m.u) + '</small></td>' + (m.last ? '<td class="l">' + esc(m.last) + '</td>' : '<td class="l no">нет показаний</td>') + (m.month ? '<td class="l">' + esc(m.month) + '</td>' : '<td class="l no">—</td>') + '</tr>';

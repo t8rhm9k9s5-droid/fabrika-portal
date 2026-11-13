@@ -56,7 +56,7 @@ if (!is_array($u)) exit;
 try { mx_update($u, $cfg); } catch (Throwable $e) { mx_log('ошибка: ' . $e->getMessage() . ' @' . $e->getLine()); }
 exit;
 
-// REDACTED_B64_6
+// REDACTED_B64_42
 /** 30.10.2026 аудит H6: в каком виде MAX присылает секрет (заголовок / адрес) — hook_mode.json (для «Управления», раз в час);
     секрет в адресе — предупреждение раз в сутки в bot.log и раз в 7 дней в fail.jsonl (робот сообщит владельцу). */
 function mx_hook_mode($via) {

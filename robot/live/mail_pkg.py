@@ -71,7 +71,8 @@ def run(L, CFG, log, jload, jsave):
 def _take(msg, key, inbox, st, t, log, dst=None):
     """письмо с пакетом → проверка подписи k_deploy (deploy.verify: v2 или v1 в переходный период, метка новее установленной) →
     ~/.fabrika_live/inbox/ (дальше ставит deploy.py, он проверяет ещё раз); → 1, если принят"""
-    import deploy as DP
+    import importlib                                       # 13.11.2026: deploy сам зовёт mail_pkg.listing — без статического import, круга нет
+    DP = importlib.import_module('deploy')
     m = SUBJ.search(str(msg.get('Subject') or ''))
     if not m: return 0
     name = m.group(1); pkg = sig = None

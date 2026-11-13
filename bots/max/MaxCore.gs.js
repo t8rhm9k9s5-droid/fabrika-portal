@@ -45,7 +45,7 @@ var MX_SHEETS = {
   mx_defer:     ['id', 'ts', 'cid', 'g', 'who', 'why', 'text', 'ctx', 't'] // события групп для Claude, пришедшие в тихие часы: push утром, одной пачкой
 };
 
-// REDACTED_B64_2 режим и вход
+// REDACTED_B64_38 режим и вход
 function mx_isGoogle() { return String(P_().getProperty('MODE') || '').trim().toLowerCase() === 'google'; }
 
 /** Вход для Relay.gs (режим google): подписанные команды (t, d, s), вызов Telegram-скрипта (op tgcall, формат relay.php) или вебхук MAX. */
@@ -123,7 +123,7 @@ function mx_tick(budgetMs, batch) {
   return n;
 }
 
-// REDACTED_B64_2 Outbox (модуль common/Outbox.gs шага F3, контракт fix_gpt_0511.md): неудавшиеся побочные действия
+// REDACTED_B64_38 Outbox (модуль common/Outbox.gs шага F3, контракт fix_gpt_0511.md): неудавшиеся побочные действия
 /** Положить действие в Outbox: key — '<операция>:<адресат>' (повтор того же key второй операции не создаёт), kind — mx_push | mx_tg | mx_user | mx_chat,
     payload — что повторить (mx_obHandlers). → true — записано (или уже было); false — модуля нет / не записалось (в журнал: действие потеряно). */
 function mx_outbox(key, kind, target, payload) {
@@ -183,7 +183,7 @@ function mx_removeTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'mx_queueTick') ScriptApp.deleteTrigger(t); });
 }
 
-// REDACTED_B64_2 API ядра для таймеров шага 3 (Timers.gs: TM_CORE → tm_send_)
+// REDACTED_B64_38 API ядра для таймеров шага 3 (Timers.gs: TM_CORE → tm_send_)
 /** Сообщение в группу: opt.html — текст уже в HTML MAX (иначе отправляется как есть, без разметки), opt.reply — mid, на который отвечаем.
     → {ok, mid, code, err}. Своё сообщение попадает в историю группы. */
 function mx_tmSendChat(cid, text, opt) {
@@ -233,7 +233,7 @@ function mx_handle(u) {
   mx_log('unknown', type);
 }
 
-// REDACTED_B64_2 журнал, настройки, листы
+// REDACTED_B64_38 журнал, настройки, листы
 /** Журнал (лист log через Store.gs): без токена MAX, без телефонов; k — область. Никогда не бросает исключение. */
 function mx_log(k, msg) { try { logRow_('mx:' + k, mx_maskPhones(mask_(String(msg))).slice(0, 500)); } catch (x) { console.log('mx_log: ' + x); } }
 function mx_errText(x) { return String(x && x.message || x).slice(0, 300); }
@@ -332,7 +332,7 @@ function mx_countersTrim() {
   } catch (x) { mx_log('err', 'счётчики (обрезка): ' + mx_errText(x)); }
 }
 
-// REDACTED_B64_2 время, тексты, люди
+// REDACTED_B64_38 время, тексты, люди
 function mx_msk(fmt, d) { return Utilities.formatDate(d || new Date(), 'Europe/Moscow', fmt); }
 function mx_hourKey() { return mx_msk('yyyy-MM-dd-HH'); }
 function mx_dayKey() { return mx_msk('yyyy-MM-dd'); }
@@ -361,7 +361,7 @@ function mx_workTime() {
 function mx_isLeader(name, uid) {
   if (typeof au_isLeader === 'function') { try { return !!(au_isLeader(name) || (uid && au_isLeader(String(uid)))); } catch (x) { mx_log('err', 'au_isLeader: ' + mx_errText(x)); } }
   var own = mx_ownerUid(); if (own && Number(uid) === own) return true;
-  return /(^|\s)(Сотрудник2\s*М|Сотрудник2\s+Отчество1|Сотрудник1\S*\s+Т(?![а-яё])|Сотрудник18|Сотрудник80|Сотрудник10|Сотрудник23\S*\s+Сотрудник24|Сотрудник24\s+Отчество1|Сотрудник23\S*\s+В\.\s*В\.|Сотрудник19|Сотрудник16|Сотрудник1\s+А(ндрей|\.\s*А\.))/i.test(String(name || ''));
+  return /(^|\s)(Сотрудник2\s*М|Сотрудник2\s+Отчество1|Сотрудник1\S*\s+Т(?![а-яё])|Сотрудник17|Сотрудник80|Сотрудник10|Сотрудник23\S*\s+Сотрудник24|Сотрудник24\s+Отчество1|Сотрудник23\S*\s+В\.\s*В\.|Сотрудник18|Сотрудник19|Сотрудник1\s+А(ндрей|\.\s*А\.))/i.test(String(name || ''));
 }
 /** Имя27 и Джанова (не работают): лично им бот в MAX ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans). */
 function mx_isBanned(name) { return /попов|джанов/i.test(String(name || '')); }
@@ -391,7 +391,7 @@ function mx_normMsg(m, rc) {
   return o;
 }
 
-// REDACTED_B64_2 MAX API (через api_ из Code.gs — токен только там)
+// REDACTED_B64_38 MAX API (через api_ из Code.gs — токен только там)
 function mx_botUid() {
   if (MX_MEM.me !== undefined) return MX_MEM.me;
   var ca = CacheService.getScriptCache(), v = ca.get('mx_me');
@@ -414,7 +414,7 @@ function mx_sendChat(cid, text, extra) {
 function mx_sendUser(uid, text, extra) { return api_('POST', '/messages', { user_id: uid }, mx_msgBody(text, extra)); }
 function mx_answerCb(cbid, text) { if (cbid) api_('POST', '/answers', { callback_id: cbid }, { notification: String(text).slice(0, 200) }); }
 
-// REDACTED_B64_2 вызовы Telegram-скрипта (вместо max/hook.php → GAS_URL и relay.php)
+// REDACTED_B64_38 вызовы Telegram-скрипта (вместо max/hook.php → GAS_URL и relay.php)
 /** Общий ключ с Telegram-скриптом: hex HMAC-SHA256(K_CMD как байты, 'fabrika-max-v1') — так же выводит v44l (maxKeyDerived_) и хостинг (max_key_sync.py). */
 function mx_maxKey() {
   if (MX_MEM.maxKey !== undefined) return MX_MEM.maxKey;
@@ -480,7 +480,7 @@ function mx_tgOwner(text, buttons, note) {
   return !!(r2 && r2.ok);
 }
 
-// REDACTED_B64_2 допуск к боту в личке (GPT A1, 05.11; правило Т. В. 28.10: «доступ только через моё согласование»)
+// REDACTED_B64_38 допуск к боту в личке (GPT A1, 05.11; правило Т. В. 28.10: «доступ только через моё согласование»)
 /** Кому в личке можно отвечать по существу (база знаний, автономность, передача команды Claude): владелец; uid из settings.dm_allow; участники
     ВКЛЮЧЁННЫХ групп бота (appr и on, не каналы) — список участников берётся из MAX и кэшируется (MX_STAFF_TTL). Fail-closed: список не получен
     (MAX не ответил, пусто) — отказ, а не разрешение; имя человека не проверяется (его можно подделать). → true/false. */
@@ -508,7 +508,7 @@ function mx_staff(refresh) {
   return S;
 }
 
-// REDACTED_B64_2 push к Claude (модуль cp_ шага 5; без него — ничего не шлём)
+// REDACTED_B64_38 push к Claude (модуль cp_ шага 5; без него — ничего не шлём)
 function mx_pushOn() { return typeof cp_push === 'function' && typeof cp_enabled === 'function' && !!cp_enabled(); }
 /** ev = {src, who, chat, id, text, ctx}; now — сразу (личная команда Т. В. или руководителя) или пачкой через cp_flush. → true, если принято модулем
     (повтор того же id модуль не шлёт второй раз). Текст и контекст — без телефонов. */

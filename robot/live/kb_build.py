@@ -47,7 +47,7 @@ BAN = re.compile(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b|\b\d{2}:\d{2}:\d{6,7}:
                  r'«мечта»|дом «мечта»|дом\.html|видеорегистратор|rtsp:', re.I)   # «Варские» — остановка маршрутки на портале, её не режем
 
 
-# REDACTED_B64_1 ключи и фрагменты
+# REDACTED_B64_37 ключи и фрагменты
 def stem(w):
     if re.match(r'^[а-я]+$', w):
         for e in ENDINGS:
@@ -115,7 +115,7 @@ def norm_info():
                    'отрезать первое подходящее окончание из endings (длинные первыми; остаток ≥ 4 букв, только кириллица) → первые cut знаков'}
 
 
-# REDACTED_B64_1 шифр T14B1 (как seal() в live.py)
+# REDACTED_B64_37 шифр T14B1 (как seal() в live.py)
 def seal_obj(obj, key):
     raw = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     nonce = secrets.token_bytes(16)
@@ -139,7 +139,7 @@ def unseal(text, key):
     except Exception: return None
 
 
-# REDACTED_B64_1 разбор страницы
+# REDACTED_B64_37 разбор страницы
 BLOCK = {'p', 'div', 'li', 'tr', 'td', 'th', 'section', 'article', 'br', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'ul', 'ol', 'main', 'blockquote'}
 SKIPT = {'script', 'style', 'noscript', 'svg', 'header', 'footer', 'nav', 'form', 'button', 'select', 'iframe', 'template', 'aside'}
 HEAD = {'h1', 'h2', 'h3'}
@@ -219,7 +219,7 @@ def prio(url):
     return 3
 
 
-# REDACTED_B64_1 сеть (тесты подменяют fetch и _sleep)
+# REDACTED_B64_37 сеть (тесты подменяют fetch и _sleep)
 _sleep = time.sleep
 
 
@@ -272,7 +272,7 @@ def sitemap_urls(maps, limit=3000):
     return out[:limit]
 
 
-# REDACTED_B64_1 обход частями
+# REDACTED_B64_37 обход частями
 def crawl_step(st, budget, log, save):
     """продолжить обход: st — состояние (queue, seen, pages, delay); до budget секунд; сохраняет каждые 15 страниц"""
     t0 = time.time()
@@ -343,7 +343,7 @@ def site_frags(pages):
     return uniq
 
 
-# REDACTED_B64_1 сборка kb.bin
+# REDACTED_B64_37 сборка kb.bin
 def merge(portal, site, key, t):
     """→ (объект kb, размер зашифрованного, сколько фрагментов сайта не влезло)"""
     site = sorted(site, key=lambda f: -f.get('p', 3))

@@ -12,7 +12,7 @@
    Данные — те же, что компания публикует на своём сайте открыто. */
 // 30.10.2026 аудит: FABRIKA_SO_SRC / FABRIKA_NOW — только для проверки на компьютере (как FABRIKA_HOME; на хостинге их нет)
 define('SRC', getenv('FABRIKA_SO_SRC') ?: 'https://fabrikant.su/upload/als-1c/stores/');
-const CITIES = ['moscow' => 'Москва', 'nizhny-novgorod' => 'Сотрудник11 Имя2', 'samara' => 'Самара', 'ryazan' => 'Рязань', 'ekaterinburg' => 'Екатеринбург',
+const CITIES = ['moscow' => 'Москва', 'nizhny-novgorod' => 'Сотрудник11 Имя3', 'samara' => 'Самара', 'ryazan' => 'Рязань', 'ekaterinburg' => 'Екатеринбург',
   'saint-petersburg' => 'Санкт-Петербург', 'krasnodar' => 'Краснодар', 'simferopol' => 'Симферополь', 'almaty' => 'Алматы'];
 const KEEP_DAYS = 120;
 const RETRY_MAX = 6;                                     // 30.10.2026 аудит H8: дозапросов недостающих городов за день (раз в 20 минут)

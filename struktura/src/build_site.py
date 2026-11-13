@@ -17,7 +17,7 @@ esc = lambda s: html.escape(s or "", quote=True)
 TOTAL_STAFF = AREAS_STAFF
 EDITION = "01.11"   # редакция страницы: шапка и подвал
 
-# REDACTED_B64_1 компоненты
+# REDACTED_B64_37 компоненты
 def contact_btn(value, kind):
     return (f'<button type="button" class="ct ct-{kind}" data-copy="{esc(value)}" title="Скопировать">'
             f'<span>{esc(value)}</span></button>')
@@ -101,7 +101,7 @@ def roles_section():
         out.append("</div>")
     return "".join(out)
 
-# REDACTED_B64_1 разделы
+# REDACTED_B64_37 разделы
 lead_cards = "".join(card(p, True) for p in LEADERSHIP)
 sec = SECRETARY
 sec_html = (f'<aside class="secnote" data-search="{esc((sec["name"] + " приёмная секретарь " + sec["role"] + " " + " ".join(sec["emails"] + sec["phones"])).lower())}">'

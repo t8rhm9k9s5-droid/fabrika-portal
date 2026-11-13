@@ -5,7 +5,7 @@
 итога в state/probe_vi.json. Python 3.6."""
 import re, time, urllib.request, urllib.error, ssl
 
-URLS = [('card', 'https://www.vseinstrumenti.REDACTED_B64_5'),
+URLS = [('card', 'https://www.vseinstrumenti.REDACTED_B64_41'),
         ('list', 'https://www.vseinstrumenti.ru/category/ofisnye-stulya-4497/'),
         ('pas', 'https://pas.vseinstrumenti.ru/app/login')]   # 12.11: кабинет поставщика (ЛКП) — пускает ли хостинг; без входа, только страница логина
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'

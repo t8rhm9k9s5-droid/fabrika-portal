@@ -270,7 +270,7 @@ def _drafts(L, st, dr_id, res, deadline, log):
     return n
 
 
-# REDACTED_B64_1 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
+# REDACTED_B64_37 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
 def queue_alert(L, subject, text, critical=False):
     """оповещение владельцу → state/bots_alerts.json (на Диск — следующим прогоном; бот Telegram пишет Т. В.). Повтор того же текста за час — не дублируется."""
     h = _sha(str(text).encode('utf-8'))[:16]                            # повтор — по тексту: alert() зовёт и mail_send, и max_send с одним текстом

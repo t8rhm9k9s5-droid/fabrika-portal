@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 U = '/root/.claude/uploads/91321563-ef32-5ced-806b-925c9616f525/'
-TMP = 'REDACTED_B64_4'
+TMP = 'REDACTED_B64_40'
 OUT = '/home/claude/site/plans'
 os.makedirs(TMP, exist_ok=True); os.makedirs(OUT, exist_ok=True)
 SK = _cg1_read_json('/home/claude/build/sklad_data.json')

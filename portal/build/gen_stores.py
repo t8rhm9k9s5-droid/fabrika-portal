@@ -64,7 +64,7 @@ details[open] > .irow .ichev{transform:rotate(90deg)}
 <script>
 (function(){
   var D = JSON.parse(document.getElementById('stores-data').textContent);
-  var NAMES = {'moscow':'Москва','nizhny-novgorod':'Сотрудник11 Имя2','samara':'Самара','ryazan':'Рязань','ekaterinburg':'Екатеринбург','saint-petersburg':'Санкт-Петербург','krasnodar':'Краснодар','simferopol':'Симферополь','almaty':'Алматы'};
+  var NAMES = {'moscow':'Москва','nizhny-novgorod':'Сотрудник11 Имя3','samara':'Самара','ryazan':'Рязань','ekaterinburg':'Екатеринбург','saint-petersburg':'Санкт-Петербург','krasnodar':'Краснодар','simferopol':'Симферополь','almaty':'Алматы'};
   var ORDER = Object.keys(NAMES);
   // расходники офиса (скотч, каталоги, бумага…) в итоги мебели не входят
   var CONS = /^(Каталог|Скотч|Стрейч|Краска аэрозольная|МФУ|Бумага|Картридж|Мешки|Перчатки|Ручка канцелярская|Зарядное устройство|Винт барашек|Образцы)/i;

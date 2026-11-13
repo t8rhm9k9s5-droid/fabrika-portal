@@ -237,11 +237,11 @@ def report_like(frm, subj, names):
     if frm in ('user5@example.org', 'user4@example.org') and any(k in s for k in ('пкс свободные остатки', 'складские остатки')): return True
     if frm == 'user3@example.org' and any(k in s for k in ('реестр рекламаций', 'тз в работе')): return True       # 03.11.2026: рассылки 1С для rep_1c.py (02.11) — без этого письма не доходили до разбора
     if frm in ('user33@example.org', 'user22@example.org', 'user5@example.org', 'user4@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user22@example.org (А. Сотрудник1 пишет оттуда)
-    if frm == 'user34@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник5 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
-    if frm in ('user34@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник5 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
+    if frm == 'user34@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник6 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
+    if frm in ('user34@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник6 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
     if frm in ('user3@example.org', 'user34@example.org', 'user30@example.org', 'user35@example.org', 'user5@example.org', 'user4@example.org') and \
             any(n.endswith('.xlsx') for n in low) and (any(k in s for k in ('запасы гп', 'товары на складах')) or any('товары на складах' in n or ('запас' in n and 'гп' in n) for n in low)):
-        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник5 на 1c@) → stock_mv.py
+        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник6 на 1c@) → stock_mv.py
     return frm == 'user30@example.org' and any(n.endswith('.zip') for n in low)
 
 

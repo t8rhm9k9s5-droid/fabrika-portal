@@ -16,19 +16,19 @@ import datetime, email, email.policy, email.utils, imaplib, json, os, re, ssl, t
 import mx_ctl as MC, itm as IT
 
 SINCE = datetime.date(2026, 10, 1)
-RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежедневные» 06.10, правило М. Сотрудник6 — с 07.10
+RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежедневные» 06.10, правило М. Сотрудник5 — с 07.10
 MSK = MC.MSK
 # офис продаж: ключ, название, имя в MAX (рег. выражение), признаки в тексте, адреса почты
 OPS = [
-    ('ekb', 'ОП Екатеринбург', r'^Имя4$|Сотрудник40', r'\bЕКБ\b|Екатеринбург', ('user43@example.org', 'user44@example.org')),
+    ('ekb', 'ОП Екатеринбург', r'^Имя5$|Сотрудник40', r'\bЕКБ\b|Екатеринбург', ('user43@example.org', 'user44@example.org')),
     ('sam', 'ОП Самара', r'Сотрудник44', r'\bСамар', ('user45@example.org', 'user46@example.org')),
-    ('nn', 'ОП Сотрудник11 Имя2', r'Сотрудник42', r'\bНН\b|Сотрудник11\w* Имя2', ('user47@example.org', 'user48@example.org')),
+    ('nn', 'ОП Сотрудник11 Имя3', r'Сотрудник42', r'\bНН\b|Сотрудник11\w* Имя3', ('user47@example.org', 'user48@example.org')),
     ('krd', 'ОП Краснодар', r'Сотрудник47|Сотрудник46', r'склад\w* Краснодар|\bОП Краснодар', ('user49@example.org', 'user50@example.org')),
     ('sim', 'ОП Симферополь', r'Сотрудник48', r'Симферопол|\bКрым', ('user51@example.org', 'user52@example.org')),
     ('msk', 'ОП Москва', r'Сотрудник37', r'\bОП Москва', ('user19@example.org',)),
     # 02.11.2026, замечания Т. В.: «Узбекистан исключи из всего портала» — офис не показывается (исходная переписка не трогается)
     # ('uz', 'Узбекистан', r'Сотрудник36|Имя13|Fakhriddin|Kodirov', r'Узбекистан|Ташкент', ('user53@example.org',)),
-    ('net', 'Сеть офисов продаж', r'Сотрудник6', r'', ('user8@example.org', 'user42@example.org')),
+    ('net', 'Сеть офисов продаж', r'Сотрудник5', r'', ('user8@example.org', 'user42@example.org')),
 ]
 MGR_RX = {k: re.compile(rx) for k, _, rx, _, _ in OPS}
 HEAD_RE = re.compile(r'^\s*ОП\s+[А-ЯЁA-Z][\w\- ]{2,30}?\s+(\d{1,2})\.(\d{1,2})')

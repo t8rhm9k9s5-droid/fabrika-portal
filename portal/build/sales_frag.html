@@ -121,7 +121,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 .kop[open]>summary .ichev{transform:rotate(90deg)}
 .kob{padding:4px 16px 14px;font-size:15px;line-height:1.45}.kob p{margin:8px 0 4px}.kob ol,.kob ul{margin:4px 0 6px;padding-left:20px}.kob li{margin:3px 0}
 .kost{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--p-soft,#eee);font-size:12px;font-weight:500;vertical-align:2px}
-/* 30.10.2026: «Офисы продаж — октябрь 2026» (письмо М. И. Сотрудник6, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
+/* 30.10.2026: «Офисы продаж — октябрь 2026» (письмо М. И. Сотрудник5, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
 .opm .mtx tr.opt td{font-weight:600}
 .opm .mtx .hl{background:var(--p-soft,rgba(120,120,128,.12))}
 .opm .mtx th.hl{color:var(--p-fg,inherit);font-weight:600}
@@ -189,8 +189,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 (function () {
   var D = JSON.parse(document.getElementById('sales-data').textContent || '{}'), V = document.getElementById('view'), STOCK = null, TZ = null, CALC = null, DOCS = null;
   var MON = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'], WD = ['вс','пн','вт','ср','чт','пт','сб'];
-  var SHORT = { ekb: 'Екатеринбург', sam: 'Самара', nn: 'Н. Имя2', krd: 'Краснодар', sim: 'Симферополь', msk: 'Москва', net: 'Сотрудник6 М. И.' };
-  var WH = { ekb: 'ОП Екатеринбург', sam: 'ОП Самара', nn: 'ОП Сотрудник11 Имя2', krd: 'ОП Краснодар', sim: 'ОП Симферополь', msk: 'ОП Москва' };
+  var SHORT = { ekb: 'Екатеринбург', sam: 'Самара', nn: 'Н. Имя3', krd: 'Краснодар', sim: 'Симферополь', msk: 'Москва', net: 'Сотрудник5 М. И.' };
+  var WH = { ekb: 'ОП Екатеринбург', sam: 'ОП Самара', nn: 'ОП Сотрудник11 Имя3', krd: 'ОП Краснодар', sim: 'ОП Симферополь', msk: 'ОП Москва' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n(v) { return v == null ? '—' : String(Math.round(v)).replace('-', '−').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function dd(s) { if (!s) return '—'; var p = s.slice(0, 10).split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; }
@@ -239,7 +239,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       var _thr = ONLINE.thr || 0.1, _low = (ONLINE.prices || []).filter(function (p) { return p.p && p.r && p.p / p.r - 1 < -_thr; }).length, _ns = {}; (ONLINE.prices || []).forEach(function (p) { _ns[p.s] = 1; });
       h += '<p class="ihdr" id="onlh">Онлайн-продажи</p><div class="igroup"><a class="irow" href="#online"><span class="ic"><span class="ibody"><span class="ititle">Онлайн-продажи: ' + rub(_ot) + ' за ' + esc((ONLINE.months || []).join('–')) + '</span><span class="isub">' + Object.keys(_oc).map(function (k) { return esc(k.replace(' — наш магазин ООО «ПКС»', ' (наш)')) + ' ' + rub(_oc[k]); }).join(' · ') + ' · продавцов ' + Object.keys(_ns).length + ', ниже РРЦ ' + _low + (ONLINE.comp ? ' · конкуренты ' + ONLINE.comp.length : '') + '</span></span><span class="ichev"></span></span></a></div>'; }
     h += dayBlock();                                                      // 30.10.2026: продажи за день — ежедневные рассылки 1С
-    h += opmBlock();                                                      // 30.10.2026: офисы продаж — октябрь 2026 (данные М. И. Сотрудник6)
+    h += opmBlock();                                                      // 30.10.2026: офисы продаж — октябрь 2026 (данные М. И. Сотрудник5)
     if (CALC && CALC.lines && Object.keys(CALC.lines).length) h += linesBlock();
     if (T1 && T1.n) {                                                     // 28.10.2026: «ТЗ в работе» из 1С — этап, сколько стоит, срок актуальности
       h += '<p class="ihdr" id="tz1">ТЗ в работе · 1С</p><div class="igroup">' +
@@ -281,6 +281,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     // 12.11.2026, Т. В.: «в разделе продаж отдельный раздел ФТС и в разрезе клиентов поступление денег за каждый месяц… по году отчёт… разрез по продажам и прогнозам»
     if (FTSY && FTSY.months) { var fy = FTSY.year || {}; h += '<p class="ihdr">ФТС</p><div class="igroup"><a class="irow" href="#fts"><span class="ic"><span class="ibody"><span class="ititle">ООО «ФТС» — план, факт, деньги по клиентам</span><span class="isub">с января ' + rub(fy.fact || 0) + ' отгружено, ' + rub(fy.money || 0) + ' пришло · прогноз ноября ' + rub((FTSY.forecast || {}).nov || 0) + '</span></span><span class="chev">›</span></span></a></div>'; }
     // 11.11.2026, Т. В.: «отчёт по менеджерам в разрезе филиалов: менеджер и базис поставки ОП…, поставка за текущий месяц, ФТС, ПКС отдельно, накопленным итогом»; «отдельный раздел онлайн-продажи»
+    h += '<p class="ihdr">Особый контроль</p><div class="igroup"><a class="irow" href="#leads"><span class="ic"><span class="ibody"><span class="ititle">Лиды выставок: ход работы по офисам</span><span class="isub" id="leadsSub">' + (LEADS && LEADS.tot ? 'отмечено ' + LEADS.tot.done + ' из ' + LEADS.tot.rows + (LEADS.tot.today ? ', сегодня +' + LEADS.tot.today : '') + ' · сверка 20.11, итог 27.11' : '1074 контакта, 11 таблиц; сверка 20.11, итог 27.11') + '</span></span><span class="ichev"></span></span></a></div>';
     h += '<p class="ihdr">Менеджеры и офисы продаж</p><div class="igroup"><a class="irow" href="#mgrop"><span class="ic"><span class="ibody"><span class="ititle">Продажи по менеджерам и ОП (базис поставки)</span><span class="isub">отгрузки месяца, ФТС и ПКС отдельно, накопленным итогом по дням</span></span><span class="ichev"></span></span></a></div>';
     h += '<p class="ihdr">График отгрузки</p><div class="igroup"><a class="irow" href="#ship"><span class="ic"><span class="ibody"><span class="ititle">График отгрузки — октябрь по неделям</span><span class="isub">отгрузки → перемещения на ОП → продажи из ОП → остаток ОП; сравнение «переместили / продали» по офисам</span></span><span class="ichev"></span></span></a></div>';
     h += '<p class="ihdr">Сотрудник7</p><div class="igroup"><a class="irow" href="#cls"><span class="ic"><span class="ibody"><span class="ititle">Классификация клиентов</span><span class="isub">тип (9 каналов), класс ABC по выручке, статус активности — утверждено 29.10.2026</span></span><span class="ichev"></span></span></a></div>';
@@ -426,7 +427,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   });
   // 28.10.2026, поручение: «отчёт по проводке заказов на производство» — точки и сроки из И-КО-04 «Работа с графиком производства» и И-КО-03 (нестандарт)
   var PCP = [['Заказ покупателя в 1С — статус «В производстве»', 'менеджер', 'до включения в график', 'с другим статусом заказ в график не ставится; нестандарт — после 100% оплаты, если спецификацией не оговорено иное'],
-    ['Включение в график следующей недели', 'менеджер', 'среда до 16:00', 'только объём, который отгружается на предстоящей неделе; приоритет мощностей — через Сотрудник19 Ю. А.'],
+    ['Включение в график следующей недели', 'менеджер', 'среда до 16:00', 'только объём, который отгружается на предстоящей неделе; приоритет мощностей — через Сотрудник18 Ю. А.'],
     ['Утверждение графика', 'ПДО / директор по производству + начальник отдела продаж', 'четверг — пятница', 'утверждённый график — основа выпуска на неделю'],
     ['Выпуск по графику', 'производство', 'неделя графика', 'факт выпуска — ежедневный отчёт ПДО'],
     ['Уведомление клиента, транспорт, реализация, отгрузка', 'менеджер, склад ГП', 'после выпуска', 'заявка на транспорт, реализация с «упр. учёт», контроль неотгруженной продукции']];
@@ -440,12 +441,12 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 28.10.2026, поручение: «понять, как классифицировать клиента и его тип»; 29.10.2026 (опрос) — Т. В. утвердил (9 типов, ABC); 04.11 (замечание 5а) — на портале как действующая
-  var CLT = [['Сеть / федеральный ритейл', 'Hoff, Комус, Тандер (Магнит), М.Видео, ВсеИнструменты, Онлайн Имя8', 'договор по форме сети, акции и скидки сети, логистика по её правилам'],
+  var CLT = [['Сеть / федеральный ритейл', 'Hoff, Комус, Тандер (Магнит), М.Видео, ВсеИнструменты, Онлайн Имя2', 'договор по форме сети, акции и скидки сети, логистика по её правилам'],
     ['Своя марка клиента (СТМ)', 'по 1С: Стул груп, Geometry, Mio Tesoro, Hoff, Gigant — 40,4 млн ₽ за июль — октябрь', 'наше изделие под маркой клиента — отдельные артикулы, упаковка и этикетка'],
     ['Дилер / оптовик', 'перепродаёт нашу продукцию в регионе', 'тип цен «дилер» или «опт», объём и регулярность'],
     ['Проект / тендер', 'объекты: ВиТ, «Вкусно — и точка», ДОДО, медцентры, банки', 'через ТЗ и расчёт ПЭО, график отгрузок по объектам'],
     ['Корпоративный клиент', 'покупает для себя: офис, школа, кафе', 'прайс, разовые или повторные закупки'],
-    ['Маркетплейс', 'Ozon, Сотрудник14 Имя3 (ПКС), Wildberries', 'свои остатки FBS/FBO, свои цены и комиссии'],
+    ['Маркетплейс', 'Ozon, Сотрудник14 Имя4 (ПКС), Wildberries', 'свои остатки FBS/FBO, свои цены и комиссии'],
     ['Розница', 'физлица, выставочный зал', 'розничный прайс'],
     ['Экспорт', 'Казахстан', 'валюта, НДС и логистика другой страны'],
     ['Внутри группы', 'ЖПС, ФТС, ПКС', 'не считается в продажах клиентам']];
@@ -480,7 +481,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       h += '<p class="ifoot" style="margin:10px 16px 4px"><b>Загрузка линий продажами</b> — продано за ' + MSH[+lastFull.slice(5) - 1] + ' против мощности в месяц (недельная норма плана ' + esc(CAP.m) + ' × 4,33).</p>' +
         '<div class="mtx"><table style="min-width:0"><thead><tr><th>Вид</th><th>продано, шт</th><th>мощность, шт/мес</th><th>загрузка</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     }
-    return h + '<p class="ifoot" style="margin:8px 16px 12px"><b>Это не вся выручка компании.</b> Источник — ежемесячные отчёты ПЭО «Средние цены реализации»: продажи изделий по видам номенклатуры сбыт за период отчёта (ПЭО присылает его около 25-го числа — месяц в нём неполный), без ФТС, проектов и прочих продаж. Полная выручка — по отчёту 1С «Продажи» (Сотрудник19 Ю. А.): июль 118,4, август 108,3, сентябрь 154,6, октябрь по 26.10 — 83,5 млн ₽ с НДС. Таблица нужна для средних цен и штук по видам; красным — вид продукции продаётся меньше чем на 70% мощности линии.</p></div>';
+    return h + '<p class="ifoot" style="margin:8px 16px 12px"><b>Это не вся выручка компании.</b> Источник — ежемесячные отчёты ПЭО «Средние цены реализации»: продажи изделий по видам номенклатуры сбыт за период отчёта (ПЭО присылает его около 25-го числа — месяц в нём неполный), без ФТС, проектов и прочих продаж. Полная выручка — по отчёту 1С «Продажи» (Сотрудник18 Ю. А.): июль 118,4, август 108,3, сентябрь 154,6, октябрь по 26.10 — 83,5 млн ₽ с НДС. Таблица нужна для средних цен и штук по видам; красным — вид продукции продаётся меньше чем на 70% мощности линии.</p></div>';
   }
   document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[data-lm]'); if (!a) return; e.preventDefault(); LMODE = a.getAttribute('data-lm'); main(); var el = document.getElementById('lines'); if (el) el.scrollIntoView(); });
   function rub(v) { return v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' млн ₽' : n(v) + ' ₽'; }
@@ -677,10 +678,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       '<p class="ifoot" style="margin:6px 0 0">Столбик — заказано за день, ₽ (наведите — сумма и штуки). Оранжевая линия — средний день за последние 28 дней: ' + rub(S.r28) + '.</p>';
   }
   // 29.10.2026 00:00, пользователь: «Заведи документ «График отгрузки» и заведи весь октябрь в него по неделям, и привяжи учёт отгрузок и перемещений
-  // товара на ОП, потом продажи из ОП и сравнение перемещения и продажи — документы запроси у Сотрудник19 и Сотрудник6». Пока из 1С нет выгрузок —
+  // товара на ОП, потом продажи из ОП и сравнение перемещения и продажи — документы запроси у Сотрудник18 и Сотрудник5». Пока из 1С нет выгрузок —
   // заполнено тем, что есть: Ozon по неделям (аналитика кабинета ПКС) и остатки ОП (снимок fabrikant.su/stock); остальное — «запрошено».
   var SHIP = (function () { try { return JSON.parse(document.getElementById('ship-data').textContent || 'null'); } catch (e) { return null; } })();
-  // 11.11.2026, Сотрудник16 К. В.: «загрузи данный формат отчёта в раздел ПРОДАЖИ, чтобы отслеживать ежедневное выполнение плана по менеджерам»
+  // 11.11.2026, Сотрудник19 К. В.: «загрузи данный формат отчёта в раздел ПРОДАЖИ, чтобы отслеживать ежедневное выполнение плана по менеджерам»
   var PLANM = (function () { try { return JSON.parse(document.getElementById('planm-data').textContent || 'null'); } catch (e) { return null; } })();
   function planm() {
     var P = PLANM, h = '<a class="back" href="#">Продажи</a><h1>Выполнение плана по менеджерам</h1>';
@@ -702,8 +703,30 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
 
+
+  // 13.11.2026, Т. В.: «это на особый контроль … прогресс по мере появления весь учитывать и публиковать, Имя10 пусть всех торопит».
+  // Данные — st/leads.bin (робот хостинга раз в час читает 11 таблиц офисов; только счётчики, без контактов).
+  var LEADS = null;
+  function leadsSub() { var e = document.getElementById('leadsSub'); if (e && LEADS && LEADS.tot) e.textContent = 'отмечено ' + LEADS.tot.done + ' из ' + LEADS.tot.rows + (LEADS.tot.today ? ', сегодня +' + LEADS.tot.today : '') + ' · сверка 20.11, итог 27.11'; }
+  function leads() {
+    var D = LEADS, h = '<a class="back" href="#">Продажи</a><h1>Лиды выставок</h1><p class="lead">Особый контроль Т. В. Сотрудник1. Контакты выставок 2022–2025 разложены по офисам; в каждой таблице жёлтые столбцы — дата контакта, результат, следующий шаг, статус. Торопит всех ' + esc((D && D.chaser) || 'Сотрудник33 Д. Р.') + '.</p>';
+    if (!D || !D.offices) { V.innerHTML = h + '<p class="lead">Загружаю ход работы…</p>'; return; }
+    var dm = function (d) { return d ? d.slice(8, 10) + '.' + d.slice(5, 7) : ''; }, T = D.tot || {}, pc = function (a, b) { return b ? Math.round(100 * a / b) : 0; };
+    h += '<div class="igroup hero"><div class="hnum">' + pc(T.done, T.rows) + '%<small>отмечено ' + T.done + ' из ' + T.rows + '</small></div>' +
+      '<div class="hsub">со статусом — ' + (T.status || 0) + (T.today ? ' · сегодня +' + T.today : '') + ' · сверка ' + dm(D.due && D.due.mid) + ', итог ' + dm(D.due && D.due.end) + '</div>' +
+      '<div class="hsub">обновлено ' + esc(String(D.t || '').replace('T', ' ')) + ' (раз в час)</div></div>';
+    h += '<p class="ihdr">По офисам</p><div class="igroup">' + D.offices.slice().sort(function (a, b) { return pc(a.done, a.rows) - pc(b.done, b.rows); }).map(function (o) {
+      var p = pc(o.done, o.rows), st = Object.keys(o.st || {}).map(function (k) { return k + ' — ' + o.st[k]; }).join(', ');
+      return '<a class="irow" href="' + esc(o.url) + '" target="_blank" rel="noopener noreferrer"><span class="ic"><span class="ibody"><span class="ititle">' + esc(o.n) + ' · ' + p + '%</span>' +
+        '<span class="isub">' + esc(o.who) + ' · отмечено ' + o.done + ' из ' + o.rows + (o.today ? ' · сегодня +' + o.today : '') + (st ? ' · ' + esc(st) : '') + (o.err ? ' · таблица не прочиталась, числа прежние' : '') + '</span>' +
+        '<span style="display:block;height:4px;border-radius:2px;background:var(--ios-sep);margin-top:6px"><span style="display:block;height:4px;border-radius:2px;width:' + p + '%;background:' + (p >= 50 ? 'var(--t-green,#34c759)' : p >= 20 ? 'var(--t-orange,#ff9f0a)' : 'var(--t-red,#ff3b30)') + '"></span></span>' +
+        '</span><span class="ichev"></span></span></a>';
+    }).join('') + '</div>';
+    if (D.days && D.days.length > 1) h += '<p class="ifoot">По дням (отмечено к концу дня): ' + D.days.map(function (x) { return dm(x.d) + ' — ' + x.done; }).join(' · ') + '</p>';
+    V.innerHTML = h;
+  }
   // 11.11.2026, Т. В.: менеджер × базис поставки (ОП), ФТС и ПКС отдельно, накопленным итогом. Данные — build/sales_mgr_op/<месяц>.json
-  // (будет: ежедневная рассылка 1С; пока — итог по менеджерам от Сотрудник16, разбивка запрошена).
+  // (будет: ежедневная рассылка 1С; пока — итог по менеджерам от Сотрудник19, разбивка запрошена).
   var MGROP = (function () { try { return JSON.parse(document.getElementById('mgrop-data').textContent || 'null'); } catch (e) { return null; } })();
   function mgrop() {
     var D = MGROP, h = '<a class="back" href="#">Продажи</a><h1>Продажи по менеджерам и ОП</h1>';
@@ -712,6 +735,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     var orgs = D.orgs || ['ФТС', 'ПКС'], ops = D.ops || [];
     var used = ops.filter(function (o) { return D.rows.some(function (r) { return r.by && r.by[o]; }); });
     h += '<p class="lead">' + MN[+D.month.slice(5, 7) - 1] + ' ' + D.month.slice(0, 4) + ', отгружено с 1-го числа по ' + dm(D.asof) + '. Источник: ' + esc(D.src || '') + '.</p>';
+    if (D.answers && D.answers.length) h += '<div class="igroup"><p class="ifoot" style="margin:10px 16px"><b>Как считается (ответы отдела продаж):</b><br>' + D.answers.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';   // 13.11.2026: ответы Сотрудник5
     if (D.missing && D.missing.length) h += '<div class="igroup"><p class="ifoot" style="margin:10px 16px"><b>Чего не хватает (запрошено' + (D.asked ? ' ' + dm(D.asked) : '') + '):</b><br>' + D.missing.map(esc).join('<br>') + '</p></div>';
     var cell = function (r, o, g) { var x = r.by && r.by[o]; return x && x[g] ? n(x[g]) : '—'; };
     var orgSum = function (r, g) { var t = 0, any = false; for (var o in (r.by || {})) { if (r.by[o][g]) { t += r.by[o][g]; any = true; } } return any ? t : null; };
@@ -738,7 +762,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 12.11.2026, Т. В.: раздел ФТС — план/факт по месяцам, приход денег по клиентам за каждый месяц, отгрузка по клиентам, прогноз.
-  // Данные — build/fts/fts_year.json (отчёты Сотрудник16 К. В. «План» и «План-ФАКТ» ФТС из папки «Планы» itm@, разово 12.11.2026).
+  // Данные — build/fts/fts_year.json (отчёты Сотрудник19 К. В. «План» и «План-ФАКТ» ФТС из папки «Планы» itm@, разово 12.11.2026).
   var FTSY = (function () { try { return JSON.parse(document.getElementById('fts-data').textContent || 'null'); } catch (e) { return null; } })();
   function ftsView() {
     var D = FTSY, h = '<a class="back" href="#">Продажи</a><h1>ООО «ФТС»</h1>';
@@ -836,21 +860,36 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
         '<details class="rep"><summary><b>Спрос на площадках</b></summary>' + tbl(['площадка', 'товар', 'сигнал'], (O.demand || []).map(function (d) { return td([esc(d.w), esc(d.m), esc(d.x)]); })) + '</details>' +
         '<details class="rep"><summary><b>Методика (международная практика)</b></summary>' + tbl(['метрика', 'как считаем'], (O.method || []).map(function (d) { return td([esc(d.k), esc(d.x)]); })) + '</details></div>';
     }
-    h += '<p class="ifoot">Источник: ' + esc(O.src || '') + '.' + (O.sheet ? ' <a href="' + esc(O.sheet) + '" target="_blank" rel="noopener">Google Таблица</a> (доступ — аккаунт 1c@ и Сотрудник16 К. В.).' : '') + '</p>';
+    h += '<p class="ifoot">Источник: ' + esc(O.src || '') + '.' + (O.sheet ? ' <a href="' + esc(O.sheet) + '" target="_blank" rel="noopener">Google Таблица</a> (доступ — аккаунт 1c@ и Сотрудник19 К. В.).' : '') + '</p>';
     V.innerHTML = h;
   }
   function ship() {
     var S = SHIP || {}, W = S.weeks || [], OP = S.op || [];
-    var h = '<a class="back" href="#">Продажи</a><h1>График отгрузки</h1><p class="lead">' + (S.plan ? 'Сверху — план отгрузки на неделю из 1С (присылает Ю. А. Сотрудник19), по дням и клиентам. ' : '') + 'Ниже — октябрь по неделям: отгрузки с фабрики → перемещения на офисы продаж → продажи из ОП → остаток ОП. ' +
-      'Отгрузки, перемещения и продажи из ОП — из 1С; данные запрошены у Ю. А. Сотрудник19 и М. И. Сотрудник6 (письмо 29.10), документ заполняется по мере поступления.</p>';
-    // 11.11.2026: план отгрузки на неделю из 1С (Сотрудник19 Ю. А.) — по дням, внутри — контрагенты и заказы
+    var h = '<a class="back" href="#">Продажи</a><h1>График отгрузки</h1><p class="lead">' + (S.plan ? 'Сверху — план отгрузки на неделю из 1С (присылает Ю. А. Сотрудник18), по дням и клиентам. ' : '') + 'Ниже — октябрь по неделям: отгрузки с фабрики → перемещения на офисы продаж → продажи из ОП → остаток ОП. ' +
+      'Отгрузки, перемещения и продажи из ОП — из 1С; данные запрошены у Ю. А. Сотрудник18 и М. И. Сотрудник5 (письмо 29.10), документ заполняется по мере поступления.</p>';
+    // 11.11.2026: план отгрузки на неделю из 1С (Сотрудник18 Ю. А.) — по дням, внутри — контрагенты и заказы
     var PL = S.plan;
     if (PL && PL.days && PL.days.length) {
       var dm = function (d) { return d.slice(8, 10) + '.' + d.slice(5, 7); };
+      var MX = PL.days.some(function (d) { return d.qx; });   // 13.11.2026: с 16.11 в графике есть цех металлоизделий
+      var AN = PL.an;                                          // 13.11.2026, Т. В.: «сделай аналитику» — итоги недели (build_site.py)
+      if (AN) {
+        var pr = AN.prev, dl = pr && pr.s ? AN.s / pr.s - 1 : null, dq = pr && pr.q ? AN.q / pr.q - 1 : null, pc = function (x) { return (x > 0 ? '+' : '') + String(Math.round(100 * x)).replace('-', '−') + ' %'; };
+        h += '<p class="ihdr">Аналитика недели ' + dm(PL.from) + '–' + dm(PL.to) + '</p><div class="igroup hero"><div class="hnum">' + rub(AN.s) + '</div><div class="hsub">' + n(AN.q) + ' шт · средняя цена ' + rub(AN.avg) +
+          (pr ? ' · к неделе ' + dm(pr.from) + '–' + dm(pr.to) + ': ' + pc(dl) + ' по сумме, ' + pc(dq) + ' по штукам' : '') + '</div>' +
+          '<div class="hst"><div><span>клиентов / заказов</span><b>' + n(AN.clients) + ' / ' + n(AN.orders) + '</b></div><div><span>доля топ-5 клиентов</span><b>' + String(AN.top5).replace('.', ',') + ' %</b></div>' +
+          '<div><span>«обязательно»</span><b>' + rub(AN.must[0]) + ' · ' + n(AN.must[1]) + '</b></div><div><span>перемещения на ОП и склады</span><b>' + rub(AN.int) + '</b></div></div>' +
+          '<div class="rx" style="padding:4px 16px 12px">' +
+          (AN.car && AN.car[0] ? '<p><b style="color:#ff9500">Перенесено из прошлого графика:</b> ' + n(AN.car[0]) + ' заказов на ' + rub(AN.car[1]) + ' (' + Math.round(100 * AN.car[1] / AN.s) + ' % недели) — они уже стояли в графике прошлой недели.</p>' : '') +
+          '<p><b>Крупнейшие получатели:</b> ' + AN.top_cl.map(function (c) { return esc(c[0]) + ' — ' + rub(c[1]); }).join('; ') + '.</p>' +
+          '<p><b>Модели:</b> ' + AN.top_it.map(function (c) { return esc(c[0]) + ' — ' + n(c[2]) + ' шт, ' + rub(c[1]); }).join('; ') + '.</p>' +
+          (AN.exp && AN.exp.length ? '<p><b>Экспорт:</b> ' + AN.exp.map(function (c) { return esc(c[0]) + ' — ' + rub(c[1]); }).join('; ') + '.</p>' : '') +
+          (AN.new_cl ? '<p>Новых получателей к прошлой неделе: ' + n(AN.new_cl) + '.</p>' : '') + '</div></div>';
+      }
       h += '<p class="ihdr">План отгрузки ' + dm(PL.from) + '–' + dm(PL.to) + ' · 1С</p><div class="igroup">' +
-        '<div class="mtx"><table style="min-width:0"><thead><tr><th>день</th><th>стулья и кресла, шт</th><th>мягкая мебель, шт</th><th>сумма</th><th>клиентов</th></tr></thead><tbody>' +
-        PL.days.map(function (d) { return '<tr><td>' + dm(d.d) + '</td><td>' + n(d.qc) + '</td><td>' + n(d.qm) + '</td><td>' + rub(d.s) + '</td><td>' + n(d.clients.length) + '</td></tr>'; }).join('') +
-        (PL.total ? '<tr><td><b>итого</b></td><td><b>' + n(PL.total.qc) + '</b></td><td><b>' + n(PL.total.qm) + '</b></td><td><b>' + rub(PL.total.s) + '</b></td><td></td></tr>' : '') +
+        '<div class="mtx"><table style="min-width:0"><thead><tr><th>день</th><th>стулья и кресла, шт</th><th>мягкая мебель, шт</th>' + (MX ? '<th>металлоизделия, шт</th>' : '') + '<th>сумма</th><th>клиентов</th></tr></thead><tbody>' +
+        PL.days.map(function (d) { return '<tr><td>' + dm(d.d) + '</td><td>' + n(d.qc) + '</td><td>' + n(d.qm) + '</td>' + (MX ? '<td>' + n(d.qx || 0) + '</td>' : '') + '<td>' + rub(d.s) + '</td><td>' + n(d.clients.length) + '</td></tr>'; }).join('') +
+        (PL.total ? '<tr><td><b>итого</b></td><td><b>' + n(PL.total.qc) + '</b></td><td><b>' + n(PL.total.qm) + '</b></td>' + (MX ? '<td><b>' + n(PL.total.qx || 0) + '</b></td>' : '') + '<td><b>' + rub(PL.total.s) + '</b></td><td></td></tr>' : '') +
         '</tbody></table></div>' +
         PL.days.map(function (d) {
           return '<details class="rep"><summary><b>' + dm(d.d) + '</b> · ' + n(d.q) + ' шт · ' + rub(d.s) + '</summary><div class="rx">' +
@@ -870,7 +909,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       OP.map(function (o) { return '<tr><td>' + esc(o.t) + '</td><td>' + n(o.stock) + '</td><td class="muted">запрошено</td><td class="muted">запрошено</td><td class="muted">—</td></tr>'; }).join('') +
       '</tbody></table></div><p class="ifoot" style="margin:8px 16px 12px">Отклонение = перемещено − продано − изменение остатка: расхождение показывает, что ушло мимо учёта или зависло на складе офиса.</p></div>';
     h += '<p class="ihdr">Что запрошено</p><div class="igroup"><div class="cpl"><div><b>1.</b> План продаж каждого офиса и менеджера в разрезе групп производства × средняя цена (если нет — составить).</div><div><b>2.</b> Отгрузки за октябрь по неделям: дата, клиент/ОП, номенклатура, количество, сумма.</div><div><b>3.</b> Перемещения товара на ОП за октябрь.</div><div><b>4.</b> Продажи из ОП за октябрь — для сравнения с перемещениями.</div></div>' +
-      '<p class="ifoot" style="margin:8px 16px 12px">Ответственные: Ю. А. Сотрудник19 (отдел продаж), М. И. Сотрудник6 (сеть офисов продаж). Письма — 29.10 после подтверждения Т. В. Сотрудник1.</p></div>';
+      '<p class="ifoot" style="margin:8px 16px 12px">Ответственные: Ю. А. Сотрудник18 (отдел продаж), М. И. Сотрудник5 (сеть офисов продаж). Письма — 29.10 после подтверждения Т. В. Сотрудник1.</p></div>';
     V.innerHTML = h;
   }
   // 30.10.2026: «Офисы продаж — октябрь 2026» — выгрузки 1С по офисам продаж на 30.10 (build/sales_op/2026-10.json → #salesop-data, подставляет build_site.py):
@@ -962,7 +1001,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
           '<p class="ifoot">Продано против выпуска и плана по тем же линиям — <a href="staff.html#salescap">«Производство» → «Продажи, выпуск и план по линиям»</a>.</p>';
       }
     }
-    // 12.11.2026, команда бота №10 (Сотрудник16 К. В., 11.11 22:35): «Добавить в раздел «ПРОДАЖИ» средние цены по типам товаров и мощностям
+    // 12.11.2026, команда бота №10 (Сотрудник19 К. В., 11.11 22:35): «Добавить в раздел «ПРОДАЖИ» средние цены по типам товаров и мощностям
     //   по отношению к прошлому месяцу с указанием процента роста средней цены». Средняя цена = сумма ÷ количество (те же отчёты 1С, «Стоимость»);
     //   выбранный месяц (на дату) против предыдущего месяца целиком; рост — (новая ÷ прежняя − 1) × 100.
     var ymPrev = yms[yms.indexOf(ym) + 1];
@@ -1269,7 +1308,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Новый сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
         [sxRow({ n: c.name, r: c.what || '', x: c.ask ? 'Вопрос' + (c.to ? ' (' + c.to + ')' : '') + ': ' + c.ask : '', chips: [[c.answer ? 'ответ: ' + c.answer : 'ответа нет', '', c.answer ? 'tag' : 'warn']] })], 'og-warn'));
     });
-    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник44 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник6 напрямую' })]));
+    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник44 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник5 напрямую' })]));
     if (SPB && SPB.list && SPB.list.length) ch.push(sxCard('ОП Санкт-Петербург закрыт с ' + dd(SPB.closed), SPB.list.length + ' клиентов', '', SPB.by.map(function (x) { return sxRow({ n: x[0], r: 'клиентов передано: ' + n(x[1]) }); }).concat(
       ['<details class="og-fold"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary>' + SPB.list.map(function (x) { return sxRow({ n: x[0], r: 'передан: ' + x[1] }); }).join('') + '</details>'])));
     if ((K.check || []).length) ch.push(sxCard('Что проверить', K.check.length + '', '', K.check.map(function (c, i) { return sxRow({ n: (i + 1) + '.', r: c }); })));
@@ -1325,7 +1364,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1><p class="lead">' + esc(D.src || '') + '</p><iframe id="secfr" sandbox="allow-scripts" style="width:100%;height:80vh;border:0;border-radius:12px;background:#fff"></iframe>';
     document.getElementById('secfr').srcdoc = String(D.html || '');
   }
-  // 03.11.2026: ответ М. И. Сотрудник6 02.11 — ОП Самара без руководителя (в поиске, Сотрудник44 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
+  // 03.11.2026: ответ М. И. Сотрудник5 02.11 — ОП Самара без руководителя (в поиске, Сотрудник44 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
   var SPB = (function () { try { return JSON.parse(document.getElementById('spb-data').textContent || 'null'); } catch (e) { return null; } })();
   // 02.11.2026, пользователь: «лови отзывы» — отзывы покупателей Ozon из выгрузки кабинета (Excel → ozon_report/make_rev.py → ozrev-data).
   //   API отзывов Ozon закрыт без подписки Premium Plus; когда откроется — хостинг (ozon.py) отдаст их сам, а здесь останется выгрузка.
@@ -1406,11 +1445,42 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (!R || !R.n) return '';
     return '<p class="ihdr">Отзывы покупателей</p><div class="igroup"><a class="irow" href="#rev"><span class="itile" style="--c:' + (R.neg_unproc ? '#ff3b30' : '#34c759') + '"><b style="font:700 12px/1 -apple-system,sans-serif;color:#fff">' + String(R.avg.toFixed(1)).replace('.', ',') + '</b></span><span class="ic"><span class="ibody"><span class="ititle">Ozon · ' + n(R.n) + ' отзывов за ' + dd(R.from) + ' — ' + dd(R.to) + '</span><span class="isub">без ответа ' + n(R.unproc) + ' · плохих (≤ 3★) ' + n(R.neg) + (R.neg_unproc ? ' · из них без ответа ' + n(R.neg_unproc) : '') + '</span></span><span class="ichev"></span></span></a>' + vi + '</div>';
   }
+  // 13.11.2026, Т. В.: «давай подключим mp stat» — MPStats (WB и Ozon): наши товары, конкуренты, ниша (st/mps.bin, робот раз в сутки)
+  var MPS = null;
+  function mpsBlock() {
+    if (!MPS) return '';
+    var MN = { wb: 'Wildberries', oz: 'Ozon' }, per = dd(MPS.d1) + '–' + dd(MPS.d2), h = '';
+    var O = MPS.ours || {}, ks = ['wb', 'oz'].filter(function (k) { return O[k]; });
+    var tr = function (c) { return '<tr>' + c.map(function (x, i) { return (i ? '<td>' : '<td style="white-space:normal">') + x + '</td>'; }).join('') + '</tr>'; };
+    var th = function (c) { return '<thead><tr>' + c.map(function (x) { return '<th>' + x + '</th>'; }).join('') + '</tr></thead>'; };
+    var avg = function (z) { return z.q ? rub(z.rev / z.q) : '—'; };
+    if (ks.length) h += '<p class="ihdr">MPStats · наши товары · ' + per + '</p><div class="igroup"><div class="mtx"><table style="min-width:0">' +
+      th(['Площадка', 'выручка', 'продано, шт', 'средняя цена', 'товаров (с продажами)', 'остаток, шт']) + '<tbody>' +
+      ks.map(function (k) { var z = O[k]; return tr([MN[k], '<b>' + rub(z.rev) + '</b>', n(z.q), avg(z), n(z.n) + ' (' + n(z.n_sold) + ')', n(z.st)]); }).join('') + '</tbody></table></div></div>';
+    ['wb', 'oz'].forEach(function (k) {
+      var C = (MPS.comp || {})[k] || [], z = O[k]; if (!C.length) return;
+      var rows = (z ? [{ b: 'Фабрикант (мы)', rev: z.rev, q: z.q, n: z.n, me: 1 }] : []).concat(C).sort(function (a, b) { return b.rev - a.rev; });
+      h += '<p class="ihdr">MPStats · ' + MN[k] + ' · мы и конкуренты</p><div class="igroup"><div class="mtx"><table style="min-width:0">' + th(['Бренд', 'выручка', 'продано, шт', 'средняя цена', 'товаров']) + '<tbody>' +
+        rows.map(function (r) { return tr([(r.me ? '<b>' + esc(r.b) + '</b>' : esc(r.b)), rub(r.rev), n(r.q), avg(r), n(r.n)]); }).join('') + '</tbody></table></div></div>';
+    });
+    ['wb', 'oz'].forEach(function (k) {
+      var N = (MPS.niche || {})[k] || []; if (!N.length) return;
+      h += '<p class="ihdr">MPStats · ' + MN[k] + ' · ниша (категории наших товаров)</p><div class="igroup"><div class="mtx"><table style="min-width:0">' + th(['Категория', 'выручка категории', 'наша выручка', 'доля', 'место', 'брендов', 'лидеры']) + '<tbody>' +
+        N.map(function (c) { return tr([esc(String(c.c).split('/').slice(-2).join(' / ')), rub(c.rev), rub(c.our), (c.share || 0).toFixed(1).replace('.', ',') + ' %', c.pos || '—', n(c.brands),
+          '<small>' + (c.top || []).slice(0, 3).map(function (b) { return esc(b.b); }).join(', ') + '</small>']); }).join('') + '</tbody></table></div></div>';
+    });
+    ['wb', 'oz'].forEach(function (k) {
+      var T = (O[k] || {}).top || []; if (!T.length) return;
+      h += '<p class="ihdr">MPStats · ' + MN[k] + ' · наши лидеры продаж</p><div class="igroup"><div class="mtx"><table style="min-width:640px">' + th(['Товар', 'продано, шт', 'выручка', 'цена', 'остаток', 'рейтинг', 'отзывы']) + '<tbody>' +
+        T.slice(0, 10).map(function (x) { return tr([esc(x.n || x.id) + '<br><small style="opacity:.6">' + esc(String(x.id || '')) + (x.s ? ' · ' + esc(x.s) : '') + '</small>', n(x.q), rub(x.rev), rub(x.p), n(x.st), x.rt ? String(x.rt).replace('.', ',') : '—', n(x.fb)]); }).join('') + '</tbody></table></div></div>';
+    });
+    return h ? h + '<p class="ifoot" style="margin:8px 4px 14px">Источник — MPStats (оценка по открытым данным площадок), ' + per + '; обновлено ' + esc(String(MPS.t || '').replace('T', ' ')) + '. Робот забирает раз в сутки.</p>' : '';
+  }
   function mp() {
     var S = ozStat();
     var h = '<a class="back" href="#">Продажи</a><h1>Маркетплейсы</h1><p class="lead"><b style="display:inline-block;padding:2px 9px;border-radius:999px;background:#005bff;color:#fff;font-size:13px;vertical-align:2px">Ozon</b> ' +
       'Статистика Ozon по кабинету ООО «ПКС»: заказы покупателей на Ozon по дням и по товарам (SKU) с 1 июля 2026. Источник — Ozon Seller API, раздел «Аналитика».</p>';
-    h += odBlock() + revLink();
+    h += odBlock() + revLink() + mpsBlock();
     if (!S) { V.innerHTML = h + (OD || OZR ? '' : '<p class="lead">Данных Ozon пока нет: хостинг забирает их раз в сутки.</p>'); return; }
     var cm = S.cm;
     h += '<div class="igroup hero" style="margin-top:14px"><div class="hnum">' + rub(cm.rev) + '</div><div class="hsub">Ozon · заказано в ' + MNP[cm.m - 1] + ' по ' + dd(S.last) + ' · ' + n(cm.u) + ' шт</div>' +
@@ -1433,10 +1503,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       top.map(function (a) { return '<tr><td style="white-space:normal;min-width:260px">' + esc(a.name || a.sku) + '<br><small style="opacity:.6">SKU ' + esc(a.sku) + '</small></td>' + MK.map(function (k) { return '<td>' + (a.m[k] ? rub(a.m[k]) + '<br><small style="opacity:.6">' + n(a.u[k]) + ' шт</small>' : '·') + '</td>'; }).join('') + '<td>' + (ctot ? Math.round((a.m[ck] || 0) / ctot * 100) + '%' : '') + '</td></tr>'; }).join('') +
       '</tbody></table></div><p class="ifoot" style="margin:8px 16px 12px">20 товаров с наибольшими заказами в ' + MNP[+ck.slice(5) - 1] + '. Полный список по SKU и прогноз по каждому — в ежедневном отчёте Ozon (Excel).</p></div>';
     h += '<p class="ifoot" style="margin:14px 4px">Как читать: «заказано» — сумма заказов покупателей по ценам продажи на Ozon. Это не выручка компании: отмены, возвраты и комиссии Ozon здесь не вычтены. ' +
-      'Кабинет ООО «ПКС» (Seller ID 53022) продаёт и со складов Ozon (FBO), и со своего склада (FBS — отгрузка в пункт приёма Ozon в Рязани). Wildberries и Сотрудник14 Имя3 на портал пока не подключены — здесь только Ozon.</p>';
+      'Кабинет ООО «ПКС» (Seller ID 53022) продаёт и со складов Ozon (FBO), и со своего склада (FBS — отгрузка в пункт приёма Ozon в Рязани). Wildberries и Сотрудник14 Имя4 на портал пока не подключены — здесь только Ozon.</p>';
     V.innerHTML = h;
   }
-  function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf') buf(); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom(); else main(); window.scrollTo(0, 0); }
+  function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf') buf(); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom(); else main(); window.scrollTo(0, 0); }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live) {
     if (window.T14M) T14M.start(['sales.bin']);              // 04.11.2026: единый источник получает файл раньше страницы — числа совпадают
@@ -1448,6 +1518,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     T14Live.load().then(function (L) { if (L && L.stock && L.stock.allwh) { STOCK = L.stock; route(); } });
     if (T14Live.bin) T14Live.bin('docs.bin').then(function (Z) { if (Z && Z.kinds) { DOCS = {}; Z.kinds.forEach(function (k) { DOCS[k.k] = k; }); DOCS._buffer = Z.buffer || null; if (location.hash === '#recl' || location.hash === '#buf') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('staff.bin').then(function (Z) { if (Z && Z.changes) { KOW = Z; if (location.hash === '#ko') route(); else if (!location.hash) main(); } });
+    if (T14Live.bin) T14Live.bin('leads.bin').then(function (Z) { if (Z && Z.offices) { LEADS = Z; leadsSub(); if (location.hash === '#leads') leads(); } });   // 13.11.2026: лиды выставок
+    if (T14Live.bin) T14Live.bin('mps.bin').then(function (Z) { if (Z && (Z.ours || Z.comp)) { MPS = Z; if (location.hash === '#mp') route(); } });   // 13.11.2026: MPStats
     if (T14Live.bin) T14Live.bin('ozd.bin').then(function (Z) { if (Z && Z.days && Z.days.length) { OD = Z; if (location.hash === '#mp') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('ozh.bin').then(function (Z) { if (Z && Z.days && Z.days.length && (!OZ || String(Z.t || '') >= String(OZ.t || ''))) { var pl = OZ && OZ.plan; OZ = Z; if (pl && !OZ.plan) OZ.plan = pl; if (location.hash === '#mp') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('promises.bin').then(function (P) { if (P && P.n != null) { PROM = P; if (location.hash === '#prom') route(); else if (!location.hash) main(); } });
