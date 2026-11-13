@@ -10,6 +10,7 @@
   • «Реестр объектов ФТС на 21.10.xlsx» — график объектов «Вкусно — и точка» до конца года (К. В. Сотрудник16, 22.10.2026).
 Пишет /home/claude/library/econ.json (сводка для раздела «Документы → Цены и мощность») и кладёт файлы в library/raw/econ/.
 Мощность считается теоретическая: штук в час = 3600 / цикл × гнёзд (за цикл), смена — 8 ч без простоев и переналадок."""
+from _cg1_build_io import read_file as _cg1_read_file
 import json, os, re, shutil, hashlib, datetime, collections
 import openpyxl
 
@@ -115,7 +116,7 @@ def build():
         p = SRC + rel
         dst = OUT + k + '.xlsx'; shutil.copy(p, dst)
         src.append({'k': k, 'title': title, 'file': 'library/econ/' + k + '.xlsx', 'dl': name, 'bytes': os.path.getsize(dst), 'source': frm,
-                    'sha256': hashlib.sha256(open(p, 'rb').read()).hexdigest()})
+                    'sha256': hashlib.sha256(_cg1_read_file(p, 'rb')).hexdigest()})
     E = {'updated': '2026-10-24', 'shift_h': SHIFT_H, 'sources': src, 'jps': prices_jps(), 'fts': prices_fts(), 'gki': gki(), 'vit': vit_plan(),
          'missing': [
              'Цены единиц готовой продукции и деталей ГКИ: отпускной прайс или плановая себестоимость по изделиям (у ПЭО). Присланные цены — только на материалы и комплектующие.',
@@ -126,7 +127,10 @@ def build():
              'Файл с мощностями по участкам, который обещал Сотрудник20 на совещании (письмо Т. В. Сотрудник1 21.10.2026).'],
          'note': 'Мощность — теоретическая, по таблице оснастки ГКИ: штук в час = 3600 / время цикла × гнёзд (деталей за цикл), смена 8 ч без простоев и переналадок. '
                  'Деньгами её можно будет оценить, когда будут цены единиц изделий (см. «Чего не хватает»).'}
-    json.dump(E, open(LIB + 'econ.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = E
+    with open(LIB + 'econ.json', 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
     g = E['gki']
     print('econ: прессформ', len(g['presses']), 'ложементов', len(g['jigs']), 'без цикла', g['no_cycle'], 'в ремонте', len(g['repair']))
     print('цены ЖПС', E['jps']['n'], 'ФТС', E['fts']['n'], 'ВиТ', {k: (v['placed'], v['nodp'], v['other']) for k, v in E['vit']['months'].items()})

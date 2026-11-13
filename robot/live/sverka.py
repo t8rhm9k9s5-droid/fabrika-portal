@@ -248,5 +248,7 @@ def flush(L, code_dir, state_dir, recv, log=None, put=None):
         return {'state': 'ok', 't': doc['made'], 'file': name}
     finally:
         try: fcntl.flock(lk, fcntl.LOCK_UN)
-        except Exception: pass
+        except Exception:
+            # намеренно: после неудачной явной разблокировки дескриптор всё равно закрывается ниже.
+            pass
         lk.close()

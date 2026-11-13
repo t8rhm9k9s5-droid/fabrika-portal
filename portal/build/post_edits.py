@@ -8,6 +8,7 @@
   zone of a different height (the user's remark); the line between them and the height ratio are taken from the Yandex satellite
   screenshot (roof seam and shadows), the two-storey part checked against the ЕГРН area 1 288,1 м²;
 - ТП-1 (b57) drawn like ТП-2/ТП-3 (closed brick substation with a slab cornice), but low and with cable inputs, as on the survey."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import numpy as np
 REMOVE_B = {'b17'}
 REMOVE_GHOST = {'hangar'}
@@ -208,7 +209,7 @@ def apply_cams2026(d):
     from matplotlib.path import Path as _P
     f = '/home/claude/build/cams2026/cams2026.json'
     if not os.path.exists(f) or 'cams' not in d: return d
-    C = json.load(open(f, encoding='utf-8')); SRC = 'схема видеокамер от 24.09.2026 (А. Сотрудник1)'
+    C = _cg1_read_json(f, encoding='utf-8'); SRC = 'схема видеокамер от 24.09.2026 (А. Сотрудник1)'
     if 'aff' in d: M = np.array(d['aff']['ms']); LL = np.array(d['aff']['ll'])
     else:                                   # site3d.json read by gen2.py has no affine yet: fit it from the survey points, as gen3d.py does
         A_ = np.array([[s['x'], s['y'], 1] for s in d['sp']])
@@ -240,7 +241,7 @@ def apply_cams2026(d):
         changed.append(c)
     # mounts for the changed cameras: the same rules as for all the others (mount_cams.py)
     NS = {'S': {'cams': changed + [x for x in d['cams'] if x not in changed][:3], 'poles': d['poles'], 'power': d['power']}, 'blds': d['buildings'], 'zat': zat, 'np': np, 'math': math, 'json': json}
-    src = open('/home/claude/build/mount_cams.py', encoding='utf-8').read()
+    src = _cg1_read_file('/home/claude/build/mount_cams.py', encoding='utf-8')
     keep = {id(x): (x['x'], x['y'], x['z'], dict(x['mount'])) for x in NS['S']['cams'] if x not in changed}
     import io, contextlib
     with contextlib.redirect_stdout(io.StringIO()): exec(src, NS)
@@ -363,7 +364,7 @@ def sewer_kryuchkov(d):
     import os, json
     p = '/home/claude/build/net/sewer_kr_2026-10-23.json'
     if not os.path.exists(p) or any(u.get('kr') for u in d.get('utils', [])): return
-    J = json.load(open(p, encoding='utf-8')); zat = _zat_fn(d); DEPTH = 1.8
+    J = _cg1_read_json(p, encoding='utf-8'); zat = _zat_fn(d); DEPTH = 1.8
     note = ('Трасса нанесена главным инженером А. В. Сотрудник26 на генплан 03.26 (письмо 23.10.2026); на топосъёмке 2016 г. её нет. '
             'Материал и диаметр не указаны, глубина условная (≈ 1,8 м).')
     for s_ in J['segs']:
@@ -475,7 +476,7 @@ def kr_answers_1023(d):
         if g.get('name', '').startswith('ШГРП —'):
             g['note'] = ('На предприятие приходит газ низкого давления (подземный газопровод, участок :779); шкаф с высокого на низкое давление — за границей участка, через дорогу. Газ по всему предприятию — низкого давления, проложен надземно, разных диаметров (' + KRA + ', 6.12, 8.3). ' + (g.get('note') or '')).strip()
     zat = _zat_fn(d)
-    J = json.load(open('/home/claude/build/net/kr_2026-10-23b.json'))
+    J = _cg1_read_json('/home/claude/build/net/kr_2026-10-23b.json')
     PW = d.setdefault('power', [])
     for p in PW:
         if p.get('name', '').startswith('ВЛ-10 кВ №11'):
@@ -505,7 +506,7 @@ def kr_answers_1023(d):
 def _b35n_merged():
     import os, json
     p = '/home/claude/build/net/b35n_merged.json'
-    return json.load(open(p, encoding='utf-8'))['poly'] if os.path.exists(p) else None
+    return _cg1_read_json(p, encoding='utf-8')['poly'] if os.path.exists(p) else None
 B35N_MERGED = _b35n_merged()
 def b35n_merged(d):
     import numpy as np

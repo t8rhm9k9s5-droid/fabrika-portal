@@ -2,6 +2,7 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, math, re, io, contextlib
 import numpy as np
 from matplotlib.path import Path
@@ -11,13 +12,13 @@ import pdfplumber
 
 # reuse mapping machinery from build.py (MAPS, bil, orient ...)
 with contextlib.redirect_stdout(io.StringIO()):
-    exec(open('/home/claude/build/build.py').read())
+    exec(_cg1_read_file('/home/claude/build/build.py'))
 # geo helpers from gen2 (no outputs needed, but it writes site.html/kml again: harmless)
 with contextlib.redirect_stdout(io.StringIO()):
     G2 = {}
-    exec(open('/home/claude/build/gen2.py').read(), G2)
+    exec(_cg1_read_file('/home/claude/build/gen2.py'), G2)
 geo = G2['geo']; LAT0 = G2['LAT0']; LON0 = G2['LON0']
-D = json.load(open('/home/claude/build/data_px.json'))
+D = _cg1_read_json('/home/claude/build/data_px.json')
 cams2 = G2['cams']          # georeferenced camera list from gen2 (same order as D['cams'])
 
 def loc(p):                  # sheet px -> local metres (east, north)
@@ -47,7 +48,7 @@ def inside_bld(x, y, pad=0):
     return None
 
 # ---------------- spot heights -> terrain ----------------
-oh = json.load(open('/home/claude/build/ocr_heights.json'))
+oh = _cg1_read_json('/home/claude/build/ocr_heights.json')
 fence = Path(D['FENCE'])
 pts = []
 for r in oh:
@@ -144,7 +145,7 @@ for c2 in cams2:
                   'lat': c2['lat'], 'lon': c2['lon'], 'X': c2['X'], 'Y': c2['Y'], 'dup': c2['dup']})
 
 # ---------------- utilities (dash chains, classified by reading the sheet) ----------------
-chains = json.load(open('/home/claude/build/chains.json'))
+chains = _cg1_read_json('/home/claude/build/chains.json')
 TYPE = {}
 # types checked against the letters printed in the line gaps (Г — газ, В — водопровод, К — канализация)
 for i in (50, 51, 52, 53, 54, 55): TYPE[i] = 'gas_hp'
@@ -172,10 +173,10 @@ for a, b in [((2856, 438), (3566, 919)), ((3585, 705), (4241, 1146))]:   # pole 
 
 # all pole symbols (square with centre dot); positions checked against the benchmark act (SP3 12.78 m, SP13 12.63 / 34.34 m)
 poles_all = []
-for px in json.load(open('/home/claude/build/poles.json')):
+for px in _cg1_read_json('/home/claude/build/poles.json'):
     g = loc(tuple(px)); poles_all.append({'x': g[0], 'y': g[1], 'z': round(zat(*g), 2)})
 # lighting poles seen on the photos of 21.10.2026 (front/surfaces.py): camera 011 hangs on one, under its floodlight
-for lp in json.load(open('/home/claude/build/front/front.json', encoding='utf-8')).get('poles', []):
+for lp in _cg1_read_json('/home/claude/build/front/front.json', encoding='utf-8').get('poles', []):
     near = [q for q in poles_all if math.hypot(q['x'] - lp['at'][0], q['y'] - lp['at'][1]) < 0.6]
     q = near[0] if near else poles_all.append({'x': lp['at'][0], 'y': lp['at'][1], 'z': round(zat(*lp['at']), 2)}) or poles_all[-1]
     q.update({'light': True, 'name': lp['name'], 'mtxt': 'на опоре освещения с прожектором, внутри территории за забором у ТП'})
@@ -202,11 +203,11 @@ trees = [{'x': loc(p)[0], 'y': loc(p)[1], 't': 'd'} for p in TREES_D] + [{'x': l
 TREES_GONE = [(3172, 3000), (3232, 2893), (3207, 2918)]
 trees = [t for t in trees if all(math.hypot(t['x'] - loc(g)[0], t['y'] - loc(g)[1]) > 0.5 for g in TREES_GONE)]
 # trees seen on the photos of 21.10.2026 by the chapel (front/surfaces.py)
-trees += [{'x': t['at'][0], 'y': t['at'][1], 't': 'd'} for t in json.load(open('/home/claude/build/front/front.json', encoding='utf-8')).get('trees', [])]
+trees += [{'x': t['at'][0], 'y': t['at'][1], 't': 'd'} for t in _cg1_read_json('/home/claude/build/front/front.json', encoding='utf-8').get('trees', [])]
 for t in trees: t['z'] = round(zat(t['x'], t['y']), 2)
 
 # ---------------- surfaces: grass patches from "Луг" labels ----------------
-W_ = json.load(open('/home/claude/build/ocr_words.json'))
+W_ = _cg1_read_json('/home/claude/build/ocr_words.json')
 grass = []
 for w in W_:
     if w['t'].startswith('Луг') and w['c'] > 40:
@@ -267,7 +268,10 @@ out = {'origin': {'lat': LAT0, 'lon': LON0}, 'zmin': zmin, 'conv': round(G2['CON
        'devs': [{'name': v['name'], 'ip': v['ip'], 'x': round(v['x'] + E0, 2), 'y': round(N1 - v['y'], 2)} for v in G2['devs']],
        'parcels': G2['PARCELS'],
        'extent': {'x0': float(E0), 'x1': float(E0 + W), 'y0': float(N1 - Hm), 'y1': float(N1)}}
-json.dump(out, open('/home/claude/build/site3d.json', 'w'), ensure_ascii=False)
+_cg1_dump_func = json.dump
+_cg1_dump_value = out
+with open('/home/claude/build/site3d.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
 import collections
 print('buildings', len(blds), 'cams', len(cams3), 'utils', collections.Counter(u['t'] for u in utils), 'manholes', len(mh2),
       'trees', len(trees), 'grass', len(grass), 'net', len(net), 'fiber', len(fib), 'terrain', Z.shape, out['terrain']['range'])

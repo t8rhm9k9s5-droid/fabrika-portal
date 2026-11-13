@@ -20,7 +20,7 @@ RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежед
 MSK = MC.MSK
 # офис продаж: ключ, название, имя в MAX (рег. выражение), признаки в тексте, адреса почты
 OPS = [
-    ('ekb', 'ОП Екатеринбург', r'^Имя5$|Сотрудник40', r'\bЕКБ\b|Екатеринбург', ('user43@example.org', 'user44@example.org')),
+    ('ekb', 'ОП Екатеринбург', r'^Имя4$|Сотрудник40', r'\bЕКБ\b|Екатеринбург', ('user43@example.org', 'user44@example.org')),
     ('sam', 'ОП Самара', r'Сотрудник44', r'\bСамар', ('user45@example.org', 'user46@example.org')),
     ('nn', 'ОП Сотрудник11 Имя2', r'Сотрудник42', r'\bНН\b|Сотрудник11\w* Имя2', ('user47@example.org', 'user48@example.org')),
     ('krd', 'ОП Краснодар', r'Сотрудник47|Сотрудник46', r'склад\w* Краснодар|\bОП Краснодар', ('user49@example.org', 'user50@example.org')),
@@ -61,7 +61,9 @@ def rep_day(m):
         try:
             d = datetime.date(dt.year, int(h.group(2)), int(h.group(1)))
             if d <= dt.date(): return d
-        except ValueError: pass
+        except ValueError:
+            # намеренно: неверная дата в заголовке заменяется расчётом даты по времени сообщения ниже.
+            pass
     d = dt.date()
     if dt.hour < 10:
         d -= datetime.timedelta(days=1)
@@ -71,23 +73,29 @@ def rep_day(m):
 
 def max_part(L, st, res):
     home = os.path.dirname(L); M = os.path.join(home, '.fabrika_max')
-    try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+    try:
+        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: res['max'] = 'нет настроек бота MAX'; return {}
     token = cfg.get('token') or ''
-    try: groups = json.load(open(os.path.join(M, 'groups.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'groups.json'), encoding='utf-8') as _cg1_file_2:
+            groups = json.load(_cg1_file_2)
     except Exception: groups = {}
     cid = next((k for k, v in groups.items() if v.get('on') and MC.GROUP_TITLE.search(str(v.get('title') or ''))), None)
     if not token or not cid: res['max'] = 'нет токена или группы'; return {}
     ap = os.path.join(M, 'sales_msgs.json')
-    try: arch = json.load(open(ap, encoding='utf-8'))
+    try:
+        with open(ap, encoding='utf-8') as _cg1_file_3:
+            arch = json.load(_cg1_file_3)
     except Exception: arch = {}
     if not arch:
         for f in sorted(os.listdir(os.path.join(M, 'export'))) if os.path.isdir(os.path.join(M, 'export')) else []:
             if not f.startswith(str(cid) + '_'): continue
             try:
-                for x in json.load(open(os.path.join(M, 'export', f), encoding='utf-8')).get('messages') or []:
-                    mid = str(x.get('mid') or '')
-                    if mid: arch[mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or '', 'bot': bool(x.get('bot')), 'text': str(x.get('text') or '')}
+                with open(os.path.join(M, 'export', f), encoding='utf-8') as _cg2_file_1:
+                    for x in json.load(_cg2_file_1).get('messages') or []:
+                        mid = str(x.get('mid') or '')
+                        if mid: arch[mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or '', 'bot': bool(x.get('bot')), 'text': str(x.get('text') or '')}
             except Exception: pass
     code, j = MC.api(token, 'GET', '/messages', {'chat_id': cid, 'count': 100})
     if code == 200:
@@ -163,7 +171,9 @@ def mail_part(L, CFG, st, res, budget=60):
         res['mail'] = ('1c@: ' if box1c else 'Mail.ru: ') + str(e)[:120]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     return keep
 
@@ -235,7 +245,9 @@ def run(L, CFG, log, jload, jsave, publish, iso):
     except Exception as e: arch = {}; res['max'] = 'ошибка: %s' % str(e)[:120]
     try: mail = mail_part(L, CFG, st, res)
     except Exception as e: mail = st.get('mail') or {}; res['mail'] = 'ошибка: %s' % str(e)[:120]
-    try: items = list((json.load(open(os.path.join(os.path.dirname(L), '.fabrika_max', 'ctl.json'), encoding='utf-8')).get('items') or {}).values())
+    try:
+        with open(os.path.join(os.path.dirname(L), '.fabrika_max', 'ctl.json'), encoding='utf-8') as _cg2_file_2:
+            items = list((json.load(_cg2_file_2).get('items') or {}).values())
     except Exception: items = []
     data = build(arch, mail, now.date(), items)
     data.update({'v': 1, 't': res['t'], 'since': SINCE.isoformat(), 'rule_from': RULE_FROM.isoformat(), 'src': {'max': res.get('max'), 'mail': res.get('mail')}})

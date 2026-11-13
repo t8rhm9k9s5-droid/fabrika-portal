@@ -8,8 +8,9 @@
 Данные — build/invest/cases.json (ведёт Claude по выгрузкам 1С и материалам дела; источники почты на портале не пишем) → build/invest_frag.html,
 вставляется gen_staff.py после «Продажи, выпуск и план по линиям»."""
 import json, html
+from _cg1_build_io import read_json as _cg1_read_json
 B = '/home/claude/build/'
-D = json.load(open(B + 'invest/cases.json', encoding='utf-8'))
+D = _cg1_read_json(B + 'invest/cases.json', encoding='utf-8')
 e = html.escape
 TONE = {'bad': 'var(--t-bad,#C33D32)', 'warn': '#c77800', 'ok': 'var(--t-ok,#34c759)'}
 
@@ -39,5 +40,6 @@ frag = ('<p class="ihdr" id="invest">Расследования</p>\n<div class=
         '.iv .ivl{margin:0;padding-left:18px}.iv .ivl li{margin:3px 0}.iv .ivl small{display:block;color:var(--p-fg3,#888);font-size:12px}'
         '.iv .ivn{margin:10px 0 0;padding:8px 10px;border-radius:10px;background:var(--p-soft,rgba(120,120,128,.12))}'
         '@media (max-width:420px){.iv .ivb{padding-left:16px}}</style>\n')
-open(B + 'invest_frag.html', 'w', encoding='utf-8').write(frag)
+with open(B + 'invest_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(frag)
 print('расследования:', len(D['cases']))

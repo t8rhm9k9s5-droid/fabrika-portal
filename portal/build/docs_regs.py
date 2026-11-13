@@ -13,6 +13,7 @@
   2) пишет реестр /home/claude/library/regs.json (статус, дата, кто утвердил, оформление, замечания) и добавляет документы в
      library.json → items (cat 'regs').
 Единое оформление — после образца бланка и логотипа от маркетинга (запрос 24.10.2026, срок 27.10 18:00)."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, os, shutil, subprocess, hashlib, sys, glob, tempfile, unicodedata
 
 SRC = '/home/claude/docs_in/2026-10-24/'
@@ -169,8 +170,8 @@ STYLE = dict(
       'Сканы перенабраны текстом; снимки экрана 1С сохранены рисунками с подписями.',
       'Дубли убраны: 5 файлов (список ниже).',
       'Бланки, которые заполняют на компьютере, есть ещё и в Word или Excel — раздел «Шаблоны для заполнения» (тот же вид, что PDF).',
-      'Новые регламенты (24.10.2026, проекты): Р-КО-02 «Работа с новым клиентом», Р-ОМТС-01 «Отбор и заведение нового поставщика», '
-      'Р-КО-03 «Въезд на территорию и оформление пропуска» и схема цепочек документов СХ-КО-01.',
+      ('Новые регламенты (24.10.2026, проекты): Р-КО-02 «Работа с новым клиентом», Р-ОМТС-01 «Отбор и заведение нового поставщика», '
+      'Р-КО-03 «Въезд на территорию и оформление пропуска» и схема цепочек документов СХ-КО-01.'),
       'Шрифт — фирменный ALS Ekibastuz (лицензия № 985758 от 2016 г. на ЗАО «Жилпромсервис»: продукция и реклама; файлы прислал А. Сотрудник1 24.10.2026). Шаблоны Word и Excel — тоже ALS Ekibastuz (без встраивания: на компьютере без шрифта Word и Excel подставят свой).'],
  plan=['Утвердить документы приказом и вписать номер и дату в шапку.',
        'Решить, какой порядок рекламаций действует, и свести его в один регламент.',
@@ -196,7 +197,7 @@ def brand_doc(id_):
     spec = importlib.util.spec_from_file_location('d', p); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     ch = {}
     if os.path.exists(BRAND + 'changes/' + id_ + '.json'):
-        ch = json.load(open(BRAND + 'changes/' + id_ + '.json', encoding='utf-8'))
+        ch = _cg1_read_json(BRAND + 'changes/' + id_ + '.json', encoding='utf-8')
     return m.DOC, ch
 
 
@@ -209,7 +210,7 @@ TPL_NOTE = ('Копии бланков для заполнения на комп
 
 
 def sha(p):
-    return hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    return hashlib.sha256(_cg1_read_file(p, 'rb')).hexdigest()
 
 
 def pages(p):
@@ -330,15 +331,21 @@ def build(force=False):
     tops = {t for t, _ in PROCS}
     for r in reg: assert r['topic'] in tops, r['topic']
     R = {'updated': '2026-10-24', 'groups': [{'k': k, 't': t} for k, t in G], 'procs': [{'t': t, 'x': x} for t, x in PROCS], 'docs': reg, 'issues': ISSUES, 'removed': REMOVED, 'style': STYLE, 'tpl_note': TPL_NOTE}
-    json.dump(R, open(LIB + 'regs.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = R
+    with open(LIB + 'regs.json', 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
     # library.json: one item per document, category «regs»
-    L = json.load(open(LIB + 'library.json', encoding='utf-8'))
+    L = _cg1_read_json(LIB + 'library.json', encoding='utf-8')
     L['items'] = [i for i in L['items'] if i.get('cat') != 'regs']
     for r in reg:
         L['items'].append({'cat': 'regs', 'id': r['id'], 'title': r['title'], 'file': r['file'], 'bytes': r['bytes'], 'pages': r.get('pages'),
                            'date': r.get('date') or None, 'source': r['source'], 'received': r['received'], 'sha256': r['src_sha256']})
     L['updated'] = '2026-10-24'
-    json.dump(L, open(LIB + 'library.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = L
+    with open(LIB + 'library.json', 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
     tot = sum(os.path.getsize(p) for p in glob.glob(OUT + '*'))
     print('документов', len(reg), '; файлов в regs', len(glob.glob(OUT + '*')), '; всего %.1f МБ' % (tot / 1e6))
 

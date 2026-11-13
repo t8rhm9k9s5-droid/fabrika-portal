@@ -8,11 +8,12 @@
   Площадка — Чертежи (docs.html) and Архив (archive.html), as before.
 New documents come by e-mail with the subject «Фабрика: документ» or through «Управление»; Claude adds them to library.json.
 Writes build/library_frag.html; the files are copied to site/library/ by build_site.py."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, re, html, os
 B = '/home/claude/build/'
-L = json.load(open('/home/claude/library/library.json', encoding='utf-8'))
+L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник16 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник16 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
         ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
@@ -24,24 +25,24 @@ INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rule
        ('onec', 'Инструкции по 1С', '#ff9500', 'onec', 'Как сделать документ в 1С'),
        ('regs-review', 'Реестр и замечания', '#ff3b30', 'review', 'Убранные дубли, вопросы, фирменный стиль'),
        ('econ', 'Цены и мощность', '#af52de', 'chart', 'Цены материалов, оснастка ГКИ, план объектов ВиТ')]
-ECON = json.load(open('/home/claude/library/econ.json', encoding='utf-8')) if os.path.exists('/home/claude/library/econ.json') else None   # docs_econ.py
+ECON = _cg1_read_json('/home/claude/library/econ.json', encoding='utf-8') if os.path.exists('/home/claude/library/econ.json') else None   # docs_econ.py
 items = [dict(i, file='library/' + i['file'].replace('raw/', '', 1)) for i in L.get('items', []) if not i.get('hidden')]   # 02.11.2026: hidden — убрано с портала по решению Т. В. (файл остаётся)
 links = L.get('links', [])
 # how many sheets and documents the site pages have (for the rows «Чертежи» and «Архив»)
 n_docs = n_arch = None
 try:
     import re
-    t = open(B + 'docs_v2.html', encoding='utf-8').read(); n_docs = len(re.findall(r'"img":\s*"plans/', t))
-    n_arch = len(json.load(open(B + 'archive/files.json', encoding='utf-8')))
+    t = _cg1_read_file(B + 'docs_v2.html', encoding='utf-8'); n_docs = len(re.findall(r'"img":\s*"plans/', t))
+    n_arch = len(_cg1_read_json(B + 'archive/files.json', encoding='utf-8'))
     # 30.10.2026: другая версия документа (alt_of в archive/catalog.py → ALT) открывается из карточки основного — в счёт раздела не входит
-    _at = open(B + 'archive_frag.html', encoding='utf-8').read(); _ai = _at.find('{"groups"')
+    _at = _cg1_read_file(B + 'archive_frag.html', encoding='utf-8'); _ai = _at.find('{"groups"')
     if _ai >= 0: n_arch = sum(1 for _x in json.JSONDecoder().raw_decode(_at[_ai:])[0]['docs'] if not _x.get('alt_of'))
 except Exception as e:
     print('counts:', e)
 # internal documents of the company (24.10.2026): register with statuses, overlaps and the style draft — docs_regs.py
 REGS = None
 if os.path.exists('/home/claude/library/regs.json'):
-    REGS = json.load(open('/home/claude/library/regs.json', encoding='utf-8'))
+    REGS = _cg1_read_json('/home/claude/library/regs.json', encoding='utf-8')
     for r in REGS['docs']:
         r['file'] = 'library/' + r['file'].replace('raw/', '', 1)
         if r.get('orig'): r['orig'] = 'library/' + r['orig'].replace('raw/', '', 1)
@@ -50,11 +51,11 @@ if os.path.exists('/home/claude/library/regs.json'):
 # типовые договоры от юриста (27.10.2026, тред 1a16debd72d0efed): library/dogovory.json, файлы library/raw/dogovory/
 DOG = None
 if os.path.exists('/home/claude/library/dogovory.json'):
-    DOG = json.load(open('/home/claude/library/dogovory.json', encoding='utf-8'))
+    DOG = _cg1_read_json('/home/claude/library/dogovory.json', encoding='utf-8')
     for _i in DOG['items']:
         _i['file'] = 'library/' + _i['file'].replace('raw/', '', 1); _i.pop('sha256', None); _i.pop('orig', None)
 # документы с сайта компании fabrikant.su/company/documentation и их сверка (пользователь 26.10.2026: «забирай всю документацию, проверяй на противоречия и раскладывай на нашем сайте»)
-PUB = json.load(open('/home/claude/library/fabrikant_su.json', encoding='utf-8')) if os.path.exists('/home/claude/library/fabrikant_su.json') else None
+PUB = _cg1_read_json('/home/claude/library/fabrikant_su.json', encoding='utf-8') if os.path.exists('/home/claude/library/fabrikant_su.json') else None
 # 30.10.2026, владелец: «На сайте есть дубли документов, зачем!?» (пример — каталог 2025: внутренний и ещё раз «С сайта компании»).
 # Документ с fabrikant.su, который совпадает с внутренним (fabrikant_su.json → same_as {ref: lib:|dog:|reg:<id>, rel: same|like|old, how}),
 # второй строкой не показывается: у внутреннего — отметка «есть на fabrikant.su» и ссылка на копию сайта (<документ>.pub), на сверке —
@@ -99,7 +100,7 @@ if PUB:
 # 28.10.2026: почтовый ящик → «Фамилия И.О.» из справочника компании (кто прислал прайс)
 MBX = {}
 try:
-    for _c in json.load(open('/home/claude/build/admin/company_raw.json', encoding='utf-8')).get('cards', []):
+    for _c in _cg1_read_json('/home/claude/build/admin/company_raw.json', encoding='utf-8').get('cards', []):
         _ls = [str(x).strip() for x in (_c.get('lines') or [])]
         _em = [x for x in _ls if re.match(r'^[\w.\-]+@fabrikant\.(su|pro)$', x)]
         _nm = [x for x in _ls if re.match(r'^[А-ЯЁ][а-яё\-]+ [А-ЯЁ][а-яё]+( [А-ЯЁ][а-яё]+)?$', x)]
@@ -119,7 +120,7 @@ data = json.dumps({'mbx': MBX, 'pub': PUB, 'cats': [{'k': k, 't': t, 'c': c, 'i'
                    'docs': n_docs, 'arch': n_arch, 'upd': L.get('updated'), 'regs': REGS, 'econ': ECON, 'dog': DOG, 'view': VIEW,
                    # 29.10.2026: «Перевыпуск документов» — журнал замечаний по сканам/фото/не фирменному стилю (fabrika/tools/build_inventory.py → docs_reissue.json);
                    # прогресс в % по исполнителям — пользователь: «показать прогресс в % исполнителю», контроль каждые 2 рабочих дня
-                   'reissue': (json.load(open('/home/claude/build/docs_reissue.json', encoding='utf-8')) if os.path.exists('/home/claude/build/docs_reissue.json') else None)}, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
+                   'reissue': (_cg1_read_json('/home/claude/build/docs_reissue.json', encoding='utf-8') if os.path.exists('/home/claude/build/docs_reissue.json') else None)}, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 
 page = '''<title>Фабрика — документы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -282,7 +283,8 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   var TYPES = [
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
-    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},   // 11.11.2026, Сотрудник16 К. В.
+    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник16 К. В.: записки на возврат   // 11.11.2026, Сотрудник16 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -769,5 +771,6 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
 })();
 </script>
 '''
-open(B + 'library_frag.html', 'w', encoding='utf-8').write(page)
+with open(B + 'library_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(page)
 print('library page', round(len(page) / 1e3), 'KB; items', len(items), 'links', len(links), 'docs', n_docs, 'archive', n_arch)

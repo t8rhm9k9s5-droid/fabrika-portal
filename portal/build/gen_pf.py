@@ -210,5 +210,6 @@ frag = '''
 })();
 </script>
 '''
-open(B + 'pf_frag.html', 'w', encoding='utf-8').write(frag)
+with open(B + 'pf_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(frag)
 print('pf block', round(len(frag) / 1e3, 1), 'KB; months', sorted(S['months']), '; galv', bool(S['galv']))

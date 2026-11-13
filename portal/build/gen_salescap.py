@@ -10,13 +10,14 @@
 выпуск и план — pf.bin с хостинга (дневные отчёты ПДО и утверждённые планы месяцев), без него — снимок сборки; план ноября — plan_2026-11 (21 р. д.,
 «Шеффилд» считается в «Креслах руководителя» — решение Т. В. 02.11). Заказано и не отгружено (октябрь) — 1С «Ведомость по заказам покупателей».
 → build/salescap_frag.html (вставляется gen_staff.py после «План-факт»)."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, datetime
 B = '/home/claude/build/'
-P = json.load(open(B + 'sales_1c/month_2026-11-02/parsed.json', encoding='utf-8'))
-C = json.load(open(B + 'sales_1c/conv_oct.json', encoding='utf-8'))
-U = json.load(open(B + 'ship/unshipped_oct.json', encoding='utf-8'))
+P = _cg1_read_json(B + 'sales_1c/month_2026-11-02/parsed.json', encoding='utf-8')
+C = _cg1_read_json(B + 'sales_1c/conv_oct.json', encoding='utf-8')
+U = _cg1_read_json(B + 'ship/unshipped_oct.json', encoding='utf-8')
 UV = {k: v for k, v in U['vid'].items() if k != 'Итог'}
-PN = json.load(open('/home/claude/fabrika/inbox/plan_2026-11/plan_2026-11.json', encoding='utf-8'))
+PN = _cg1_read_json('/home/claude/fabrika/inbox/plan_2026-11/plan_2026-11.json', encoding='utf-8')
 # вид сбыта (1С) → линия и участок (правило пересчёта, conv_oct.json)
 VL = {v: (d['line'], d['area']) for v, d in C['vid'].items() if d.get('line')}
 OUTSIDE = ['Прочее', 'Комплект.', 'Услуги', 'Материалы', '(не указан)']        # вне мощности производства
@@ -71,8 +72,8 @@ months['2026-11'] = {'label': 'ноябрь', 'whole': False, 'sales_to': last11
                      'out': None, 'out_days': 0, 'out_wd': 0, 'out_last': None}
 data = {'order': ['2026-11', '2026-10'], 'months': months, 'src': '1С «Продажи в разрезе мощностей производства» за октябрь и ноябрь (02.11 15:52)'}
 
-DET = open(B + 'salescap_rule.html', encoding='utf-8').read()
-STYLE = open(B + 'salescap_style.html', encoding='utf-8').read()
+DET = _cg1_read_file(B + 'salescap_rule.html', encoding='utf-8')
+STYLE = _cg1_read_file(B + 'salescap_style.html', encoding='utf-8')
 
 frag = '''
 <p class="ihdr" id="salescap">Продажи, выпуск и план по линиям</p>
@@ -134,5 +135,6 @@ frag = '''
 })();
 </script>
 '''
-open(B + 'salescap_frag.html', 'w', encoding='utf-8').write(frag)
+with open(B + 'salescap_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(frag)
 print('salescap: октябрь', len(r10), 'линий, продано', months['2026-10']['tot'], '; ноябрь', len(r11), 'линий, на', last11, months['2026-11']['tot'])

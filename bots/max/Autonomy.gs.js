@@ -698,7 +698,7 @@ function au_priceAction(data) {
   var client = String(rec.client || '') || 'по сообщению в группе' + (rec.group ? ' «' + rec.group + '»' : ''), qty = rec.qty ? String(rec.qty) : 'не указано', basisTxt = basis + (city ? ' (' + city + ')' : '');
   if (kind === 'peo') {
     var PL = sc.peo_letter || {}, to = Array.isArray(PL.to) && PL.to.length ? PL.to : AU_PEO_TO, cc = Array.isArray(PL.cc) && PL.cc.length ? PL.cc : AU_PEO_CC;
-    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя6 Отчество30', addr = au_address_(peoName);
+    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя5 Отчество30', addr = au_address_(peoName);
     out.mail = { to: to.slice(), cc: cc.slice(), subject: 'Расчёт цены: ' + pos + ', базис ' + basis,
       body: addr + ', добрый день!\nПросим, пожалуйста, рассчитать цену для клиента ' + client + (rec.manager ? ' (менеджер ' + rec.manager + (rec.group ? ', «' + rec.group + '»' : '') + ')' : '') + ': ' + pos + ', количество ' + qty + ', базис ' + basisTxt + '.' +
         (X ? ' Сейчас по прайсу ' + au_dmy_(String(P.date || '')) + ' — ' + au_fmtMoney_(X) + ' ₽ с НДС' : ' Цены прайса на этом базисе нет') + (Y ? ', клиент просит ' + au_fmtMoney_(Y) + ' ₽' + (Z !== null ? ' (' + au_pct_(Z) + ')' : '') : '') + '.\n' +

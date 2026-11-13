@@ -67,7 +67,9 @@ def _pub_parts(L, st, publish, log):
         files = {}
         for k, n in pmap.items():
             if n != p: continue
-            try: files[k] = base64.b64encode(open(os.path.join(root, k), 'rb').read()).decode()
+            try:
+                with open(os.path.join(root, k), 'rb') as _cg1_file_1:
+                    files[k] = base64.b64encode(_cg1_file_1.read()).decode()
             except Exception as e: log('  ! Планы: файл', k, e.__class__.__name__)
         if publish('exp_pln_%d.bin' % p, {'part': p, 't': IT._now().strftime('%Y-%m-%dT%H:%M'), 'files': files}): done += 1
         else: return done, sorted(dirty)
@@ -148,7 +150,9 @@ def run(L, CFG, log, jload, jsave, publish, budget=BUDGET):
                         if not fn: continue
                         fn = IT.clean(fn)
                         try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-                        except Exception: pass
+                        except Exception:
+                            # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+                            pass
                         fn = IT.fix_ext(IT.clean(fn))
                         raw_ = p.get_payload(decode=True) or b''
                         sha = hashlib.sha256(raw_).hexdigest()[:24]
@@ -169,7 +173,9 @@ def run(L, CFG, log, jload, jsave, publish, budget=BUDGET):
             res['state'] = 'Mail.ru: ' + str(e)[:160]; pending = True
         finally:
             try: M.logout()
-            except Exception: pass
+            except Exception:
+                # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+                pass
             lk.close()
         st['pending'] = pending
         st['tries'] = int(st.get('tries') or 0) + 1

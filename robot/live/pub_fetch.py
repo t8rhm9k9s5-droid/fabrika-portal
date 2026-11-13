@@ -39,7 +39,9 @@ def run(L, log, jload, jsave, publish, publish_file, iso):
     try: os.remove(os.path.join(L, 'pub_go'))
     except Exception: pass
     here = os.path.dirname(os.path.abspath(__file__))
-    try: P = json.load(open(os.path.join(here, 'fabrikant_su.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(here, 'fabrikant_su.json'), encoding='utf-8') as _cg1_file_1:
+            P = json.load(_cg1_file_1)
     except Exception as e: return {'state': 'нет списка документов: %s' % e.__class__.__name__}
     files = st.get('files') or {}
     ok = err = 0; errs = []

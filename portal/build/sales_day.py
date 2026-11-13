@@ -13,6 +13,7 @@ xlsx из 1С кладёт строки в «xl/SharedStrings.xml» (с боль
 
   python3 build/sales_day.py ФАЙЛ.xlsx [ФАЙЛ.xlsx ...] [--got 2026-10-30T14:08]   → /home/claude/build/sales_1c/daily.json
 Ничего не выдумываем: что в отчёте, то и в daily.json; день без одного из отчётов — только тот, что пришёл."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, os, re, sys, zipfile
 import xml.etree.ElementTree as ET
 
@@ -167,11 +168,11 @@ def main(argv):
     for a in it:
         if a == '--got': got = next(it)
         else: files.append(a)
-    try: D = json.load(open(OUT, encoding='utf-8'))
+    try: D = _cg1_read_json(OUT, encoding='utf-8')
     except Exception: D = {}
     D['src'] = 'рассылки 1С «Продажи в разрезе типов товаров» и «Продажи в разрезе мощностей производства» (user3@example.org), продажи за день'
     for f in files:
-        data = open(f, 'rb').read()
+        data = _cg1_read_file(f, 'rb')
         rec = parse(data)
         if rec:
             merge(D, rec, got, os.path.basename(f))
@@ -183,7 +184,11 @@ def main(argv):
     D['days'] = dict(sorted(D.get('days', {}).items()))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     tmp = OUT + '.tmp'
-    json.dump(D, open(tmp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1); os.replace(tmp, OUT)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = D
+    with open(tmp, 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
+    os.replace(tmp, OUT)
     print('→', OUT, '; дней', len(D['days']))
 
 

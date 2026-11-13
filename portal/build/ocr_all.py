@@ -39,4 +39,7 @@ for ang in (0,28,-62):
                 lx,ly=user25@example.org([l,t+h*0.85,1.0])
                 words.append({'t':txt,'c':conf,'x':ox/2,'y':oy/2,'lx':lx/2,'ly':ly/2,'ang':ang,'h':h/2})
     print('angle',ang,'jobs',len(jobs),'words',len(words),flush=True)
-json.dump(words,open('/home/claude/build/ocr_words.json','w'),ensure_ascii=False)
+_cg1_dump_func = json.dump
+_cg1_dump_value = words
+with open('/home/claude/build/ocr_words.json','w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)

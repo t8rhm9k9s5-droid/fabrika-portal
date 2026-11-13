@@ -8,6 +8,7 @@
            offline after the first sign-in (service worker). Only pages of ONLINE_HOST stay inside the app (and see the file-saving bridge);
            every other link opens in the browser. Asked for by the user on 22.10.2026 (APK that pulls the data from GitHub, with saving files).
    lite: everything but the archive documents (PDF scans); full: with phone copies of the archive (arch_small/)."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os, re, sys, json, shutil, subprocess, glob
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
@@ -24,12 +25,14 @@ if os.path.exists(WORK): shutil.rmtree(WORK)
 shutil.copytree(f'{B}/proj', WORK)
 if VARIANT == 'online':
     ma = f'{WORK}/smali/ru/fabrikant/t14/MainActivity.smali'; cl = f'{WORK}/smali/ru/fabrikant/t14/Client.smali'
-    t = open(ma, encoding='utf-8').read(); assert 'https://appassets.androidplatform.net/index.html' in t
-    open(ma, 'w', encoding='utf-8').write(t.replace('https://appassets.androidplatform.net/index.html', ONLINE_URL).replace('" T14App/1.0"', '" T14App/2.0"'))
-    t = open(cl, encoding='utf-8').read(); assert t.count('"appassets.androidplatform.net"') == 1 and t.count('    if-nez v1, :ours\n') == 1
+    t = _cg1_read_file(ma, encoding='utf-8'); assert 'https://appassets.androidplatform.net/index.html' in t
+    with open(ma, 'w', encoding='utf-8') as _cg1_output_29:
+        _cg1_output_29.write(t.replace('https://appassets.androidplatform.net/index.html', ONLINE_URL).replace('" T14App/1.0"', '" T14App/2.0"'))
+    t = _cg1_read_file(cl, encoding='utf-8'); assert t.count('"appassets.androidplatform.net"') == 1 and t.count('    if-nez v1, :ours\n') == 1
     # pages of ONLINE_HOST stay in the WebView; nothing is served from the APK (the site comes from the network / the service worker)
     t = t.replace('"appassets.androidplatform.net"', '"' + ONLINE_HOST + '"').replace('    if-nez v1, :ours\n', '    nop\n', 1)
-    open(cl, 'w', encoding='utf-8').write(t)
+    with open(cl, 'w', encoding='utf-8') as _cg1_output_33:
+        _cg1_output_33.write(t)
 else:
     shutil.copytree(SITE, WWW)
     os.remove(f'{WWW}/README.txt')
@@ -43,7 +46,7 @@ if VARIANT != 'online':
     for fam, faces in FONTS:
         pkg = glob.glob(f'{B}/fonts_npm/fontsource-{fam}-[0-9]*/package')[0]
         for w, st in faces:
-            src = open(f'{pkg}/{w}{"-italic" if st == "italic" else ""}.css', encoding='utf-8').read()
+            src = _cg1_read_file(f'{pkg}/{w}{"-italic" if st == "italic" else ""}.css', encoding='utf-8')
             for blk in re.findall(r'/\* ([a-z0-9-]+) \*/\s*(@font-face \{.*?\})', src, re.S):
                 name, body = blk
                 if not re.search(r'-(cyrillic|latin)-\d', name): continue          # cyrillic, cyrillic-ext, latin, latin-ext
@@ -51,14 +54,15 @@ if VARIANT != 'online':
                 shutil.copy(f'{pkg}/files/{f}', f'{WWW}/fonts/{f}')
                 body = re.sub(r'src: [^;]+;', f"src: url({f}) format('woff2');", body)
                 css.append(body)
-    open(f'{WWW}/fonts/fonts.css', 'w', encoding='utf-8').write('\n'.join(css) + '\n')
+    with open(f'{WWW}/fonts/fonts.css', 'w', encoding='utf-8') as _cg1_output_55:
+        _cg1_output_55.write('\n'.join(css) + '\n')
 
     # ---- camera photos: the site takes them from the artifact store (/_blob/<id>); the app serves the same path from its files
-    h = open(f'{SITE}/archive.html', encoding='utf-8').read()
+    h = _cg1_read_file(f'{SITE}/archive.html', encoding='utf-8')
     ARCH = json.loads(re.search(r'<script id="arch-data" type="application/json">(.*?)</script>', h, re.S).group(1))
     by_asset = {d['asset']: d for d in ARCH['docs'] if d.get('asset')}
-    ids = set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', open(f'{SITE}/data/edits.json', encoding='utf-8').read()))
-    ids |= set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', open(f'{SITE}/index.html', encoding='utf-8').read()))
+    ids = set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', _cg1_read_file(f'{SITE}/data/edits.json', encoding='utf-8')))
+    ids |= set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', _cg1_read_file(f'{SITE}/index.html', encoding='utf-8')))
     os.makedirs(f'{WWW}/_blob', exist_ok=True)
     for i in sorted(ids):
         d = by_asset.get(i)
@@ -79,7 +83,7 @@ if VARIANT != 'online':
     shutil.copy(f'{B}/app_glue.js', f'{WWW}/assets/app.js')
     GF = re.compile(r'<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>')
     for page in glob.glob(f'{WWW}/*.html'):
-        s = open(page, encoding='utf-8').read()
+        s = _cg1_read_file(page, encoding='utf-8')
         cut = s.find('<script')
         head, rest = (s[:cut], s[cut:]) if cut > 0 else (s, '')
         n_gf = len(GF.findall(head))
@@ -106,10 +110,12 @@ if VARIANT != 'online':
             s = s.replace("'Этот файл хранится в онлайн-версии сайта (в Claude).'",
                           ("'Документа нет в лёгкой версии приложения: он есть в полной версии (с архивом) и на сайте в Claude.'" if VARIANT == 'lite'
                            else "'Этого файла нет в приложении — он есть на сайте в Claude.'"))
-        open(page, 'w', encoding='utf-8').write(s)
+        with open(page, 'w', encoding='utf-8') as _cg1_output_110:
+            _cg1_output_110.write(s)
 
 # ---- apktool project
-open(f'{WORK}/apktool.yml', 'w').write(f"""!!brut.androlib.meta.MetaInfo
+with open(f'{WORK}/apktool.yml', 'w') as _cg1_output_113:
+    _cg1_output_113.write(f"""!!brut.androlib.meta.MetaInfo
 apkFileName: t14.apk
 compressionType: false
 doNotCompress:

@@ -88,7 +88,7 @@ function mx_updKey(u) {
 function mx_drain(budgetMs, batch) {
   var t0 = Date.now(), n = 0, timeUp = true, err = false;
   while (Date.now() - t0 < budgetMs) {
-    var items = st_inClaim(batch || 5, MX_TRIES, MX_STALE_MS); if (!items.length) { timeUp = false; break; }
+    var items = st_inClaim(Math.min(batch || 5, 3), MX_TRIES, MX_STALE_MS); if (!items.length) { timeUp = false; break; }   // 10.11: не больше 3 за раз — бюджет проверяется чаще (пачка 20 давала тики по 1–3,5 мин)
     items.forEach(function (it) {
       var raw = st_inBody(it.body); if (raw === null) { st_inFail(it.key, it.tries, 'тело события на Диске не найдено', true); return; }
       var u; try { u = JSON.parse(raw); } catch (x) { st_inFail(it.key, it.tries, 'не JSON', true); return; }
@@ -117,8 +117,8 @@ function mx_tick(budgetMs, batch) {
     try { mx_deferFlush(); } catch (x) { mx_log('err', 'отложенные: ' + mx_errText(x)); }
     try { mx_questionsTick(); } catch (x) { mx_log('err', 'вопросы: ' + mx_errText(x)); }
   }
-  try { mx_histFlush(Math.max(8000, left() - 3000)); } catch (x) { mx_log('err', 'история: ' + mx_errText(x)); }
-  try { mx_obRun(Math.max(5000, Math.min(20000, left() - 2000))); } catch (x) { mx_log('err', 'outbox: ' + mx_errText(x)); }   // досылка неудавшихся действий (GPT A5)
+  if (left() > 8000) { try { mx_histFlush(left() - 3000); } catch (x) { mx_log('err', 'история: ' + mx_errText(x)); } }   // 10.11: без времени — в следующий тик
+  if (left() > 5000) { try { mx_obRun(Math.min(20000, left() - 2000)); } catch (x) { mx_log('err', 'outbox: ' + mx_errText(x)); } }   // досылка неудавшихся действий (GPT A5)
   if (new Date().getMinutes() % 30 === 7 && left() > 10000) { st_inTrim(3000); mx_countersTrim(); mx_histTrim(); st_inboxTrim(7); }
   return n;
 }

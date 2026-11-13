@@ -3,9 +3,10 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """site_template.html -> site_template_v2.html: the plan page of the site with editing (move / rotate / hide / rename / plan inside)."""
+from _cg1_build_io import read_file as _cg1_read_file
 src = '/home/claude/build/site_template.html'
 dst = '/home/claude/build/site_template_v2.html'
-s = open(src, encoding='utf-8').read()
+s = _cg1_read_file(src, encoding='utf-8')
 R = []
 R.append(('<title>Видеокамеры на Терехина, 14</title>', '<title>Промплощадка Терехина, 14</title>'))
 R.append(('display=swap">\n<style>', 'display=swap">\n<link rel="stylesheet" href="assets/site.css">\n<style>'))
@@ -192,12 +193,13 @@ R.append(('const cams=DATA.cams, B=DATA.b;', "const cams=DATA.cams, B=DATA.b;\n/
 R.append(("    const ce=ED('c:'+c.id);\n    if(ce){p=[p[0]+(ce.dx||0),p[1]-(ce.dy||0)];if(a!==null)a+=ce.rot||0}", "    const ce=c.isNew?null:ED('c:'+c.id);\n    if(ce){p=[p[0]+(ce.dx||0),p[1]-(ce.dy||0)];if(a!==null){if(ce.az!=null)a=ce.az-90+(ce.rot||0);else a+=ce.rot||0}}\n    if(c.isNew){const r=ED(c.id);if(r){const L0=DATA.loc0||[0,0];p=[r.x-L0[0],L0[1]-r.y];a=(r.az||0)-90;c.title0=r.name||c.title0}else{camEls[c.id].g.style.display='none';if(camEls[c.id].fov)camEls[c.id].fov.style.display='none';continue}}"))
 R.append(("  editPanel('c:'+c.id,{kind:'c',title:c.title0,hasHost:!!c.host});", '  if(c.isNew) card.insertAdjacentHTML(\'beforeend\',\'<p class="note">Новая камера, добавлена на странице модели. Объектив, направление и высота правятся там.</p>\'); else editPanel(\'c:\'+c.id,{kind:\'c\',title:c.title0,hasHost:!!c.host});'))
 R.append(('--cam:#d2372b; --cam-fov:rgba(210,55,43,.14); --cam-fov-sel:rgba(210,55,43,.32);', '--cam:#2563c9; --cam-fov:rgba(37,99,201,.13); --cam-fov-sel:rgba(37,99,201,.30);'))
-exec(open('/home/claude/build/szz/patch2d_block.py', encoding='utf-8').read())
-exec(open('/home/claude/build/ndv/patch2d_block.py', encoding='utf-8').read())
+exec(_cg1_read_file('/home/claude/build/szz/patch2d_block.py', encoding='utf-8'))
+exec(_cg1_read_file('/home/claude/build/ndv/patch2d_block.py', encoding='utf-8'))
 for a, b in R:
     n = s.count(a)
     assert n == 1, (n, a[:90])
     s = s.replace(a, b)
 s = s.replace('--cam:#ff5b4c; --cam-fov:rgba(255,91,76,.16); --cam-fov-sel:rgba(255,91,76,.36);', '--cam:#5b8ff0; --cam-fov:rgba(91,143,240,.16); --cam-fov-sel:rgba(91,143,240,.36);')
-open(dst, 'w', encoding='utf-8').write(s)
+with open(dst, 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(s)
 print('ok', len(R))

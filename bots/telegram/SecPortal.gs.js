@@ -8,7 +8,7 @@
 // Убрать доступ — /transport_dostup (там же, отдельной строкой «Структура»).
 var SEC_PARTS = { ko: 'Коммерческий отдел: люди, функционал, зоны', org: 'Оргструктура компании', kos: 'Коммерческий отдел: функционал и блок-схема', sim: 'СИМ-карты МТС' };
 var SEC_RATE = 30;
-var SEC_FILE = { ko: 'REDACTED_HEX_2', org: 'REDACTED_HEX_3', kos: 'REDACTED_HEX_4', sim: 'REDACTED_HEX_5' };
+var SEC_FILE = { ko: 'REDACTED_HEX_3', org: 'REDACTED_HEX_4', kos: 'REDACTED_HEX_5', sim: 'REDACTED_HEX_6' };
 /** k/<имя>.bin с сайта → объект (ключ владельца); кэш — только если влезает (cachePut_ < 100 КБ). */
 function secBin_(part) {
   var c = CacheService.getScriptCache(), k = 'secb_' + part, s = c.get(k); if (s) { try { return JSON.parse(s); } catch (e) {} }

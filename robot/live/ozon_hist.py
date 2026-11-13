@@ -219,7 +219,9 @@ def run(L, log, jload, jsave, iso, publish=None):
         log('ozon SKU по месяцам: строк', len(st['sku']), ('; ' + st['sku_err']) if st.get('sku_err') else '')
     if not due:
         if publish and st.get('analytics') and not os.path.exists(os.path.join(L, 'state', 'ozh_pub_v1')):   # первый раз — опубликовать уже собранное
-            publish('ozh.bin', portal(st)); open(os.path.join(L, 'state', 'ozh_pub_v1'), 'w').write(iso(now))
+            publish('ozh.bin', portal(st))
+            with open(os.path.join(L, 'state', 'ozh_pub_v1'), 'w') as _cg2_file_1:
+                _cg2_file_1.write(iso(now))
         return {k: st.get(k) for k in ('state', 't', 'fbs', 'fbo', 'days', 'err', 'sku_t')}
     cid, key, _ = OZ.creds(L)
     if not cid or not key: return {'state': 'нет ключа Ozon'}

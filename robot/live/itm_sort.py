@@ -90,7 +90,9 @@ def run(L, CFG, log, jload, jsave, budget=100):
     st = jload('itm_sort.json', {})
     apply_ = os.path.exists(go)
     # 28.10.2026: команда и пакетом — code/itm_sort_cmd.json {"id": …}: перенос один раз на каждый новый id (задача №21 владельца)
-    try: cmd = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'itm_sort_cmd.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'itm_sort_cmd.json'), encoding='utf-8') as _cg1_file_1:
+            cmd = json.load(_cg1_file_1)
     except Exception: cmd = {}
     cmd_id = str(cmd.get('id') or '')
     if cmd_id and cmd_id not in (st.get('cmds') or []): apply_ = True
@@ -182,7 +184,9 @@ def run(L, CFG, log, jload, jsave, budget=100):
         res['state'] = 'Mail.ru: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     st.update({'state': res.get('state'), 't': res['t'], 'plan_ts': time.time()})
     jsave('itm_sort.json', st)

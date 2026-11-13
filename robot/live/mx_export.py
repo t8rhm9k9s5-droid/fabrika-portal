@@ -15,7 +15,9 @@ import mx_ctl as MC
 
 
 def _groups(M, token):
-    try: groups = json.load(open(os.path.join(M, 'groups.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'groups.json'), encoding='utf-8') as _cg1_file_1:
+            groups = json.load(_cg1_file_1)
     except Exception: groups = {}
     out = {}
     for k, v in groups.items():
@@ -30,16 +32,21 @@ def _groups(M, token):
 
 def run(L, log, jload, jsave, publish, iso):
     here = os.path.dirname(os.path.abspath(__file__))
-    try: jobs = json.load(open(os.path.join(here, 'mx_export_cmd.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(here, 'mx_export_cmd.json'), encoding='utf-8') as _cg1_file_2:
+            jobs = json.load(_cg1_file_2)
     except Exception: return {'state': 'нет заданий'}
     jobs = [j for j in jobs if isinstance(j, dict) and j.get('id') and j.get('g') and j.get('from') and j.get('to')] if isinstance(jobs, list) else []
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     dp = os.path.join(M, 'export_done.json')
-    try: done = json.load(open(dp, encoding='utf-8'))
+    try:
+        with open(dp, encoding='utf-8') as _cg1_file_3:
+            done = json.load(_cg1_file_3)
     except Exception: done = {}
     job = next((j for j in jobs if j['id'] not in done), None)
     if not job: return {'state': 'ok', 'done': len(done)}
-    try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+    try:
+        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'state': 'нет настроек бота MAX'}
     token = cfg.get('token') or ''
     if not token: return {'state': 'нет токена MAX'}

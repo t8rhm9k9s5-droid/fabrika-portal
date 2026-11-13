@@ -8,6 +8,7 @@
   SCHEME_FN   — {ФИО: [краткие функции из блок-схемы]}
   TABLES      — {"Графики работы ОП": {...}, "Ответы и решения": {...}, "Подрядчики ОП": {...}}
 """
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os, re
 from html.parser import HTMLParser
 
@@ -55,7 +56,7 @@ def text(n, clean=True):
 norm = lambda s: re.sub(r"[ \t ]+", " ", re.sub(r"\s*\n\s*", "\n", s)).strip()
 
 def _parse():
-    p = _P(); p.feed(open(MASTER, encoding="utf-8").read()); return p.root
+    p = _P(); p.feed(_cg1_read_file(MASTER, encoding="utf-8")); return p.root
 
 def _section(root, sid):
     for s in root.find_all("section"):
@@ -124,7 +125,7 @@ PEOPLE = _people(_root)
 SCHEME = _scheme(_root)
 SCHEME_FN = {k: v["fn"] for k, v in SCHEME.items()}
 TABLES = _tables(_root)
-EDITION = re.search(r"редакция (\d\d\.\d\d)", open(os.path.join(_SRC, "ko_master", "shapka_i_podval.txt"), encoding="utf-8").read()).group(1)
+EDITION = re.search(r"редакция (\d\d\.\d\d)", _cg1_read_file(os.path.join(_SRC, "ko_master", "shapka_i_podval.txt"), encoding="utf-8")).group(1)
 
 def scheme_fn(name, fallback=()):
     return SCHEME_FN.get(name) or list(fallback)

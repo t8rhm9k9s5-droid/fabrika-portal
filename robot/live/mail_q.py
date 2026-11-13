@@ -37,7 +37,9 @@ def mode(path=None):
     01.11.2026 (внешняя проверка кода, замечание 05): раньше нет файла / не читается / незнакомое значение → «как раньше» (smtp, imap) —
     то есть ящики владельца. Теперь это ошибка: такой режим → 'off' (письма ждут в очереди, ящики владельца не открываются; ящик 1c@
     читается отдельным участком, как всегда) и 'err' — причина, она уходит в статус и тревогу. smtp/imap — только если написаны явно."""
-    try: j = json.load(open(path or CFG_FILE, encoding='utf-8'))
+    try:
+        with open(path or CFG_FILE, encoding='utf-8') as _cg1_file_1:
+            j = json.load(_cg1_file_1)
     except FileNotFoundError: return {'send': 'off', 'read': 'off', 'err': 'mail_cfg.json: нет файла'}
     except Exception as e: return {'send': 'off', 'read': 'off', 'err': 'mail_cfg.json не читается: %s' % e.__class__.__name__}
     if not isinstance(j, dict): return {'send': 'off', 'read': 'off', 'err': 'mail_cfg.json: не объект'}
@@ -126,7 +128,9 @@ def _state_path(): return os.path.join(L, 'state', 'mail_q.json')
 
 
 def state():
-    try: return json.load(open(_state_path(), encoding='utf-8'))
+    try:
+        with open(_state_path(), encoding='utf-8') as _cg1_file_2:
+            return json.load(_cg1_file_2)
     except Exception: return {}
 
 
@@ -144,7 +148,8 @@ def _stale_kill(lp, log):
     """29.10.2026: замок держит зависший отправщик (письма стояли с утра: «в очереди 15, отправлено 0») — если ему больше BUDGET+10 мин
     и это действительно mail_q.py, завершить его; ничего не удаляется"""
     try:
-        pid, t = open(lp, encoding='utf-8').read().split()[:2]; pids, t = [int(pid)], float(t)
+        pid, t = open(lp, encoding='utf-8').read().split()[:2]
+        pids, t = [int(pid)], float(t)
     except Exception:                                  # замок старого вида (пустой): время — по файлу, процессы — по /proc
         try: t = os.path.getmtime(lp)
         except Exception: return False
@@ -153,12 +158,15 @@ def _stale_kill(lp, log):
             if d.isdigit() and int(d) != os.getpid():
                 try:
                     if b'mail_q.py' in open('/proc/%s/cmdline' % d, 'rb').read(): pids.append(int(d))
-                except Exception: pass
+                except Exception:
+                    # намеренно: недоступный или уже завершившийся процесс не включаем в список кандидатов.
+                    pass
     if time.time() - t < BUDGET + 600 or not pids: return False
     import signal as _sg
     done = False
     for pid in pids:
-        try: cmd = open('/proc/%d/cmdline' % pid, 'rb').read().decode('utf-8', 'replace')
+        try:
+            cmd = open('/proc/%d/cmdline' % pid, 'rb').read().decode('utf-8', 'replace')
         except Exception: continue
         if 'mail_q' not in cmd and 'live.py' not in cmd: continue
         try: os.kill(pid, _sg.SIGKILL); done = True; log('почта: завис отправщик (pid %d, %d мин) — завершён' % (pid, (time.time() - t) // 60))
@@ -217,7 +225,8 @@ def is_big(it):
 def big_pending():
     for f in pending():
         try:
-            if is_big(json.load(open(os.path.join(OUT, f), encoding='utf-8'))): return True
+            with open(os.path.join(OUT, f), encoding='utf-8') as _cg2_big_file:
+                if is_big(json.load(_cg2_big_file)): return True
         except Exception: pass
     return False
 
@@ -248,7 +257,9 @@ def work(send, log=lambda *a: None, budget=BUDGET, clock=time.time, only=None):
     # 29.10.2026, пользователь: «поменяй работу с почтой так чтобы не грузить работу сайта» — низкий приоритет процесса, не больше
     # MAX_PER_RUN писем и BUDGET секунд за запуск, при обрыве связи — пауза DOWN_PAUSE; состояние пишется после каждой попытки
     try: os.nice(10)
-    except Exception: pass
+    except Exception:
+        # намеренно: если снижение приоритета недоступно, очередь работает с прежним приоритетом.
+        pass
     t0 = clock(); today = _now().strftime('%Y-%m-%d')
     st = state(); st['run_t'] = _now().strftime('%Y-%m-%dT%H:%M'); st['mode'] = 'smtp' if only is None else 'bot+smtp'; _save_state(st)
     if st.get('down_until', 0) > clock():
@@ -260,7 +271,9 @@ def work(send, log=lambda *a: None, budget=BUDGET, clock=time.time, only=None):
     for f in pending():
         if clock() - t0 > budget or tried >= MAX_PER_RUN: break
         p = os.path.join(OUT, f)
-        try: it = json.load(open(p, encoding='utf-8'))
+        try:
+            with open(p, encoding='utf-8') as _cg1_file_5:
+                it = json.load(_cg1_file_5)
         except Exception:
             _move(p, 'bad'); res.setdefault('bad_list', []).append(f); continue
         if only is not None and not only(it): continue
@@ -305,7 +318,9 @@ def work(send, log=lambda *a: None, budget=BUDGET, clock=time.time, only=None):
     for p, it, box in late:                                        # 30.10.2026 аудит P2: поток «зависшего» письма ещё жив — дождаться в пределах бюджета
         box['th'].join(max(0, min(budget - (clock() - t0), SEND_LIMIT)))
         if str(box.get('r', '')).startswith('ok') and os.path.exists(p):
-            it = json.load(open(p, encoding='utf-8')); it.pop('inflight', None)
+            with open(p, encoding='utf-8') as _cg1_file_6:
+                it = json.load(_cg1_file_6)
+            it.pop('inflight', None)
             it['sent'] = _now().strftime('%Y-%m-%dT%H:%M:%S'); it['via'] = box['r'] + ' (дописано после предела)'
             _write_json(p, it); _move(p, os.path.join('sent', today)); res['sent'] += 1; res['unknown'] = max(0, res.get('unknown', 0) - 1)
             st['sent'] = st.get('sent', 0) + 1; log('почта: письмо «%s» всё-таки ушло' % (it.get('subject') or '')[:60], box['r'])
@@ -369,12 +384,19 @@ def _acks(st, res, today, clock, log):
         if not f.endswith('.json') or not ID_RE.match(f[:-5]) or not os.path.isfile(ap): continue
         iid = f[:-5]; p = os.path.join(OUT, iid + '.json')
         ap = _archive_ack(ap, 'done', today)
-        try: a = json.load(open(ap, encoding='utf-8'))
+        try:
+            with open(ap, encoding='utf-8') as _cg1_file_7:
+                a = json.load(_cg1_file_7)
         except Exception: a = None
         if not isinstance(a, dict) or not (a.get('ok') or a.get('err') is not None):
             d = os.path.join(OUT, 'acks', 'bad', today); os.makedirs(d, exist_ok=True)
             os.replace(ap, os.path.join(d, os.path.basename(ap))); continue
-        try: it = json.load(open(p, encoding='utf-8')) if os.path.isfile(p) else None
+        try:
+            if os.path.isfile(p):
+                with open(p, encoding='utf-8') as _cg2_cond_file:
+                    it = json.load(_cg2_cond_file)
+            else:
+                it = None
         except Exception: it = None
         if it is None:                                             # уже разобрано (повтор подтверждения) или чужой id
             res['unknown'] += 1; continue
@@ -416,7 +438,9 @@ def bot_work(publish, default_to=None, log=lambda *a: None, clock=time.time):
     for f in pending():
         p = os.path.join(OUT, f)
         if not ID_RE.match(f[:-5]): _move(p, 'bad'); res.setdefault('bad_list', []).append(f); continue
-        try: it = json.load(open(p, encoding='utf-8'))
+        try:
+            with open(p, encoding='utf-8') as _cg1_file_8:
+                it = json.load(_cg1_file_8)
         except Exception: _move(p, 'bad'); res.setdefault('bad_list', []).append(f); continue
         if is_big(it): big += 1; continue                          # 30.10.2026 DESIGN 14: вложения > 200 КБ — отправит хостинг по SMTP (work(only=is_big))
         if not it.get('bot_t') and it.get('inflight'):             # 30.10.2026 аудит P2: SMTP-попытка оборвалась — могло уйти; боту — не раньше паузы

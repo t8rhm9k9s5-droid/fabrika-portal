@@ -42,7 +42,9 @@ def load(path=None):
     except OSError: mt = None
     if _C['path'] == p and _C['mt'] == mt: return _C['people']
     out = []
-    try: raw = json.load(open(p, encoding='utf-8')).get('people') or []
+    try:
+        with open(p, encoding='utf-8') as _cg2_file_1:
+            raw = json.load(_cg2_file_1).get('people') or []
     except Exception: raw = []
     for x in raw:
         parts = _n(x.get('fio')).split()

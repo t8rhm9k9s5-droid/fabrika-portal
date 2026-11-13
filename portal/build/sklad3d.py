@@ -3,7 +3,8 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 # exec'd inside extra3d.py (needs loc, zat, mk_building, blds, byk, S, NS, PPM, np, math)
-SKD = json.load(open('/home/claude/build/sklad_data.json'))
+from _cg1_build_io import read_json as _cg1_read_json
+SKD = _cg1_read_json('/home/claude/build/sklad_data.json')
 SKH = SKD['heights']
 _F = SKD['frame']
 _Om = np.array(loc(m2p(_F['O'][0], _F['O'][1])))

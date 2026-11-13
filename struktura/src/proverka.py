@@ -3,11 +3,12 @@
 1. Раздел «Коммерческий отдел» хранится в двух HTML (ko_master/): карточки сотрудников, блок-схема и таблицы
    в них должны совпадать. Расхождение — ошибка: правку внесли только в один файл.
 2. ФИО, почта и телефоны сотрудников коммерческого отдела в разделе и в data_fabrikant.py должны сходиться — иначе предупреждение."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os, re, sys
 import data_fabrikant as D
 import ko_data as K
 SRC = os.path.dirname(os.path.abspath(__file__)); M = os.path.join(SRC, "ko_master")
-rd = lambda n: open(os.path.join(M, n), encoding="utf-8").read()
+rd = lambda n: _cg1_read_file(os.path.join(M, n), encoding="utf-8")
 org, page = rd("razdel_v_orgstrukture.html"), rd("stranica_kommercheskiy_otdel.html")
 errors, warns = [], []
 
@@ -36,7 +37,7 @@ for g, pp in K.PEOPLE:
 # 3. Собранные страницы против снимков опубликованных (папка published/) — только для сведения
 ROOT = os.path.dirname(SRC)
 def _body(path):
-    t = open(path, encoding="utf-8").read(); t = t[t.find("<title>"):]
+    t = _cg1_read_file(path, encoding="utf-8"); t = t[t.find("<title>"):]
     return (t[:t.rfind("</body>")] if "</body>" in t else t).rstrip().splitlines()
 for site, pub in (("fabrikant-site.html", "orgstruktura_01.11.html"), ("kommercheskiy-otdel.html", "kommercheskiy-otdel_28.10.html"),
                   ("vygruzki-1c.html", "vygruzki-1c_23.10.html")):

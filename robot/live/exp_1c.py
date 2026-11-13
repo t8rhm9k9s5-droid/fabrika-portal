@@ -74,7 +74,9 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
     res = {'t': IT._now().strftime('%Y-%m-%dT%H:%M')}
     if _cleanup(L, SITE, st, log): jsave('exp_1c.json', st); res['state'] = 'файлы удалены'; return res
     p = os.path.join(HERE, 'exp_1c_cmd.json')
-    try: cmd = json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as _cg1_file_1:
+            cmd = json.load(_cg1_file_1)
     except Exception: res['state'] = st.get('state') or 'нет команды'; return res
     if not cmd.get('id'): res['state'] = 'нет id в команде'; return res
     if st.get('id') != cmd['id']:
@@ -149,7 +151,9 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
                         if not fn: continue
                         fn = IT.clean(fn)
                         try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-                        except Exception: pass
+                        except Exception:
+                            # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+                            pass
                         fn = IT.fix_ext(IT.clean(fn))
                         data_ = prt.get_payload(decode=True) or b''
                         ext = _ext(fn); sha = hashlib.sha256(data_).hexdigest()[:24]
@@ -170,7 +174,9 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
         res['state'] = 'Gmail: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
     # 3) публикация частей (только дописываются) и индекса
     pmap, sizes, dirty = st['part_of'], st['part_sz'], set(st.get('dirty') or [])
     for row in st['msgs'].values():
@@ -186,7 +192,9 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
             files = {}
             for k, n in pmap.items():
                 if n == p_:
-                    try: files[k] = base64.b64encode(open(os.path.join(root, k), 'rb').read()).decode()
+                    try:
+                        with open(os.path.join(root, k), 'rb') as _cg1_file_2:
+                            files[k] = base64.b64encode(_cg1_file_2.read()).decode()
                     except Exception: pass
             if publish('exp_1c_%d.bin' % p_, {'part': p_, 'files': files}): dirty.discard(p_)
         st['dirty'] = sorted(dirty)

@@ -128,15 +128,24 @@
   var LION = LOGO.replace('viewBox="0 0 163 29" role="img" aria-label="Фабрикант"', 'viewBox="0 0 31 29" class="brand-mark" aria-hidden="true" width="15" height="14"');
   // [page, title, icon, tile colour, admins only] — прежний список (модель 3D его тоже знает)
   var SECTIONS = [['index.html', 'Модель', 'model', '#007aff'], ['plan.html', 'План', 'plan', '#5856d6'], ['stock.html', 'Склад', 'stock', '#ff9500'], ['stores.html', 'Остатки ОП', 'stock', '#ff6b00'],
-    ['library.html', 'Документы', 'docs', '#30b0c7'], ['staff.html', 'Производство', 'staff', '#af52de'], ['chat.html', 'Чат', 'chat', '#34c759'], ['admin.html', 'Управление', 'gear', '#8e8e93', true]];
+    ['library.html', 'Документы', 'docs', '#30b0c7'], ['staff.html', 'Производство', 'staff', '#af52de'], ['admin.html', 'Управление', 'gear', '#8e8e93', true]];
   var UNDER = { 'docs.html': 'library.html', 'archive.html': 'library.html' };   // pages that live inside a section
   // портал: десять разделов; [страница, название, значок, цвет, подпись]. 28.10.2026 — порядок, значки и цвета утверждённых макетов
   // (цепочка фабрики: производство ← снабжение ← продажи)
-  var PORTAL = [['home.html', 'Главная', 's_home', 'var(--ic-home)', 'Пульс фабрики и что требует внимания'], ['plan.html', 'Карта производства', 's_map', 'var(--ic-map)', 'Территория, сети и объекты'],
-    ['staff.html', 'Производство', 's_prod', 'var(--ic-prod)', 'Участки, люди и выпуск'], ['stock.html', 'Склад', 's_stock', 'var(--ic-stock)', 'Остатки и поступления'],
-    ['omts.html', 'ОМТС', 's_omts', 'var(--ic-omts)', 'Снабжение: заявки, сроки, остатки'], ['sales.html', 'Продажи', 's_sales', 'var(--ic-sales)', 'Отчёты офисов продаж'],
-    ['products.html', 'Изделия и материалы', 's_items', 'var(--ic-items)', 'Модели, прайсы и сертификаты'], ['library.html', 'Документы', 's_docs', 'var(--ic-docs)', 'Инструкции, формы и схемы'],
-    ['calls.html', 'Кому звонить', 's_phone', 'var(--ic-calls)', 'Телефоны и кто за что отвечает'], ['chat.html', 'Чат', 's_chat', 'var(--ic-chat)', 'Обсуждения и рабочие вопросы']];
+  // 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры, чат пока убери» — десять разделов по работе компании
+  // (проект 12.11: work/portal_struct/struct.json); раздел — razdel.html#<id>: отчёты списком, ведут на прежние страницы. 6-й элемент — страница,
+  // чьи цифры показывает карточка раздела на главной (T14M.card). Прежний список (до 13.11) — build/site.before-razdel1311.js
+  var PORTAL = [['home.html', 'Главная', 's_home', 'var(--ic-home)', 'Пульс компании и что требует решения'],
+    ['razdel.html#sales', 'Продажи', 's_sales', 'var(--ic-sales)', 'Онлайн-продажи, план-факт, клиенты и заказы', 'sales.html'],
+    ['razdel.html#prod', 'Производство', 's_prod', 'var(--ic-prod)', 'Выпуск, участки, мощность', 'staff.html'],
+    ['razdel.html#quality', 'Качество', 's_file', 'var(--ic-err)', 'Рекламации, брак, сертификаты'],
+    ['razdel.html#supply', 'Снабжение и склад', 's_stock', 'var(--ic-stock)', 'Заявки ОМТС и остатки складов', 'stock.html'],
+    ['razdel.html#log', 'Логистика', 's_omts', 'var(--ic-omts)', 'Отгрузки и транспорт'],
+    ['razdel.html#fin', 'Финансы и экономика', 's_sliders', 'var(--ic-ai)', 'Выручка, деньги, экономика ПЭО'],
+    ['razdel.html#items', 'Продукция', 's_items', 'var(--ic-items)', 'Каталог, модели, материалы, прайсы'],
+    ['razdel.html#people', 'Люди', 's_org', 'var(--ic-calls)', 'Структура, контакты, кадры'],
+    ['razdel.html#docs', 'Документы', 's_docs', 'var(--ic-docs)', 'Договоры, регламенты, чертежи, архив'],
+    ['razdel.html#site', 'Площадка', 's_map', 'var(--ic-map)', 'План, 3D-модель, счётчики', 'plan.html']];
   // 29.10.2026, «Транспорт (ГЛОНАСС)»: пользователь — «надо подключить», кто видит — «Только я». Пункт — только на устройстве, где вошёл
   // владелец (личный вход «owner»: id = первые 24 знака SHA-256('fabrika-login:owner')); это лишь меню — данные проверяет и отдаёт скрипт бота (op gl)
   var OWNER_ID = 'REDACTED_HEX_1';
@@ -146,8 +155,6 @@
   // 12.11.2026, Т. В.: «сделай в это меню «Структура» и там эти разделы» — оргструктура, коммерческий отдел, СИМ-карты (закрыто: он и А. В.);
   // флаг t14.sec ставит страница после ответа бота «доступ есть» (у брата); сами данные отдаёт только бот (op sec)
   function secFlag() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }
-  if (isOwner() || secFlag()) PORTAL.push(['sales.html#struct', 'Структура', 's_org', 'var(--ic-docs)', 'Оргструктура, коммерческий отдел, СИМ-карты']);
-  if (isOwner() || glFlag()) PORTAL.push(['transport.html', 'Транспорт', 's_omts', 'var(--ic-items)', 'ГЛОНАСС: где машины, пробег, стоянки']);
   var SUBS = [['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'plan.html'], ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'plan.html'], ['stores.html', 'Остатки ОП', 's_store', 'var(--ic-stock)', 'stock.html'],
     ['utils.html', 'Счётчики и откачка', 's_meter', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
   var PARENT = { 'index.html': 'plan.html', 'utils.html': 'plan.html', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
@@ -467,6 +474,14 @@
     var cur = here(); if (!/\.html$/.test(cur)) cur = 'index.html';
     var sec = PARENT[cur] || cur, isPlan = cur === 'plan.html';
     if (cur === 'sales.html' && /^#(struct|sec-|ko$)/.test(location.hash)) sec = 'sales.html#struct';   // 12.11.2026: «Структура» живёт на странице продаж
+    // 13.11.2026: новая структура — пункт меню раздела «горит» и на его странице раздела, и на страницах его отчётов
+    var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
+      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
+    function onSec(u) {
+      if (u === sec) return true;
+      var d = cur === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : sec === 'sales.html#struct' ? 'people' : DOMOF[cur];
+      return !!d && u === 'razdel.html#' + d;
+    }
     var conf = PAGE_TABS[cur] || { tabs: [] };
     if (conf.body) document.body.classList.add(conf.body);
     document.body.classList.add('has-portal');
@@ -501,7 +516,7 @@
       s.dataset.keep = '1';
       s.appendChild(h4('Внутренний портал'));
       var g = el('div', 'igroup'); s.appendChild(g);
-      PORTAL.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], (p[0] === sec) ? 'сейчас' : ''); a.href = p[0]; if (p[0] === sec) a.setAttribute('aria-current', 'page'); g.appendChild(a); });
+      PORTAL.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], onSec(p[0]) ? 'сейчас' : ''); a.href = p[0]; if (onSec(p[0])) a.setAttribute('aria-current', 'page'); g.appendChild(a); });
       s.appendChild(h4('Внутри разделов'));
       var g2 = el('div', 'igroup'); s.appendChild(g2);
       SUBS.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], p[0] === cur ? 'сейчас' : ''); a.href = p[0]; if (p[0] === cur) a.setAttribute('aria-current', 'page'); g2.appendChild(a); });
@@ -678,7 +693,7 @@
       var a = el('a', 'pnav', '<span class="pi" style="--c:' + color + '">' + ICON[icon] + '</span><span class="pt"></span><span class="pbadge"></span>');
       a.href = href; a.querySelector('.pt').textContent = title; a.dataset.p = href; return a;
     }
-    PORTAL.forEach(function (p) { var a = navItem(p[0], p[2], p[3], p[1]); if (p[0] === sec) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
+    PORTAL.forEach(function (p) { var a = navItem(p[0], p[2], p[3], p[1]); if (onSec(p[0])) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
     if (isAdmin()) { var ad = navItem('admin.html', 'gear', 'var(--ic-grey)', 'Управление'); if (cur === 'admin.html') ad.setAttribute('aria-current', 'page'); nav.appendChild(ad); }
     side.appendChild(el('div', 'pcap pai-cap', 'Помощник'));
     var ask = trigger('search', 'pnav pask', 'spark', 'Спросить у портала'); ask.innerHTML = '<span class="pi" style="--c:var(--ic-ai)">' + ICON.spark + '</span><span class="pt">Спросить у портала</span>'; side.appendChild(ask);
@@ -803,7 +818,7 @@
     top.appendChild(bk);
     var tl = el('a', 'plogo', LOGO); tl.href = 'home.html'; tl.setAttribute('aria-label', 'Фабрикант — главная'); top.appendChild(tl);
     var crumb = el('nav', 'pcrumb'); crumb.setAttribute('aria-label', 'Где я');
-    var secName = (PORTAL.filter(function (p) { return p[0] === sec; })[0] || [0, cur === 'admin.html' ? 'Управление' : cur === 'transport.html' ? 'Транспорт' : ''])[1];
+    var secName = (PORTAL.filter(function (p) { return onSec(p[0]); })[0] || [0, cur === 'admin.html' ? 'Управление' : cur === 'transport.html' ? 'Транспорт' : ''])[1];
     var subName = (SUBS.filter(function (p) { return p[0] === cur; })[0] || [0, ''])[1];
     crumb.innerHTML = '<a href="home.html">' + LION + 'Фабрика</a>' + (secName && sec !== 'home.html' ? ' / ' + (cur !== sec ? '<a href="' + sec + '"></a>' : '<span></span>') : ' / <span>Главная</span>') + (cur !== sec && subName ? ' / <span></span>' : '');
     var cl = crumb.querySelectorAll('a:not(:first-child),span'); if (cl[0] && sec !== 'home.html') cl[0].textContent = secName; if (cl[1]) cl[1].textContent = subName;
@@ -838,14 +853,14 @@
     } else {
       bar.appendChild(link('home.html', 's_home', 'Главная'));
       var bs = trigger('sections', cur === 'home.html' || cur === 'chat.html' ? '' : 'on', 's_grid', 'Разделы'); bar.appendChild(bs);
-      bar.appendChild(link('chat.html', 's_chat', 'Чат'));
+      // 13.11.2026, Т. В.: «чат пока убери»
       bar.appendChild(trigger('profile', '', 's_person', 'Профиль'));
       srch = trigger('search', 'psrch', 's_search', 'Поиск', true);
       document.body.classList.add('has-srch');
     }
     bar.style.setProperty('--n', String(bar.children.length));
     // цвет раздела — для точки у заголовка страницы
-    var secRow = PORTAL.filter(function (p) { return p[0] === sec; })[0];
+    var secRow = PORTAL.filter(function (p) { return onSec(p[0]); })[0];
     if (secRow) document.body.style.setProperty('--sec', secRow[3]);
     if (cur === 'home.html') document.body.classList.add('pg-home');
     document.body.insertBefore(top, document.body.firstChild);

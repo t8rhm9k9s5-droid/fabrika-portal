@@ -11,6 +11,7 @@
   * текст, который кто-то записал в news.txt сам после прошлой публикации (daily.sh — правки сотрудников, Claude — что изменилось);
   * иначе — последнее изменение из «Готовится» (build/version_pending.json).
 Запуск: python3 auto_news.py  (из publish_pages.sh перед build_enc.py). Состояние — app_build/news_state.json."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import json, os, time
 A = '/home/claude/app_build'
 NEWS, STATE = f'{A}/news.txt', f'{A}/news_state.json'
@@ -19,7 +20,7 @@ LIMIT = 300                                   # build_enc keeps news[:300]
 
 
 def load(p, d=None):
-    try: return json.load(open(p, encoding='utf-8'))
+    try: return _cg1_load_json(p, encoding='utf-8')
     except Exception: return d
 
 
@@ -56,7 +57,7 @@ def main():
     # ---- текст, записанный после прошлой публикации
     manual = ''
     if os.path.exists(NEWS) and os.path.getmtime(NEWS) > st.get('written', 0) + 1:
-        manual = open(NEWS, encoding='utf-8').read().strip()
+        manual = _cg1_read_file(NEWS, encoding='utf-8').strip()
         if '\n' in manual and manual.split('\n', 1)[0].startswith('Обновлено'): manual = manual.split('\n', 1)[1].strip()
     if manual: parts.append(manual)
     if not parts:
@@ -67,9 +68,12 @@ def main():
     body = '. '.join(p.rstrip('.') for p in parts) + '.'
     room = LIMIT - len(title) - 1
     if len(body) > room: body = body[:room - 1].rstrip() + '…'
-    open(NEWS, 'w', encoding='utf-8').write(title + '\n' + body)
+    with open(NEWS, 'w', encoding='utf-8') as _cg1_output_71:
+        _cg1_output_71.write(title + '\n' + body)
     st.update(new); st['written'] = time.time() + 2
-    json.dump(st, open(STATE, 'w', encoding='utf-8'), ensure_ascii=False)
+    _cg1_json_value_74 = st
+    with open(STATE, 'w', encoding='utf-8') as _cg1_json_output_74:
+        json.dump(_cg1_json_value_74, _cg1_json_output_74, ensure_ascii=False)
     os.utime(NEWS, (st['written'] - 2, st['written'] - 2))
     print('news:', title, '|', body)
 

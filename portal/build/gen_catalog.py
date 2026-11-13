@@ -7,10 +7,11 @@
 Источник — разбор PDF прайса (build/catalog/prais_2026-10-28.json: строка = исполнение, spec — обивка, цвет каркаса, механизм,
 подлокотники, опора, ролики, доп. свойства; цены I–V — базисы отгрузки). Цвета и ткани по каталогу ещё сверяются — так и пишем.
 Пишет build/catalog_frag.html (вставляется в products.html вместо <!--ASSORT-->)."""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, re, html, collections
 
 B = '/home/claude/build/'
-D = json.load(open(B + 'catalog/prais_2026-10-28.json', encoding='utf-8'))
+D = _cg1_read_json(B + 'catalog/prais_2026-10-28.json', encoding='utf-8')
 PDF = 'library/prices/prais_2026-10-28.pdf'
 TYPE = r'(кресл|стул|диван|банкетк|скамь|секци|подстоль|каркас|кушетк|модуль|сегмент|пуф|подлокотник|столик)'
 BASIS = 'I — Рязань, Москва'
@@ -100,7 +101,11 @@ css = '''<style>
 .pcat .cnew{display:inline-block;padding:1px 6px;border-radius:6px;background:var(--p-soft,rgba(128,128,128,.18));font-size:11px;color:var(--p-fg2,inherit)}
 @media (max-width:520px){.pcat .ctab td:nth-child(2){min-width:150px}}
 </style>'''
-open(B + 'catalog_frag.html', 'w', encoding='utf-8').write(css + '\n' + '\n'.join(h))
-json.dump({'types': len(S), 'models': nmod, 'isp': nisp}, open(B + 'catalog/summary.json', 'w', encoding='utf-8'), ensure_ascii=False)
+with open(B + 'catalog_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(css + '\n' + '\n'.join(h))
+_cg1_dump_func = json.dump
+_cg1_dump_value = {'types': len(S), 'models': nmod, 'isp': nisp}
+with open(B + 'catalog/summary.json', 'w', encoding='utf-8') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
 print('каталог:', len(S), 'типов,', nmod, 'моделей,', nisp, 'исполнений;', round(len(''.join(h)) / 1e3), 'KB')
 for s, fams in S.items(): print(' ', s, ':', ', '.join(list(fams)[:30]))

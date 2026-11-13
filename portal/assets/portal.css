@@ -622,3 +622,19 @@ body.pg-plan.pfull.has-portal .tabbar{left:16px!important;right:16px!important}
 .sx-part .og-tools a[data-og]{cursor:pointer}
 .sx-part{margin-top:18px}
 html body .sx-part{width:100%;box-sizing:border-box;align-self:center;margin-left:auto;margin-right:auto}
+/* 13.11.2026, Т. В.: «чтобы нигде такого не было» — читаемость во всех разделах, обе темы (проверка контраста 90 страниц и разделов, телефон).
+   Цвета текста: светлая тема — тёмные оттенки iOS (контраст ≥ 4,5 на белом), тёмная — светлые. Заливки кнопок и плашек не трогаем. */
+html:root:not([data-theme="dark"]){--t-green:#248a3d;--t-orange:#b25000;--t-red:#d70015;--t-indigo:#3634a3;--t-press:#0866c6}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]){--t-green:#30d158;--t-orange:#ffb340;--t-red:#ff6961;--t-indigo:#a5a3ff;--t-press:#0a6fd8}}
+html:root[data-theme="dark"]{--t-green:#30d158;--t-orange:#ffb340;--t-red:#ff6961;--t-indigo:#a5a3ff;--t-press:#0a6fd8}
+html body .up,html body .badge.ok{color:var(--t-green)!important}
+html body .night{color:var(--t-indigo)!important}
+html body [style^="color:#34c759"],html body [style*=";color:#34c759"],html body [style*=" color:#34c759"]{color:var(--t-green)!important}
+html body [style^="color:#ff9500"],html body [style*=";color:#ff9500"],html body [style*=" color:#ff9500"]{color:var(--t-orange)!important}
+html body [style^="color:#ff3b30"],html body [style*=";color:#ff3b30"],html body [style*=" color:#ff3b30"]{color:var(--t-red)!important}
+html body .itile,html body .tabpanel .itile{color:color-mix(in srgb,var(--c,var(--p-fg2)) 72%,var(--ios-label))!important}
+html body .itile b[style*="color:#fff"]{color:inherit!important}
+html body .age.old{background:#c33d32!important;color:#fff!important}
+html body #blindBox .blt button[data-bk=bl]:not([aria-pressed=true]){color:var(--t-red)!important}
+html body .fhome .hp-seg button[aria-pressed="true"],html body .pf .mchips button[aria-pressed="true"]{background:var(--t-press)!important;color:#fff!important}
+html body #mapInfo .mibl{color:var(--t-red)!important;border-color:var(--t-red)!important}

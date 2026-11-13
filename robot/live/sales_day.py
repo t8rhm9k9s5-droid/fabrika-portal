@@ -213,11 +213,14 @@ def main(argv):
     for a in it:
         if a == '--got': got = next(it)
         else: files.append(a)
-    try: D = json.load(open(OUT, encoding='utf-8'))
+    try:
+        with open(OUT, encoding='utf-8') as _cg1_file_1:
+            D = json.load(_cg1_file_1)
     except Exception: D = {}
     D['src'] = 'рассылки 1С «Продажи в разрезе типов товаров» и «Продажи в разрезе мощностей производства» (user3@example.org), продажи за день'
     for f in files:
-        data = open(f, 'rb').read()
+        with open(f, 'rb') as _cg1_file_2:
+            data = _cg1_file_2.read()
         rec = parse(data)
         if rec:
             merge(D, rec, got, os.path.basename(f))
@@ -229,7 +232,11 @@ def main(argv):
     D['days'] = dict(sorted(D.get('days', {}).items()))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     tmp = OUT + '.tmp'
-    json.dump(D, open(tmp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1); os.replace(tmp, OUT)
+    _cg2_dump_1 = json.dump
+    _cg2_data_1 = D
+    with open(tmp, 'w', encoding='utf-8') as _cg2_file_1:
+        _cg2_dump_1(_cg2_data_1, _cg2_file_1, ensure_ascii=False, indent=1)
+    os.replace(tmp, OUT)
     print('→', OUT, '; дней', len(D['days']))
 
 

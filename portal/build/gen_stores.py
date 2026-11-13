@@ -8,11 +8,12 @@
 Данные: каждый день — st/so.php на хостинге (скачивает xlsx 1С с fabrikant.su раз в сутки, хранит снимки вне сайта);
 в страницу встроены снимки, снятые при сборке (stock_op/ГГГГ-ММ-ДД.json, по моделям), — чтобы раздел работал и без сервера,
 и чтобы динамика начиналась с 26.10.2026."""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, glob, os, html
 B = '/home/claude/build/'
 base = []
 for f in sorted(glob.glob(B + 'stock_op/????-??-??.json')):
-    d = json.load(open(f, encoding='utf-8'))
+    d = _cg1_read_json(f, encoding='utf-8')
     base.append({'date': d['date'], 'cities': {c: {'total': v.get('total'), 'models': {m: q[0] for m, q in v.get('models', {}).items()},
                                                     'other': v.get('other', []), 'wh': v.get('wh', '')} for c, v in d['cities'].items()}})
 DATA = json.dumps({'base': base}, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
@@ -156,5 +157,6 @@ details[open] > .irow .ichev{transform:rotate(90deg)}
 })();
 </script>
 '''
-open(B + 'stores_frag.html', 'w', encoding='utf-8').write(PAGE)
+with open(B + 'stores_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(PAGE)
 print('stores_frag.html', len(PAGE) // 1000, 'KB; дней встроено:', len(base))

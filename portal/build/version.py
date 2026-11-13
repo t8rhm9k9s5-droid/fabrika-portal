@@ -15,6 +15,7 @@
      python3 version.py bump patch|minor|major "строка" … — выпустить сейчас (старые c|x|d тоже понимаются)
      python3 version.py js FILE                      — assets/version.js для сайта
      python3 version.py news                         — короткий текст для уведомления о новой версии"""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import re, sys, json, datetime
 LOG = '/home/claude/build/CHANGELOG.txt'
 PENDING = '/home/claude/build/version_pending.json'
@@ -25,7 +26,7 @@ TEST = re.compile(r'^тест (\d+\.\d+\.\d+) · (.+)$')             # before 1.
 
 
 def parse():
-    lines = open(LOG, encoding='utf-8').read().split('\n')
+    lines = _cg1_read_file(LOG, encoding='utf-8').split('\n')
     out, cur = [], None
     for ln in lines:
         m = HEAD.match(ln.strip()); t = TEST.match(ln.strip())
@@ -52,7 +53,7 @@ def msk(): return datetime.datetime.now(datetime.timezone.utc) + datetime.timede
 
 
 def pending():
-    try: return json.load(open(PENDING, encoding='utf-8'))
+    try: return _cg1_read_json(PENDING, encoding='utf-8')
     except Exception: return {'items': []}
 
 
@@ -61,7 +62,7 @@ def total(P=None): return sum(i['n'] for i in (P or pending())['items'])
 
 def write_pending_block(P):
     """the block «Готовится» at the top of CHANGELOG.txt (above the versions)"""
-    s = open(LOG, encoding='utf-8').read()
+    s = _cg1_read_file(LOG, encoding='utf-8')
     a = s.find('\nГотовится'); b = s.index(releases()[0]['v'] + ' · ')
     if a < 0 or a > b: a = b - 1
     n = total(P)
@@ -69,7 +70,8 @@ def write_pending_block(P):
     blk = ('\nГотовится (ещё не выпущено): ' + str(n) + ' ' + ('изменение' if n % 10 == 1 and n % 100 != 11 else 'изменения' if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else 'изменений') +
            '; номер — при выпуске\n' + ''.join('- ' + i['t'] + (' (' + str(i['n']) + ')' if i['n'] != 1 else '') + ' · ' + kinds.get(i.get('k', 'patch'), 'исправление') + ' · ' + i['date'] + '\n'
                                               for i in P['items']) + '\n') if P['items'] else '\n'
-    open(LOG, 'w', encoding='utf-8').write(s[:a] + blk + s[b:])
+    with open(LOG, 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(s[:a] + blk + s[b:])
 
 
 def bump(kind, items):
@@ -77,19 +79,27 @@ def bump(kind, items):
     V = releases(); d, x, c = V[0]['n']; kind = KINDS.get(kind, 'patch')
     d, x, c = (d + 1, 0, 0) if kind == 'major' else (d, x + 1, 0) if kind == 'minor' else (d, x, c + 1)
     P = pending(); lines = [i.strip().lstrip('- ') for i in items if i.strip()] + [i['t'] + (' (' + str(i['n']) + ')' if i['n'] != 1 else '') for i in P['items']]
-    s = open(LOG, encoding='utf-8').read()
+    s = _cg1_read_file(LOG, encoding='utf-8')
     head = '%d.%d.%d · %s' % (d, x, c, msk().strftime('%d.%m.%Y'))
     entry = head + '\n' + '\n'.join('- ' + i for i in lines) + '\n\n'
     i = s.index(V[0]['v'] + ' · ')
-    open(LOG, 'w', encoding='utf-8').write(s[:i] + entry + s[i:])
-    json.dump({'items': []}, open(PENDING, 'w', encoding='utf-8'), ensure_ascii=False, indent=1); write_pending_block({'items': []})
+    with open(LOG, 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(s[:i] + entry + s[i:])
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = {'items': []}
+    with open(PENDING, 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
+    write_pending_block({'items': []})
     return '%d.%d.%d' % (d, x, c)
 
 
 def add(n, text, kind='patch'):
     """изменение в «Готовится»; номер версии — при выпуске (release), по самому крупному виду"""
     P = pending(); P['items'].append({'t': text.strip().lstrip('- '), 'n': max(1, int(n)), 'k': KINDS.get(kind, 'patch'), 'date': msk().strftime('%d.%m %H:%M')})
-    json.dump(P, open(PENDING, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = P
+    with open(PENDING, 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
     write_pending_block(P)
     return 'pending %d' % total(P)
 
@@ -107,7 +117,8 @@ def js(path):
     data = {'v': R[0]['v'], 'log': [{'v': e['v'], 'date': e['date'], 'items': e['items']} for e in R[:15]],
             'tests': [{'v': e['v'], 'date': e['date'], 'items': e['items']} for e in T],
             'pending': [{'t': i['t'], 'n': i['n'], 'k': i.get('k', 'patch'), 'date': i['date']} for i in pending()['items']], 'rule': 'semver'}
-    open(path, 'w', encoding='utf-8').write('/* «Фабрика»: номер версии и что нового (из build/CHANGELOG.txt, version.py) */\nwindow.T14_VERSION = ' +
+    with open(path, 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write('/* «Фабрика»: номер версии и что нового (из build/CHANGELOG.txt, version.py) */\nwindow.T14_VERSION = ' +
                                              json.dumps(data, ensure_ascii=False).replace('<', '\\u003c') + ';\n')
 
 

@@ -54,7 +54,8 @@ def off(code_dir):
     p = os.path.join(code_dir, 'bots_off.json')
     if not os.path.exists(p): return False
     try:
-        j = json.load(open(p, encoding='utf-8'))
+        with open(p, encoding='utf-8') as _cg1_file_1:
+            j = json.load(_cg1_file_1)
         return not (isinstance(j, dict) and j.get('off') is False)
     except Exception: return True
 
@@ -80,7 +81,9 @@ def _queue_update(L, name, fn):
     lk = open(p + '.lock', 'a+')
     try:
         fcntl.flock(lk, fcntl.LOCK_EX)
-        try: Q = json.load(open(p, encoding='utf-8'))
+        try:
+            with open(p, encoding='utf-8') as _cg1_file_2:
+                Q = json.load(_cg1_file_2)
         except Exception: Q = {}
         items = Q.get('items') if isinstance(Q, dict) and isinstance(Q.get('items'), list) else []
         items = fn(items)
@@ -99,7 +102,9 @@ def _src_path(L, SITE, name, kind):
 
 def site_ver(SITE):
     """{"ver": <const VERSION из sw.js>, "t": …} — бот Telegram сообщает телефонам о новой версии (вместо чтения sw.js с хостинга); None — нет sw.js"""
-    try: s = open(os.path.join(SITE, 'sw.js'), encoding='utf-8', errors='replace').read(20000)
+    try:
+        with open(os.path.join(SITE, 'sw.js'), encoding='utf-8', errors='replace') as _cg1_file_3:
+            s = _cg1_file_3.read(20000)
     except Exception: return None
     m = re.search(r"const VERSION = '([^']+)'", s)
     if not m: return None
@@ -123,7 +128,8 @@ def _mime(name):
 
 def _queue_json(L, name):
     try:
-        Q = json.load(open(os.path.join(L, 'state', name), encoding='utf-8'))
+        with open(os.path.join(L, 'state', name), encoding='utf-8') as _cg1_file_4:
+            Q = json.load(_cg1_file_4)
         return json.dumps(Q, ensure_ascii=False).encode('utf-8') if isinstance(Q, dict) and Q.get('items') else None
     except Exception: return None
 

@@ -19,7 +19,9 @@ SRC_OK = re.compile(r'^st/exp_[\w.-]+\.bin$')
 def run(L, SITE, log, jload, jsave):
     p = os.path.join(HERE, 'drive_put.json')
     if not os.path.exists(p): return {'state': 'нет заданий'}
-    try: jobs = json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as _cg1_file_1:
+            jobs = json.load(_cg1_file_1)
     except Exception as e: return {'state': 'ошибка задания: %s' % e}
     st = jload('drive_put.json', {'done': {}})
     todo = [j for j in jobs if isinstance(j, dict) and j.get('id') and j.get('src') and j['id'] not in st['done']]
@@ -33,7 +35,8 @@ def run(L, SITE, log, jload, jsave):
         path = os.path.join(SITE, src)
         if not os.path.isfile(path):
             res['err'].append('%s: нет файла' % j['id']); continue
-        data = open(path, 'rb').read()
+        with open(path, 'rb') as _cg1_file_2:
+            data = _cg1_file_2.read()
         if len(data) > MAX: res['err'].append('%s: больше 20 МБ' % j['id']); continue
         try: r = GD.put_file(L, j.get('name') or os.path.basename(path), data, j.get('mime') or 'application/octet-stream', j.get('sub'))
         except Exception as e: r = {'ok': False, 'err': '%s %s' % (e.__class__.__name__, str(e)[:120])}

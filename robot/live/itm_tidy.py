@@ -29,7 +29,8 @@ def mode(path=None):
     """→ 'on' | 'plan' | 'off' (code/mail_cfg.json → tidy)"""
     p = path or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mail_cfg.json')
     try:
-        j = json.load(open(p, encoding='utf-8'))
+        with open(p, encoding='utf-8') as _cg1_file_1:
+            j = json.load(_cg1_file_1)
         v = str(j.get('tidy') or '').strip().lower()
         return v if v in ('on', 'plan') else 'off'
     except Exception: return 'off'
@@ -80,7 +81,9 @@ def _ensure(M, box, have):
         if typ == 'OK':
             have.add(b)
             try: M.subscribe('"%s"' % b)
-            except Exception: pass
+            except Exception:
+                # намеренно: сбой подписки IMAP не отменяет успешно созданную папку, уже добавленную в have.
+                pass
     return box in have
 
 
@@ -135,11 +138,16 @@ def work(M, fl, st, log, md=None, L=None):
                 os.makedirs(os.path.join(L, 'state'), exist_ok=True)
                 old = []
                 p = os.path.join(L, 'state', 'itm_tidy_plan.json')
-                try: old = json.load(open(p, encoding='utf-8')).get('items') or []
+                try:
+                    with open(p, encoding='utf-8') as _cg2_file_1:
+                        old = json.load(_cg2_file_1).get('items') or []
                 except Exception: pass
                 seen = set(x['uid'] for x in old)
                 old = (old + [x for x in plan if x['uid'] not in seen])[-300:]
-                json.dump({'t': _now().strftime('%Y-%m-%dT%H:%M'), 'items': old}, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+                _cg2_dump_2 = json.dump
+                _cg2_data_2 = {'t': _now().strftime('%Y-%m-%dT%H:%M'), 'items': old}
+                with open(p, 'w', encoding='utf-8') as _cg2_file_2:
+                    _cg2_dump_2(_cg2_data_2, _cg2_file_2, ensure_ascii=False)
             except Exception as e: log('  ! itm_tidy план:', e)
     if res['moved'] or res['seen']: log('itm_tidy: прочитано', res['seen'], '; в папки', res['moved'], '; ждут решения', res['wait'])
     return res

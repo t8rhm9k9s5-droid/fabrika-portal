@@ -2,10 +2,11 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, math, re, html
 import numpy as np, cv2
 
-d = json.load(open('/home/claude/build/data_px.json'))
+d = _cg1_read_json('/home/claude/build/data_px.json')
 PPM = d['PPM']  # px per metre (150 dpi, 1:500)
 
 # MSK-62 from grid crosses: (1891,130) -> X=454500, Y=1337100 ; north-up
@@ -149,9 +150,10 @@ for v in d['dev']:
 data = {'W': round(W, 2), 'H': round(H, 2), 'cams': cams, 'devs': devs, 'b': bmeta}
 
 svg_static = '\n'.join([yard] + bsvg + extra + [fence] + lsvg)
-tpl = open('/home/claude/build/site_template.html', encoding='utf-8').read()
+tpl = _cg1_read_file('/home/claude/build/site_template.html', encoding='utf-8')
 out = tpl.replace('/*__DATA__*/', 'const DATA=' + json.dumps(data, ensure_ascii=False) + ';') \
          .replace('<!--__STATIC__-->', svg_static) \
          .replace('__VB__', f'0 0 {W:.2f} {H:.2f}')
-open('/home/claude/build/site.html', 'w', encoding='utf-8').write(out)
+with open('/home/claude/build/site.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(out)
 print('W,H', round(W), round(H), 'cams', len(cams), 'bytes', len(out))

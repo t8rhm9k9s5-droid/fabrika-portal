@@ -514,6 +514,7 @@ function tm_remScan_(st, G, namesOf, owner, bot, sinceMs, cfg, org) {
       if (m.ts < sinceMs || m.bot || !m.mid || String(m.uid) === String(bot) || seen[m.mid]) return;
       seen[m.mid] = 1;
       var text = String(m.text || '').trim();
+      if (text && ((m.mentions || []).map(String).indexOf(String(bot || TM_BOT_FALLBACK)) >= 0 || TM_BOT_RX.test(text))) { n += tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byMid); return; }   // 13.11: «@бот на контроль»
       if (!text || text.charAt(0) === '/' || !TM_ASK.test(text)) return;
       var ad = tm_addressee_(m, byMid, names, bot), to = ad[0], how = ad[1];
       var isOwner = (owner && String(m.uid) === String(owner)) || (!owner && TM_OWNER_RE.test(m.name || ''));
@@ -538,6 +539,58 @@ function tm_remScan_(st, G, namesOf, owner, bot, sinceMs, cfg, org) {
 var TM_COURTESY_RX = /^[\s,.!?)(+👍🙏😊🙂]*(?:(?:всем|коллеги|друзья)\s*)?(?:доброе\s+утро|добрый\s+(?:день|вечер)|здравствуйте|привет(?:ствую)?|спасибо(?:\s+большое)?|благодарю|ок(?:ей)?|хорошо|понял[аи]?|принято|принял[аи]?|да|нет|ага|угу)(?:[\s,.!?)(+👍🙏😊🙂]+(?:(?:всем|коллеги|друзья)\s*)?(?:доброе\s+утро|добрый\s+(?:день|вечер)|здравствуйте|привет(?:ствую)?|спасибо(?:\s+большое)?|благодарю|ок(?:ей)?|хорошо|понял[аи]?|принято|принял[аи]?|да|нет|ага|угу))*[\s,.!?)(+👍🙏😊🙂]*$/i;   // 12.11 CodeQL (redos): слова — через разделитель, «поняла» входит в «понял[аи]?»
 var TM_STEM_STOP = { 'пожал': 1, 'спаси': 1, 'здрав': 1, 'колле': 1, 'добры': 1, 'добро': 1, 'сегод': 1, 'завтр': 1, 'вчера': 1, 'тимур': 1, 'викто': 1, 'можно': 1, 'нужно': 1, 'будет': 1, 'когда': 1, 'почем': 1, 'какой': 1, 'какая': 1, 'какие': 1, 'сколь': 1, 'подск': 1, 'скажи': 1, 'ответ': 1, 'вопро': 1 };
 function tm_stems_(s) { var o = {}; tm_words_(s).forEach(function (w) { if (w.length >= 5 && !TM_STEM_STOP[w.slice(0, 5)]) o[w.slice(0, 5)] = 1; }); return o; }
+/** 13.11.2026 (Т. В.; Сотрудник16 К. В.: «когда бота ставят в группе в сообщении, он не берёт его на контроль»): отметка бота в сообщении группы —
+    явная постановка на контроль. Каждый отмеченный (кроме бота и автора) — свой вопрос в st.q (ctl: true); никого не отметили — вопрос группе.
+    Подтверждение в группе — ответом на сообщение (tm_remAck_, не в тихие часы); нет ответа 2 ч — бот лично (tm_remLadder_), затем группа и письмо. */
+var TM_BOT_FALLBACK = '539375202', TM_BOT_RX = /@id6215018827_bot/i;
+function tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byMid) {
+  var me = String(m.uid || ''), bu = String(bot || TM_BOT_FALLBACK), isOwner = !!(owner && me === String(owner)), to = [], n = 0;
+  var add = function (u) { u = String(u || ''); if (u && u !== bu && u !== me && !(owner && u === String(owner)) && to.indexOf(u) < 0) to.push(u); };
+  (m.mentions || []).forEach(add);
+  // «@бот бери на контроль» ответом на сообщение: на контроле — то сообщение (его текст и отмеченные в нём; никого — его автор)
+  var src = m.rmid && byMid ? byMid[m.rmid] : null;
+  if (src && !src.bot && String(src.uid) !== bu) { (src.mentions || []).forEach(add); if (!to.length && String(src.uid || '') !== me) add(src.uid); }
+  if (!to.length) to = ['group'];
+  var own = text.replace(TM_BOT_RX, '').replace(/^[\s,.:;!—-]+/, '').trim();
+  var body = src && String(src.text || '').trim() ? String(src.text).trim() : (own || text), qmid = src ? src.mid : m.mid;
+  to.forEach(function (u) {
+    var qid = tm_sha12_(String(cid) + qmid + ':' + u); if (st.q[qid]) return;   // то же сообщение второй раз на контроль — второй вопрос не заводим
+    var q = { g: g.title, cid: String(cid), mid: qmid, cmd_mid: m.mid, t: tm_msk_(m.ts).iso, ts: m.ts, from: m.name || 'без имени', from_uid: m.uid, from_owner: isOwner,
+              to_uid: u === 'group' ? null : u, to_name: u === 'group' ? 'Коллеги' : (names[u] || 'участник группы'), how: 'на контроль (отметка бота)', ctl: true,
+              text: body.slice(0, 600), st: 'open', rem: [] };
+    if (q.to_uid) {
+      var p = tm_person_(cfg, org, names[u] || '', q.to_uid) || {};
+      q.mail = p.mail || ''; q.fio = p.fio || ''; q.dep = p.dep || ''; q.first = names[u] ? tm_firstName_(q.to_name, p.fio) : 'Коллега';
+      if (!q.mail) q.no_mail = true;
+    }
+    st.q[qid] = q; n++;
+  });
+  var q0 = st.q[tm_sha12_(String(cid) + qmid)];                                // обычный вопрос по тому же сообщению — теперь ведёт контроль, без двойных напоминаний
+  if (n && q0 && !q0.ctl && q0.st === 'open' && (!q0.to_uid || to.indexOf(String(q0.to_uid)) >= 0)) { q0.st = 'dup'; q0.dup_t = tm_msk_(m.ts).iso; }
+  if (n) (st.ack = st.ack || {})[String(cid) + ':' + m.mid] = { cid: String(cid), mid: m.mid, qmid: qmid, t: tm_msk_(m.ts).iso,
+    who: to.map(function (u) { return u === 'group' ? '' : String(names[u] || 'участник группы').split(' (@')[0]; }).filter(Boolean) };
+  return n;
+}
+/** подтверждение «взял на контроль» — один раз на сообщение, ответом на него; старше суток — не шлём (подхвачено задним числом) */
+function tm_remAck_(ctx, st) {
+  if (!st.ack || ctx.quiet) return 0;
+  var n = 0;
+  Object.keys(st.ack).forEach(function (k) {
+    var a = st.ack[k]; if (a.sent || (a.tries || 0) >= 3) return;
+    if (tm_isoMs_(a.t) < ctx.msk.ms - 24 * 3600e3) { a.sent = 'old'; return; }
+    var who = (a.who || []).filter(function (x, i, arr) { return arr.indexOf(x) === i; });
+    var txt = '✅ Взял на контроль. ' + (who.length ? 'Жду ответа: ' + who.join(', ') + '.' : 'Жду ответа в группе.') +
+              ' Ответьте, пожалуйста, ответом на это сообщение. Не будет ответа через 2 часа — напомню лично.';
+    var r = tm_sendOnce_('ctl:ack:' + k, 'chat', { cid: a.cid, text: txt, reply: a.mid }, 'remind');
+    a.tries = (a.tries || 0) + 1;
+    if (r.ok) {
+      a.sent = ctx.msk.iso; a.amid = r.mid || ''; n++;
+      if (r.mid) Object.keys(st.q).forEach(function (qk) { var q = st.q[qk]; if (q.ctl && q.mid === (a.qmid || a.mid) && String(q.cid) === a.cid) q.rem.push({ t: ctx.msk.iso, kind: 'ack', mid: String(r.mid) }); });
+    }
+  });
+  var ks = Object.keys(st.ack); if (ks.length > 300) ks.slice(0, ks.length - 200).forEach(function (k) { delete st.ack[k]; });
+  return n;
+}
 /** F4 C-B1: сообщение m — ответ на вопрос q? Связь: ответ (reply) на вопрос или на напоминание бота о нём, упоминание автора вопроса, ответ на другое
     сообщение автора вопроса; без такой связи — только содержательный текст (не приветствие/«спасибо»), не ответ на чужое сообщение и с общим словом с вопросом. */
 function tm_remIsAnswer_(m, q, byMid, qMids) {
@@ -611,12 +664,29 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
   Object.keys(st.q).forEach(function (k) {
     var q = st.q[k]; if (q.st !== 'open') return;
     var qms = tm_isoMs_(q.t), qd = q.t.slice(0, 10);
-    if (tm_wdBetween_(qd, today) > TM_REM_MAX_WD) { q.st = 'stale'; q.stale_t = ctx.msk.iso; return; }
+    if (tm_wdBetween_(qd, today) > TM_REM_MAX_WD) {
+      if (q.ctl && q.to_uid && !q.from_owner && q.from_uid) {                  // 13.11: снято с напоминаний без ответа — сказать тому, кто ставил на контроль
+        if (!ctx.workday || ctx.quiet || ctx.msk.h < 9) return;
+        var st0 = '⚠️ ' + 'На контроле без ответа: ' + String(q.to_name).split(' (@')[0] + ' — ваше сообщение в группе «' + q.g + '» от ' + tm_dmy_(q.t) + ':\n«' + q.text.slice(0, 200) +
+                  '»\n\nНапоминал лично и в группе. Дальше — на ваше решение.';
+        tm_sendOnce_('rem:ctlstale:' + k, 'user', { uid: String(q.from_uid), text: st0 }, 'remind');
+      }
+      q.st = 'stale'; q.stale_t = ctx.msk.iso; return;
+    }
     if (q.to_uid && tm_banned_(cfg, today, q.mail, q.to_name)) { q.ban = true; return; }
     delete q.ban;
     if (!ctx.workday || ctx.quiet) return;
     var rt = q.rem.filter(function (r) { return r.t.slice(0, 10) === today; }), gToday = rt.filter(function (r) { return r.kind === 'group'; });
     var gLast = q.rem.filter(function (r) { return r.kind === 'group'; }).map(function (r) { return r.t; }).sort().pop() || '';
+    // 13.11: поставлено на контроль отметкой бота — через 2 ч сначала лично в бота; в группу — только если лично не дошло или ещё через 2 ч без ответа
+    var dmR = q.rem.filter(function (r) { return r.kind === 'dm' || r.kind === 'dm_fail'; })[0];
+    if (q.ctl && q.to_uid && !dmR && h >= 9 && h < 18 && ctx.msk.ms >= qms + two) {
+      var dt = '🔔 ' + (q.first || tm_firstName_(q.to_name)) + ', ' + (q.from_owner ? 'Т. В. Сотрудник1' : String(q.from).split(' (@')[0]) + ' поставил(а) на контроль ваш ответ в группе «' + q.g + '» (' +
+               tm_dmy_(q.t) + ', ' + q.t.slice(11, 16) + '):\n«' + q.text.slice(0, 300) + '»\n\nОтветьте, пожалуйста, в группе — ответом на это сообщение там. Спасибо!';
+      var rd = tm_sendOnce_('rem:dm:' + k, 'user', { uid: q.to_uid, text: dt }, 'remind');
+      q.rem.push({ t: ctx.msk.iso, kind: rd.ok ? 'dm' : 'dm_fail', mid: '' }); if (rd.ok) { n++; return; }
+    }
+    if (q.ctl && dmR && dmR.kind === 'dm' && ctx.msk.ms < tm_isoMs_(dmR.t) + two) return;
     if (h >= 9 && h < 18 && ctx.msk.ms >= qms + two && !gLast) {             // 12.11: в группу — одно напоминание на вопрос, не каждые 2 часа
       var text = q.to_uid ? '🔔 ' + (q.first || tm_firstName_(q.to_name)) + ', на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.' : TM_GROUP_TXT;
       var r = tm_sendOnce_('rem:g:' + k + ':' + today + ':' + gToday.length, 'chat', { cid: q.cid, text: text, reply: q.mid }, 'remind');
@@ -768,6 +838,7 @@ function tm_remind_(ctx) {
   res.groups = Object.keys(G).length; res.owner = !!owner;
   res['new'] = tm_remScan_(st, G, namesOf, owner, bot, tm_isoMs_(st.since), cfg, org);
   res.done = tm_remAnswers_(st, G, owner, bot);
+  res.ack = tm_remAck_(ctx, st);                                                // 13.11: «взял на контроль» на отметку бота
   res.rem = tm_remLadder_(ctx, st, cfg, org, res);
   var ctl = tm_load_('ctl.json', {}), namesC = {};
   Object.keys(ctl.names || {}).forEach(function (k) { namesC[String(k)] = ctl.names[k]; });

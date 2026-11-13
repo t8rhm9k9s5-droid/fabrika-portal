@@ -4,9 +4,10 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Render model views from given eye points (local metres) to compare with site photos.
    python3 render_views.py views.json outdir   views: [{"name":..., "eye":[x,y,h], "look":[x,y,h], "fov":vertical_deg, "w":720, "h":960}]"""
+from _cg1_build_io import read_json as _cg1_read_json
 import asyncio, json, sys, os
 from playwright.async_api import async_playwright
-V = json.load(open(sys.argv[1])); OUT = sys.argv[2]; os.makedirs(OUT, exist_ok=True)
+V = _cg1_read_json(sys.argv[1]); OUT = sys.argv[2]; os.makedirs(OUT, exist_ok=True)
 URL = sys.argv[3] if len(sys.argv) > 3 else 'http://localhost:8766/index.html'
 async def main():
     async with async_playwright() as p:

@@ -14,7 +14,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def _url():
-    try: return json.load(open(os.path.join(HERE, 'gdrive_1c.json'), encoding='utf-8')).get('url') or ''
+    try:
+        with open(os.path.join(HERE, 'gdrive_1c.json'), encoding='utf-8') as _cg2_file_1:
+            return json.load(_cg2_file_1).get('url') or ''
     except Exception: return ''
 
 

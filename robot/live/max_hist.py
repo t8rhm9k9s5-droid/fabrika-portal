@@ -180,16 +180,21 @@ def promises(msgs, today, MC):
 def run(L, log, jload, jsave, publish, iso):
     import mx_ctl as MC
     home = os.path.dirname(L); M = os.path.join(home, '.fabrika_max')
-    try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+    try:
+        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'state': 'нет настроек бота MAX'}
     token = cfg.get('token') or ''
     if not token: return {'state': 'нет токена MAX'}
-    try: groups = json.load(open(os.path.join(M, 'groups.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'groups.json'), encoding='utf-8') as _cg1_file_2:
+            groups = json.load(_cg1_file_2)
     except Exception: groups = {}
     cid = next((k for k, v in groups.items() if v.get('on') and MC.GROUP_TITLE.search(str(v.get('title') or ''))), None)
     if not cid: return {'state': 'бота нет в группе «Коммерческий отдел»'}
     hp = os.path.join(M, 'history_all.json')
-    try: H = json.load(open(hp, encoding='utf-8'))
+    try:
+        with open(hp, encoding='utf-8') as _cg1_file_3:
+            H = json.load(_cg1_file_3)
     except Exception: H = {'msgs': {}, 'oldest': None, 'done': False, 'mode': None, 'calls': 0, 'errs': []}
     now = datetime.datetime.now(MC.MSK)
     res = {'t': iso(now), 'calls': 0, 'new': 0}
@@ -207,11 +212,12 @@ def run(L, log, jload, jsave, publish, iso):
         for fn in sorted(os.listdir(os.path.join(M, 'export'))) if os.path.isdir(os.path.join(M, 'export')) else []:
             if not fn.startswith(str(cid)) or not fn.endswith('.json'): continue
             try:
-                for x in json.load(open(os.path.join(M, 'export', fn), encoding='utf-8')).get('messages') or []:
-                    mid = str(x.get('mid') or '')
-                    if mid and mid not in H['msgs']:
-                        H['msgs'][mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
-                                          'text': mask(str(x.get('text') or '')), 'rmid': '', 'mentions': []}
+                with open(os.path.join(M, 'export', fn), encoding='utf-8') as _cg2_file_1:
+                    for x in json.load(_cg2_file_1).get('messages') or []:
+                        mid = str(x.get('mid') or '')
+                        if mid and mid not in H['msgs']:
+                            H['msgs'][mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
+                                              'text': mask(str(x.get('text') or '')), 'rmid': '', 'mentions': []}
             except Exception: pass
         H['export_in'] = True
     # новые
@@ -281,9 +287,9 @@ def run(L, log, jload, jsave, publish, iso):
             if LD.is_lead(name=who, uid=uid_of.get(who)): return False     # 03.11.2026: руководству напоминаний нет
             return members is None or uid_of.get(who) in members
         # 28.10, пользователь: «используй фамилии, имена из файла структуры — люди в филиалах менялись» (docs_brand/org.json, Коммерческий отдел → Филиалы)
-        OFFICE = {'Сотрудник43 Сотрудник42': 'ОП Сотрудник11 Имя2', 'Имя5': 'ОП Екатеринбург', 'Сотрудник32 Сотрудник48': 'ОП Симферополь', 'ОП Самара Фабрикант': 'ОП Самара',
+        OFFICE = {'Сотрудник43 Сотрудник42': 'ОП Сотрудник11 Имя2', 'Имя4': 'ОП Екатеринбург', 'Сотрудник32 Сотрудник48': 'ОП Симферополь', 'ОП Самара Фабрикант': 'ОП Самара',
                   'Сотрудник45 Сотрудник44 Фабрикант Самара': 'ОП Самара', 'Сотрудник3 Сотрудник47': 'ОП Краснодар', 'Сотрудник21 Сотрудник16': 'ОП Рязань'}
-        FIO = {'ОП Сотрудник11 Имя2': 'Сотрудник42 Сотрудник43 Отчество23, руководитель офиса продаж', 'ОП Екатеринбург': 'Сотрудник40 Имя5 Отчество22, руководитель офиса продаж',
+        FIO = {'ОП Сотрудник11 Имя2': 'Сотрудник42 Сотрудник43 Отчество23, руководитель офиса продаж', 'ОП Екатеринбург': 'Сотрудник40 Имя4 Отчество22, руководитель офиса продаж',
                'ОП Самара': 'Сотрудник44 Сотрудник45 Отчество24, менеджер', 'ОП Краснодар': 'Сотрудник47 Сотрудник3 Отчество25, менеджер',
                'ОП Симферополь': 'Сотрудник48 Сотрудник32 Отчество22, менеджер', 'ОП Рязань': 'Сотрудник16 Сотрудник21 Отчество11, директор по развитию'}
         def nrm(t):
@@ -398,7 +404,9 @@ def groups_pull(token, groups, M, MC, publish, iso, now, log=None):
     else: titles = {k: str((groups.get(k) or {}).get('title') or '') for k in cids}
     for cid in cids[:3]:
         hp = os.path.join(M, 'history_%s.json' % cid)
-        try: H = json.load(open(hp, encoding='utf-8'))
+        try:
+            with open(hp, encoding='utf-8') as _cg1_file_4:
+                H = json.load(_cg1_file_4)
         except Exception: H = {'msgs': {}}
         upper = None
         for _ in range(4):

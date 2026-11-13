@@ -3,10 +3,11 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Loose ends of the networks and objects tied to nothing, in the model data (site_app.json, local metres) -> net_check.json"""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, math, numpy as np
 from shapely.geometry import Point, LineString, Polygon
 B = '/home/claude/build/'
-S = json.load(open(B + 'site_app.json'))
+S = _cg1_read_json(B + 'site_app.json')
 A = S['aff']['ms']; LL = S['aff']['ll']
 ms = lambda p: (A[0][0]*p[0] + A[0][1]*p[1] + A[0][2], A[1][0]*p[0] + A[1][1]*p[1] + A[1][2])
 ll = lambda p: (LL[0][0]*p[0] + LL[0][1]*p[1] + LL[0][2], LL[1][0]*p[0] + LL[1][1]*p[1] + LL[1][2])
@@ -101,7 +102,10 @@ for c in S['cams']:
     if not c.get('mount'):
         X, Y = ms((c['x'], c['y'])); k, n, db = nearest_b(Point(c['x'], c['y']))
         pts.append(dict(cat='cam', p=[c['x'], c['y']], X=round(X, 2), Y=round(Y, 2), name=f'камера {c.get("num") or c.get("ip")} {c.get("name") or ""} — не привязана к зданию или опоре', near=n, dnear=round(db, 1)))
-json.dump({'ends': issues, 'points': pts}, open(B + 'net_check.json', 'w'), ensure_ascii=False, indent=1)
+_cg1_dump_func = json.dump
+_cg1_dump_value = {'ends': issues, 'points': pts}
+with open(B + 'net_check.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
 if __name__ == '__main__':
     import collections
     print(collections.Counter((i['cat'], i['fam']) for i in issues))

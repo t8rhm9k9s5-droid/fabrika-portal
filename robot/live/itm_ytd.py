@@ -148,7 +148,9 @@ def _save_full(L, IG, kind, full, row, st, res):
         if not fn: continue
         fn = IT.fix_ext(IT.clean(fn))
         try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-        except Exception: pass
+        except Exception:
+            # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+            pass
         data = p.get_payload(decode=True) or b''
         if not data: continue
         low = fn.lower()
@@ -254,7 +256,9 @@ def parse_ved(rows):
         c = [x for x in r if x not in ('', None)]
         if len(c) >= 2:
             try: flat.append((c[0].strip(), float(str(c[1]).replace(' ', '').replace(',', '.'))))
-            except ValueError: pass
+            except ValueError:
+                # намеренно: строка без числового количества не входит в плоский список выпуска.
+                pass
     day, vid, models, orders, cur_v = None, {}, {}, set(), None
     for i, (nm, q) in enumerate(flat):
         m = re.match(r'^(\d\d)\.(\d\d)\.(\d{4})$', nm)
@@ -451,7 +455,9 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
     for fn in os.listdir(OUTD) if os.path.isdir(OUTD) else []:
         m = re.match(r'plan_(\d{4})-(\d\d)\.json$', fn)
         if not m: continue
-        try: P = json.load(open(os.path.join(OUTD, fn), encoding='utf-8'))
+        try:
+            with open(os.path.join(OUTD, fn), encoding='utf-8') as _cg1_file_1:
+                P = json.load(_cg1_file_1)
         except Exception: continue
         y, mo = int(m.group(1)), int(m.group(2)); wk = P.get('week_days', 5); wd = int(P.get('wd') or 0) or BO.work_days(y, mo)   # 03.11: «wd» — рабочие дни из утверждённого плана ПДО (ноябрь — 21)
         plans_wd['%04d-%02d' % (y, mo)] = wd
@@ -538,27 +544,28 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
     tz, plan_letters, by_folder, seen, calc = {}, [], {}, set(), {}
     peo_first, req_first = {}, {}
     if os.path.exists(idx_path):
-        for ln in open(idx_path, encoding='utf-8'):
-            try: r = json.loads(ln)
-            except Exception: continue
-            by_folder[r.get('f')] = by_folder.get(r.get('f'), 0) + 1
-            key = r.get('mid') or ('%s|%s' % (r.get('f'), r.get('u')))
-            if key in seen and not r.get('pl'): continue
-            seen.add(key)
-            sj = (r.get('s') or '')
-            ck = re.sub(r'^(\s*(re|fw|fwd|ответ|пересл\w*)(\[\d+\])?\s*:|\s*\[\w+\])+', '', sj, flags=re.I).strip().lower()[:80]
-            mt_ = TZ_RE.search(sj)
-            if mt_: ck = 'тз:' + tz_num(mt_)                                       # одно ТЗ — один расчёт, как бы ни менялась тема
-            if PEO_RE.match(r.get('fr') or '') and re.search(r'расч[её]т|просч[её]т|стоимост|цен[аы]|себестоим|ТЗ\s*№', sj, re.I):    # 28.10: расчёты цен ПЭО по месяцам
-                cm = calc.setdefault((r.get('t') or '')[:7], set()); cm.add(ck)
-                if ck and (ck not in peo_first or (r.get('t') or '') < peo_first[ck]['t']): peo_first[ck] = {'t': r.get('t') or '', 'fr': r.get('fr') or '', 's': sj[:160]}
-            elif ck and not PEO_RE.match(r.get('fr') or '') and (r.get('fr') or '').endswith(('@fabrikant.su', '@fabrikant.pro')):
-                if ck not in req_first or (r.get('t') or '') < req_first[ck]['t']: req_first[ck] = {'t': r.get('t') or '', 'fr': r.get('fr') or ''}
-            m = TZ_RE.search(sj)
-            if m:
-                k = tz_num(m)                                                      # 02.11: «11/02» и «11/2» — одно ТЗ (нумерация И-КО-02 и 1С: ММ/N)
-                tz.setdefault(k, []).append(r)
-            if r.get('pl'): plan_letters.append({'t': r['t'], 'fr': r['fr'], 's': r['s'][:160], 'a': [a['n'] for a in r['pl']][:6], 'sha': [[a['n'], a.get('sha')] for a in r['pl']][:6]})
+        with open(idx_path, encoding='utf-8') as _cg2_file_1:
+            for ln in _cg2_file_1:
+                try: r = json.loads(ln)
+                except Exception: continue
+                by_folder[r.get('f')] = by_folder.get(r.get('f'), 0) + 1
+                key = r.get('mid') or ('%s|%s' % (r.get('f'), r.get('u')))
+                if key in seen and not r.get('pl'): continue
+                seen.add(key)
+                sj = (r.get('s') or '')
+                ck = re.sub(r'^(\s*(re|fw|fwd|ответ|пересл\w*)(\[\d+\])?\s*:|\s*\[\w+\])+', '', sj, flags=re.I).strip().lower()[:80]
+                mt_ = TZ_RE.search(sj)
+                if mt_: ck = 'тз:' + tz_num(mt_)                                       # одно ТЗ — один расчёт, как бы ни менялась тема
+                if PEO_RE.match(r.get('fr') or '') and re.search(r'расч[её]т|просч[её]т|стоимост|цен[аы]|себестоим|ТЗ\s*№', sj, re.I):    # 28.10: расчёты цен ПЭО по месяцам
+                    cm = calc.setdefault((r.get('t') or '')[:7], set()); cm.add(ck)
+                    if ck and (ck not in peo_first or (r.get('t') or '') < peo_first[ck]['t']): peo_first[ck] = {'t': r.get('t') or '', 'fr': r.get('fr') or '', 's': sj[:160]}
+                elif ck and not PEO_RE.match(r.get('fr') or '') and (r.get('fr') or '').endswith(('@fabrikant.su', '@fabrikant.pro')):
+                    if ck not in req_first or (r.get('t') or '') < req_first[ck]['t']: req_first[ck] = {'t': r.get('t') or '', 'fr': r.get('fr') or ''}
+                m = TZ_RE.search(sj)
+                if m:
+                    k = tz_num(m)                                                      # 02.11: «11/02» и «11/2» — одно ТЗ (нумерация И-КО-02 и 1С: ММ/N)
+                    tz.setdefault(k, []).append(r)
+                if r.get('pl'): plan_letters.append({'t': r['t'], 'fr': r['fr'], 's': r['s'][:160], 'a': [a['n'] for a in r['pl']][:6], 'sha': [[a['n'], a.get('sha')] for a in r['pl']][:6]})
     T = {'n': 0, 'to_pto': 0, 'peo': 0, 'months': {}, 'by_from': {}, 'open': [], 'lead': []}
     for k, rs in tz.items():
         rs.sort(key=lambda r: r.get('t') or '')
@@ -578,7 +585,9 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
             try:
                 d0 = datetime.datetime.strptime(first['t'], '%Y-%m-%dT%H:%M'); d1 = datetime.datetime.strptime(peo['t'], '%Y-%m-%dT%H:%M')
                 T['lead'].append(round((d1 - d0).total_seconds() / 86400, 1))
-            except Exception: pass
+            except Exception:
+                # намеренно: без корректной пары дат не добавляем длительность в статистику T['lead'].
+                pass
         elif pto: T['open'].append({'tz': k, 't': first.get('t'), 'fr': who, 's': (first.get('s') or '')[:120], 'n': len(rs)})
     # 28.10.2026, поручение: «ТЗ заведённые в обработку, отработанные и рассчитанные, какие заказы по ним взяты, что разработано и не внедрено» —
     # реестр по каждому ТЗ из тем писем: изделие и клиент (тема «ТЗ №ММ/N  Изделие_Клиент»), кто завёл, когда ответил ПТО, рассчитал ПЭО,
@@ -805,33 +814,36 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
             if st.get('docs_rq') != 1 and os.path.exists(idx):
                 rawof = {name: raw for raw, name in fl}
                 qd = set(st.get('qdone') or []); qm = set(x[3] for x in st['queue'])
-                for ln in open(idx, encoding='utf-8'):
-                    try: r = json.loads(ln)
-                    except Exception: continue
-                    if 'pl' in r or not r.get('u') or r.get('mid') in qd or r.get('mid') in qm: continue
-                    dk = _doc_kind(r) if not TZ_RE.search(r.get('s') or '') else None
-                    if dk and r.get('f') in rawof:
-                        st['queue'].append([rawof[r['f']], r['u'], dk, r['mid'], r['t'], r.get('fr', '')]); qm.add(r['mid'])
+                with open(idx, encoding='utf-8') as _cg3_file_11:
+                    for ln in _cg3_file_11:
+                        try: r = json.loads(ln)
+                        except Exception: continue
+                        if 'pl' in r or not r.get('u') or r.get('mid') in qd or r.get('mid') in qm: continue
+                        dk = _doc_kind(r) if not TZ_RE.search(r.get('s') or '') else None
+                        if dk and r.get('f') in rawof:
+                            st['queue'].append([rawof[r['f']], r['u'], dk, r['mid'], r['t'], r.get('fr', '')]); qm.add(r['mid'])
                 st['docs_rq'] = 1; changed = True
             # 28.10: отчёты ПДО январь — май (Excel, не PDF) раньше не сохранялись — один раз поставить их в очередь заново
             if st.get('rep_rq') != 1 and os.path.exists(idx):
                 rawof = {name: raw for raw, name in fl}; qm = set(x[3] for x in st['queue'])
-                for ln in open(idx, encoding='utf-8'):
-                    try: r = json.loads(ln)
-                    except Exception: continue
-                    if r.get('fr') in ('user28@example.org', 'user36@example.org') and (r.get('t') or '') < '2026-06-01' and r.get('mx') \
-                            and re.search(r'отч[её]т', r.get('s') or '', re.I) and r.get('f') in rawof and r.get('mid') not in qm:
-                        st['queue'].append([rawof[r['f']], r['u'], 'rep', r['mid'], r['t'], r['fr']]); qm.add(r['mid'])
+                with open(idx, encoding='utf-8') as _cg3_file_12:
+                    for ln in _cg3_file_12:
+                        try: r = json.loads(ln)
+                        except Exception: continue
+                        if r.get('fr') in ('user28@example.org', 'user36@example.org') and (r.get('t') or '') < '2026-06-01' and r.get('mx') \
+                                and re.search(r'отч[её]т', r.get('s') or '', re.I) and r.get('f') in rawof and r.get('mid') not in qm:
+                            st['queue'].append([rawof[r['f']], r['u'], 'rep', r['mid'], r['t'], r['fr']]); qm.add(r['mid'])
                 st['rep_rq'] = 1; changed = True
             # 28.10: отчёты ПЭО («Средние цены реализации» январь — сентябрь и др.) скачаны до того, как их стали сохранять в ytd/econ — один раз заново
             if st.get('econ_rq') != 1 and os.path.exists(idx):
                 rawof = {name: raw for raw, name in fl}; qm = set(x[3] for x in st['queue'])
-                for ln in open(idx, encoding='utf-8'):
-                    try: r = json.loads(ln)
-                    except Exception: continue
-                    if PEO_RE.match(r.get('fr') or '') and r.get('mx') and (r.get('sz') or 0) < MAX_FULL and r.get('f') in rawof and r.get('mid') not in qm \
-                            and re.search(r'средн\w*\s+цен|себестоим|выполнен|отгруз|продаж', r.get('s') or '', re.I) and not TZ_RE.search(r.get('s') or ''):
-                        st['queue'].append([rawof[r['f']], r['u'], 'rep', r['mid'], r['t'], r['fr']]); qm.add(r['mid'])
+                with open(idx, encoding='utf-8') as _cg3_file_13:
+                    for ln in _cg3_file_13:
+                        try: r = json.loads(ln)
+                        except Exception: continue
+                        if PEO_RE.match(r.get('fr') or '') and r.get('mx') and (r.get('sz') or 0) < MAX_FULL and r.get('f') in rawof and r.get('mid') not in qm \
+                                and re.search(r'средн\w*\s+цен|себестоим|выполнен|отгруз|продаж', r.get('s') or '', re.I) and not TZ_RE.search(r.get('s') or ''):
+                            st['queue'].append([rawof[r['f']], r['u'], 'rep', r['mid'], r['t'], r['fr']]); qm.add(r['mid'])
                 st['econ_rq'] = 1; changed = True
             # 28.10: «буфер заказов» — в темах писем его нет, ищем в тексте писем (поиск на сервере), письма скачиваются целиком
             if st.get('body_rq') != 1 and time.time() - t0 < budget * 0.7:
@@ -888,7 +900,9 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
         res['state'] = 'Mail.ru: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     try: os.chmod(idx, 0o600)
     except Exception: pass

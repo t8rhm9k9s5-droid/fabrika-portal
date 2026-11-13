@@ -4,6 +4,7 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Floor plans for «План внутри»: crop the plan drawings, and tie each image to the ground by axis intersections (МСК-62).
 Writes site/plans/plan_<k>.jpg and build/plans_src.json: {k: {src, w, h, label, floor, ctrl: [[img_x, img_y, X, Y], ...]}}"""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, subprocess, os
 import numpy as np
 from PIL import Image
@@ -12,13 +13,13 @@ U = '/root/.claude/uploads/91321563-ef32-5ced-806b-925c9616f525/'
 TMP = 'REDACTED_B64_4'
 OUT = '/home/claude/site/plans'
 os.makedirs(TMP, exist_ok=True); os.makedirs(OUT, exist_ok=True)
-SK = json.load(open('/home/claude/build/sklad_data.json'))
+SK = _cg1_read_json('/home/claude/build/sklad_data.json')
 O = np.array(SK['frame']['O']); u = np.array(SK['frame']['u']); v = np.array(SK['frame']['v'])   # O = (X, Y); u, v = (east, north)
 def fmsk(uu, vv):
     e = O[1] + u[0] * uu + v[0] * vv; n = O[0] + u[1] * uu + v[1] * vv; return [round(float(n), 3), round(float(e), 3)]
 AX1 = {str(i + 1): 0.49 + x for i, x in enumerate([0, 6, 12, 18, 24, 30, 36, 40])}
 AY1 = {c: 0.07 + 6 * i for i, c in enumerate('АБВГДЕЖ')}
-S3 = json.load(open('/home/claude/build/site3d.json'))
+S3 = _cg1_read_json('/home/claude/build/site3d.json')
 # local metres -> MSK by the same affine as the 3D page
 pts = [(s['x'], s['y'], s['X'], s['Y']) for s in S3['sp']]
 A = np.array([[p[0], p[1], 1] for p in pts]); MS = np.array([[p[2], p[3]] for p in pts])
@@ -65,4 +66,7 @@ def wsm(s_, t_): p = Ow + es * s_ + et * t_; return l2m(p[0], p[1])
 add('ws', 'Маркировочный план цеха', '/home/claude/docs2/zip/ТОМ3_75_23-АР.pdf', 12, 120, (95, 45, 1600, 410),
     [((142.0, 387.0), wsm(0, 0)), ((1545.1, 387.0), wsm(49.5, 0)), ((142.0, 69.5), wsm(0, 11.2)), ((1545.1, 69.5), wsm(49.5, 11.2))],
     106.75, '75/23-АР, лист 12')
-json.dump(plans, open('/home/claude/build/plans_src.json', 'w'), ensure_ascii=False, indent=1)
+_cg1_dump_func = json.dump
+_cg1_dump_value = plans
+with open('/home/claude/build/plans_src.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)

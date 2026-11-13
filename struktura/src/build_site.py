@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Сайт оргструктуры ГК «Фабрикант»: руководство, производственные участки, отделы, функции коммерческого отдела."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
 _ROOT = _os.path.dirname(_SRC)
@@ -11,7 +12,7 @@ import sales_section as KO   # стили и скрипты раздела
 import ko_master as KOM       # сам раздел «Коммерческий отдел» — ko_master/*.html
 
 OUT = _os.path.join(_ROOT, "sites", "fabrikant-site.html")
-LOGO = base64.b64encode(open(_os.path.join(_SRC, "logo_white.png"), "rb").read()).decode()
+LOGO = base64.b64encode(_cg1_read_file(_os.path.join(_SRC, "logo_white.png"), "rb")).decode()
 esc = lambda s: html.escape(s or "", quote=True)
 
 TOTAL_STAFF = AREAS_STAFF
@@ -333,5 +334,6 @@ page = f"""<title>Оргструктура «Фабрикант»</title>
 <footer><div class="wrap">{esc(COMPANY)} · оргструктура по «Компания (1).pdf», производственные участки по схеме участков, ответы руководителей и решения коммерческого директора · редакция {EDITION}.2026</div></footer>
 <script>{JS}{KO.TOGGLE_JS}</script>
 """
-open(OUT, "w", encoding="utf-8").write(page)
+with open(OUT, "w", encoding="utf-8") as _cg1_output_337:
+    _cg1_output_337.write(page)
 print("saved", OUT, len(page))

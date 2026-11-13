@@ -5,6 +5,7 @@
 """Web app (PWA) «Фабрика» for iPhone (and any phone): the offline site + manifest, icons, service worker.
    python3 build_pwa.py -> /home/claude/app_build/pwa/terekhina14  and  /mnt/user-data/outputs/Фабрика — сайт со всеми документами.zip
    Put the folder on any HTTPS web server; on the iPhone: Safari -> Поделиться -> На экран «Домой»."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os, re, sys, json, shutil, glob, time, zipfile, hashlib
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
@@ -16,14 +17,14 @@ os.remove(f'{OUT}/README.txt')
 shutil.copytree(f'{B}/fonts_www', f'{OUT}/fonts', dirs_exist_ok=True)   # the local fonts (@fontsource, OFL) — app_build/fonts_www; с 29.10 их же кладёт build_site.py (один набор на сайт)
 
 # archive: phone copies, fetched when opened and kept for offline use
-h = open(f'{SITE}/archive.html', encoding='utf-8').read()
+h = _cg1_read_file(f'{SITE}/archive.html', encoding='utf-8')
 ARCH = json.loads(re.search(r'<script id="arch-data" type="application/json">(.*?)</script>', h, re.S).group(1))
 for d in ARCH['docs']: shutil.copy(f'{B}/arch_small/{d["file"]}', f'{OUT}/archive/{d["file"]}')
 DOC_FILES = ['archive/' + d['file'] for d in ARCH['docs']]
 # camera photos: relative path with an extension, so the site works from any folder of the server
 by_asset = {d['asset']: d for d in ARCH['docs'] if d.get('asset')}
-ids = set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', open(f'{SITE}/data/edits.json', encoding='utf-8').read()))
-ids |= set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', open(f'{SITE}/index.html', encoding='utf-8').read()))
+ids = set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', _cg1_read_file(f'{SITE}/data/edits.json', encoding='utf-8')))
+ids |= set(re.findall(r'"photo":\s*"([0-9a-f]{32})"', _cg1_read_file(f'{SITE}/index.html', encoding='utf-8')))
 # 29.10.2026, пользователь: «убери дубли файлов на портале» — фото камер больше не копируются в _blob/<id>.jpg (8 файлов, 2,4 МБ повторяли
 # archive/kadr_*.jpg): страницы получают карту id → archive/<файл> (window.T14_BLOB) и берут фото из архива
 BLOB = {i: 'archive/' + by_asset[i]['file'] for i in ids if i in by_asset}
@@ -59,11 +60,13 @@ if os.environ.get('T14_ACCT_URL') or os.path.exists('/home/claude/push/acct_live
     _M, _why = _ACCT.plan_master(_S, _ACCT.load_keyring())      # a new site key is decided here, so acct.json already says «shared: false»
     if _why != 'same key': _ACCT.save_enc_secret(_S, _SEC); print('site key:', _why)
     json.dump({'url': os.environ.get('T14_ACCT_URL') or json.load(open(PUSH))['url'], 'pub': _ACCT.keys()['pub'], 'salt': _S['salt'], 'iter': _S['iter'], 'shared': not _S.get('master_hex')}, open(f'{OUT}/acct.json', 'w', encoding='utf-8'))
-json.dump({'name': 'Фабрика', 'short_name': 'Фабрика', 'description': 'Портал «Фабрика»: карта производства, производство, склад, документы, изделия и чат', 'lang': 'ru', 'start_url': './home.html', 'scope': './',
+_cg1_json_value_63 = {'name': 'Фабрика', 'short_name': 'Фабрика', 'description': 'Портал «Фабрика»: карта производства, производство, склад, документы, изделия и чат', 'lang': 'ru', 'start_url': './home.html', 'scope': './',
            'display': 'standalone', 'background_color': '#141A26', 'theme_color': '#242528',
            'icons': [{'src': 'icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png'}, {'src': 'icons/icon-512.png', 'sizes': '512x512', 'type': 'image/png'},
-                     {'src': 'icons/icon-maskable-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'}]},
-          open(f'{OUT}/manifest.webmanifest', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+                     {'src': 'icons/icon-maskable-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'}]}
+with open(f'{OUT}/manifest.webmanifest', 'w', encoding='utf-8') as _cg1_json_output_63:
+    json.dump(_cg1_json_value_63,
+              _cg1_json_output_63, ensure_ascii=False, indent=1)
 
 # pages
 HEAD = ('<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">'
@@ -75,7 +78,7 @@ GF = re.compile(r'<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>')
 shutil.copy(f'{B}/pwa_glue.js', f'{OUT}/assets/pwa.js')
 shutil.copy(f'{B}/app_glue.js', f'{OUT}/assets/app.js')        # Android shell (online APK): saving files, the Back button; does nothing in a browser
 for page in glob.glob(f'{OUT}/*.html'):
-    s = open(page, encoding='utf-8').read()
+    s = _cg1_read_file(page, encoding='utf-8')
     cut = s.find('<script'); head, rest = s[:cut], s[cut:]
     # 28.10.2026: ссылки на fonts.googleapis.com вырезались только до первого <script>, а с 28.10 страницы начинаются со скрипта темы —
     # plan.html, archive.html и index.html снова ждали Google Fonts (блокирующий <link>, без интернета — долгий белый экран). Вырезаем везде,
@@ -88,7 +91,7 @@ for page in glob.glob(f'{OUT}/*.html'):
     s = s.replace("one('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js').catch(()=>window.__T14_FILE ? Promise.reject(1) : one('lib/xlsx.full.min.js'))",
                   "one('lib/xlsx.full.min.js')")
     s = s.replace("'/_blob/' + encodeURIComponent(c.photo)", "((window.T14_BLOB || {})[c.photo] || 'archive/' + encodeURIComponent(c.photo) + '.jpg')")
-    if "'/_blob/' + encodeURIComponent(c.photo)" in open(page, encoding='utf-8').read() or 'T14_BLOB' in s:
+    if "'/_blob/' + encodeURIComponent(c.photo)" in _cg1_read_file(page, encoding='utf-8') or 'T14_BLOB' in s:
         s = s.replace('<body>', '<body><script>window.T14_BLOB=' + json.dumps(BLOB, separators=(',', ':')) + '</script>', 1)
     if page.endswith('archive.html'):
         m = re.search(r'(<script id="arch-data" type="application/json">)(.*?)(</script>)', s, re.S)
@@ -100,7 +103,8 @@ for page in glob.glob(f'{OUT}/*.html'):
         s = s.replace("L.getDocument({url: srcOf(d), isEvalSupported: false, useSystemFonts: true})",
                       "L.getDocument({url: srcOf(d), isEvalSupported: false, useSystemFonts: true, disableRange: true, disableStream: true})")
         s = s.replace("'Этот файл хранится в онлайн-версии сайта (в Claude).'", "'Документ ещё не сохранён на телефоне — откройте его один раз при интернете.'")
-    open(page, 'w', encoding='utf-8').write(s)
+    with open(page, 'w', encoding='utf-8') as _cg1_output_104:
+        _cg1_output_104.write(s)
 
 # service worker: everything except the archive documents is saved on install; documents are saved when opened (or all at once)
 pre = []
@@ -111,7 +115,7 @@ for root, _, files in os.walk(OUT):
         pre.append(rel)
 pre.sort()
 pre_size = sum(os.path.getsize(f'{OUT}/{p}') for p in pre); doc_size = sum(os.path.getsize(f'{OUT}/{p}') for p in DOC_FILES)
-ver = hashlib.sha1(''.join(hashlib.sha1(open(f'{OUT}/{p}', 'rb').read()).hexdigest() + p for p in pre).encode()).hexdigest()[:10]   # the whole content of every file
+ver = hashlib.sha1(''.join(hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest() + p for p in pre).encode()).hexdigest()[:10]   # the whole content of every file
 # 28.10.2026, пользователь: «по мелким обновлениям не присылай всем уведомления в боты и пуши на портал — просто обновляй данные. Если меняем дизайн,
 #   структуру или набралось много обновлений (больше 50 в разных папках) — тогда да, и всё равно не больше 5 в день или сводкой в 18:00. Лично мне — каждый раз.»
 #   Скрипт уведомлений шлёт пуш всем, когда меняется хвост VERSION (хэш) → хвост меняется только у «крупного» выпуска; сам sw.js меняется всегда
@@ -119,11 +123,11 @@ ver = hashlib.sha1(''.join(hashlib.sha1(open(f'{OUT}/{p}', 'rb').read()).hexdige
 #   или первая сборка после 18:00 (сводка дня); не больше 5 в день. Решение — в release_state.json (его читает bot/bot_live.py для новостей бота).
 import datetime as _dtr
 _RS = f'{B}/release_state.json'
-try: _st = json.load(open(_RS, encoding='utf-8'))
+try: _st = _cg1_load_json(_RS, encoding='utf-8')
 except Exception: _st = {}
-_cur = {p: hashlib.sha1(open(f'{OUT}/{p}', 'rb').read()).hexdigest()[:12] for p in pre}
+_cur = {p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in pre}
 if not _st.get('pub'):
-    try: _st['pub'] = re.search(r"const VERSION = '[^']*-([0-9a-f]{10})'", open(f'{OUT}/sw.js', encoding='utf-8').read()).group(1)
+    try: _st['pub'] = re.search(r"const VERSION = '[^']*-([0-9a-f]{10})'", _cg1_read_file(f'{OUT}/sw.js', encoding='utf-8')).group(1)
     except Exception: _st['pub'] = ver
     _st['files'] = _cur
 _changed = sum(1 for p, h in _cur.items() if (_st.get('files') or {}).get(p) != h)
@@ -138,13 +142,17 @@ if _public:
     if _digest: _st['digest_day'] = _day
 _st['last'] = {'t': _now.strftime('%Y-%m-%dT%H:%M'), 'public': bool(_public), 'changed': _changed, 'ver': ver}
 _st['days'] = {k: v for k, v in sorted(_days.items())[-10:]}
-json.dump(_st, open(_RS, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+_cg1_json_value_143 = _st
+with open(_RS, 'w', encoding='utf-8') as _cg1_json_output_143:
+    json.dump(_cg1_json_value_143, _cg1_json_output_143, ensure_ascii=False, indent=1)
 print('уведомления:', 'всем (%s)' % _st.get('why') if _public else 'только данные, без рассылки всем (изменено файлов %d, рассылок сегодня %d)' % (_changed, _n))
-sw = open(f'{B}/pwa_sw.js', encoding='utf-8').read()
-sw = sw.replace('__VERSION__', STAMP + '-' + _st['pub']).replace('__PRECACHE__', json.dumps(pre)).replace('__DOCS__', json.dumps({p: hashlib.sha1(open(f'{OUT}/{p}', 'rb').read()).hexdigest()[:12] for p in DOC_FILES}))
-open(f'{OUT}/sw.js', 'w', encoding='utf-8').write(sw)
-open(f'{OUT}/README.txt', 'w', encoding='utf-8').write(open(f'{B}/pwa_readme.txt', encoding='utf-8').read()
-     .replace('__PRE__', f'{pre_size / 1e6:.0f}').replace('__DOCS__', f'{doc_size / 1e6:.0f}').replace('__N__', str(len(DOC_FILES))))
+sw = _cg1_read_file(f'{B}/pwa_sw.js', encoding='utf-8')
+sw = sw.replace('__VERSION__', STAMP + '-' + _st['pub']).replace('__PRECACHE__', json.dumps(pre)).replace('__DOCS__', json.dumps({p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in DOC_FILES}))
+with open(f'{OUT}/sw.js', 'w', encoding='utf-8') as _cg1_output_146:
+    _cg1_output_146.write(sw)
+with open(f'{OUT}/README.txt', 'w', encoding='utf-8') as _cg1_output_147:
+    _cg1_output_147.write(_cg1_read_file(f'{B}/pwa_readme.txt', encoding='utf-8')
+         .replace('__PRE__', f'{pre_size / 1e6:.0f}').replace('__DOCS__', f'{doc_size / 1e6:.0f}').replace('__N__', str(len(DOC_FILES))))
 zp = '/mnt/user-data/outputs/Фабрика — сайт со всеми документами.zip'      # the whole open site (sync.json, push.json inside): only on request, python3 build_pwa.py --zip
 if '--zip' in sys.argv:
     with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED) as z:

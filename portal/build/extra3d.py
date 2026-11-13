@@ -3,17 +3,18 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Adds substations, power networks, the sewing workshop project and parcel :779 to site3d.json."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, math, io, contextlib, re
 import numpy as np
 from matplotlib.path import Path
 
 NS = {}
 with contextlib.redirect_stdout(io.StringIO()):
-    exec(open('/home/claude/build/data3d.py').read(), NS)
+    exec(_cg1_read_file('/home/claude/build/data3d.py'), NS)
 geo, loc, zat = NS['geo'], NS['loc'], NS['zat']
 D = NS['D']
-S = json.load(open('/home/claude/build/site3d.json'))
-GPD = json.load(open('/home/claude/build/gp_data.json'))
+S = _cg1_read_json('/home/claude/build/site3d.json')
+GPD = _cg1_read_json('/home/claude/build/gp_data.json')
 PPM = (150 / 2.54) / 5
 
 
@@ -66,7 +67,7 @@ new = [
     mk_building('nKpp', 'Пристройка «Н» к проходной', [(4100, 2277), (4082, 2300), (4133, 2338), (4150, 2314)], 3.0, 'Н'),
 ]
 # ТП-2 and ТП-3 as on photo 3 of 21.10.2026 (front/surfaces.py): white silicate brick, heights from the photo, details drawn by the app
-_TPX = json.load(open('/home/claude/build/front/front.json', encoding='utf-8')).get('tp', {})
+_TPX = _cg1_read_json('/home/claude/build/front/front.json', encoding='utf-8').get('tp', {})
 for _b in new:
     if _b['k'] in _TPX:
         _b['cad'] = {'tp2': [{'n': '00:00:0000000:2', 't': 'здание трансформаторной подстанции, лит. Л', 's': '40,6', 'm': 'name'}], 'tp3': [{'n': '00:00:0000000:3', 't': 'здание, лит. М', 's': '25,5', 'm': 'name'}]}.get(_b['k'], [])
@@ -141,7 +142,7 @@ P845 = [(454502.78, 1337070.14), (454497.95, 1337088.99), (454483.29, 1337122.17
         (454444.43, 1337221.01), (454440.60, 1337219.37), (454425.94, 1337212.36), (454410.24, 1337204.84), (454403.51, 1337201.57),
         (454408.61, 1337191.08), (454403.02, 1337188.19), (454431.69, 1337132.17), (454440.33, 1337115.26), (454443.86, 1337116.70),
         (454466.15, 1337128.46), (454496.28, 1337067.11)]
-exec(open('/home/claude/build/sklad3d.py').read())
+exec(_cg1_read_file('/home/claude/build/sklad3d.py'))
 
 # ---------- parcel :779 (GPZU coordinates, MSK-62) ----------
 P779 = [(454432.97, 1337243.18), (454406.25, 1337308.81), (454376.19, 1337341.04), (454364.16, 1337332.59), (454327.28, 1337302.85),
@@ -303,7 +304,7 @@ for u in S['utils']:
 gedges = [(a_, b_, 'wall', k) for k, nm, _, pp in D['B'] for a_, b_ in zip(pp, pp[1:] + pp[:1])]
 gedges += [(a_, b_, 'wall', k) for k, nm, pp in D['NEW'] for a_, b_ in zip(pp, pp[1:] + pp[:1])]
 gedges += [(a_, b_, 'fence', None) for i_, (a_, b_) in enumerate(zip(F, F[1:] + F[:1])) if i_ not in FSKIP]
-GLABS = [l for l in json.load(open('/home/claude/gp/texts.json'))]
+GLABS = [l for l in _cg1_read_json('/home/claude/gp/texts.json')]
 def _pt2px(x, y): return (1890.4 + (x - 886.14) * 2.0835, 131.2 + (y - 62.96) * 2.0833)
 gas_over_n = 0; gas_in = []
 for t in GLABS:
@@ -351,7 +352,10 @@ S['parcel779'] = parcel
 S['elec'] = {'cables': cables, 'trays': trays, 'wall': wallc}
 S['proj'] = proj_net
 S['artwell'] = artwell
-exec(open('/home/claude/build/mount_cams.py').read())
-json.dump(S, open('/home/claude/build/site3d.json', 'w'), ensure_ascii=False)
+exec(_cg1_read_file('/home/claude/build/mount_cams.py'))
+_cg1_dump_func = json.dump
+_cg1_dump_value = S
+with open('/home/claude/build/site3d.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
 print('buildings', len(blds), 'wall cables', len(wallc), [w['len'] for w in wallc], 'utils',
       __import__('collections').Counter(u['t'] for u in S['utils']))

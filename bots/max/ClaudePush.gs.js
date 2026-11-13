@@ -396,3 +396,16 @@ function cp_status() {
   catch (e) { out.err = String(e && e.message || e); }
   return out;
 }
+
+
+// REDACTED_B64_2 10.11.2026: включение push (свойств больше 50 — в «Настройках проекта» они только для чтения)
+/** Вставьте ключ задачи «Фабрика — команда из бота (push)» в кавычки ниже, выберите cp_setupFire и нажмите «Выполнить».
+    ПОСЛЕ ЗАПУСКА СОТРИТЕ КЛЮЧ ИЗ КАВЫЧЕК И СОХРАНИТЕ — в свойствах он останется, в коде храниться не должен. */
+var CP_FIRE_TOKEN_PASTE = '';
+function cp_setupFire() {
+  var p = PropertiesService.getScriptProperties();
+  p.setProperty('CLAUDE_FIRE_URL', 'https://api.anthropic.REDACTED_B64_7');
+  p.setProperty('CP_HOUR_LIMIT', '15');
+  if (String(CP_FIRE_TOKEN_PASTE).trim()) p.setProperty('CLAUDE_FIRE_TOKEN', String(CP_FIRE_TOKEN_PASTE).trim());
+  console.log('CLAUDE_FIRE_URL задан; CP_HOUR_LIMIT=15; ключ: ' + (p.getProperty('CLAUDE_FIRE_TOKEN') ? 'ЕСТЬ' : 'НЕТ — вставьте и запустите ещё раз') + '; MODE=' + p.getProperty('MODE') + '; push включён: ' + cp_enabled());
+}

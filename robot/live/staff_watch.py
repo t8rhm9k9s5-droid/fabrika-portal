@@ -34,7 +34,9 @@ IGNORE_MAX = re.compile(r'попов|джанова|фабрикант|бот|cl
 
 
 def _jl(p, d=None):
-    try: return json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as _cg1_file_1:
+            return json.load(_cg1_file_1)
     except Exception: return d
 
 
@@ -42,13 +44,13 @@ def _norm(n): return re.sub(r'[^а-яa-z]', '', (n or '').lower().replace('ё', 
 
 
 def _match(name, people):
-    """имя из MAX («Сотрудник45 Сотрудник44», «Имя5») → человек из списка или None"""
+    """имя из MAX («Сотрудник45 Сотрудник44», «Имя4») → человек из списка или None"""
     w = [_norm(x) for x in (name or '').split() if len(_norm(x)) > 2]
     for p in people:
         pw = [_norm(x) for x in p['name'].split()] + [_norm(x) for a in p.get('aliases') or [] for x in a.split()]
         if w and w[0] in pw[:1] or (len(w) > 1 and any(x in pw[:1] for x in w)): return p
     one = [p for p in people if len(w) == 1 and len(p['name'].split()) > 1 and w[0] == _norm(p['name'].split()[1])]
-    return one[0] if len(one) == 1 else None                              # только имя («Имя5») — если совпадение одно
+    return one[0] if len(one) == 1 else None                              # только имя («Имя4») — если совпадение одно
 
 
 def _banned(cfg, mail, name):

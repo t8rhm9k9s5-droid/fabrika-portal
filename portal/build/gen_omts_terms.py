@@ -7,6 +7,7 @@
 build/omts/Сроки поставки материалов *.ods → build/omts/terms.json + вставка <script id="omts-terms"> в build/omts_frag.html.
 Группы — по убыванию самого долгого срока в группе, строки внутри группы — тоже по убыванию. Срок в днях — для сортировки и
 «самый долгий»: рабочие дни × 1,4 → календарные; «в течение месяца» = 30; «каждую среду / пятницу» = 7; «среда и пятница» = 4."""
+from _cg1_build_io import read_file as _cg1_read_file
 import glob, json, math, os, re, sys
 import pandas as pd
 
@@ -63,14 +64,18 @@ def main():
     _dm = re.search(r'(\d{4}-\d{2}-\d{2})', os.path.basename(SRC))   # 11.11.2026: дата версии — из имени файла (новая версия от Т. В. 11.11)
     data = {'v': 1, 'date': _dm.group(1) if _dm else '2026-11-03', 'by': 'О. В. Сотрудник8, менеджер ОМТС' + (' (обновление передал Т. В. Сотрудник1 11.11: плёнка п/э 5 раб. дней, пакеты ПНД 30 календ. дней)' if _dm and _dm.group(1) >= '2026-11-11' else ''), 'appr': None, 'appr_by': 'руководитель ОМТС С. Н. Сотрудник9',
             'status': 'проект', 'n_rows': len(rows), 'n_groups': len(G), 'groups': G}
-    json.dump(data, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    h = open(FRAG, encoding='utf-8').read()
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = data
+    with open(OUT, 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
+    h = _cg1_read_file(FRAG, encoding='utf-8')
     tag = '<script id="omts-terms">window.OMTS_TERMS = ' + json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + ';</script>'
     if '<script id="omts-terms">' in h:
         h = re.sub(r'<script id="omts-terms">.*?</script>', lambda m: tag, h, count=1, flags=re.S)
     else:
         h = h.replace('<script src="assets/edits.js"></script>', tag + '\n<script src="assets/edits.js"></script>', 1)
-    open(FRAG, 'w', encoding='utf-8').write(h)
+    with open(FRAG, 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(h)
     print(json.dumps({'src': os.path.basename(SRC), 'rows': len(rows), 'groups': len(G),
                       'top': [(x['g'], x['max']) for x in G[:6]], 'unparsed': [x['t'] for x in rows if x['n'] is None]}, ensure_ascii=False))
 

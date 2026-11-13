@@ -14,7 +14,9 @@ NUM_KEY = re.compile(r'MH|Moto|Engine|Fuel|Dist|Run|Mileage|Duration|Time|Speed|
 
 
 def _cfg(L):
-    try: return json.load(open(os.path.join(L, 'code', 'glonass_month.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(L, 'code', 'glonass_month.json'), encoding='utf-8') as _cg1_file_1:
+            return json.load(_cg1_file_1)
     except Exception: return {}
 
 

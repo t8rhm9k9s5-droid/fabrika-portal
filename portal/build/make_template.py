@@ -4,6 +4,7 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Sample table for loading cameras into the site (Терехина, 14): the current 76 cameras with the same columns
 the site exports and reads back, a legend, spare rows for new cameras, and a sheet with the rules and one example row."""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, sys
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -11,7 +12,7 @@ from openpyxl.comments import Comment
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter
 
-D = json.load(open(sys.argv[1], encoding='utf-8'))
+D = _cg1_read_json(sys.argv[1], encoding='utf-8')
 OUT = sys.argv[2]
 rows, HELP, COLS = D['rows'], D['help'], D['cols']
 keys = [c[0] for c in COLS]

@@ -15,6 +15,7 @@
 пункты с номерами, одинаковые у ЖПС/ПКС/ФТС — один раз, отличия — отдельно), регламентов и бланков (library/regs.json), статей ГК РФ (проверены по
 КонсультантПлюс), памятки бота по рекламации и спору, прайс 28.10 (+ app_build/host/live/price_now.json для кода ботов). Приоритет при пределе размера —
 рекламации и качество, сроки, приёмка, гарантия, ответственность, цены, оплата, отгрузка; остальное — «кратко»."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import hashlib, hmac, html, io, json, os, re, subprocess, sys, datetime, zipfile
 sys.path.insert(0, '/home/claude/app_build/host/live')
 import kb_build as KB
@@ -32,12 +33,12 @@ def add(title, text, url, section):
 
 
 def jl(p, d=None):
-    try: return json.load(open(p, encoding='utf-8'))
+    try: return _cg1_read_json(p, encoding='utf-8')
     except Exception: return d
 
 
 def page_text(name):
-    try: s = open(B + name, encoding='utf-8').read()
+    try: s = _cg1_read_file(B + name, encoding='utf-8')
     except Exception: return '', ''
     t = re.search(r'<title>(.*?)</title>', s, re.S)
     s = re.sub(r'<script\b.*?</script[^>]*>|<style\b.*?</style[^>]*>|<svg\b.*?</svg[^>]*>', ' ', s, flags=re.S | re.I)   # 12.11 CodeQL: и <SCRIPT>, </script >
@@ -56,7 +57,7 @@ def ppl_line(P, pid, role=None):
 
 # REDACTED_B64_1 «Кому звонить»
 def calls():
-    try: s = open(B + 'calls_frag.html', encoding='utf-8').read()
+    try: s = _cg1_read_file(B + 'calls_frag.html', encoding='utf-8')
     except Exception: return
     m = re.search(r'<script id="calls-data" type="application/json">(.*?)</script>', s, re.S)
     if not m: return
@@ -197,7 +198,7 @@ def portal_map():
         v = re.sub(r'Загружаю[^.]*…', '', v).strip()
         if u in DESC: v = DESC[u] + ' ' + (v if len(v) > 80 else '')
         add('Раздел портала «%s»' % name, 'Раздел портала «%s» (%s). %s' % (name, u, v[:560]), u, 'Разделы портала')
-    try: log = open(B + 'CHANGELOG.txt', encoding='utf-8').read()
+    try: log = _cg1_read_file(B + 'CHANGELOG.txt', encoding='utf-8')
     except Exception: log = ''
     vers = re.findall(r'^(\d+\.\d+\.\d+ · [^\n]+)\n((?:- [^\n]*\n?)+)', log, re.M)[:5]
     for head, items in vers:
@@ -279,7 +280,7 @@ def src_text(path, sub):
         else:
             subprocess.run(['soffice', '--headless', '--convert-to', 'txt:Text (encoded):UTF8', '--outdir', os.path.dirname(out), path],
                            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
-    return open(out, encoding='utf-8-sig').read().replace('\xa0', ' ')
+    return _cg1_read_file(out, encoding='utf-8-sig').replace('\xa0', ' ')
 
 
 def cap(s):
@@ -745,10 +746,15 @@ def prices():
                    'публичной офертой (расшифровка прайса). Цена зависит от базиса отгрузки (региона); одинаковых цен по регионам быть не должно — строки с '
                    'совпадением отмечены в same. Скидка больше 5 % — только с согласия Т. В. Сотрудник1.',
            'bases': [{'k': k, 'cities': c} for k, c in BASES], 'city_basis': CITY,
-           'peo': [{'name': 'Сотрудник55 Имя6 Отчество30', 'role': 'начальник ПЭО', 'mail': 'user13@example.org'},
+           'peo': [{'name': 'Сотрудник55 Имя5 Отчество30', 'role': 'начальник ПЭО', 'mail': 'user13@example.org'},
                    {'name': 'Сотрудник56 Имя20 Отчество31', 'role': 'экономист ПЭО', 'mail': 'user14@example.org'}],
            'discount_owner_pct': 5, 'n': len(rows), 'n_same': same, 'items': rows}
-    tmp = PRICE_OUT + '.tmp'; json.dump(out, open(tmp, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')); os.replace(tmp, PRICE_OUT)
+    tmp = PRICE_OUT + '.tmp'
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = out
+    with open(tmp, 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, PRICE_OUT)
     STAT['price_rows'] = len(rows); STAT['price_same'] = same
     add('Прайс-лист 28.10.2026: базисы отгрузки и цены',
         'Действующий прайс-лист ГК «Фабрикант» от 28.10.2026 (цены с НДС, руб.). Базисы отгрузки (регион определяет цену): %s. Цены действуют для клиентов, '
@@ -836,7 +842,10 @@ def main():
     sealed = KB.seal_obj(obj, key)
     assert KB.unseal(sealed, key) == obj
     tmp = OUT + '.tmp'; open(tmp, 'w').write(sealed); os.replace(tmp, OUT)
-    json.dump(obj, open(B + 'kb_portal.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = obj
+    with open(B + 'kb_portal.json', 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
     by = {}
     for f in uniq: by[f['s']] = by.get(f['s'], 0) + 1
     if len(sealed) > KB.MAX_KB: sys.exit('kb_portal.txt %d байт больше kb_build.MAX_KB — kb.bin не соберётся' % len(sealed))

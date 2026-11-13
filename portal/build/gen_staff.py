@@ -6,16 +6,17 @@
 in the look of iOS «Настройки» (22.10.2026): grouped lists, a row per area, a tap opens the details.
 Which buildings belong to an area comes from the edits store (chosen in the model's building card),
 otherwise from the defaults in areas.json. Writes build/staff_frag.html (a fragment; the skeleton is added by build_site.py)."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import os
 import json, html
 B = '/home/claude/build/'
 # 03.11.2026: «Расследования» (gen_invest.py → invest_frag.html) на общий портал НЕ выкладываем: выводы и имена — только Сотрудник81
 #   (правило: «выводы о виновных — только Т. В.», по 6244/6038 никому ничего до его разбора на планёрке). Данные — build/invest/cases.json и реестр.
 #   Выложить — только по слову Т. В.: в cases.json поставить "public": true.
-try: INVEST_PUBLIC = bool(json.load(open(B + 'invest/cases.json', encoding='utf-8')).get('public'))
+try: INVEST_PUBLIC = bool(_cg1_read_json(B + 'invest/cases.json', encoding='utf-8').get('public'))
 except Exception: INVEST_PUBLIC = False
-A = json.load(open(B + 'areas.json', encoding='utf-8'))
-S = json.load(open(B + 'site_app.json', encoding='utf-8'))
+A = _cg1_read_json(B + 'areas.json', encoding='utf-8')
+S = _cg1_read_json(B + 'site_app.json', encoding='utf-8')
 import sys as _s; _s.path.insert(0, B); import split_b43 as _SB; _SB.split(S); import split_b29 as _SB29; _SB29.split(S)   # лит. С is two areas: металлоизделия and ГКИ (23.10.2026)
 esc = lambda s: html.escape(str(s), quote=True)
 areas = A['areas']
@@ -144,9 +145,9 @@ body{{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacS
   {(f'<p class="ihdr">Ночная смена</p><div class="igroup">{night_row(A["night"])}</div>') if A.get('night') else ''}
   <p class="ihdr" id="areas">Отдельные участки</p>
   <div class="igroup">{''.join(area_row(a) for a in free)}</div>
-  {open(B + 'pf_frag.html', encoding='utf-8').read() if os.path.exists(B + 'pf_frag.html') else ''}
-  {open(B + 'salescap_frag.html', encoding='utf-8').read() if os.path.exists(B + 'salescap_frag.html') else ''}
-  {open(B + 'invest_frag.html', encoding='utf-8').read() if os.path.exists(B + 'invest_frag.html') and INVEST_PUBLIC else ''}
+  {_cg1_read_file(B + 'pf_frag.html', encoding='utf-8') if os.path.exists(B + 'pf_frag.html') else ''}
+  {_cg1_read_file(B + 'salescap_frag.html', encoding='utf-8') if os.path.exists(B + 'salescap_frag.html') else ''}
+  {_cg1_read_file(B + 'invest_frag.html', encoding='utf-8') if os.path.exists(B + 'invest_frag.html') and INVEST_PUBLIC else ''}
   <p class="ihdr" id="headcount">Численность по участкам</p>
   <div class="igroup">{''.join(count_row(a) for a in sorted(areas, key=lambda a: (-a['staff'], a['n'])))}</div>
   <p class="ifoot">{esc(A['note'])} Где находится участок — предварительно, по названиям цехов; поправить можно в <a href="index.html">модели</a>: откройте здание и выберите участок в карточке. В модели слой «Участки производства» красит здания по участкам.</p>
@@ -183,5 +184,6 @@ body{{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacS
 }})();
 </script>
 '''
-open(B + 'staff_frag.html', 'w', encoding='utf-8').write(page)
+with open(B + 'staff_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(page)
 print('staff page', round(len(page) / 1e3), 'KB')

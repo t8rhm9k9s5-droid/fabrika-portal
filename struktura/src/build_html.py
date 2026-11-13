@@ -210,5 +210,6 @@ search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();
 </script></body></html>"""
 
 out = _os.path.join(_ROOT, "out", "Оргструктура_контакты.html")
-open(out, "w", encoding="utf-8").write(HTML + SCRIPT)
+with open(out, "w", encoding="utf-8") as _cg1_output_213:
+    _cg1_output_213.write(HTML + SCRIPT)
 print("saved", out)

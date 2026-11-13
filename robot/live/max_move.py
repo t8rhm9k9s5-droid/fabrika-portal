@@ -86,7 +86,8 @@ def sources(home, state_dir):
 
 def payload(name, path):
     """содержимое файла для копии: config.json — без секретов; остальное — как есть"""
-    raw = open(path, 'rb').read()
+    with open(path, 'rb') as _cg1_file_2:
+        raw = _cg1_file_2.read()
     if name == 'max/config.json':
         try: raw = json.dumps(scrub(json.loads(raw.decode('utf-8'))), ensure_ascii=False, indent=1).encode('utf-8')
         except Exception: return None                       # не разобрался — не копировать вовсе (секреты не уйдут)
@@ -94,7 +95,9 @@ def payload(name, path):
 
 
 def run(L, CODE, log, jload, jsave, put=None, home=None, budget=BUDGET):
-    try: job = json.load(open(os.path.join(CODE, 'max_move.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(CODE, 'max_move.json'), encoding='utf-8') as _cg1_file_3:
+            job = json.load(_cg1_file_3)
     except Exception: return {'state': 'нет задания'}
     jid = str((job or {}).get('id') or '')
     if not ID_RE.match(jid): return {'state': 'ошибка: id задания'}

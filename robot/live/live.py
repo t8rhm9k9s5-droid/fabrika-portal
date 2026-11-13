@@ -289,7 +289,9 @@ def is_workday(d):
     try:
         import mx_ctl as MCT
         if d.isoformat() in MCT.HOLIDAYS: return False
-    except Exception: pass
+    except Exception:
+        # намеренно: если список mx_ctl недоступен, рабочий день определяет BO.is_workday ниже.
+        pass
     return BO.is_workday(d)
 
 
@@ -360,7 +362,9 @@ def fetch_mail(seen, limit=60, budget=200):
         return out, 'ok'
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
 
 
 KNOWN_EXT = ('pdf', 'xls', 'xlsx', 'xlsm', 'xlsb', 'zip', 'rar', '7z', 'doc', 'docx', 'csv', 'txt', 'odt', 'ods', 'jpg', 'jpeg', 'png', 'rtf', 'xml')
@@ -368,7 +372,9 @@ KNOWN_EXT = ('pdf', 'xls', 'xlsx', 'xlsm', 'xlsb', 'zip', 'rar', '7z', 'doc', 'd
 
 def decode_name(fn):
     try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-    except Exception: pass
+    except Exception:
+        # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+        pass
     fn = re.sub(r'[\t\r\n]+', '', fn)          # 27.10: Mail.ru переносит имя файла посреди слова (CRLF+TAB) — TAB убираем
     m = re.match(r'^(.*)\.([A-Za-z0-9 ]{2,8})$', fn)     # 27.10: перенос с пробелом ломает расширение: «Гальваника ОКТЯБРЬ 2026.p df»
     if m and ' ' in m.group(2) and m.group(2).replace(' ', '').lower() in KNOWN_EXT: fn = m.group(1) + '.' + m.group(2).replace(' ', '')
@@ -536,7 +542,8 @@ def gas_inbox(recv, limit=30, budget=150):
         if i >= limit or time.time() - t0 > budget: break
         p = os.path.join(GAS_IN, f); sub = os.path.join('done', today)
         try:
-            j = json.load(open(p, encoding='utf-8'))
+            with open(p, encoding='utf-8') as _cg1_file_4:
+                j = json.load(_cg1_file_4)
             if not isinstance(j, dict): raise ValueError('не объект')
             raw = gas_raw(j)
         except Exception as e:
@@ -607,7 +614,8 @@ def build_all():
     for d in days:                                         # every day with an output report goes into history.json (the month total); the last one → output.json
         BO.main(d)
     if days:
-        O = json.load(open(os.environ['FABRIKA_OUT_JSON'], encoding='utf-8'))
+        with open(os.environ['FABRIKA_OUT_JSON'], encoding='utf-8') as _cg1_file_5:
+            O = json.load(_cg1_file_5)
         parts['out'] = O
         parts['bot_output'] = BP.output_part(O)
         try: parts['vyp'] = BP.vyp_part(O, BO, os.path.join(OUTD, 'raw', O['date'], 'vypusk.pdf'))
@@ -616,7 +624,9 @@ def build_all():
     ds = [d for d, (s, p) in P1.find_dates(sraw).items() if s or p]
     if ds:
         D = P1.build(os.path.join(sraw, max(ds)), sraw, os.path.join(STATE, 'stock.json'))
-        try: PR = json.load(open(os.path.join(STKD, 'avg_sales.json'), encoding='utf-8'))
+        try:
+            with open(os.path.join(STKD, 'avg_sales.json'), encoding='utf-8') as _cg1_file_6:
+                PR = json.load(_cg1_file_6)
         except Exception: PR = None
         data, brief = SD.build(D, PR, None)
         try: data['days'] = stock_days(D, sraw, ds)     # 01.11.2026: остатки по дням за прошлый и текущий месяц (вчера / неделя / месяц на портале)
@@ -773,7 +783,8 @@ def publish(name, obj):
 # REDACTED_B64_1 4) the 10:35 check
 def max_send(text):
     """to the owner in MAX, if the MAX bot is set up (token and /owner in ~/.fabrika_max/config.json)"""
-    try: c = json.load(open(os.path.join(os.path.dirname(L), '.fabrika_max', 'config.json'), encoding='utf-8'))
+    try:
+        c = json.load(open(os.path.join(os.path.dirname(L), '.fabrika_max', 'config.json'), encoding='utf-8'))
     except Exception: return 'бот MAX не подключён'
     tok, uid = c.get('token'), (c.get('owner') or {}).get('user_id')
     if not tok or not uid: return 'бот MAX не подключён'
@@ -865,7 +876,9 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
                 try: s.quit()                                    # ошибка закрытия после удачной отправки — не ошибка письма
                 except Exception:
                     try: s.close()
-                    except Exception: pass
+                    except Exception:
+                        # намеренно: ошибка закрытия SMTP-соединения не меняет уже установленный результат отправки.
+                        pass
         return 'ok (%s)' % label if stage == 'отправлено' else None
 
     def _ssl465():
@@ -876,7 +889,9 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
         try: s.starttls(context=ssl.create_default_context())
         except Exception:
             try: s.close()
-            except Exception: pass
+            except Exception:
+                # намеренно: ошибка закрытия SMTP-соединения не подменяет исходную ошибку starttls.
+                pass
             raise
         return s
     if only1c:
@@ -1126,7 +1141,11 @@ def sales_day_backfill():
     try:   # 03.11.2026: отчёт 1С «за месяц» пришёл не в 1c@ (Т. В., 02.11) — месяц из сборки: code/sales_month_seed.json, один раз на запись
         sp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sales_month_seed.json')
         if os.path.exists(sp):
-            seed = json.load(open(sp, encoding='utf-8')); sd0 = jload('sales_day.json', {}) or {}; ch = 0; sdn = sd0.setdefault('seeded', {})
+            with open(sp, encoding='utf-8') as _cg1_file_8:
+                seed = json.load(_cg1_file_8)
+            sd0 = jload('sales_day.json', {}) or {}
+            ch = 0
+            sdn = sd0.setdefault('seeded', {})
             for rec in seed.get('recs') or []:
                 key = rec['month'] + ':' + rec['kind']
                 if sdn.get(key) == rec['got']: continue
@@ -1345,6 +1364,11 @@ def lane_reports():
         try: status['rep_bf'] = rep_1c_backfill()                      # 03.11.2026: «Реестр рекламаций» и «ТЗ в работе» из архива 1c@ (пришли до фильтра)
         except Exception as e:
             status['rep_bf'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! 1С реестр (архив):', e.__class__.__name__, e)
+    try:                                                               # 12.11.2026 Т. В.: письмо 3+ дня подряд без разборщика — вопрос «куда класть»
+        import mail_recur as MR
+        status['mail_recur'] = MR.run(L, CODE, jload, jsave, log)
+    except Exception as e:
+        status['mail_recur'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! ежедневные рассылки:', e.__class__.__name__, e)
     try: status['period_lock'] = period_lock_run()                     # 02.11.2026: закрытие месяца до 5-го — снимок продаж, даже если писем нет
     except Exception as e:
         status['period_lock'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! закрытие месяца:', e.__class__.__name__, e)
@@ -1696,7 +1720,8 @@ def lane_mail():
         mo = []                                            # 29.10.2026: + code/mail_out_*.json (старый общий прогон читает только mail_out.json — новые письма ему не видны)
         for fn in ['mail_out.json'] + sorted(f for f in os.listdir(CODE) if re.match(r'^mail_out_[\w-]+\.json$', f)):
             try:
-                x = json.load(open(os.path.join(CODE, fn), encoding='utf-8'))
+                with open(os.path.join(CODE, fn), encoding='utf-8') as _cg1_file_9:
+                    x = json.load(_cg1_file_9)
                 if not isinstance(x, list): raise ValueError('не список')         # 30.10.2026 аудит P1
                 mo += x
             except Exception as e: log('  ! письма по поручению, файл', fn, e.__class__.__name__, e)
@@ -1800,7 +1825,9 @@ def lane_every(name, t=None):
                 hh, mm = (int(x) for x in str(CHECK_AT).split(':')[:2])
                 dt = (t - t.replace(hour=hh, minute=mm, second=0, microsecond=0)).total_seconds()
                 if -15 * 60 <= dt <= 25 * 60: ev = 10            # проверка «всё ли пришло» не съезжает
-        except Exception: pass
+        except Exception:
+            # намеренно: если уточнение окна CHECK_AT недоступно, сохраняем дневной или ночной интервал ev.
+            pass
     return ev
 
 
@@ -1813,10 +1840,13 @@ def lane_due(name, t=None):
     # 30.10.2026, пользователь: «Сейчас всё проверь и обнови» — code/lane_go.json {"участок": "ГГГГ-ММ-ДДTЧЧ:ММ"} (приходит пакетом):
     # участок запускается вне очереди один раз — если последний запуск был раньше этого времени (режим экономии не мешает разовому прогону)
     try:
-        go = json.load(open(os.path.join(CODE, 'lane_go.json'), encoding='utf-8'))
+        with open(os.path.join(CODE, 'lane_go.json'), encoding='utf-8') as _cg1_file_10:
+            go = json.load(_cg1_file_10)
         g = str((go or {}).get(name) or '')
         if g and str(s.get('t') or '') < g <= (t or now()).strftime('%Y-%m-%dT%H:%M'): return True
-    except Exception: pass
+    except Exception:
+        # намеренно: если разовое указание lane_go недоступно, ниже применяется обычный интервал участка.
+        pass
     ts = s.get('ts')
     if not ts:
         try: ts = datetime.datetime.strptime(s['t'], '%Y-%m-%dT%H:%M').replace(tzinfo=MSK).timestamp()

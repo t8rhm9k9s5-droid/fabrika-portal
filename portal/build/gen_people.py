@@ -428,6 +428,8 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
 })();
 </script>
 '''
-open(B + 'chat_frag.html', 'w', encoding='utf-8').write(CHAT)
-open(B + 'admin_frag.html', 'w', encoding='utf-8').write(ADMIN)
+with open(B + 'chat_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(CHAT)
+with open(B + 'admin_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(ADMIN)
 print('chat', round(len(CHAT) / 1e3), 'KB; admin', round(len(ADMIN) / 1e3), 'KB')

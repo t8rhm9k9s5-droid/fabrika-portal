@@ -27,7 +27,10 @@ out=[]
 for r in sorted(res,key=lambda r:-r['conf']):
     if any(abs(r['x']-o['x'])<8 and abs(r['y']-o['y'])<8 and r['v']==o['v'] for o in out): continue
     out.append(r)
-json.dump(out,open('/home/claude/build/ocr_heights.json','w'))
+_cg1_dump_func = json.dump
+_cg1_dump_value = out
+with open('/home/claude/build/ocr_heights.json','w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file)
 print(len(res),len(out))
 import collections
 print(collections.Counter(int(r['v']) for r in out))

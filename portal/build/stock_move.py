@@ -12,6 +12,7 @@
 Разбор — тот же код, что у робота хостинга: app_build/host/live/stock_mv.py (филиал: «Офис продаж <город> …» → «ОП <город>»,
 остальные склады → «Рязань»; брак и рекламации — внутри филиала с отметкой k='brak').
 Выход: /home/claude/stock/move/ГГГГ-ММ.json — для страницы «Склад» (gen_stock.py → <script id="move-data">) и плитки на главной."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, os, sys
 
 D = '/home/claude/stock/move'
@@ -21,7 +22,7 @@ import stock_mv as SMV
 
 
 def meta(p):
-    try: return json.load(open(p[:-5] + '.meta.json', encoding='utf-8'))
+    try: return _cg1_read_json(p[:-5] + '.meta.json', encoding='utf-8')
     except Exception: return {}
 
 
@@ -30,7 +31,7 @@ def main():
     for f in sorted(os.listdir(RAW)):
         if not f.lower().endswith('.xlsx') or f.startswith('~$'): continue
         p = os.path.join(RAW, f); M = meta(p)
-        J = SMV.parse(open(p, 'rb').read(), M.get('file') or f, (M.get('letter') or '')[:10] or None, src=M.get('src') or f)
+        J = SMV.parse(_cg1_read_file(p, 'rb'), M.get('file') or f, (M.get('letter') or '')[:10] or None, src=M.get('src') or f)
         if not J: sys.exit('не отчёт «Товары на складах»: %s' % f)
         if M.get('to'): J['to'] = M['to']
         J['got'] = (M.get('letter') or '')[:16]
@@ -38,7 +39,10 @@ def main():
         if not o or (J['to'], J['got']) > (o['to'], o['got']): best[J['m']] = J        # за месяц — самый поздний отчёт
     for m, J in sorted(best.items()):
         out = os.path.join(D, m + '.json')
-        json.dump(J, open(out, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+        _cg1_dump_func = json.dump
+        _cg1_dump_value = J
+        with open(out, 'w', encoding='utf-8') as _cg1_json_file:
+            _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, separators=(',', ':'))
         done.append((m, J['to'], J['tot'], J['nw'], len(J['g']), J['brak'][3], os.path.getsize(out)))
     for x in done: print('движение по складам %s по %s: итог %s, складов %d, филиалов %d, брак и рекламации %s, %d байт' % x)
 

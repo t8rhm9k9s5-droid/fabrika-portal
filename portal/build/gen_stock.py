@@ -7,17 +7,18 @@ Input: /home/claude/stock/stock.json (stock/parse_1c.py). Only the warehouse in 
 Views inside the page by the address: #  — the summary and the groups; #g1… — a group with its models (a tap opens the variants);
 #free — free stock of ПКС that has no pair in the warehouse report; the search looks through models and variants.
 Writes build/stock_frag.html (a fragment; the skeleton is added by build_site.py) and build/stock_brief.json (for the model's card)."""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, html, datetime, os
 B = '/home/claude/build/'
-D = json.load(open('/home/claude/stock/stock.json', encoding='utf-8'))
+D = _cg1_read_json('/home/claude/stock/stock.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
 import sys
 sys.path.insert(0, B)
 import stock_data
-try: PR = json.load(open('/home/claude/stock/prices/avg_sales.json', encoding='utf-8'))
+try: PR = _cg1_read_json('/home/claude/stock/prices/avg_sales.json', encoding='utf-8')
 except Exception as _e: PR = None; print('prices:', _e)
 try:
-    _reps = sorted([i for i in json.load(open('/home/claude/library/library.json', encoding='utf-8'))['items'] if i.get('cat') == 'reports'], key=lambda i: i.get('date') or '')
+    _reps = sorted([i for i in _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')['items'] if i.get('cat') == 'reports'], key=lambda i: i.get('date') or '')
     _rep = {'t': _reps[-1]['title'], 'n': len(_reps)} if _reps else None
 except Exception as _e:
     _rep = None; print('reports:', _e)
@@ -31,11 +32,14 @@ try: subprocess.run(['python3', B + 'stock_move.py'], check=True)
 except Exception as _e: print('движение за месяц:', _e)
 MOVE = []
 for _f in sorted(glob.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'), reverse=True):
-    try: MOVE.append(json.load(open(_f, encoding='utf-8')))
+    try: MOVE.append(_cg1_read_json(_f, encoding='utf-8'))
     except Exception as _e: print('движение за месяц:', _f, _e)
 mjs = json.dumps(MOVE, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 # what the model's warehouse card shows
-json.dump(brief, open(B + 'stock_brief.json', 'w', encoding='utf-8'), ensure_ascii=False)
+_cg1_dump_func = json.dump
+_cg1_dump_value = brief
+with open(B + 'stock_brief.json', 'w', encoding='utf-8') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
 
 page = '''<title>Фабрика — склад</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -499,5 +503,6 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
 })();
 </script>
 '''
-open(B + 'stock_frag.html', 'w', encoding='utf-8').write(page)
+with open(B + 'stock_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(page)
 print('stock page', round(len(page) / 1e3), 'KB; groups', len(groups), 'items', sum(len(g['i']) for g in groups))

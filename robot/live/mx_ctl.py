@@ -519,7 +519,9 @@ def lead_guard(st, M, owner_uid, bot_uid, t, res):
         to = None
         if it.get('src') == 'group' and it.get('mid'):
             if hist is None:
-                try: hist = (json.load(open(os.path.join(M, 'history_all.json'), encoding='utf-8')) or {}).get('msgs') or {}
+                try:
+                    with open(os.path.join(M, 'history_all.json'), encoding='utf-8') as _cg2_file_1:
+                        hist = (json.load(_cg2_file_1) or {}).get('msgs') or {}
                 except Exception: hist = {}
             src = hist.get(it['mid']) or {}
             cand = []
@@ -550,18 +552,23 @@ def lead_guard(st, M, owner_uid, bot_uid, t, res):
 
 def run(L, log, jload, jsave, iso):
     home = os.path.dirname(L); M = os.path.join(home, '.fabrika_max')
-    try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+    try:
+        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'state': 'нет настроек бота MAX'}
     token = cfg.get('token') or ''
     bot_uid = (cfg.get('bot') or {}).get('user_id')
     owner_uid = (cfg.get('owner') or {}).get('user_id')      # 03.11.2026: владелец — руководство, вопросов ему нет
     if not token: return {'state': 'нет токена MAX'}
-    try: groups = json.load(open(os.path.join(M, 'groups.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'groups.json'), encoding='utf-8') as _cg1_file_2:
+            groups = json.load(_cg1_file_2)
     except Exception: groups = {}
     cid = next((k for k, v in groups.items() if v.get('on') and GROUP_TITLE.search(str(v.get('title') or ''))), None)
     if not cid: return {'state': 'бота нет в группе «Коммерческий отдел»'}
     stp = os.path.join(M, 'ctl.json')
-    try: st = json.load(open(stp, encoding='utf-8'))
+    try:
+        with open(stp, encoding='utf-8') as _cg1_file_3:
+            st = json.load(_cg1_file_3)
     except Exception: st = {}
     rs = os.path.join(M, 'ctl_reseed')                     # 27.10.2026: файл-команда — разобрать группу заново новыми правилами (пока вопросов не было)
     if os.path.exists(rs) and not st.get('asks'):
@@ -576,9 +583,10 @@ def run(L, log, jload, jsave, iso):
     if not st.get('seeded'):
         exp = os.path.join(M, 'export', '%s_2026-10-01_2026-10-31.json' % cid)
         try:
-            for x in json.load(open(exp, encoding='utf-8')).get('messages') or []:
-                msgs.append({'ts': int(x.get('ts') or 0), 'mid': str(x.get('mid') or ''), 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
-                             'text': str(x.get('text') or ''), 'rmid': '', 'mentions': []})
+            with open(exp, encoding='utf-8') as _cg2_file_2:
+                for x in json.load(_cg2_file_2).get('messages') or []:
+                    msgs.append({'ts': int(x.get('ts') or 0), 'mid': str(x.get('mid') or ''), 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
+                                 'text': str(x.get('text') or ''), 'rmid': '', 'mentions': []})
         except Exception: pass
     code, j = api(token, 'GET', '/messages', {'chat_id': cid, 'count': 100})
     if code != 200:
@@ -632,7 +640,9 @@ def run(L, log, jload, jsave, iso):
     # 2) own items: the mail requests and the regular reports
     try: os.chmod(os.path.join(M, 'ctl_manual.json'), 0o600)
     except Exception: pass
-    try: man = json.load(open(os.path.join(M, 'ctl_manual.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'ctl_manual.json'), encoding='utf-8') as _cg1_file_4:
+            man = json.load(_cg1_file_4)
     except Exception: man = []
     for x in man if isinstance(man, list) else []:
         iid = 'm-' + str(x.get('id'))
@@ -712,9 +722,13 @@ def run(L, log, jload, jsave, iso):
     # 4б) личные сообщения (DIRECT) — один раз каждое; ответы адресата — в st['direct'][id]['replies']
     st.setdefault('direct', {})
     # 28.10.2026, пользователь: «пиши по всем правкам брату… через ботов» — ещё личные сообщения из code/mx_direct.json (Claude кладёт пакетом кода)
-    try: extra = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mx_direct.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mx_direct.json'), encoding='utf-8') as _cg1_file_5:
+            extra = json.load(_cg1_file_5)
     except Exception: extra = []
-    try: files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mx_files.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mx_files.json'), encoding='utf-8') as _cg1_file_6:
+            files = json.load(_cg1_file_6)
     except Exception: files = {}
     members = None
     all_dm = DIRECT + [x for x in extra if isinstance(x, dict) and x.get('id') and (x.get('uid') or x.get('name') or x.get('to') == 'owner') and x.get('text') and x.get('at')]

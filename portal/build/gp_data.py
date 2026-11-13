@@ -4,14 +4,15 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Geometry and content taken from the general plan 26/08-РАВП-ПЗУ (03.26), all in topo sheet px.
 PDF vectors give the geometry; the JPG decides what exists (items missing in the JPG are dropped)."""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, re, math
 import numpy as np
 
 GP = '/home/claude/gp/'
-polys = json.load(open(GP + 'polys.json'))
-net = json.load(open(GP + 'gp_net.json'))
-texts = json.load(open(GP + 'texts.json'))
-green = json.load(open(GP + 'green_parcels.json'))
+polys = _cg1_read_json(GP + 'polys.json')
+net = _cg1_read_json(GP + 'gp_net.json')
+texts = _cg1_read_json(GP + 'texts.json')
+green = _cg1_read_json(GP + 'green_parcels.json')
 
 
 def pt2px(x, y):  # PDF pt (display) -> topo px
@@ -109,7 +110,10 @@ out['ulabels'] = [l for l in LAB if re.match(r'(пхв|чуг)\.\d+', l['t']) or
 out['cad_gp'] = {'b43': '109', 'nSklad': '1647', 'b40': '149', 'b38': '111', 'b37': '150', 'b35': '151', 'b30': '107', 'b31': '152',
                  'bProd': '153', 'b29': '154', 'b26': '148', 'b25': '158', 'b22': '147', 'b18': '159', 'b10': '23', 'b45': '87', 'ws': '1824'}
 
-json.dump(out, open('/home/claude/build/gp_data.json', 'w'), ensure_ascii=False)
+_cg1_dump_func = json.dump
+_cg1_dump_value = out
+with open('/home/claude/build/gp_data.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
 if __name__ == '__main__':
     for k in ('sklad', 'kot_sklad', 'nav', 'kot1', 'ws_rect', 'red_plan'): print(k, round(area_m2(out[k]), 1))
     for p in out['parcels']: print(p['id'], p['area'])

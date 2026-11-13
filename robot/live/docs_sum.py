@@ -206,7 +206,9 @@ def _prices(L, uniq, log, publish_file, cache, MAX_TXT=2):
         for f in r.get('f') or []:
             fp = os.path.join(L, 'ytd', 'docs', f.get('p') or '')
             if not os.path.exists(fp): continue
-            raw = open(fp, 'rb').read(); sha = hashlib.sha256(raw).hexdigest()[:24]
+            with open(fp, 'rb') as _cg1_file_1:
+                raw = _cg1_file_1.read()
+            sha = hashlib.sha256(raw).hexdigest()[:24]
             # 28.10: имена из почты бывают в разложенном Юникоде («и» + знак краткости вместо «й») — приводим к обычному виду до любых проверок
             f = dict(f, n=unicodedata.normalize('NFC', f.get('n') or ''))
             r = dict(r, s=unicodedata.normalize('NFC', r.get('s') or ''))
@@ -221,10 +223,16 @@ def _prices(L, uniq, log, publish_file, cache, MAX_TXT=2):
         if done >= MAX_TXT or _t.time() - t0 > 90: break
         try: txt = _pdf_text(x['fp']) if x['ext'] == 'pdf' else _sheet_text(x['fp'])
         except Exception as e: txt = '!! %s' % e.__class__.__name__
-        open(tp, 'w', encoding='utf-8').write('# %s | %s | %s | %s\n%s' % (x['f'].get('n'), x['r'].get('t'), x['r'].get('fr'), x['dd'], txt)); done += 1
+        with open(tp, 'w', encoding='utf-8') as _cg2_file_1:
+            _cg2_file_1.write('# %s | %s | %s | %s\n%s' % (x['f'].get('n'), x['r'].get('t'), x['r'].get('fr'), x['dd'], txt))
+        done += 1
     def txt_of(x):
         tp = os.path.join(td, x['sha'] + '.txt')
-        return open(tp, encoding='utf-8').read() if os.path.exists(tp) else ''
+        if os.path.exists(tp):
+            with open(tp, encoding='utf-8') as _cg2_cond_file:
+                return _cg2_cond_file.read()
+        else:
+            return ''
     # одинаковые файлы (пересылки) — один раз, с историей отправок
     by_sha = {}
     for x in sorted(F, key=lambda x: x['r'].get('t') or ''):
@@ -299,9 +307,10 @@ def run(L, log, jload, jsave, publish, iso, now, publish_file=None):
     p = os.path.join(L, 'state', 'ytd_docs.jsonl')
     if not os.path.exists(p): return {'state': 'документов пока нет'}
     recs = []
-    for ln in open(p, encoding='utf-8'):
-        try: recs.append(json.loads(ln))
-        except Exception: pass
+    with open(p, encoding='utf-8') as _cg2_file_2:
+        for ln in _cg2_file_2:
+            try: recs.append(json.loads(ln))
+            except Exception: pass
     seen, uniq = set(), []
     for r in sorted(recs, key=lambda r: r.get('t') or '', reverse=True):
         if r.get('mid') in seen: continue
@@ -329,7 +338,9 @@ def run(L, log, jload, jsave, publish, iso, now, publish_file=None):
                 if publish_file and k in PUBK and os.path.exists(fp) and os.path.getsize(fp) <= MAX_PUB:
                     try:
                         import hashlib
-                        raw = open(fp, 'rb').read(); fid = hashlib.sha256(raw).hexdigest()[:24]
+                        with open(fp, 'rb') as _cg1_file_2:
+                            raw = _cg1_file_2.read()
+                        fid = hashlib.sha256(raw).hexdigest()[:24]
                         if publish_file(fid, raw): rec['id'] = fid
                     except Exception as e: log('  ! документы из почты: файл', f.get('n'), e.__class__.__name__)
                 if fp.lower().endswith(('.xls', '.xlsx')) and os.path.exists(fp):
@@ -364,7 +375,9 @@ def run(L, log, jload, jsave, publish, iso, now, publish_file=None):
                                  'late': sum(1 for o in allo if o['ship'] and o['ship'] < (r.get('t') or today)[:10]),
                                  'late_s': sum(o['s'] for o in allo if o['ship'] and o['ship'] < (r.get('t') or today)[:10])}
                 break
-    except StopIteration: pass
+    except StopIteration:
+        # намеренно: StopIteration используется выше для пропуска отключённого раздела buf.
+        pass
     except Exception as e: log('  ! буфер заказов:', e.__class__.__name__, e)
     jsave('docs_cache.json', cache)
     if sample: jsave('docs_sample.json', sample)

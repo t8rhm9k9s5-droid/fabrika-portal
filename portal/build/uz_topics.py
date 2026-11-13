@@ -8,6 +8,7 @@
 {'chat': {...}, 'messages': [{'time','from','uid','bot','text','att','rmid','fwd'}]}).
 Выход: /home/claude/out/Fabrikant_UZ_chat_<период>.xlsx — листы «Сводка», «Темы», «Хронология», «Вопросы без ответа», «Договорённости и сроки»,
 «Люди». Темы — по ключевым словам (несколько тем на сообщение допускаются); телефоны и номера карт замаскированы."""
+from _cg1_build_io import read_json as _cg1_read_json
 import argparse, base64, collections, datetime, hashlib, hmac, json, os, re, sys
 
 TOPICS = [
@@ -48,7 +49,7 @@ def main():
         key = hmac.new(bytes.fromhex(open('/home/claude/bot/bot_key.txt').read().strip()), b'fabrika-owner-v1', hashlib.sha256).hexdigest()
         if '--live' in sys.argv: key = re.search(r"KEY_HEX = '([0-9a-f]+)'", open('/home/claude/site/assets/live.js', encoding='utf-8').read()).group(1)
         D = unseal(open(a.bin, encoding='utf-8').read().strip(), key)
-    elif a.json: D = json.load(open(a.json, encoding='utf-8'))
+    elif a.json: D = _cg1_read_json(a.json, encoding='utf-8')
     else: sys.exit(__doc__)
     if D.get('state') == 'нет группы': sys.exit('бот не состоит в группе; группы бота: ' + ', '.join(D.get('titles') or []))
     M = [m for m in D.get('messages') or [] if not m.get('bot')]

@@ -91,7 +91,9 @@ def qtext(subj, txt):
 
 def org_map():
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'unans_org.json')
-    try: return {k.lower(): v for k, v in (json.load(open(p, encoding='utf-8')).get('mail') or {}).items()}
+    try:
+        with open(p, encoding='utf-8') as _cg2_org_file:
+            return {k.lower(): v for k, v in (json.load(_cg2_org_file).get('mail') or {}).items()}
     except Exception: return {}
 
 
@@ -170,7 +172,9 @@ def mail(L, CFG, days, log, budget=100):
         st['mail'] = 'Mail.ru: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     out, seenx = [], set()
     for c in cand:
@@ -187,10 +191,13 @@ def mail(L, CFG, days, log, budget=100):
 def max_group(L, days):
     """группа «Коммерческий отдел»: обращения к Сотрудник81 Отчество42 с вопросом, на которые он не ответил в группе"""
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
-    try: cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+    try:
+        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'err': 'нет настроек бота MAX'}, []
     owner = int(((cfg.get('owner') or {}).get('user_id')) or 0)
-    try: H = json.load(open(os.path.join(M, 'history_all.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(M, 'history_all.json'), encoding='utf-8') as _cg1_file_2:
+            H = json.load(_cg1_file_2)
     except Exception: return {'err': 'нет истории группы'}, []
     msgs = sorted((m for m in (H.get('msgs') or {}).values() if m.get('ts')), key=lambda m: m['ts'])
     if not owner:                                       # /owner в боте MAX не привязан — Сотрудник2 Отчество1 по имени в истории группы
@@ -222,7 +229,8 @@ def max_group(L, days):
                         'g': 'Коммерческий отдел', 'why': why, 'x': IT.mask(re.sub(r'\s+', ' ', txt))[:300]})
     # другие группы — журнал пересылок владельцу (max/hook.php, с 28.10)
     try:
-        J = [json.loads(x) for x in open(os.path.join(M, 'grp_owner.jsonl'), encoding='utf-8') if x.strip()]
+        with open(os.path.join(M, 'grp_owner.jsonl'), encoding='utf-8') as _cg2_journal_file:
+            J = [json.loads(x) for x in _cg2_journal_file if x.strip()]
     except Exception: J = []
     ans_ids = {j.get('rmid') for j in J if j.get('k') == 'a'}
     for j in J:
@@ -243,7 +251,8 @@ def grp_pub(L, days, publish):
     """задача №20 владельца («собрать из группы коммерческий отдел замечания по отчетам за вчера и ответить на них»): сообщения группы
     за дни отчёта (без телефонов, до 700 знаков) → st/grp.bin; бот и Claude разбирают замечания и ответы"""
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
-    H = json.load(open(os.path.join(M, 'history_all.json'), encoding='utf-8'))
+    with open(os.path.join(M, 'history_all.json'), encoding='utf-8') as _cg1_file_3:
+        H = json.load(_cg1_file_3)
     msgs = sorted((m for m in (H.get('msgs') or {}).values() if m.get('ts')), key=lambda m: m['ts'])
     by = {m['mid']: m for m in msgs}
     out = []
@@ -283,7 +292,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     for q in xq:
         v = None
         fam = [w for w in re.split(r'\s+', q['n']) if w]
-        for w in fam:                                        # «Сотрудник40 Имя5» / «Имя5 Сотрудник40» → по фамилии из оргструктуры
+        for w in fam:                                        # «Сотрудник40 Имя4» / «Имя4 Сотрудник40» → по фамилии из оргструктуры
             if w.lower() in names: v = names[w.lower()]; break
         items.append({'src': 'max', 'day': q['day'], 't': q['t'], 'fio': v[0] if v else q['n'], 'role': (v[1] if v and len(v) > 1 else ''),
                       'dep': (v[2] if v and len(v) > 2 else ''), 'new': not v, 'g': q['g'], 'why': q['why'], 'x': q['x']})

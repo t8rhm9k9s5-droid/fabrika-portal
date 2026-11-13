@@ -74,9 +74,12 @@ def parse_t(s): return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M').replace(t
 def load_cfg(path=None):
     c = dict(DEF)
     try:
-        j = json.load(open(path or CFG_FILE, encoding='utf-8'))
+        with open(path or CFG_FILE, encoding='utf-8') as _cg1_file_1:
+            j = json.load(_cg1_file_1)
         if isinstance(j, dict): c.update({k: v for k, v in j.items() if not k.startswith('_')})
-    except Exception: pass
+    except Exception:
+        # намеренно: при ошибке чтения настроек возвращаем значения DEF, созданные выше.
+        pass
     return c
 
 
@@ -247,7 +250,9 @@ def scan(L, CFG, cfg, cache, since, budget=90):
         st['mail'] = 'IMAP: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     return st, out
 

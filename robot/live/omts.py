@@ -46,7 +46,9 @@ def read_rows(path):
             if sh.cell_type(r, c) == xlrd.XL_CELL_DATE:
                 try:
                     t = xlrd.xldate_as_tuple(v, 0); v = '%02d.%02d.%04d' % (t[2], t[1], t[0])
-                except Exception: pass
+                except Exception:
+                    # намеренно: если Excel-дата не преобразуется, передаём исходное значение в _cell.
+                    pass
             row.append(_cell(v))
         out.append(row)
     return out
@@ -235,18 +237,19 @@ def run(L, log, jload, jsave, publish, iso):
     if not os.path.exists(idx): return {'state': 'нет архива itm@'}
     files = {k: [] for k, _, _ in KINDS}
     cache = jload('omts_cache2.json', {})            # 12.11.2026: старые вложения робот удаляет через 3 дня — точка ряда берётся из кэша
-    for ln in open(idx, encoding='utf-8'):
-        try: r = json.loads(ln)
-        except Exception: continue
-        if r.get('fr') != 'user3@example.org': continue
-        for k, _, rx in KINDS:
-            if not rx.search(r.get('s') or ''): continue
-            for a in r.get('a') or []:
-                ext = os.path.splitext((a.get('n') or '').lower())[1]
-                if ext in ('.xls', '.xlsx') and a.get('p') and (k != 'pok' or 'покупн' in (a.get('n') or '').lower()):
-                    p = os.path.join(L, 'arch', 'files', a['sha'] + ext)
-                    if os.path.exists(p) or os.path.basename(p) in cache: files[k].append((r.get('t') or '', p, a.get('n')))
-            break
+    with open(idx, encoding='utf-8') as _cg2_file_1:
+        for ln in _cg2_file_1:
+            try: r = json.loads(ln)
+            except Exception: continue
+            if r.get('fr') != 'user3@example.org': continue
+            for k, _, rx in KINDS:
+                if not rx.search(r.get('s') or ''): continue
+                for a in r.get('a') or []:
+                    ext = os.path.splitext((a.get('n') or '').lower())[1]
+                    if ext in ('.xls', '.xlsx') and a.get('p') and (k != 'pok' or 'покупн' in (a.get('n') or '').lower()):
+                        p = os.path.join(L, 'arch', 'files', a['sha'] + ext)
+                        if os.path.exists(p) or os.path.basename(p) in cache: files[k].append((r.get('t') or '', p, a.get('n')))
+                break
     out = {'t': iso(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))), 'kinds': []}
     sample = {}
     for k, title, _ in KINDS:

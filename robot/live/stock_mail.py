@@ -138,7 +138,8 @@ def run(L, now, jload, jsave, mail_send, log, brief=None):
     if hm < '10:00' or hm >= '20:00': return {'state': 'ждёт 10:00'}
     p = os.path.join(L, 'state', 'stock.json')
     if not os.path.exists(p): return {'state': 'нет данных склада'}
-    D = json.load(open(p, encoding='utf-8'))
+    with open(p, encoding='utf-8') as _cg1_file_1:
+        D = json.load(_cg1_file_1)
     late = D.get('date') != day
     if late and hm < '11:30': return {'state': 'ждёт отчёт 1С за сегодня', 'last': D.get('date')}
     try: tw = mv_last(jload('stock_mv.json', {}))         # 03.11.2026 (Р1а): главная цифра — «Товары на складах»

@@ -158,7 +158,8 @@ class Session:
     def _path(self): return os.path.join(self.L, 'state', 'glonass_token.json')
 
     def _load(self):
-        try: j = json.load(open(self._path(), encoding='utf-8'))
+        try:
+            j = json.load(open(self._path(), encoding='utf-8'))
         except Exception: return None
         if j.get('mt') != self.mt or time.time() - float(j.get('ts') or 0) > TOKEN_AGE: return None   # ключ изменён или токен стар
         return j.get('token') or None
@@ -1405,7 +1406,8 @@ def trk_cfg(path=None):
     p = path or TRK_CFG_FILE
     if os.path.isfile(p):
         try:
-            j = json.load(open(p, encoding='utf-8-sig'))
+            with open(p, encoding='utf-8-sig') as _cg1_file_4:
+                j = json.load(_cg1_file_4)
             if not isinstance(j, dict): raise ValueError('не словарь')
             c.update({k: v for k, v in j.items() if not str(k).startswith('_')})
         except Exception as e: c['_err'] = 'glonass_trk_cfg.json не прочитан (%s) — настройки по умолчанию' % e.__class__.__name__
@@ -1423,7 +1425,9 @@ def trk_cfg(path=None):
     try:
         import mx_ctl as _MC                                             # общий список праздников робота (аудит P21, 30.10)
         c['_hol'] |= set(_MC.HOLIDAYS)
-    except Exception: pass
+    except Exception:
+        # намеренно: при недоступном mx_ctl сохраняем праздники, уже заданные в настройках ГЛОНАСС.
+        pass
     return c
 
 

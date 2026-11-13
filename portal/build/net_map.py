@@ -3,6 +3,7 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Map of loose ends and untied objects for the questions list -> /home/claude/build/out_net/net_map.png"""
+from _cg1_build_io import read_json as _cg1_read_json
 import json, os, numpy as np
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from matplotlib.lines import Line2D
 from matplotlib import font_manager
 for f in ('Regular', 'Bold'): font_manager.fontManager.addfont(f'/usr/share/fonts/truetype/liberation/LiberationSans-{f}.ttf')
 plt.rcParams['font.family'] = 'Liberation Sans'
-S = json.load(open('/home/claude/build/site_app.json'))
+S = _cg1_read_json('/home/claude/build/site_app.json')
 C = {'gas': '#e0a100', 'water': '#1e88e5', 'sewer': '#8d6e63', 'unknown': '#9e9e9e', 'el': '#d81b60'}
 FAM = {'gas_hp': 'gas', 'gas_lp': 'gas', 'gas_ug': 'gas', 'gas_over': 'gas', 'water': 'water', 'sewer': 'sewer', 'unknown': 'unknown'}
 # markers: number, point (local m), short tag

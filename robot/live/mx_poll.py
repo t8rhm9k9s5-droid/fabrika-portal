@@ -76,7 +76,9 @@ def cfg_path(): return CFG_FILE or os.path.join(os.path.dirname(os.path.abspath(
 
 
 def load_cfg():
-    try: c = json.load(open(cfg_path(), encoding='utf-8'))
+    try:
+        with open(cfg_path(), encoding='utf-8') as _cg1_file_1:
+            c = json.load(_cg1_file_1)
     except Exception: c = {}
     if not isinstance(c, dict): c = {}
     for k, d in (('on', False), ('executors', []), ('people', []), ('ban', []), ('heads', {}),
@@ -85,7 +87,9 @@ def load_cfg():
 
 
 def jl(p, d=None):
-    try: return json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as _cg1_file_2:
+            return json.load(_cg1_file_2)
     except Exception: return d
 
 
@@ -119,7 +123,9 @@ def banned(cfg, today, mail=None, name=None):
 def org_map():
     """unans_org.json: почта → [ФИО, должность, отдел] (единственный справочник людей на хостинге)"""
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'unans_org.json')
-    try: return {k.lower(): v for k, v in (json.load(open(p, encoding='utf-8')).get('mail') or {}).items()}
+    try:
+        with open(p, encoding='utf-8') as _cg2_org_file:
+            return {k.lower(): v for k, v in (json.load(_cg2_org_file).get('mail') or {}).items()}
     except Exception: return {}
 
 

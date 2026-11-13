@@ -88,7 +88,10 @@ out['design_shift'] = {'du': round(float(shift[0]), 2), 'dv': round(float(shift[
 # ±0,000 котельной: в ПЗУ (лист 5) 106,50, как у складов; в АР л.33 подписано 106,25 — берём ПЗУ, земля вокруг 106,30…106,50
 out['boiler'] = {'floor': 106.50, 'floor_ar': 106.25, 'ground': 106.40, 'roof': {'type': 'mono', 'high': 7.40, 'low': 6.31}, 'canopy': {'high': 6.31, 'low': 5.22}}
 out['chimney'] = {'px': px(45.19, 38.4), 'h': 18.0, 'size': 0.55, 'base': 1.6}
-json.dump(out, open('/home/claude/build/sklad_data.json', 'w'), ensure_ascii=False, indent=1)
+_cg1_dump_func = json.dump
+_cg1_dump_value = out
+with open('/home/claude/build/sklad_data.json', 'w') as _cg1_json_file:
+    _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False, indent=1)
 if __name__ == '__main__':
     print('frame azimuth u', out['frame']['az_u'], '| design shift (u,v)', out['design_shift'])
     print('sklad2 frame u', round(ax1 - 0.5, 2), round(ax7 + 0.5, 2), 'pzu v2', {k: [round(x, 2) for x in v] for k, v in out['sklad2']['pzu_v2'].items()})

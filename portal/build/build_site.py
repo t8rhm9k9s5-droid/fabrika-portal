@@ -5,6 +5,7 @@
 """Assemble the website in two forms:
    /home/claude/site      — for publishing as a Claude artifact (the main page stays a fragment; the tool adds the skeleton)
    /home/claude/site_zip  — standalone static site for any web server or a local folder (full documents, local three.js fallback)"""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import os, re, shutil, subprocess, zipfile
 
 SITE = '/home/claude/site'
@@ -19,15 +20,17 @@ def full(frag):
 # index.html (the 3D app) is written by gen_app.py into the site folder as a fragment; plan.html and docs.html come from build/
 subprocess.run(['python3', '/home/claude/build/gen_stores.py'], check=True)
 subprocess.run(['python3', '/home/claude/build/gen_calls.py'], check=True)   # «Кому звонить» (27.10.2026)   # «Остатки ОП» с fabrikant.su/stock (26.10.2026)
-frags = {'index.html': open(os.path.join(SITE, 'index.html'), encoding='utf-8').read()}
+frags = {'index.html': _cg1_read_file(os.path.join(SITE, 'index.html'), encoding='utf-8')}
 for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products.html', '/home/claude/build/products_frag.html'), ('plan.html', '/home/claude/build/plan_frag.html'), ('docs.html', '/home/claude/build/docs_v2.html'), ('staff.html', '/home/claude/build/staff_frag.html'), ('archive.html', '/home/claude/build/archive_frag.html'), ('stock.html', '/home/claude/build/stock_frag.html'), ('library.html', '/home/claude/build/library_frag.html'), ('chat.html', '/home/claude/build/chat_frag.html'), ('admin.html', '/home/claude/build/admin_frag.html'), ('stores.html', '/home/claude/build/stores_frag.html'), ('sales.html', '/home/claude/build/sales_frag.html'), ('calls.html', '/home/claude/build/calls_frag.html'), ('omts.html', '/home/claude/build/omts_frag.html'),
                   # 29.10.2026: «Транспорт (ГЛОНАСС)» — только владельцу (пользователь: «Только я»); данных в странице нет — их отдаёт скрипт бота по личному входу владельца (op gl)
                   ('transport.html', '/home/claude/build/transport_frag.html'),
                   # 04.11.2026, Т. В. (опрос): «раздел с показаниями счётчиков и откачки сточных вод» — под «Картой производства»
-                  ('utils.html', '/home/claude/build/utils_frag.html')):
-    frags[name] = open(src, encoding='utf-8').read()
+                  ('utils.html', '/home/claude/build/utils_frag.html'),
+                  # 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры» — страница раздела (10 разделов, отчёты списком)
+                  ('razdel.html', '/home/claude/build/razdel_frag.html')):
+    frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
            'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — счётчики и откачка'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
@@ -48,10 +51,12 @@ for _n in frags:
     elif '<script src="assets/site.js"></script>' in frags[_n]: frags[_n] = frags[_n].replace('<script src="assets/site.js"></script>', '<script src="assets/version.js"></script>\n<script src="assets/acct.js"></script>\n<script src="assets/site.js"></script>', 1)
     else: frags[_n] += '\n<script src="assets/version.js"></script>\n<script src="assets/acct.js"></script>\n'
 # time of day and weather on the plan (23.10.2026): the same module as inside the model, top right (the north arrow is top left)
-open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8').write(open('/home/claude/build/app/sky_core.js', encoding='utf-8').read() + "\nwindow.T14SKY && T14SKY.mount('right');\n")
+with open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8') + "\nwindow.T14SKY && T14SKY.mount('right');\n")
 frags['plan.html'] += '\n<script src="assets/sky.js"></script>\n'
 # 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник14 Сотрудник15); ядро погоды без плашки — assets/sky0.js
-open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8').write(open('/home/claude/build/app/sky_core.js', encoding='utf-8').read())
+with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
 # 28.10.2026, пользователь: «карта с камерами, с фактическими и со слепыми зонами, чтобы включались слепые зоны отдельно» — assets/blind.js
 _tf = "tog('tFov','nofov','cctv.fov');"
@@ -65,7 +70,7 @@ if os.path.exists('/home/claude/build/wx/wx.json'): shutil.copy('/home/claude/bu
 shutil.copy('/home/claude/build/app/pdfview.js', os.path.join(SITE, 'assets', 'pdfview.js'))
 # the company's lion (fabrikant.su, app_build/brand/logo-short-black.svg) before «Фабрика» at the top of every page (26.10.2026, the user: «логотип забирай с нашего сайта … уже сейчас используй»)
 import re as _re
-_lion = _re.search(r'd="([^"]+)"', open('/home/claude/app_build/brand/logo-short-black.svg', encoding='utf-8').read()).group(1)
+_lion = _re.search(r'd="([^"]+)"', _cg1_read_file('/home/claude/app_build/brand/logo-short-black.svg', encoding='utf-8')).group(1)
 _mark = ('<svg class="brand-mark" viewBox="0 0 31 29" width="15" height="14" aria-hidden="true" style="display:inline-block;vertical-align:-2px;margin-right:6px">'
          '<path fill="currentColor" d="' + _lion + '"/></svg>')
 for _n in frags:
@@ -87,7 +92,7 @@ _sys.path.insert(0, '/home/claude/app_build/host/live')
 import sales_rep as _SR, datetime as _dtm
 _arch = {}
 for _f in ('reports_part1.json', 'reports_part2.json'):
-    for _i, (_t, _nm, _tx) in enumerate(_js.load(open('/home/claude/fabrika/related/max_kom/' + _f, encoding='utf-8'))):
+    for _i, (_t, _nm, _tx) in enumerate(_cg1_read_json('/home/claude/fabrika/related/max_kom/' + _f, encoding='utf-8')):
         _d = _dtm.datetime.strptime(_t, '%Y-%m-%d %H:%M').replace(tzinfo=_SR.MSK)
         _arch[_f + str(_i)] = {'ts': int(_d.timestamp() * 1000), 'mid': _f + str(_i), 'uid': None, 'name': _nm, 'bot': False, 'text': _tx}
 _sb = _SR.build(_arch, {}, _dtm.date(2026, 10, 26))
@@ -99,7 +104,7 @@ assert frags['sales.html'].count('__SALES__') == 1
 try:
     import glob as _g
     _pl = sorted(_g.glob('/home/claude/build/output/plan_*.json'))[-1]
-    _P = _js.load(open(_pl, encoding='utf-8'))
+    _P = _cg1_read_json(_pl, encoding='utf-8')
     _cap = {k: (v.get('week') or (v.get('day') or 0) * _P.get('week_days', 5)) for k, v in _P['lines'].items()}
     _capj = _js.dumps({'m': _P['month'], 'src': _P.get('src', ''), 'w': _cap}, ensure_ascii=False)
 except Exception as _e:
@@ -107,7 +112,7 @@ except Exception as _e:
 frags['sales.html'] = frags['sales.html'].replace('__CAP__', _capj, 1)
 # 28.10.2026: почтовый ящик → «Фамилия И.О.» (справочник компании admin/company_raw.json) — для отчёта «Расчёты ПЭО»
 try:
-    _cr = _js.load(open('/home/claude/build/admin/company_raw.json', encoding='utf-8')); _mbx = {}
+    _cr = _cg1_read_json('/home/claude/build/admin/company_raw.json', encoding='utf-8'); _mbx = {}
     for _c in _cr.get('cards', []):
         _ls = [str(x).strip() for x in (_c.get('lines') or [])]
         _em = [x for x in _ls if re.match(r'^[\w.\-]+@fabrikant\.(su|pro)$', x)]
@@ -121,17 +126,17 @@ except Exception as _e:
 frags['sales.html'] = frags['sales.html'].replace('__MBX__', _mbxj, 1)
 # 28.10.2026: незакрытые рекламации из 1С (recl/parse_recl.py → recl/recl_open.json) — «Продажи» → «Рекламации»
 _rp = '/home/claude/build/recl/recl_open.json'
-_rj = open(_rp, encoding='utf-8').read() if os.path.exists(_rp) else 'null'
+_rj = _cg1_read_file(_rp, encoding='utf-8') if os.path.exists(_rp) else 'null'
 frags['sales.html'] = frags['sales.html'].replace('__RECL__', re.sub(r'(\+7|\b8)[\s(-]*\d{3}[\s)-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}\b', '[тел.]', _rj).replace('<', '\\u003c'), 1)
 # 28.10.2026 23:50: рекламации за период со статистикой этапов (recl/parse_recl_all.py → recl_all.json) — блок «Рекламации за период»
 _rap = '/home/claude/build/recl/recl_all.json'
-_raj = open(_rap, encoding='utf-8').read() if os.path.exists(_rap) else 'null'
+_raj = _cg1_read_file(_rap, encoding='utf-8') if os.path.exists(_rap) else 'null'
 # 29.10.2026 00:00: «График отгрузки» — октябрь по неделям (Ozon по неделям из ozon_report/ozon_daily.json, остатки ОП — build/stock_op/*.json); 1С — запрошено
 try:
     import datetime as _dt, glob as _gl
-    _od = _js.load(open('/home/claude/build/ozon_report/ozon_daily.json', encoding='utf-8'))['rows']
+    _od = _cg1_read_json('/home/claude/build/ozon_report/ozon_daily.json', encoding='utf-8')['rows']
     _sp = sorted(_gl.glob('/home/claude/build/stock_op/*.json'))
-    _so = _js.load(open(_sp[-1], encoding='utf-8')) if _sp else {'cities': {}}
+    _so = _cg1_read_json(_sp[-1], encoding='utf-8') if _sp else {'cities': {}}
     _tot = sum((c.get('total') or 0) for c in _so.get('cities', {}).values())
     _W = []
     _d0 = _dt.date(2026, 9, 28)
@@ -151,7 +156,7 @@ except Exception as _e:
 try:
     _spl = sorted(_gl.glob('/home/claude/build/ship_plan/2*.json'))
     if _spl and _SHIP is not None:
-        _pl = _js.load(open(_spl[-1], encoding='utf-8'))
+        _pl = _cg1_read_json(_spl[-1], encoding='utf-8')
         for _dd in _pl.get('days', []):
             for _c in _dd.get('clients', []):
                 for _o in _c.get('orders', []):
@@ -161,32 +166,32 @@ except Exception as _e: print('план отгрузки:', _e)
 # 11.11.2026, Сотрудник16 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
-    _PM = _js.load(open(_pmf[-1], encoding='utf-8')) if _pmf else None
+    _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
 except Exception as _e: print('план по менеджерам:', _e); _PM = None
 frags['sales.html'] = frags['sales.html'].replace('__PLANM__', _js.dumps(_PM, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 11.11.2026, Т. В.: «отчёт по менеджерам в разрезе ОП (базис поставки), ФТС и ПКС отдельно, накопленным итогом» (build/sales_mgr_op/<ГГГГ-ММ>.json) → #mgrop;
 # «отдельный раздел онлайн-продажи» (build/online/online.json — обновляет ежедневное облачное задание по ценам) → #online
 try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
-    _MO = _js.load(open(_mof[-1], encoding='utf-8')) if _mof else None
+    _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
 # 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник16 из папки «Планы» itm@)
-try: _FY = _js.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8'))
+try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__MGROP__', _js.dumps(_MO, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
-try: _ON = _js.load(open('/home/claude/build/online/online.json', encoding='utf-8'))
+try: _ON = _cg1_read_json('/home/claude/build/online/online.json', encoding='utf-8')
 except Exception as _e: print('онлайн-продажи:', _e); _ON = None
 # 11.11.2026: конкуренты, аналоги, наши товары в СНГ (build/online/comp.json ← work/online/comp_build.py) — отдельным файлом, чтобы ежедневное задание по ценам его не затирало
 try:
-    if _ON is not None: _ON.update(_js.load(open('/home/claude/build/online/comp.json', encoding='utf-8')))
+    if _ON is not None: _ON.update(_cg1_read_json('/home/claude/build/online/comp.json', encoding='utf-8'))
 except Exception as _e: print('конкуренты:', _e)
 frags['sales.html'] = frags['sales.html'].replace('__ONLINE__', _js.dumps(_ON, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__SHIP__', _js.dumps(_SHIP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 29.10.2026: «Коммерческий отдел» — люди, функционал, зоны, инструкции (make_ko_staff.py → data/ko_staff.json)
 try:
     import subprocess as _sp; _sp.run([_sys.executable, '/home/claude/build/make_ko_staff.py'], check=True, capture_output=True)
-    _KO = _js.load(open('/home/claude/build/data/ko_staff.json', encoding='utf-8'))
+    _KO = _cg1_read_json('/home/claude/build/data/ko_staff.json', encoding='utf-8')
 except Exception as _e:
     print('коммерческий отдел:', _e); _KO = None
 frags['sales.html'] = frags['sales.html'].replace('__KO__', 'null', 1)   # 11.11.2026, Т. В.: «Коммерческий отдел» — только ему и брату: данные — st/sec_ko.bin через бота (gen_sec.py)
@@ -194,8 +199,8 @@ assert frags['sales.html'].count('__RECLA__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__RECLA__', _raj.replace('<', '\\u003c'), 1)
 # 28.10.2026: «Продажи» → «Маркетплейсы» — снимок статистики Ozon (ozon_report/*.json); на сайте свежее — st/ozh.bin (ozon_hist.py)
 try:
-    _od = _js.load(open('/home/claude/build/ozon_report/ozon_daily.json', encoding='utf-8'))
-    _osk = _js.load(open('/home/claude/build/ozon_report/ozon_sku.json', encoding='utf-8'))
+    _od = _cg1_read_json('/home/claude/build/ozon_report/ozon_daily.json', encoding='utf-8')
+    _osk = _cg1_read_json('/home/claude/build/ozon_report/ozon_sku.json', encoding='utf-8')
     _OZ = {'v': 1, 'src': 'Ozon Seller API — аналитика (заказано на сумму и в штуках), кабинет ООО «ПКС»', 'cab': 'ПКС', 't': '2026-10-28T11:42',
            'days': [[r['d'], round(r['rev']), round(r['units'])] for r in _od['rows']],
            'sku': [[r['sku'], r['name'], r['month'][:7], round(r['rev']), round(r['units'])] for r in _osk['rows']],
@@ -208,7 +213,7 @@ frags['sales.html'] = frags['sales.html'].replace('__OZON__', _ozj, 1)
 # API отзывов Ozon закрыт без подписки Premium Plus, поэтому плитка «Отзывы клиентов» и блок в «Маркетплейсах» берут выгрузку; номер заказа не берём
 try:
     _sp.run([_sys.executable, '/home/claude/build/ozon_report/make_rev.py'], check=True, capture_output=True)
-    _OZR = _js.load(open('/home/claude/build/ozon_report/ozon_reviews.json', encoding='utf-8'))
+    _OZR = _cg1_read_json('/home/claude/build/ozon_report/ozon_reviews.json', encoding='utf-8')
     _ozrj = _js.dumps(_OZR, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e:
     print('отзывы Ozon:', _e); _OZR = None; _ozrj = 'null'
@@ -221,18 +226,18 @@ frags['sales.html'] = frags['sales.html'].replace('__OZREV__', _ozrj, 1)
 # 12.11.2026, Т. В.: «отзывы занеси к нам на сайт для общей статистики» — отзывы ВсеИнструменты из кабинета поставщика (vi_report/make_vi_rev.py)
 try:
     _sp.run([_sys.executable, '/home/claude/build/vi_report/make_vi_rev.py'], check=True, capture_output=True)
-    _virj = _js.dumps(_js.load(open('/home/claude/build/vi_report/vi_reviews.json', encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
+    _virj = _js.dumps(_cg1_read_json('/home/claude/build/vi_report/vi_reviews.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e:
     print('отзывы ВИ:', _e); _virj = 'null'
 assert frags['sales.html'].count('__VIREV__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__VIREV__', _virj, 1)
 # 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник6 02.11, build/sales_op/spb_clients.json)
-try: _spbj = _js.dumps(_js.load(open('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
+try: _spbj = _js.dumps(_cg1_read_json('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('клиенты СПб:', _e); _spbj = 'null'
 assert frags['sales.html'].count('__SPB__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__SPB__', _spbj, 1)
 # 28.10.2026, пользователь: «это список ТЗ в работе» — выгрузка 1С (build/tz/parse_tz_1c.py → tz_1c.json)
-try: _tz1 = _js.dumps(_js.load(open('/home/claude/build/tz/tz_1c.json', encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
+try: _tz1 = _js.dumps(_cg1_read_json('/home/claude/build/tz/tz_1c.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('ТЗ 1С:', _e); _tz1 = 'null'
 frags['sales.html'] = frags['sales.html'].replace('__TZ1C__', _tz1, 1)
 # 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник6 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
@@ -241,23 +246,23 @@ _sopp = '/home/claude/build/sales_op/2026-10.json'
 def _sop_clean(d):
     d = dict(d); d['source'] = 'выгрузки 1С по офисам продаж, 30.10.2026'   # 02.11.2026: без почты-источника
     return d
-try: _sop = _js.dumps(_sop_clean(_js.load(open(_sopp, encoding='utf-8'))), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c') if os.path.exists(_sopp) else '{}'
+try: _sop = _js.dumps(_sop_clean(_cg1_read_json(_sopp, encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c') if os.path.exists(_sopp) else '{}'
 except Exception as _e: print('офисы продаж, октябрь:', _e); _sop = '{}'
 assert frags['sales.html'].count('__SALES_OP__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__SALES_OP__', _sop, 1)
 # 30.10.2026: «Продажи за день — 1С» — ежедневные рассылки 1С (build/sales_day.py → /home/claude/build/sales_1c/daily.json). Нет файла — блока нет
 _sdp = '/home/claude/build/sales_1c/daily.json'
-try: _sdj = _js.dumps(_js.load(open(_sdp, encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c') if os.path.exists(_sdp) else '{}'
+try: _sdj = _js.dumps(_cg1_read_json(_sdp, encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c') if os.path.exists(_sdp) else '{}'
 except Exception as _e: print('продажи за день, 1С:', _e); _sdj = '{}'
 assert frags['sales.html'].count('__SALES_DAY__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__SALES_DAY__', _sdj, 1)
 # 29.10.2026, пользователь: «подготовь страницу для тк глонасс и вообще всех авто» — автопарк (водители, машины, телефоны и заведующий автотранспортом)
 # с доски «Компания» (admin/company.json; те же данные уже показывает «Кому звонить») встраивается в «Транспорт» при сборке; сопоставление с ГЛОНАСС — в браузере владельца
 try:
-    _CO = _js.load(open('/home/claude/build/admin/company.json', encoding='utf-8')); _tr = _CO.get('transport') or {}
+    _CO = _cg1_read_json('/home/claude/build/admin/company.json', encoding='utf-8'); _tr = _CO.get('transport') or {}
     # 30.10.2026: машины — из списка ТС логистов (build/transport/fleet_ls.json ← parse_fleet.py ← «Список тс.ods» от М. Камаевой, ls@): госномера, водители, вид;
     # доска «Компания» — только телефоны водителей и заведующий автотранспортом (её 14 строк без госномеров дали ложные «расхождения» в письме 29.10)
-    _LS = _js.load(open('/home/claude/build/transport/fleet_ls.json', encoding='utf-8'))
+    _LS = _cg1_read_json('/home/claude/build/transport/fleet_ls.json', encoding='utf-8')
     _it = lambda d, sp: {'car': str(d.get('car') or '').strip(), 'plate': str(d.get('plate') or '').strip(), 'name': str(d.get('name') or '').strip(),
                          'kind': str(d.get('kind') or ''), 'spec': sp, 'phones': [str(p) for p in (d.get('phones') or []) if p]}
     _FL = {'src': _LS.get('src'), 'cars': [_it(d, 0) for d in _LS.get('cars') or []] + [_it(d, 1) for d in _LS.get('spec') or []],
@@ -282,7 +287,7 @@ for _w, _n in (('400', 'Regular'), ('700', 'Bold'), ('900', 'Heavy')):
 frags['library.html'] += '\n<script src="assets/pdfview.js"></script>\n'
 # 04.11.2026: «Счётчики и откачка» — данные (снимок build/utils/utils.json; дальше — с Диска 1c@ от ботов) и просмотр PDF актов
 assert frags['utils.html'].count('__UTILS__') == 1
-frags['utils.html'] = frags['utils.html'].replace('__UTILS__', _js.dumps(_js.load(open('/home/claude/build/utils/utils.json', encoding='utf-8')), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+frags['utils.html'] = frags['utils.html'].replace('__UTILS__', _js.dumps(_cg1_read_json('/home/claude/build/utils/utils.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['utils.html'] += '\n<script src="assets/pdfview.js"></script>\n'
 # the plan opens the building given after # (the model's card «На плане», 23.10.2026)
 frags['plan.html'] += '''\n<script>(function(){function go(){var h=(location.hash||'').slice(1);if(!/^[A-Za-z0-9_]+$/.test(h))return;var p=document.querySelector('.bld[data-b="'+h+'"]')||document.querySelector('[data-b="'+h+'"]');if(p)p.dispatchEvent(new MouseEvent('click',{bubbles:true}));}
@@ -327,16 +332,16 @@ for _n in frags:
         frags[_n] += '\n<script src="assets/edits.js"></script>\n<script src="assets/site.js"></script>\n'
 def _ddmm(s): return (s[8:10] + '.' + s[5:7]) if s and len(s) >= 10 else 'нет данных'
 def _nn(x): return '{:,}'.format(x).replace(',', ' ') if isinstance(x, int) else 'нет данных'
-try: _br = _js.load(open('/home/claude/build/stock_brief.json', encoding='utf-8'))
+try: _br = _cg1_read_json('/home/claude/build/stock_brief.json', encoding='utf-8')
 except Exception: _br = {}
-try: _ou = (_js.load(open('/home/claude/build/output.json', encoding='utf-8')) or {}).get('sklad') or {}
+try: _ou = (_cg1_read_json('/home/claude/build/output.json', encoding='utf-8') or {}).get('sklad') or {}
 except Exception: _ou = {}
 # ---- главная — «Пульс фабрики» (28.10.2026, утверждённый макет Main / IPad27_Home / IOS27_Phone). Снимок на время сборки — те же данные,
 # что показывают разделы; в браузере главная подменяет их свежими с хостинга (assets/live.js: ls.bin, pf.bin, omts.bin, sales.bin, promises.bin).
 # Чего нет — «—», цифры не выдумываем. 02.11.2026 (пользователь): плитки — продажи, выпуск план/факт, склад Рязань, ОМТС, качество, отзывы Ozon.
 _PU = {'v': 1, 'built': _dtm.datetime.now().strftime('%Y-%m-%dT%H:%M')}
 try:   # сумма продаж — отчёт 1С «Продажи» по месяцам (gen_assort.py → assort.json)
-    _A = _js.load(open('/home/claude/build/assort.json', encoding='utf-8'))
+    _A = _cg1_read_json('/home/claude/build/assort.json', encoding='utf-8')
     _dm = re.search(r'(\d\d)\.(\d\d)(?:\.\d{4})?\s*[–-]\s*(\d\d)\.(\d\d)\.(\d{4})', _A.get('src', ''))   # «01.07–26.10.2026»
     _m0, _m1 = int(_dm.group(2)), int(_dm.group(4))
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
@@ -347,7 +352,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import sales_day as _SDY
-        _DJ = _js.load(open('/home/claude/build/sales_1c/daily.json', encoding='utf-8'))
+        _DJ = _cg1_read_json('/home/claude/build/sales_1c/daily.json', encoding='utf-8')
         _ym = '%s-%02d' % (_PU['rev']['to'][:4], _PU['rev']['m'][-1])
         _MT = _SDY.month_total(_DJ, _ym)
         if _MT and _MT['tot'][1]:
@@ -356,12 +361,14 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
             print('пульс, продажи: %s — %.2f млн ₽ (%d дн., на %s)' % (_ym, _MT['tot'][1] / 1e6, _MT['days'], _MT['got']))
     except Exception as _e2: print('пульс, продажи за месяц по дням:', _e2)
     try:   # 02.11.2026, пользователь: «суммы продаж … актуальные» — итог месяца из отчёта 1С «Продажи» (снимок), пока не пришёл отчёт «за месяц» новее
-        _MO = _js.load(open('/home/claude/build/sales_1c/month_override.json', encoding='utf-8'))
+        _MO = _cg1_read_json('/home/claude/build/sales_1c/month_override.json', encoding='utf-8')
         _ym = '%s-%02d' % (_PU['rev']['to'][:4], _PU['rev']['m'][-1]); _o = _MO.get(_ym)
         if _o and _o.get('asof', '') > (_PU['rev'].get('asof') or ''):
             _PU['rev']['v'][-1] = round(_o['v']); _PU['rev']['asof'] = _o['asof']; _PU['rev']['to'] = _o.get('to') or _PU['rev']['to']; _PU['rev']['src'] = _o['src']
             print('пульс, продажи: %s — %.2f млн ₽ по отчёту 1С «Продажи» на %s' % (_ym, _o['v'] / 1e6, _o['asof']))
-    except FileNotFoundError: pass
+    except FileNotFoundError:
+        # намеренно: без файла корректировки месяца сохраняем уже рассчитанные продажи.
+        pass
     except Exception as _e4: print('пульс, итог месяца из 1С «Продажи»:', _e4)
     try:   # 03.11.2026, Т. В.: на главной — ноябрь на дату (рассылки 1С за день), итог октября — вторым числом
         _y0, _m0x = int(_PU['rev']['to'][:4]), _PU['rev']['m'][-1]
@@ -377,7 +384,7 @@ try:   # склад — тот же снимок, что у раздела «С�
     _SD = _js.loads(re.search(r'<script id="stock-data"[^>]*>(.*?)</script>', frags['stock.html'], re.S).group(1))
     _PU['stock'] = {'qty': (_SD.get('total') or {}).get('qty'), 'd_day': (_SD.get('total') or {}).get('d_day'), 'd_month': (_SD.get('total') or {}).get('d_month'),
                     'date': _SD.get('date'), 'neg': (_SD.get('neg') or [])[:12]}
-    try: _PU['stock']['brief'] = {k: v for k, v in _js.load(open('/home/claude/build/stock_brief.json', encoding='utf-8')).items() if k in ('qty', 'rub', 'd_day', 'd_month', 'date', 'wh')}   # 02.11.2026: плитка «Склад Рязань»
+    try: _PU['stock']['brief'] = {k: v for k, v in _cg1_read_json('/home/claude/build/stock_brief.json', encoding='utf-8').items() if k in ('qty', 'rub', 'd_day', 'd_month', 'date', 'wh')}   # 02.11.2026: плитка «Склад Рязань»
     except Exception as _e3: print('пульс, склад Рязань:', _e3)
     try:   # 02.11.2026: плитка «Склад · все склады» — склады Рязани и ОП (запасной снимок; свежие — ls.bin stock.allwh)
         _AW = _SD.get('allwh') or {}
@@ -387,7 +394,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:
-            _MJ = _js.load(open(_mf[-1], encoding='utf-8'))
+            _MJ = _cg1_read_json(_mf[-1], encoding='utf-8')
             _PU['stock']['move'] = {'m': _MJ['m'], 'from': _MJ['from'], 'to': _MJ['to'], 'got': _MJ.get('got'), 'tot': _MJ['tot'], 'brak': _MJ.get('brak'), 'nw': _MJ.get('nw'),
                                     'g': [[g['n']] + g['v'] for g in _MJ['g']]}
             print('пульс, все склады по отчёту «Товары на складах»: %s на %s' % (_MJ['tot'][3], _MJ['to']))
@@ -425,14 +432,16 @@ try:   # карта производства: контуры зданий и т�
     _svg += ('<p class="fm-lg">' + ''.join('<span><i class="k-%s"></i>%s</span>' % kv for kv in (('prod', 'производство'), ('wh', 'склады'), ('adm', 'офис и быт'), ('eng', 'инженерные'), ('new', 'стройка и проект'))) + '</p>')
     try:   # камеры — по модели 3D (там свежий список, со схемой видеокамер 24.09.2026); без неё — по плану
         _cams = _js.loads(re.search(r'<script id="site-json" type="application/json">(.*?)</script>', frags['index.html'], re.S).group(1)).get('cams') or _cams
-    except Exception: pass
+    except Exception:
+        # намеренно: если модель 3D не прочитана, сохраняем список камер, уже полученный из плана.
+        pass
     _PU['map'] = {'b': len(set(b for b, _ in _B)), 'c': len(_cams)}
     frags['home.html'] = frags['home.html'].replace('<!--MINIMAP-->', _svg, 1)
 except Exception as _e: print('пульс, карта:', _e)
 # 28.10.2026, пользователь: «Все данные должны собираться в иерархии… почему операторские кресла?» → «Рубли и процент вместе»:
 #   недовыпуск линии в рублях = (план − факт) × средняя цена продажи линии (1С «Продажи» октября в структуре мощности, conv_oct.json)
 try:
-    _CV = _js.load(open('/home/claude/build/sales_1c/conv_oct.json', encoding='utf-8'))
+    _CV = _cg1_read_json('/home/claude/build/sales_1c/conv_oct.json', encoding='utf-8')
     _PU['price'] = {v['line']: round(v['s'] / v['q']) for v in _CV['vid'].values() if v.get('line') and v.get('q')}
     _PU['area'] = {v['line']: v['area'] for v in _CV['vid'].values() if v.get('line')}
 except Exception as _e: print('пульс, цены линий:', _e)
@@ -452,7 +461,7 @@ except Exception as _e: print('пульс, рекламации:', _e)
 # 02.11.2026, Т. В.: продажи на главной — итог прошлого месяца, текущий месяц на дату и выполнение плана. План — план офисов продаж по менеджерам
 # (build/sales_op/2026-10.json); факт офисов за текущий месяц приходит отдельной выгрузкой — пока её нет, процент не выдумываем
 try:
-    _SOPd = _js.load(open(_sopp, encoding='utf-8')) if os.path.exists(_sopp) else {}
+    _SOPd = _cg1_read_json(_sopp, encoding='utf-8') if os.path.exists(_sopp) else {}
     _PU['plan'] = {'2026-10': (_SOPd.get('plan_oct') or {}).get('total'), '2026-11': (_SOPd.get('plan_nov') or {}).get('total'),
                    'fact': {'2026-10': ((_SOPd.get('sales_oct') or {}).get('total') or {}).get('sum')}, 'fact_to': {'2026-10': '30.10'}}
 except Exception as _e: print('пульс, план продаж:', _e)
@@ -472,10 +481,13 @@ try:
         _SNAP['move'] = dict({k: v for k, v in _mv.items() if k not in ('g', 'neg')},
                              g=[({k: v for k, v in g.items() if k in ('n', 'v', 'b', 'nb')} if isinstance(g, dict) else g) for g in (_mv.get('g') or [])])
     try: _SNAP['stock'] = dict(_PU.get('stock') or {}, gen=_SD.get('gen'))
-    except Exception: pass
-    _MJS = open('/home/claude/build/app/metrics_core.js', encoding='utf-8').read()
+    except Exception:
+        # намеренно: если дата gen недоступна, сохраняем исходный stock из копии _PU.
+        pass
+    _MJS = _cg1_read_file('/home/claude/build/app/metrics_core.js', encoding='utf-8')
     assert _MJS.count('__SNAP__') == 1
-    open(os.path.join(SITE, 'assets', 'metrics.js'), 'w', encoding='utf-8').write(_MJS.replace('__SNAP__', _js.dumps(_SNAP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1))
+    with open(os.path.join(SITE, 'assets', 'metrics.js'), 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(_MJS.replace('__SNAP__', _js.dumps(_SNAP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1))
 except Exception as _e8:
     import traceback as _tb; _tb.print_exc()
     raise SystemExit('assets/metrics.js (один источник цифр) не собран: %r' % (_e8,))
@@ -496,7 +508,7 @@ import subprocess as _sp
 _sp.run(['python3', '/home/claude/build/gen_assort.py'], check=True)
 # 02.11.2026, Т. В.: «Изделия и материалы» — только каталог; ассортимент с продажами и остатками со страницы убран (assort.json остаётся для пульса)
 _sp.run(['python3', '/home/claude/build/gen_catalog.py'], check=True)
-frags['products.html'] = frags['products.html'].replace('<!--ASSORT-->', open('/home/claude/build/catalog_frag.html', encoding='utf-8').read(), 1)
+frags['products.html'] = frags['products.html'].replace('<!--ASSORT-->', _cg1_read_file('/home/claude/build/catalog_frag.html', encoding='utf-8'), 1)
 os.makedirs(os.path.join(SITE, 'assets', 'img'), exist_ok=True)
 for _f in ('oslo-320.webp', 'oslo-640.webp', 'samba-320.webp', 'samba-640.webp'):
     shutil.copy(os.path.join('/home/claude/build/portal', _f), os.path.join(SITE, 'assets', 'img', _f))
@@ -529,7 +541,7 @@ for _p in (_lib.get('regs') or {}).get('procs') or []:
     _S.append({'t': _p.get('t'), 'x': _p.get('x') or 'Регламенты', 'u': 'library.html#regs', 'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)'})
 _S += [{'t': 'ОСЛО', 'x': 'Стул с мягкой спинкой · велюр', 'u': 'products.html#oslo', 'g': 'Изделия', 'i': 'book', 'c': 'var(--ic-items)', 'k': 'осло стул'},
        {'t': 'Самба', 'x': 'Стул с подлокотниками · искусственная кожа', 'u': 'products.html#samba', 'g': 'Изделия', 'i': 'book', 'c': 'var(--ic-items)', 'k': 'самба стул'}]
-_S += _js.load(open('/home/claude/build/calls_search.json', encoding='utf-8'))   # люди и вопросы «Кому звонить» (27.10.2026)
+_S += _cg1_read_json('/home/claude/build/calls_search.json', encoding='utf-8')   # люди и вопросы «Кому звонить» (27.10.2026)
 _sk, _S2 = set(), []   # 02.11.2026: одна и та же строка поиска (название + адрес) — один раз
 for _x in _S:
     _k = (' '.join(str(_x.get('t') or '').lower().split()), _x.get('u'))
@@ -538,7 +550,8 @@ for _x in _S:
 _S = _S2
 for _x in _S:
     for _f in ('t', 'x'): _x[_f] = re.sub(r'\b\d{2}:\d{2}:\d{6,7}:\d+\b|\b\d{1,3}(\.\d{1,3}){3}\b', '', str(_x.get(_f) or '')).strip(' ;,')
-open(os.path.join(SITE, 'assets', 'search.json'), 'w', encoding='utf-8').write(_js.dumps([x for x in _S if x['t']], ensure_ascii=False, separators=(',', ':')))
+with open(os.path.join(SITE, 'assets', 'search.json'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(_js.dumps([x for x in _S if x['t']], ensure_ascii=False, separators=(',', ':')))
 # 28.10.2026 23:00, пользователь: «переходы на другие сайты пока не допустимы — загрузи, оптимизируй тут». Всё внешнее — у нас:
 # шрифты Google Fonts (Golos Text, PT Mono, PT Sans, PT Sans Narrow, Unbounded; OFL) лежат в assets/fonts/gf/ (build/portal/fonts/gf,
 # пакеты @fontsource), запасные адреса библиотек на cdnjs/jsdelivr/unpkg убраны (three.js, OrbitControls, xlsx — только lib/).
@@ -559,7 +572,8 @@ def _localize(h):
 for _n in list(frags): frags[_n] = _localize(frags[_n])
 _ext = [(_n, m) for _n in frags for m in re.findall(r'https?://(?:fonts\.googleapis|fonts\.gstatic|cdnjs\.cloudflare|cdn\.jsdelivr|unpkg|tile\.openstreetmap)\.[a-z]+[^"\'\s)]*', frags[_n])]
 if _ext: print('ВНИМАНИЕ, остались внешние ресурсы:', _ext[:10])
-open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8').write(frags['index.html'])
+with open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(frags['index.html'])
 _lib = '/home/claude/library/raw'
 # 28.10.2026: PDF-копии Word/Excel для просмотра внутри портала (docs2pdf.py; gen_library.py → D.view). Старые копии переделываются только при смене исходника
 subprocess.run(['python3', '/home/claude/build/docs2pdf.py'])
@@ -597,19 +611,23 @@ def _nomail(m):
     return m.group(1) + v + '"'
 for _n in list(frags):
     frags[_n] = re.sub(r'("(?:src|source|note)"\s*:\s*")((?:[^"\\]|\\.)*)"', _nomail, frags[_n])
-open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8').write(frags['index.html'])   # модель 3D записана выше — перезаписываем очищенную
+with open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(frags['index.html'])   # модель 3D записана выше — перезаписываем очищенную
 # artifact form: secondary pages need their own skeleton
 for name, frag in frags.items():
     if name != 'index.html':
-        open(os.path.join(SITE, name), 'w', encoding='utf-8').write(full(frag))
+        with open(os.path.join(SITE, name), 'w', encoding='utf-8') as _cg1_output_file:
+            _cg1_output_file.write(full(frag))
 
 # standalone form
 if os.path.exists(ZIP):
     shutil.rmtree(ZIP)
 shutil.copytree(SITE, ZIP)
 for name, frag in frags.items():
-    open(os.path.join(ZIP, name), 'w', encoding='utf-8').write(full(frag))
-open(os.path.join(ZIP, 'README.txt'), 'w', encoding='utf-8').write(
+    with open(os.path.join(ZIP, name), 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(full(frag))
+with open(os.path.join(ZIP, 'README.txt'), 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(
     'Сайт «Фабрика» (Поляны, ул. Терехина, 14) — 3D-модель участка с камерами, план 2D, чертежи и документы.\n\n'
     'Как открыть: положите папку на любой веб-сервер (или хостинг статических сайтов) и откройте index.html.\n'
     'Без сервера браузер не даст странице прочитать свои файлы: тогда в модели «Ещё» → «Сохранить и скачать» →\n'

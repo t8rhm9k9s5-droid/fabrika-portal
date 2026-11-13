@@ -59,7 +59,9 @@ def run(L, CFG, log, jload, jsave):
     finally:
         st['seen'] = sorted(seen, key=int)[-500:]
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
         jsave('mail_pkg.json', st)
     res['state'] = 'ok'; res['inbox'] = len([f for f in os.listdir(inbox) if f.endswith('.pkg')])

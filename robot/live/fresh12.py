@@ -16,7 +16,8 @@ def _dm(s):
 def site_built(site_dir):
     """→ datetime сборки сайта по МСК (VERSION 'ГГГГММДДччммсс-…' в sw.js — время UTC) или None"""
     try:
-        m = re.search(r"const VERSION = '(\d{14})", open(os.path.join(site_dir, 'sw.js'), encoding='utf-8').read(200000))
+        with open(os.path.join(site_dir, 'sw.js'), encoding='utf-8') as _cg1_file_1:
+            m = re.search(r"const VERSION = '(\d{14})", _cg1_file_1.read(200000))
         if not m: return None
         return datetime.datetime.strptime(m.group(1), '%Y%m%d%H%M%S').replace(tzinfo=datetime.timezone.utc).astimezone(MSK)
     except Exception: return None

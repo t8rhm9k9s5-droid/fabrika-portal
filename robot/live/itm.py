@@ -161,14 +161,18 @@ def fix_ext(fn):
 def addr(h):
     n, a = email.utils.parseaddr(clean(h))
     try: n = str(email.header.make_header(email.header.decode_header(n)))
-    except Exception: pass
+    except Exception:
+        # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+        pass
     return n.strip().strip('"'), a.strip().lower()
 
 
 def body_text(msg):
     part = None
     try: part = msg.get_body(preferencelist=('plain', 'html'))
-    except Exception: pass
+    except Exception:
+        # намеренно: если часть тела письма не найдена, ниже возвращается пустой текст.
+        pass
     if part is None: return ''
     try: t = part.get_content()
     except Exception:
@@ -247,7 +251,9 @@ def att_names(msg):
         fn = p.get_filename()
         if fn:
             try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-            except Exception: pass
+            except Exception:
+                # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+                pass
             out.append(fix_ext(clean(fn)))
     return out
 
@@ -338,7 +344,9 @@ def send_old_drafts(M, fl, L, st, me, my_name, log):
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'itm_send_drafts.json')
     def _why(w): st['old_diag'] = {'t': time.strftime('%Y-%m-%dT%H:%M'), 'why': w}; return 0      # 29.10: почему не дошло до черновиков — в статус
     if not os.path.exists(p): return _why('нет itm_send_drafts.json')
-    try: jobs = json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as _cg1_file_2:
+            jobs = json.load(_cg1_file_2)
     except Exception as e: return _why('файл заданий: %s' % e.__class__.__name__)
     done = set(st.get('old_sent') or []); jobs = [j for j in jobs if j.get('id') and j['id'] not in done and j.get('subject_has') and j.get('to')]
     box = drafts_folder(fl)
@@ -384,7 +392,9 @@ def copy_sent(M, fl, L, st, me, my_name, log):
         dp = os.path.join(root, day)
         if not os.path.isdir(dp): continue
         for fn in sorted(os.listdir(dp)):
-            try: it = json.load(open(os.path.join(dp, fn), encoding='utf-8'))
+            try:
+                with open(os.path.join(dp, fn), encoding='utf-8') as _cg1_file_3:
+                    it = json.load(_cg1_file_3)
             except Exception: continue
             mt = it.get('meta') or {}
             if mt.get('kind') != 'itm-reply' or not mt.get('mid') or mt['mid'] in done: continue
@@ -413,7 +423,9 @@ def run_gas(L, CFG, st, res, me, log, jsave):
         p = os.path.join(din, fn)
         if not fn.endswith('.json'): continue
         try:
-            d = json.load(open(p, encoding='utf-8')); req = st.setdefault('dreq', {}).get(d.get('id'))
+            with open(p, encoding='utf-8') as _cg1_file_4:
+                d = json.load(_cg1_file_4)
+            req = st.setdefault('dreq', {}).get(d.get('id'))
             if req and d.get('send') and (d.get('text') or '').strip():
                 r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                 if not str(r).startswith('ok'): raise RuntimeError(str(r))
@@ -478,7 +490,9 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
         for fn in sorted(os.listdir(din))[:10]:
             p = os.path.join(din, fn)
             try:
-                d = json.load(open(p, encoding='utf-8')); req = st['dreq'].get(d.get('id'))
+                with open(p, encoding='utf-8') as _cg1_file_5:
+                    d = json.load(_cg1_file_5)
+                req = st['dreq'].get(d.get('id'))
                 if req and d.get('send') and (d.get('text') or '').strip():          # 29.10.2026: ответ выбрал / написал владелец — отправить, не в «Черновики»
                     r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                     if not str(r).startswith('ok'): raise RuntimeError(str(r))
@@ -583,7 +597,9 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
         res['mail'] = 'Mail.ru: ' + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         lk.close()
     # запросы черновиков живут 2 суток, не больше MAX_DREQ
     cut = (_now() - datetime.timedelta(days=2)).strftime('%Y-%m-%dT%H:%M')

@@ -4,7 +4,7 @@
 
    Что здесь: настройки (лист tm_settings), время МСК, праздники и тихие часы, руководители (бот вопросов не задаёт),
    состояние в JSON-файлах Диска («Фабрика — боты/MAX/tm/…», через Store.gs: jget_/jput_), отметки «отправлено» (лист tm_sent),
-   единственный выход в MAX — tm_send_ (API ядра шага 2: REDACTED_B64_7), публикация файлов для портала
+   единственный выход в MAX — tm_send_ (API ядра шага 2: REDACTED_B64_8), публикация файлов для портала
    в «От ботов» (bf_seal/bf_write шага 5: файлы владельца — ключ k_owner, остальные — ключ сайта), техтревоги владельцу (tm_alert_, раз в день),
    чтение новых сообщений групп из очереди max_in (Store.gs), диспетчер тиков tm_tickMinute/tm_tick с окнами по МСК, триггеры tm_setupTriggers/
    tm_removeTriggers и импорт состояния tm_importState. Остальные файлы: TimersPolls.gs (опросы), TimersCtl.gs (сроки, напоминания),
@@ -286,11 +286,22 @@ function tm_sentMark_(id, kind, to, mid, job) {
   catch (e) { tm_log_('sent', 'отметка ' + id + ' не записана: ' + tm_err_(e)); }
 }
 /** работа с ключом периода (день/неделя) уже выполнена? лист tm_runs: job, key */
-function tm_runDone_(job, key) { var r = tm_findRow_('tm_runs', job); return !!r && String(r.vals[1]) === String(key); }
+/** 10.11.2026: Таблицы превращают ключ «2026-11-10» / «2026-11-10 12:01» в дату — сравниваем в обоих видах (иначе «раз в день» не работал: техтревога каждые 10 мин съела квоту писем). */
+function tm_runKeyEq_(v, key) {
+  key = String(key);
+  if (v instanceof Date) {
+    var tz = Session.getScriptTimeZone();
+    return Utilities.formatDate(v, tz, 'yyyy-MM-dd') === key || Utilities.formatDate(v, tz, 'yyyy-MM-dd HH:mm') === key;
+  }
+  return String(v) === key;
+}
+function tm_runDone_(job, key) { var r = tm_findRow_('tm_runs', job); return !!r && tm_runKeyEq_(r.vals[1], key); }
 function tm_runMark_(job, key, res) {
   try {
     var sh = tm_sheet_('tm_runs'), r = tm_findRow_('tm_runs', job), row = [tm_cell_(job), tm_cell_(key), new Date(), tm_cell_(String(res == null ? '' : res).slice(0, 300))];
-    if (r) sh.getRange(r.row, 1, 1, 4).setValues([row]); else sh.appendRow(row);
+    var rn = r ? r.row : sh.getLastRow() + 1;
+    sh.getRange(rn, 2).setNumberFormat('@');                                  // ключ — текстом, чтобы Таблицы не делали из него дату
+    sh.getRange(rn, 1, 1, 4).setValues([row]);
   } catch (e) { tm_log_('runs', 'отметка ' + job + ': ' + tm_err_(e)); }
 }
 
@@ -583,6 +594,7 @@ function tm_slice_(ctx, cap, reserve) { return Math.max(1000, Math.min(cap, ctx.
 function tm_tickMinute() {
   if (rcot_timersPaused_()) return;
   if (!tm_on_()) return;
+  var mm0_ = tm_minOf_(tm_msk_(new Date())); if (tm_offHours_() ? mm0_ % 5 !== 0 : mm0_ % 2 !== 0) return;   // 10.11: тихие часы/выходные — раз в 5 мин; днём — раз в 2 мин (квота 6 ч/сутки, слово Т. В. «чтобы не было никаких квот Google»)
   if (!tm_begin_('minute')) return;
   var ctx = tm_ctx_('minute');
   try {
@@ -602,13 +614,15 @@ function tm_tickMinute() {
 function tm_tick() {
   if (rcot_timersPaused_()) return;
   if (!tm_on_()) return;
+  var mm_ = tm_minOf_(tm_msk_(new Date()));                                 // 10.11 (квота): днём — раз в 10 мин, в тихие часы, выходные и праздники — раз в 30 мин
+  if (tm_offHours_() ? mm_ % 30 >= 5 : mm_ % 10 >= 5) return;
   if (!tm_begin_('five')) return;
   var ctx = tm_ctx_('five');
   try {
     tm_job_(ctx, 'ingest', tm_ingest_);
     tm_job_(ctx, 'poll', tm_poll_);                                          // раньше ctl: список участников группы (poll.json) нужен адресатам поручений
     tm_job_(ctx, 'ctl', tm_ctl_);
-    tm_job_(ctx, 'remind', tm_remind_);
+    tm_every_(ctx, 'remind', 30, tm_remind_);                                // 10.11: раз в 30 мин (было каждые 10 мин по ~40 с — квота триггеров)
     tm_every_(ctx, 'unans', 55, tm_unans_);
     tm_every_(ctx, 'sales', 25, tm_salesCtl_);
     tm_every_(ctx, 'survey', 15, tm_survey_);
@@ -618,6 +632,11 @@ function tm_tick() {
     tm_daily_(ctx, 'nightly', 90, 150, tm_nightly_);
   } finally { tm_meter_(ctx); tm_end_('five'); }
 }
+/** 10.11.2026 (Т. В.: «исправь ты»): квота времени триггеров (6 ч в сутки на 1c@ вместе с Telegram-проектом) — 09–10.11 прогноз 10,8–11,6 ч.
+    Меры (триггеры не пересоздаются, tm_tick по-прежнему каждые 5 мин): днём tm_tick работает раз в 10 мин (запуски в первые 5 минут десятка),
+    в тихие часы (20:00–08:00 МСК), выходные и праздники — раз в 30 мин (первые 5 минут получаса; ночная работа 01:30–02:30 попадает), tm_tickMinute — раз в 5 мин.
+    Людям в эти часы бот и так ничего не шлёт (tm_quiet_), а ответы на команды и письма-команды задерживаются не больше чем на 5 мин. */
+function tm_offHours_() { var now = new Date(); return tm_quiet_(now) || !tm_workday_(tm_msk_(now).date); }
 /** F4 C-B3: учёт времени триггеров MAX за сутки МСК (кэш скрипта; пятиминутный тик переносит итог в лист tm_runs, строка quota) и техтревога, если
     прогноз на сутки выше TM_QUOTA_DAY_MS (квота Workspace — 6 ч на аккаунт 1c@ для ВСЕХ его проектов, Telegram-проект — из того же лимита). */
 function tm_meter_(ctx) {
@@ -718,7 +737,7 @@ function tm_nightly_(ctx) {
 }
 
 // REDACTED_B64_2 триггеры (запускать из редактора при переключении; ночью НЕ запускать)
-var TM_TRIGGERS = [['tm_tickMinute', 1], ['tm_tick', 5]];
+var TM_TRIGGERS = [['tm_tickMinute', 1], ['tm_tick', 5]];   // 10.11.2026: триггер остаётся 5 мин, реже — по часам внутри tm_tick (tm_offHours_)
 /** Поставить триггеры времени (только при MODE === 'google'; повторный запуск — пересоздаёт свои). */
 function tm_setupTriggers() {
   if (!tm_on_()) { console.log('MODE не google — триггеры tm_ не ставятся'); return { ok: false, err: 'MODE' }; }

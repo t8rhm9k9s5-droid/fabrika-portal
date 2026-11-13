@@ -196,7 +196,9 @@ def parse_page(raw, ctype=''):
     except LookupError: text = raw.decode('utf-8', 'replace')
     p = Page()
     try: p.feed(text); p.close()
-    except Exception: pass
+    except Exception:
+        # намеренно: при ошибке HTML-разбора возвращаем уже собранный объект Page.
+        pass
     return p
 
 
@@ -368,7 +370,9 @@ def run(L, log, jload, jsave, publish, iso, now, KEY, budget=BUDGET):
     here = os.path.dirname(os.path.abspath(__file__))
     st = jload('kb_build.json', {}) or {}
     t = now(); today = t.strftime('%Y-%m-%d')
-    try: ptxt = open(os.path.join(here, 'kb_portal.txt'), encoding='utf-8').read()
+    try:
+        with open(os.path.join(here, 'kb_portal.txt'), encoding='utf-8') as _cg1_file_1:
+            ptxt = _cg1_file_1.read()
     except Exception: ptxt = ''
     ph = hashlib.sha1(ptxt.encode('utf-8')).hexdigest()[:16] if ptxt else ''
     portal = unseal(ptxt, KEY) if ptxt else None

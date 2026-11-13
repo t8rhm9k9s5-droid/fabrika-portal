@@ -5,9 +5,10 @@
 """Assemble the main page of the site (the 3D app): shell + data + edits store + scene code + UI.
 The scene code (terrain, buildings, fence, mounts, utilities, workshop, floor plans) is taken from the 3D page template,
 the UI is app/app.js. Writes /home/claude/site/index.html (a fragment: the artifact tool adds the skeleton)."""
+from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, os, re
 B = '/home/claude/build/'
-tpl = open(B + 'site3d_template_v2.html', encoding='utf-8').read()
+tpl = _cg1_read_file(B + 'site3d_template_v2.html', encoding='utf-8')
 script = tpl[tpl.index('(function(){\nif(!window.THREE)'):]
 
 def cut(a, b):
@@ -90,7 +91,7 @@ for a_, b_ in [("for(const u of S.utils){", "for(const u of []){"), ("for(const 
 import sys as _rs; _rs.path.insert(0, B + 'review'); import patches as _RP, apply_review as _RV   # second review of the documents, 22.10.2026
 import ui as _UI   # map-like camera controls and the Liquid Glass look
 seg1 = _UI.seg1(_RP.seg1(seg1)); segU = _RP.segU(segU)
-scene = '\n'.join(['/* ===================== SCENE (from the 3D page) ===================== */', seg1, open(B + 'app/detail_part.js', encoding='utf-8').read(), segM, segU, _RP.net(open(B + 'app/net_part.js', encoding='utf-8').read()), open(B + 'app/review_part.js', encoding='utf-8').read(), segP, segR])
+scene = '\n'.join(['/* ===================== SCENE (from the 3D page) ===================== */', seg1, _cg1_read_file(B + 'app/detail_part.js', encoding='utf-8'), segM, segU, _RP.net(_cg1_read_file(B + 'app/net_part.js', encoding='utf-8')), _cg1_read_file(B + 'app/review_part.js', encoding='utf-8'), segP, segR])
 for bad in ("document.getElementById('card')", "UI.", "setMove(", "showObj("):
     if bad in scene: print('WARNING scene still has', bad)
 
@@ -105,13 +106,13 @@ return first(['lib/three.min.js'],function(){return !!window.THREE},8000)
 .then(function(){return first(['lib/OrbitControls.js'],function(){return !!(window.THREE&&THREE.OrbitControls)},6000)})})();   // 28.10.2026: без запасных CDN (пользователь: «переходы на другие сайты недопустимы») — только свои lib/"""
 assert '</script' not in LOADER
 import sys as _so; _so.path.insert(0, B + 'admin'); import org_patch as _ORG   # floors and rooms of the admin building, drivers at the garage (board «Компания»)
-app = _ORG.app(_UI.app(_RP.app(open(B + 'app/app.js', encoding='utf-8').read()))).replace('/*__SCENE__*/', scene)
+app = _ORG.app(_UI.app(_RP.app(_cg1_read_file(B + 'app/app.js', encoding='utf-8')))).replace('/*__SCENE__*/', scene)
 # one tab bar below instead of the toolbar, the address and the three-row sheet (22.10.2026): at the end of the app's closure
 _ti = app.index(";(function(){\n  const btn = document.getElementById('pagesBtn')"); _tj = app.rfind('})();', 0, _ti)
-app = app[:_tj] + open(B + 'app/tabs_part.js', encoding='utf-8').read() + '\n' + open(B + 'app/cardc_part.js', encoding='utf-8').read() + '\n' + app[_tj:]
+app = app[:_tj] + _cg1_read_file(B + 'app/tabs_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/cardc_part.js', encoding='utf-8') + '\n' + app[_tj:]
 # time of day and weather (23.10.2026): app/sky_core.js (also assets/sky.js for the plan page) + app/sky_part.js (light, sky, rain and snow in the scene)
 _tk = app.index(";(function(){\n  const btn = document.getElementById('pagesBtn')"); _tk = app.rfind('})();', 0, _tk)
-app = app[:_tk] + open(B + 'app/sky_core.js', encoding='utf-8').read() + '\n' + open(B + 'app/sky_part.js', encoding='utf-8').read() + '\n' + open(B + 'app/batch_part.js', encoding='utf-8').read() + '\n' + app[_tk:]   # batch_part: glued layers and 60 frames (23.10.2026)
+app = app[:_tk] + _cg1_read_file(B + 'app/sky_core.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/sky_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/batch_part.js', encoding='utf-8') + '\n' + app[_tk:]   # batch_part: glued layers and 60 frames (23.10.2026)
 _fr = "if (moved || tween || now < kickUntil || now - lastDraw > 500){ renderer.render(scene, camera);"
 assert app.count(_fr) == 1, 'frame'
 app = app.replace(_fr, "const skyA = window.__t14skyTick ? window.__t14skyTick(now) : false, bA = window.__t14batch ? window.__t14batch(now, moved || !!tween) : false;\n  if (window.__t14fps) window.__t14fps(now, moved || !!tween);\n  if (moved || tween || skyA || bA || now < kickUntil || now - lastDraw > 500){ if (!(moved || tween) || skyA || bA) renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);")
@@ -140,26 +141,28 @@ app = app.replace(_fn, "const LITE = document.documentElement.classList.contains
 _ob = B + 'output.json'
 assert app.count('/*__OUTPUT__*/null') == 1
 import os as _oso
-if _oso.path.exists(_ob): app = app.replace('/*__OUTPUT__*/null', open(_ob, encoding='utf-8').read().replace('<', '\\u003c'))
+if _oso.path.exists(_ob): app = app.replace('/*__OUTPUT__*/null', _cg1_read_file(_ob, encoding='utf-8').replace('<', '\\u003c'))
 # the warehouse card: today's stock (gen_stock.py writes the brief from the 1С mailings)
 import os as _os2
 _sb = B + 'stock_brief.json'
 assert app.count('/*__STOCK__*/null') == 1
-if _os2.path.exists(_sb): app = app.replace('/*__STOCK__*/null', open(_sb, encoding='utf-8').read().replace('<', '\\u003c'))
+if _os2.path.exists(_sb): app = app.replace('/*__STOCK__*/null', _cg1_read_file(_sb, encoding='utf-8').replace('<', '\\u003c'))
 for _a, _b in (('видны в режиме «Под землёй»', 'видны из-под земли: наклоните вид вниз за уровень глаз'), ('видна в режиме «Под землёй»', 'видна из-под земли: наклоните вид вниз за уровень глаз')):
     assert app.count(_a) == 1, _a; app = app.replace(_a, _b)   # the button «Под землёй» is gone: underground by tilting
 assert '</script' not in app.lower()
-shell = _UI.shell(open(B + 'app/shell.html', encoding='utf-8').read())
-d = json.load(open(B + 'site_app.json', encoding='utf-8'))
+shell = _UI.shell(_cg1_read_file(B + 'app/shell.html', encoding='utf-8'))
+d = _cg1_read_json(B + 'site_app.json', encoding='utf-8')
 _RV.apply_pre(d)
 import sys as _sn; _sn.path.insert(0, B + 'net'); import netdet as _ND; _ND.annotate(d)   # pipe sizes from the labels, risers and jogs between pipe ends
-d['areas'] = json.load(open(B + 'areas.json', encoding='utf-8'))   # production areas (staff page) shown as a layer
-_fix = json.load(open(B + 'site_fix.json', encoding='utf-8'))
+d['areas'] = _cg1_read_json(B + 'areas.json', encoding='utf-8')   # production areas (staff page) shown as a layer
+_fix = _cg1_read_json(B + 'site_fix.json', encoding='utf-8')
 d['parking'] = [{k: v for k, v in pk.items() if not k.endswith('_px')} for pk in _fix.get('parking', [])]
-d['company'] = json.load(open(B + 'admin/company.json', encoding='utf-8'))
-try: d['company']['gsm'] = json.load(open(B + 'admin/garage_gsm.json', encoding='utf-8'))   # 26.10.2026 (пользователь): справочник «Гараж» — машина → водитель и контакты → норма → факт → пробег/моточасы
-except FileNotFoundError: pass   # board «Компания» 30.09.2026: floors, rooms, people; drivers
-d['front'] = json.load(open(B + 'front/front.json', encoding='utf-8'))   # driveway, lawns, paths, porch at the admin building (cameras 010–012)
+d['company'] = _cg1_read_json(B + 'admin/company.json', encoding='utf-8')
+try: d['company']['gsm'] = _cg1_read_json(B + 'admin/garage_gsm.json', encoding='utf-8')   # 26.10.2026 (пользователь): справочник «Гараж» — машина → водитель и контакты → норма → факт → пробег/моточасы
+except FileNotFoundError:
+    # намеренно: при отсутствии необязательного garage_gsm.json сохраняем данные company без дополнения gsm.
+    pass   # board «Компания» 30.09.2026: floors, rooms, people; drivers
+d['front'] = _cg1_read_json(B + 'front/front.json', encoding='utf-8')   # driveway, lawns, paths, porch at the admin building (cameras 010–012)
 import sys as _s0; _s0.path.insert(0, B + 'sat'); _s0.path.insert(0, B)
 from px_geo import px2loc as _px2loc; import post_edits as _PE
 # along the north-east wall of the two-storey part of the upholstery shop (photo «дорога у нового склада»): concrete strip at the wall, then a strip of soil and gravel, then the asphalt road
@@ -197,11 +200,11 @@ d['reg'] = {'doc': _REG['doc'], 'plots': _REG['plots'], 'missing': [{kk: _it.get
 for _b in d['buildings']:                                         # what the photos of 21.10.2026 show of a building
     if _b['k'] in d['front'].get('bnotes', {}): _b['note'] = ((_b.get('note') or '') + ' ' + d['front']['bnotes'][_b['k']]).strip()
 # sanitary protection zone project (ООО «Альфа-С», 2019): boundary, design points, emission and noise sources (szz/build_szz.py)
-_z = json.load(open(B + 'szz/szz.json', encoding='utf-8')); _z.pop('noise_grid', None)
+_z = _cg1_read_json(B + 'szz/szz.json', encoding='utf-8'); _z.pop('noise_grid', None)
 for _s in _z['sources']: _s.pop('cm', None)
 d['szz'] = _z
 # 2025: inventory of emission sources, dispersion calculations, НДВ of the galvanic shop (ООО «Экопроект»; ndv/build_ndv.py)
-_n = json.load(open(B + 'ndv/ndv.json', encoding='utf-8'))
+_n = _cg1_read_json(B + 'ndv/ndv.json', encoding='utf-8')
 for _b in d['buildings']:
     if _b['k'] in _n['rename'] and _b['name'] == _n['rename'][_b['k']][1]: _b['name'] = _n['rename'][_b['k']][0]
     if _b['k'] in _n['bnote']: _b['note'] = ((_b.get('note') or '') + ' ' + _n['bnote'][_b['k']]).strip()
@@ -222,7 +225,7 @@ if _W:
 import glob as _gl
 d.setdefault('equip', [])
 for _fn in sorted(_gl.glob(B + 'docs2025/enrich_*.json')):
-    _E = json.load(open(_fn, encoding='utf-8'))
+    _E = _cg1_read_json(_fn, encoding='utf-8')
     for _b in d['buildings']:
         if _b['k'] in _E.get('rename', {}): _b['name'] = _E['rename'][_b['k']]
         if _b['k'] in _E.get('bnote', {}): _b['note'] = ((_b.get('note') or '') + ' ' + _E['bnote'][_b['k']]).strip()
@@ -253,14 +256,18 @@ import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — час�
 import corr_cams_1028 as _CC; _CC.apply(d, _RV._zat(d))   # 28.10.2026: камеры — места, направление, наклон, угол обзора по кадрам 26.10 и скриншотам А. Сотрудник1
 import corr_cams_1028b as _CB; _CB.apply(d, _RV._zat(d))   # 28.10.2026, второй заход: ответ А. Сотрудник1 — 053 выше, 042 на забор, 019 и 024 внутрь, 063 с вагончиком, новая 028, склад ТПА вплотную, 10 бытовок
 import corr_alex_1106 as _AX; _AX.apply(d, _RV._zat(d))   # 09.11.2026: правки А. В. Сотрудник1 (письмо 06.11, «да» 09.11) — work/alex_0611/plan.md
-if _oso.environ.get('FABRIKA_DUMP'): json.dump(d, open(_oso.environ['FABRIKA_DUMP'], 'w', encoding='utf-8'), ensure_ascii=False)   # 28.10: выгрузка собранных данных модели для правок
+if _oso.environ.get('FABRIKA_DUMP'):
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = d
+    with open(_oso.environ['FABRIKA_DUMP'], 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False) # 28.10: выгрузка собранных данных модели для правок
 # 01.11.2026, пользователь (журнал бота №12): фото зданий в карточках — build/bld_photos.json + build/bld_photos/*.jpg → S.bphotos (data: URI, сайт шифруется целиком)
 import base64 as _b64
-_BP = json.load(open(B + 'bld_photos.json', encoding='utf-8')) if os.path.exists(B + 'bld_photos.json') else {}
-d['bphotos'] = {k: [{'src': 'data:image/jpeg;base64,' + _b64.b64encode(open(B + 'bld_photos/' + x['f'], 'rb').read()).decode(), 'cap': x.get('cap', ''), 'by': x.get('by', ''), 'date': x.get('date', '')}
+_BP = _cg1_read_json(B + 'bld_photos.json', encoding='utf-8') if os.path.exists(B + 'bld_photos.json') else {}
+d['bphotos'] = {k: [{'src': 'data:image/jpeg;base64,' + _b64.b64encode(_cg1_read_file(B + 'bld_photos/' + x['f'], 'rb')).decode(), 'cap': x.get('cap', ''), 'by': x.get('by', ''), 'date': x.get('date', '')}
                     for x in v if os.path.exists(B + 'bld_photos/' + x['f'])] for k, v in _BP.items() if not k.startswith('_')}
 site_json = json.dumps(d, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
-edits_js = open('/home/claude/site/assets/edits.js', encoding='utf-8').read()
+edits_js = _cg1_read_file('/home/claude/site/assets/edits.js', encoding='utf-8')
 import perf_hooks as _PH; app = _PH.app(app)   # 26.10.2026: качество отрисовки по силе устройства (app/perf.js)
 app = _CC.app(app)   # 28.10.2026: угол обзора камеры из данных и строка «сверено по кадру» в карточке камеры
 app = _AX.app(app)   # 09.11.2026: опоры газа (skip/brk), распашные ворота, радиомост, котлы по списку А. В. в карточке отопления
@@ -270,6 +277,8 @@ out = (shell + '\n'
        '<script id="site-json" type="application/json">' + site_json + '</script>\n'
        '<script id="edits-js">' + edits_js + '</script>\n'
        '<script id="app-js">' + app + '</script>\n')
-open('/home/claude/site/index.html', 'w', encoding='utf-8').write(out)
-open(B + 'app/app_full.js', 'w', encoding='utf-8').write(app)
+with open('/home/claude/site/index.html', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(out)
+with open(B + 'app/app_full.js', 'w', encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(app)
 print('index.html', round(len(out) / 1e3), 'KB; app js', round(len(app) / 1e3), 'KB')

@@ -103,7 +103,8 @@ def pw_1c(L):
     p = os.path.join(L, 'imap_1c')
     try: os.chmod(p, 0o600)
     except Exception: pass
-    try: return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
+    try:
+        return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
     except Exception: return ''
 
 
@@ -187,7 +188,9 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                         if not fn: continue
                         fn = IT.clean(fn)
                         try: fn = str(email.header.make_header(email.header.decode_header(fn)))
-                        except Exception: pass
+                        except Exception:
+                            # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+                            pass
                         fn = IT.fix_ext(IT.clean(fn))
                         data_ = p.get_payload(decode=True) or b''
                         sha = hashlib.sha256(data_).hexdigest()
@@ -225,7 +228,9 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
         res['state'] = ('Mail.ru: ' if host == IT.HOST else host + ': ') + str(e)[:160]
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
         if lk: lk.close()
     try: os.chmod(idx, 0o600)
     except Exception: pass

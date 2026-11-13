@@ -2,8 +2,9 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
+from _cg1_build_io import read_file as _cg1_read_file
 p='/home/claude/build/site3d_template.html'
-s=open(p,encoding='utf-8').read()
+s=_cg1_read_file(p,encoding='utf-8')
 R=[]
 R.append(("const gB=G('buildings'), gBnew=G('newb'), gTP=G('tp'), gProj=G('proj');",
           "const gB=G('buildings'), gBnew=G('newb'), gTP=G('tp'), gProj=G('proj'), gGhost=G('ghost'), gPlan=G('plan');"))
@@ -106,5 +107,6 @@ for a,b in R:
     n=s.count(a)
     assert n==1,(n,a[:90])
     s=s.replace(a,b)
-open(p,'w',encoding='utf-8').write(s)
+with open(p,'w',encoding='utf-8') as _cg1_output_file:
+    _cg1_output_file.write(s)
 print('ok',len(R))

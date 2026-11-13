@@ -11,6 +11,7 @@
 по базовой модели в скобках («Кресло офисное Флекс (Феликс G) (Стул груп)» → Феликс G) и по словам в названии.
 Названия с маркой клиента (Hoff, Mio Tesoro, Gigant, Geometry, «Стул груп» и др.) отмечаются как «под маркой клиента».
 → build/assort.json и build/assort_frag.html (вставляется в «Изделия и материалы»)."""
+from _cg1_build_io import read_json as _cg1_read_json
 import collections, html, json, re
 import openpyxl
 
@@ -78,7 +79,7 @@ def fact_oct(R):
 
 
 def stock():
-    D = json.load(open('/home/claude/stock/stock.json', encoding='utf-8'))
+    D = _cg1_read_json('/home/claude/stock/stock.json', encoding='utf-8')
     grp, ryaz, op = {}, collections.Counter(), collections.Counter()
     W = next(w for w in D['warehouses'] if w['name'] == D['scope'])
     for w in D['warehouses']:
@@ -158,8 +159,12 @@ def main():
            'brands': sorted([[b, sum(1 for m in models.values() if m['brand'] == b), round(sum(m['s'] for m in models.values() if m['brand'] == b))] for b, _ in BRANDS
                              if any(m['brand'] == b for m in models.values())], key=lambda x: -x[2]),
            'n': len(models)}
-    json.dump(out, open(B + 'assort.json', 'w', encoding='utf-8'), ensure_ascii=False)
-    open(B + 'assort_frag.html', 'w', encoding='utf-8').write(frag(out))
+    _cg1_dump_func = json.dump
+    _cg1_dump_value = out
+    with open(B + 'assort.json', 'w', encoding='utf-8') as _cg1_json_file:
+        _cg1_dump_func(_cg1_dump_value, _cg1_json_file, ensure_ascii=False)
+    with open(B + 'assort_frag.html', 'w', encoding='utf-8') as _cg1_output_file:
+        _cg1_output_file.write(frag(out))
     print('моделей', len(models), '; типов', len(types), '; выручка', round(tot / 1e6, 1), 'млн')
     for t in types: print(' ', t['n'], t['models'], 'мод.,', t['q'], 'шт,', round(t['s'] / 1e6, 1), 'млн; склад Рязань', t['ry'], ', ОП', t['op'])
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Отдельный сайт «Коммерческий отдел»: тот же раздел, что и в общем сайте оргструктуры (sales_section.py)."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
 _ROOT = _os.path.dirname(_SRC)
@@ -8,7 +9,7 @@ import sales_section as S    # стили и скрипты раздела
 import ko_master as KOM      # сам раздел — ko_master/stranica_kommercheskiy_otdel.html
 
 OUT = _os.path.join(_ROOT, "sites", "kommercheskiy-otdel.html")
-LOGO = base64.b64encode(open(_os.path.join(_SRC, "logo_white.png"), "rb").read()).decode()
+LOGO = base64.b64encode(_cg1_read_file(_os.path.join(_SRC, "logo_white.png"), "rb")).decode()
 
 PAGE_CSS = r"""
 :root{
@@ -55,5 +56,6 @@ page = f"""<title>Коммерческий отдел «Фабрикант»</ti
 <footer><div class="wrap">{KOM.PAGE_FOOTER}</div></footer>
 <script>{S.TOGGLE_JS}{S.COPY_JS}</script>
 """
-open(OUT, "w", encoding="utf-8").write(page)
+with open(OUT, "w", encoding="utf-8") as _cg1_output_59:
+    _cg1_output_59.write(page)
 print("saved", OUT, len(page))

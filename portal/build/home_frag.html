@@ -255,8 +255,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var L = (window.T14_PORTAL || []).filter(function (p) { return p[0] !== 'home.html'; });
     var I = window.T14_ICONS || {};
     var h = L.map(function (p) {
-      var c = p[0] === 'products.html' ? null : M.card(p[0]);   // 02.11, Т. В.: «Изделия и материалы» — только каталог (без продаж и склада)
-      var mk = { 'sales.html': 'sales', 'stock.html': 'stock', 'omts.html': 'omts', 'staff.html': 'prod', 'plan.html': 'map' }[p[0]], M0 = mk && c ? M.get(mk) : null;
+      // 13.11.2026: разделы новой структуры (razdel.html#…) берут цифры со страницы из 6-го элемента (Продажи, Производство, Снабжение и склад, Площадка)
+      var pg = p[5] || p[0], c = pg === 'products.html' || /^razdel\.html/.test(pg) ? null : M.card(pg);   // 02.11, Т. В.: «Изделия и материалы» — только каталог (без продаж и склада)
+      var mk = { 'sales.html': 'sales', 'stock.html': 'stock', 'omts.html': 'omts', 'staff.html': 'prod', 'plan.html': 'map' }[pg], M0 = mk && c ? M.get(mk) : null;
       return '<li><a class="fs" href="' + p[0] + '" style="--c:' + p[3] + '"' + (M0 ? ' data-m="' + mk + '" data-mv="' + esc(M0.v == null ? '' : (mk === 'prod' ? M0.ok : M0.v)) + '" data-md="' + esc(M0.date || '') + '"' : '') + '><span class="fs-i">' + (I[p[2]] || '') + '</span><b>' + esc(p[1]) + '</b><small>' + esc(c || p[4]) + '</small></a></li>';
     }).join('');
     h += '<li><button class="fs" type="button" data-popen="search" style="--c:var(--ic-ai)"><span class="fs-i">' + (I.spark || '') + '</span><b>Спросить у портала</b><small>поиск по всем разделам' + (window.T14_AI === true ? ' и помощник' : '') + '</small></button></li>';

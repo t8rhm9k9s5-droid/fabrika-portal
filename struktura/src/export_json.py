@@ -36,11 +36,15 @@ org = dict(company=D.COMPANY, generated=now, source="data_fabrikant.py",
            tech_director=person(D.MASHINSKY_A), tech_depts=list(D.TECH_DEPTS),   # 12.11.2026: технический директор и его службы
            departments=depts, areas=[area(a) for a in D.AREAS], night_shift=area(D.NIGHT),
            night_schedule=D.NIGHT_SCHEDULE, people_in_departments=sum(x["count"] for x in depts))
-json.dump(org, open(os.path.join(OUT, "orgstruktura.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+_cg1_json_value_39 = org
+with open(os.path.join(OUT, "orgstruktura.json"), "w", encoding="utf-8") as _cg1_json_output_39:
+    json.dump(_cg1_json_value_39, _cg1_json_output_39, ensure_ascii=False, indent=1)
 
 # Коммерческий отдел — текущая редакция из главной копии раздела (ko_master/*.html), режим «Чистовик»
 import ko_data as K
 ko = dict(generated=now, edition=K.EDITION, source="ko_master/stranica_kommercheskiy_otdel.html (через ko_data.py)",
           groups=[dict(title=g, people=pp) for g, pp in K.PEOPLE], scheme=K.SCHEME, tables=K.TABLES)
-json.dump(ko, open(os.path.join(OUT, "kommercheskiy_otdel.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+_cg1_json_value_45 = ko
+with open(os.path.join(OUT, "kommercheskiy_otdel.json"), "w", encoding="utf-8") as _cg1_json_output_45:
+    json.dump(_cg1_json_value_45, _cg1_json_output_45, ensure_ascii=False, indent=1)
 print("saved out/orgstruktura.json, out/kommercheskiy_otdel.json |", org["people_in_departments"], "чел. в отделах")

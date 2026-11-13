@@ -92,17 +92,59 @@ function dn_send_(html) {
   return !!(r && r.ok);
 }
 
-/** Из g4_tick_: рабочий день, окно DN_FROM–DN_TO, раз в день. */
+/** Из g4_tick_: рабочий день, окно DN_FROM–DN_TO, раз в день. После итогов Т. В. — копия людям из DN_ALSO (лично в бот MAX). */
 function dn_tick() {
   var now = Date.now(), hm = b2Msk_(now, 'HH:mm'), day = b2Msk_(now, 'yyyy-MM-dd'), p = props();
-  if (!evWorkDay_(now) || hm < DN_FROM || hm >= DN_TO || p.getProperty('dn_day') === day) return null;
+  if (!evWorkDay_(now) || hm < DN_FROM) return null;
+  try { dn_mig_(); } catch (em) { fail_('g4:dn:mig', em); }
+  if (p.getProperty('dn_day') === day) {                // Т. В. уже получил — дошлём копии, если ещё не ушли (до полуночи)
+    try { dn_also_(now, day); } catch (ea) { fail_('g4:dn:max', ea); }
+    return null;
+  }
+  if (hm >= DN_TO) return null;
   p.setProperty('dn_day', day);                          // отметка до отправки — повтор тика не удвоит
   var html = dn_build(now), ok = false;
   try { ok = dn_send_(html); } catch (e) { fail_('g4:dn', e); }
   if (!ok) p.deleteProperty('dn_day');                   // не ушло — следующий тик в том же окне попробует снова
   try { g4_put_('dn_last.json', JSON.stringify({ day: day, t: b2Msk_(Date.now(), 'HH:mm'), ok: ok, len: html.length })); } catch (e3) { /* отметка не обязательна */ }
   try { g4_log_('dn', day + ': ' + (ok ? 'отправлено' : 'НЕ ушло') + ' (' + html.length + ' зн.)'); } catch (e4) { /* журнал */ }
+  if (ok) { try { dn_also_(now, day, html); } catch (e5) { fail_('g4:dn:max', e5); } }
   return ok;
 }
-/** Просмотр текста без отправки (из редактора). */
-function dn_test() { var t = dn_build(); console.log(t); return t; }
+
+/* 12.11.2026 Т. В.: «Отправляй ей вечерние отчеты такие же как мне — я получаю в Telegram, она в MAX»; «Она такой же абсолютный админ как и я» (права — кнопкой Т. В.).
+   DN_ALSO — кому копия итогов дня лично в бот MAX (ключ — id в боте = MAX_BASE + id в MAX). Текст тот же; «вам» → «Т. В.» (это вопросы к нему). */
+var DN_ALSO = { 'REDACTED_HEX_2': 'Сотрудник80 Сотрудник18' };
+var DN_HELLO = 'REDACTED_HEX_2';                       // одноразово: пояснение перед первой копией (права администратора даёт только Т. В. — кнопкой в /users и на портале)
+
+/** Текст для MAX: без сворачиваемой цитаты Telegram, обращения к Т. В. — по имени. */
+function dn_maxText_(html) {
+  return String(html).replace(/Ждут вашего решения/g, 'Ждут решения Т. В.').replace(/<b>Ждут вас<\/b>/g, '<b>Ждут решения Т. В.</b>')
+    .replace(/лично вам с вопросом/g, 'лично Т. В. с вопросом').replace(/<blockquote[^>]*>/g, '\n').replace(/<\/blockquote>/g, '');
+}
+
+/** Копии итогов дня в MAX (раз в день; повтор того же id бот MAX не отправит дважды). html — уже собранный текст (иначе соберём заново). */
+function dn_also_(now, day, html) {
+  var p = props(), ks = Object.keys(DN_ALSO); if (!ks.length || p.getProperty('dn_also_day') === day) return null;
+  p.setProperty('dn_also_day', day);
+  var txt = null, sent = [], bad = [];
+  ks.forEach(function (k) {
+    var uid = Number(k) - MAX_BASE; if (!(uid > 0)) return;
+    if (txt === null) txt = dn_maxText_(html || dn_build(now));
+    var r = null; try { r = g4_maxCmd_({ op: 'dm', id: 'dn-' + day + '-' + uid, uid: uid, text: txt }); } catch (e) { r = null; }
+    if (r && (r.ok || /уже отправлено/.test(String(r.error || '')))) sent.push(DN_ALSO[k]); else bad.push(DN_ALSO[k] + ': ' + String(r && (r.error || r.description) || 'нет ответа').slice(0, 80));
+  });
+  if (bad.length) p.deleteProperty('dn_also_day');       // не ушло — следующий тик попробует снова
+  try { g4_log_('dn', day + ': копия в MAX — ' + (sent.join(', ') || '—') + (bad.length ? '; НЕ ушло: ' + bad.join('; ') : '')); } catch (e2) { /* журнал */ }
+  return !bad.length;
+}
+
+/** Одноразово (свойство dn_hello): короткое пояснение получателю перед первой копией итогов. */
+function dn_mig_() {
+  var p = props(), k = DN_HELLO; if (!k || p.getProperty('dn_hello') === k || !DN_ALSO[k]) return;
+  var uid = Number(k) - MAX_BASE, msg = 'Сотрудник80, добрый вечер!\n\nПо просьбе Сотрудник2 Отчество2 сюда каждый рабочий вечер (около 19:15–19:55) будут приходить «Итоги дня» — такие же, как получает он. Сегодняшние — следующим сообщением.';
+  var r = null; try { r = g4_maxCmd_({ op: 'dm', id: 'dnhello-1211-' + uid, uid: uid, text: msg }); } catch (e) { r = null; }
+  var ok = !!(r && (r.ok || /уже отправлено/.test(String(r.error || ''))));
+  if (ok) p.setProperty('dn_hello', k);
+  try { g4_log_('dn', DN_ALSO[k] + ': пояснение к итогам дня ' + (ok ? 'отправлено' : 'НЕ ушло: ' + String(r && r.error || 'нет ответа').slice(0, 80))); } catch (e2) { /* журнал */ }
+}

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Формы выгрузок из 1С УПП: заказ → запуск → выпуск → отгрузка → оплата → возврат.
 Делает страницу (артефакт) и xlsx-шаблон для 1С-программистов из одного описания."""
+from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
 _ROOT = _os.path.dirname(_SRC)
@@ -12,7 +13,7 @@ from openpyxl.utils import get_column_letter
 esc = lambda s: html.escape(str(s), quote=True)
 OUT_HTML = _os.path.join(_ROOT, "sites", "vygruzki-1c.html")
 OUT_XLSX = _os.path.join(_ROOT, "out", "Формы_выгрузок_1С.xlsx")
-LOGO = base64.b64encode(open(_os.path.join(_SRC, "logo_white.png"), "rb").read()).decode()
+LOGO = base64.b64encode(_cg1_read_file(_os.path.join(_SRC, "logo_white.png"), "rb")).decode()
 
 # ключевые поля, по которым связываются выгрузки
 KEY = {"№ заказа покупателя", "Номенклатура (артикул)"}
@@ -258,7 +259,9 @@ footer{padding-block:26px 40px;color:var(--muted);font-size:12.5px}
 </main>
 <footer><div class="wrap">ГК «Фабрикант» · формы выгрузок для 1С-программистов (Сотрудник5 В. В., Сотрудник50 М. И.) · проект, октябрь 2026</div></footer>
 """
-    open(OUT_HTML, "w", encoding="utf-8").write(page); print("saved", OUT_HTML, len(page))
+    with open(OUT_HTML, "w", encoding="utf-8") as _cg1_forms_output:
+        _cg1_forms_output.write(page)
+    print("saved", OUT_HTML, len(page))
 
 if __name__ == "__main__":
     build_xlsx(); build_html()

@@ -34,7 +34,9 @@ MAX_TEXT = 1400                    # задача «Другое» в боте �
 
 
 def _cfg():
-    try: return json.load(open(os.path.join(HERE, 'mail_cmd.json'), encoding='utf-8'))
+    try:
+        with open(os.path.join(HERE, 'mail_cmd.json'), encoding='utf-8') as _cg1_file_1:
+            return json.load(_cg1_file_1)
     except Exception: return {}
 
 
@@ -44,7 +46,9 @@ def _now(): return datetime.datetime.now(MSK)
 def _addr(h):
     n, a = email.utils.parseaddr(re.sub(r'[\t\r\n]+', ' ', str(h or '')))
     try: n = str(email.header.make_header(email.header.decode_header(n)))
-    except Exception: pass
+    except Exception:
+        # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+        pass
     return n.strip().strip('"'), a.strip().lower()
 
 
@@ -69,7 +73,9 @@ def authentic(msg, frm):
 def body_text(msg):
     part = None
     try: part = msg.get_body(preferencelist=('plain', 'html'))
-    except Exception: pass
+    except Exception:
+        # намеренно: если часть тела письма не найдена, ниже возвращается пустой текст.
+        pass
     if part is None: return ''
     try: t = part.get_content()
     except Exception: t = (part.get_payload(decode=True) or b'').decode(part.get_content_charset() or 'utf-8', 'replace')
@@ -137,13 +143,14 @@ def _replies(L, st, mail_send, log):
     if os.path.exists(p):
         q = os.path.join(M, 'mailout.%d.jsonl' % now)
         os.replace(p, q)                                             # relay.php дальше пишет в новый файл
-        for ln in open(q, encoding='utf-8'):
-            try: r = json.loads(ln)
-            except Exception: continue
-            w = st['wait'].get(str(r.get('chat')))
-            tx = str(r.get('text') or '')
-            if re.match(r'^(Опишите задачу|Задача\n)', tx): continue        # промежуточные шаги задачи — в письмо не нужны
-            if w and int(r.get('t', 0)) >= int(w['t0']) - 5: w.setdefault('out', []).append([int(r['t']), tx[:3500]])
+        with open(q, encoding='utf-8') as _cg2_file_1:
+            for ln in _cg2_file_1:
+                try: r = json.loads(ln)
+                except Exception: continue
+                w = st['wait'].get(str(r.get('chat')))
+                tx = str(r.get('text') or '')
+                if re.match(r'^(Опишите задачу|Задача\n)', tx): continue        # промежуточные шаги задачи — в письмо не нужны
+                if w and int(r.get('t', 0)) >= int(w['t0']) - 5: w.setdefault('out', []).append([int(r['t']), tx[:3500]])
         try: os.remove(q)
         except Exception: pass
     sent = 0
@@ -166,7 +173,13 @@ def _replies(L, st, mail_send, log):
 def _sync_wait(L, st):
     p = os.path.join(_maxdir(L), 'mailwait.json')
     W = {k: {'exp': v['exp'], 't0': v['t0']} for k, v in st['wait'].items()}
-    tmp = p + '.tmp'; json.dump(W, open(tmp, 'w', encoding='utf-8')); os.chmod(tmp, 0o600); os.replace(tmp, p)
+    tmp = p + '.tmp'
+    _cg2_dump_2 = json.dump
+    _cg2_data_2 = W
+    with open(tmp, 'w', encoding='utf-8') as _cg2_file_2:
+        _cg2_dump_2(_cg2_data_2, _cg2_file_2)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, p)
 
 
 def _att_save(L, msg, when, subj, log):
@@ -178,7 +191,9 @@ def _att_save(L, msg, when, subj, log):
         fn = part.get_filename()
         if not fn or part.get_content_maintype() == 'multipart': continue
         try: fn = str(email.header.make_header(email.header.decode_header(re.sub(r'[\t\r\n]+', '', fn))))
-        except Exception: pass
+        except Exception:
+            # намеренно: при ошибке декодирования MIME-заголовка сохраняем исходное имя.
+            pass
         fn = re.sub(r'[\\/:*?"<>|]+', ' ', fn).strip()[:120] or 'file'
         data = part.get_payload(decode=True) or b''
         if not data or len(data) > 15 * 1024 * 1024: names.append(fn + ' (не сохранён: пустой или больше 15 МБ)'); continue
@@ -234,7 +249,9 @@ def run(L, CFG, log, jload, jsave, mail_send, pw, budget=50):
             jsave('mail_cmd.json', st)
     finally:
         try: M.logout()
-        except Exception: pass
+        except Exception:
+            # намеренно: ошибка завершения IMAP-сеанса не должна отменять уже обработанные письма.
+            pass
     jsave('mail_cmd.json', st)
     return res
 
