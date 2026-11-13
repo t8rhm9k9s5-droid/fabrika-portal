@@ -437,16 +437,22 @@ for _n in frags:
 # 13.11.2026, Т. В.: «35 % мощности недели ушло в следующую — emergency call для всего портала, должно загораться (в стиле iPhone / macOS)»:
 #   тревоги — build/gen_alerts.py → assets/alerts_data.js (пороги там же), показ — assets/alerts.js на каждой странице
 subprocess.run(['python3', '/home/claude/build/gen_alerts.py'])
+# 14.11.2026, Т. В. (опрос: «Пуши о тревогах»): новая «Критично» → уведомление администраторам с включёнными уведомлениями (бот TG v41+),
+#   одна тревога — один пуш, тихие часы 22–07 МСК; состояние build/alerts_pushed.json
+subprocess.run(['python3', '/home/claude/build/push_alerts.py'], timeout=180)
 for _n in frags:
     if _n == 'index.html' or '<script src="assets/alerts.js">' in frags[_n]: continue
     _gl1 = '<link rel="stylesheet" href="assets/glass.css">'          # данные — в начале страницы (главная строит «Требует внимания» сразу)
     frags[_n] = frags[_n].replace(_gl1, _gl1 + '\n<script src="assets/alerts_data.js"></script>', 1) if _gl1 in frags[_n] else '<script src="assets/alerts_data.js"></script>\n' + frags[_n]
     frags[_n] += '<script src="assets/alerts.js"></script>\n'
+subprocess.run(['python3', '/home/claude/build/gen_days.py'])
 # 13.11.2026, Т. В.: «все баги фиксируем, даже движение мышкой; тепловые карты; где человек запутался» — assets/ux.js на каждой странице
 for _n in frags:
     if '<script src="assets/ux.js">' not in frags[_n]: frags[_n] += '<script src="assets/ux.js"></script>\n'
     # 13.11.2026, Т. В. (опрос по «Dashboard V22»): цифры «набегают», узкая панель, «Сохранённое»
     if '<link rel="stylesheet" href="assets/skin_v22.css">' not in frags[_n]: frags[_n] = '<link rel="stylesheet" href="assets/skin_v22.css">\n' + frags[_n]
+    # 14.11.2026, Т. В.: «дата сверху не переключает — что было вчера?!» — данные по дням для полоски недели (build/gen_days.py)
+    if _n == 'home.html' and '<script src="assets/days_data.js">' not in frags[_n]: frags[_n] += '<script src="assets/days_data.js"></script>\n'
     for _mjs in ('motion.js', 'fav.js'):                # не _js: так в файле назван модуль json
         if '<script src="assets/%s">' % _mjs not in frags[_n]: frags[_n] += '<script src="assets/%s"></script>\n' % _mjs
 print('подсветка нового: %d записей на %s' % (len(_FI), _FDAY))
@@ -467,7 +473,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник5) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник8) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

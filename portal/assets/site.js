@@ -103,6 +103,7 @@
     s_items: SVG('<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/>'),
     s_docs: SVG('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
     s_org: SVG('<rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>'),   // 12.11.2026: «Структура»
+    s_device: SVG('<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/>'),   // 14.11.2026: «На iPhone и iPad»
     s_phone: SVG('<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>'),
     s_chat: SVG('<path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"/>'),
     s_grid: SVG('<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'),
@@ -491,6 +492,15 @@
     var panel = el('div', 'tabpanel', '<button class="grab" type="button" aria-label="Закрыть"></button><div class="phead"><button class="pbk" type="button" aria-label="Назад"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Назад</span></button><h3></h3><button class="x" type="button" aria-label="Закрыть">×</button></div>'); panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'false');
     var secs = {}, btns = {}, titles = {}, open = null, opener = null;
     function close() { panel.hidden = true; open = null; mark(); if (opener && document.contains(opener)) try { opener.focus({ preventScroll: true }); } catch (e) { } opener = null; if (window.T14Site && T14Site._track) T14Site._track(); }
+    // 14.11.2026, Т. В. (iPhone): «в меню разделы не работают» — по журналу нажатий: на странице раздела нажатие на раздел в листе меняло только
+    //   #раздел (или был тот же раздел), а лист оставался открытым поверх страницы — казалось, что ничего не происходит. Теперь любая ссылка
+    //   в листе закрывает его; тот же раздел — просто закрыть и показать страницу сверху.
+    panel.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+      var u = a.getAttribute('href') || '', same = u.split('#')[0] === cur || u.charAt(0) === '#';
+      close();
+      if (same) { var hh = u.indexOf('#') >= 0 ? u.slice(u.indexOf('#')) : ''; if (!hh || hh === location.hash) { e.preventDefault(); try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (x) { window.scrollTo(0, 0); } } }
+    });
     function mark() { for (var k in btns) btns[k].forEach(function (b) { b.setAttribute('aria-expanded', String(k === open)); }); }
     function show(k, from) {
       if (open === k) return close();
@@ -656,6 +666,8 @@
       // 27.10.2026, пользователь: боты — рядом, просто переход (бот MAX настраивается в «Управлении»)
       BOTS.forEach(function (x) {
         var a = irow('a', ICON[x[1]], x[2], x[3], ''); a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; a.addEventListener('click', function () { close(); }); g3.appendChild(a); });
+      // 14.11.2026, Т. В. (опрос: приложение для iPhone без затрат): как поставить значок, Face ID, пуши о тревогах, Siri, кнопку в Telegram
+      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'На iPhone и iPad', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
       if (APK) { var apk = irow('a', ICON.s_apk, 'var(--ic-calls)', 'Скачать приложение (APK)', 'Android'); apk.href = APK; apk.setAttribute('download', 'Фабрика.apk'); apk.addEventListener('click', function () { close(); }); g3.appendChild(apk); }
       var pb = document.getElementById('pushBtn');
       if (pb) {
@@ -970,7 +982,7 @@
     try { ['scrollY', 'pageYOffset'].forEach(function (k) { Object.defineProperty(window, k, { configurable: true, get: function () { return B.scrollTop; } }); }); } catch (e) { }
   }
   if (document.body) scrollMode(); else document.addEventListener('DOMContentLoaded', scrollMode);
-  // REDACTED_B64_2 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
+  // REDACTED_B64_10 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
   var SXP = { 'staff.html': { deps: ['Производство', 'Технологический отдел', 'Служба главного инженера', 'Служба главного механика'], areas: true, pd: true },

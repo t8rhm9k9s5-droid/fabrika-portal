@@ -58,11 +58,11 @@ html[data-skin="v22"][data-skin][data-skin] .fav-chip{background:transparent}
 /* неделя-календарь на главной (motion.js рисует .v22-week) */
 .v22-week{display:none}
 html[data-skin="v22"][data-skin][data-skin] .v22-week{display:flex;gap:6px;align-items:stretch;margin:2px 0 12px;overflow-x:auto;scrollbar-width:none}
-html[data-skin="v22"][data-skin][data-skin] .v22-week span{flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:16px;font:500 11px var(--f-body);color:var(--v-ink2)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button{flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:16px;font:500 11px var(--f-body);color:var(--v-ink2)}
 html[data-skin="v22"][data-skin][data-skin] .v22-week b{font:600 16px var(--f-display);color:var(--v-ink)}
-html[data-skin="v22"][data-skin][data-skin] .v22-week span.today{background:rgba(255,138,61,.14);color:#c2410c}
-html[data-skin="v22"][data-skin][data-skin] .v22-week span.today b,html[data-skin="v22"][data-skin][data-skin] .v22-week span.today.off b{color:#c2410c}
-html[data-skin="v22"][data-skin][data-skin] .v22-week span.off b{color:var(--v-ink3)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button.today{background:rgba(255,138,61,.14);color:#c2410c}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button.today b,html[data-skin="v22"][data-skin][data-skin] .v22-week button.today.off b{color:#c2410c}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button.off b{color:var(--v-ink3)}
 
 /* «Сохранённое» — плитками, как «Saved for later» */
 html[data-skin="v22"][data-skin][data-skin] .fav-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;background:transparent!important;border:0!important;box-shadow:none!important}
@@ -89,7 +89,7 @@ html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-sec
   html[data-skin="v22"][data-skin][data-skin] :is(.pz-k>a.gl,.fhome .pk,.fhome .fs,.rz-map a,.fav-list .irow):hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(20,22,26,.06),0 18px 36px rgba(20,22,26,.12)!important}}
 html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *,html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *:hover{animation:none!important;transition:none!important;transform:none!important}
 @media (prefers-reduced-motion:reduce){html[data-skin="v22"][data-skin][data-skin] *{animation:none!important;transition:none!important}}
-@media (min-width:900px){html[data-skin="v22"][data-skin][data-skin] .v22-week{max-width:460px;margin:-4px 0 12px auto}html[data-skin="v22"][data-skin][data-skin] .v22-week span{padding:6px 4px;border-radius:14px}}
+@media (min-width:900px){html[data-skin="v22"][data-skin][data-skin] .v22-week{max-width:460px;margin:-4px 0 12px auto}html[data-skin="v22"][data-skin][data-skin] .v22-week button{padding:6px 4px;border-radius:14px}}
 @media (prefers-color-scheme:dark){
   html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .t14al .al-crit .al-card.gl,html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .al-tile.al-crit.gl{background:#2a1a16!important}
   html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .t14al .al-warn .al-card.gl,html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .al-tile.al-warn.gl{background:#2a2216!important}}
@@ -108,3 +108,45 @@ html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *,html[data-skin="v2
   html[data-skin="v22"][data-skin][data-skin] .pside .pnav[aria-current="page"]{background:rgba(120,120,128,.18)!important}
   html[data-skin="v22"][data-skin][data-skin] .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px var(--v-card)}
 }
+/* 14.11.2026, Т. В. (iPhone): «нет симметрий по вертикали; дата сверху не переключает — что было вчера?!; граница верхнего меню — нет всех плюсов iOS» */
+/* неделя — кнопки дней: нажал → «День» (motion.js dayOpen), смахнул — соседняя неделя */
+html[data-skin="v22"][data-skin][data-skin] .v22-week{position:relative}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button{border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;transition:background .15s ease,transform .1s ease}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button:active{transform:scale(.94)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button.sel{background:rgba(120,120,128,.16)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week button.fut b{opacity:.55}
+html[data-skin="v22"][data-skin][data-skin] .v22-week[data-wk]::after{content:attr(data-wk);position:absolute;right:0;top:-16px;font:500 11px var(--f-body);color:var(--v-ink3)}
+html[data-skin="v22"][data-skin][data-skin] .v22-dnav{display:flex;justify-content:space-between;gap:8px;margin:0 0 10px}
+html[data-skin="v22"][data-skin][data-skin] .v22-dnav button{border:0;border-radius:99px;padding:7px 14px;background:rgba(120,120,128,.14);color:inherit;font:600 14px var(--f-body);cursor:pointer}
+html[data-skin="v22"][data-skin][data-skin] .v22-day .v22-dv{font:600 15px var(--f-body);color:var(--v-ink);white-space:nowrap;margin-left:8px}
+/* телефон: одна вертикаль — «Пульс» без внешней рамки, его три показателя, тревога и карточки — по одним краям; неделя — на всю ширину */
+@media (max-width:700px){
+  html[data-skin="v22"][data-skin][data-skin] .fhome .fh-ban{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important}
+  html[data-skin="v22"][data-skin][data-skin] .fhome .fb-k{gap:10px}
+  html[data-skin="v22"][data-skin][data-skin] .fhome .fb-m{background:var(--v-card)!important;border:1px solid var(--v-line)!important;box-shadow:var(--v-shadow)!important;border-radius:18px!important;padding:12px 16px!important}
+  html[data-skin="v22"][data-skin][data-skin] .v22-week{gap:0;margin:2px 0 12px;width:100%}
+  html[data-skin="v22"][data-skin][data-skin] .v22-week button{min-width:0;padding:8px 0;border-radius:14px}
+}
+/* верхняя строка как в iOS: полупрозрачная с размытием, под строкой состояния, тонкая граница снизу; при прокрутке — плотнее */
+@media (max-width:700px){
+  html[data-skin="v22"][data-skin][data-skin] body.has-portal .ptop{background:rgba(246,246,248,.72)!important;-webkit-backdrop-filter:saturate(180%) blur(20px)!important;backdrop-filter:saturate(180%) blur(20px)!important;box-shadow:0 .5px 0 rgba(60,60,67,.29)!important;z-index:40}
+  html[data-skin="v22"][data-skin][data-skin] body.has-portal .ptop.scrolled{background:rgba(246,246,248,.86)!important}
+  html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body.has-portal .ptop{background:rgba(22,22,24,.72)!important;box-shadow:0 .5px 0 rgba(84,84,88,.6)!important}
+  html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body.has-portal .ptop.scrolled{background:rgba(22,22,24,.88)!important}
+}
+@media (max-width:700px) and (prefers-color-scheme:dark){
+  html[data-skin="v22"]:not([data-theme="light"])[data-skin][data-skin] body.has-portal .ptop{background:rgba(22,22,24,.72)!important;box-shadow:0 .5px 0 rgba(84,84,88,.6)!important}
+  html[data-skin="v22"]:not([data-theme="light"])[data-skin][data-skin] body.has-portal .ptop.scrolled{background:rgba(22,22,24,.88)!important}
+}
+/* отклик на нажатие, как в iOS: карточки чуть «проседают», без синей вспышки */
+html[data-skin="v22"][data-skin][data-skin] a,html[data-skin="v22"][data-skin][data-skin] button{-webkit-tap-highlight-color:transparent}
+@media (hover:none){
+  html[data-skin="v22"][data-skin][data-skin] :is(.fhome .fb-m,.fhome .pk,.fhome .fs,.rz-map a,.pz-k>a,.igroup .irow,.al-tile,.tabbar a,.tabbar button):active{transform:scale(.97);transition:transform .08s ease}
+}
+/* жест «назад» от левого края и «потянуть вниз — обновить» (ios.js в motion.js) */
+.v22-edge{position:fixed;z-index:95;top:50%;left:6px;width:40px;height:40px;margin-top:-20px;border-radius:50%;display:grid;place-items:center;background:rgba(120,120,128,.24);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .12s}
+.v22-edge::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin-left:4px}
+.v22-ptr{position:fixed;z-index:95;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);width:34px;height:34px;margin-left:-17px;border-radius:50%;display:grid;place-items:center;background:rgba(120,120,128,.24);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);opacity:0;pointer-events:none}
+.v22-ptr::before{content:"";width:16px;height:16px;border-radius:50%;border:2.4px solid currentColor;border-top-color:transparent}
+.v22-ptr.go::before{animation:v22spin .8s linear infinite}
+@keyframes v22spin{to{transform:rotate(360deg)}}

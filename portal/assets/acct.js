@@ -536,6 +536,23 @@
     s.body.appendChild(a);
     s.body.appendChild(el('p', 'ifoot', 'Приложите фото или скриншот. Если правили модель на этом устройстве — «Ещё» → «Скачать правки (файл)» и приложите файл. Если письмо не открылось, скопируйте адрес выше.'));
   }
+  // ---------------- «На iPhone» (14.11.2026, Т. В., опрос «приложение для iPhone без затрат»: значок, Face ID, пуши о тревогах, Siri, Telegram)
+  function iphone() {
+    var s = sheet('На iPhone и iPad', 'Портал как приложение — без App Store и без затрат');
+    var B = 'https://techfabrikant.ru/';
+    function step(n, t, x) { var d = el('div', 'iph-st', '<b></b><p></p>'); d.firstChild.textContent = n + '. ' + t; d.lastChild.textContent = x; s.body.appendChild(d); }
+    var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');
+    s.body.appendChild(css);
+    step(1, 'Значок на экране «Домой»', 'Откройте портал в Safari → кнопка «Поделиться» → «На экран „Домой“». Портал запускается как приложение: во весь экран, без адресной строки.');
+    step(2, 'Вход по Face ID', 'Войдите паролем один раз — портал предложит вход по Face ID или короткому коду. Включить позже: «Ещё» → «Личный вход» → «Быстрый вход на этом устройстве». Пароль на устройстве не хранится.');
+    step(3, 'Уведомления о тревогах', 'Только из значка на экране «Домой» (iOS 16.4 и новее): «Ещё» → «Уведомления» → «Разрешить». Приходит каждая новая «Критично» — один раз, только заголовок, без сумм и клиентов; ночью (22:00–07:00) — утром.');
+    step(4, 'Siri', 'Приложение «Команды» → «+» → действие «Открыть URL» → вставьте адрес раздела (кнопка ниже) → назовите команду, например «Фабрика отгрузка». Дальше: «Привет, Siri, Фабрика отгрузка». Откроется в Safari — там тоже один раз войдите по Face ID.');
+    var g = el('div', 'igroup'); s.body.appendChild(g);
+    [['Главная и тревоги', 'home.html'], ['Продажи', 'sales.html'], ['График отгрузки', 'sales.html#ship'], ['Поручения', 'poruch.html'], ['Разделы', 'razdel.html']].forEach(function (r) { g.appendChild(copyRow(r[0], B + r[1])); });
+    step(5, 'В Telegram', 'В чате с ботом «Фабрика — уведомления» слева от поля ввода — кнопка «Портал»: открывает портал прямо в Telegram, вход — как на сайте.');
+    s.body.appendChild(el('p', 'ifoot', 'На Android — приложение (APK) в разделе «Ещё». Если что-то не получается — «Ещё» → «Сообщить об ошибке».'));
+    return s;
+  }
   // проверить текст перед отправкой (чат): {text, notes}
   function check(text) { return A.api('ask', { tok: A.tok(), q: text, ctx: ctx(), page: page(), mode: 'fix' }); }
 
@@ -547,6 +564,6 @@
   var EXPIRED_TXT = 'Срок личного входа истёк. Вход действует 30 дней с последнего ввода пароля — нажмите «Войти заново» и введите логин и пароль.';
   function relogin() { return A.forget().then(function () { try { G.dispatchEvent(new Event('t14acct')); } catch (e) { } account(); }); }
   function reloginBtn(cls) { var b = btn('Войти заново', cls == null ? 'pri' : cls); b.addEventListener('click', function () { relogin(); }); return b; }
-  G.T14UI = { sheet: sheet, account: account, assistant: assistant, check: check, versions: versions, report: report, field: field, btn: btn, msg: msg, busy: busy, copyRow: copyRow, el: el, esc: esc, toast: toast,
+  G.T14UI = { sheet: sheet, iphone: iphone, account: account, assistant: assistant, check: check, versions: versions, report: report, field: field, btn: btn, msg: msg, busy: busy, copyRow: copyRow, el: el, esc: esc, toast: toast,
     expired: expired, expiredText: EXPIRED_TXT, relogin: relogin, reloginBtn: reloginBtn };
 })(window);
