@@ -56,7 +56,6 @@
   function revWhen(R) {   // 03.11.2026: как на странице «Продажи» — «по 02.11 (рассылка 03.11 10:00)»; письмо в тот же день — «на 02.11 15:52»
     if (R.asof && R.to && String(R.asof).slice(0, 10) > String(R.to).slice(0, 10)) return ' по ' + dd(R.to) + ' (рассылка ' + dd(R.asof) + ' ' + String(R.asof).slice(11, 16) + ')';
     return R.asof ? ' на ' + dd(R.asof) + ' ' + String(R.asof).slice(11, 16) : (R.to ? ' по ' + dd(R.to) : ''); }
-  var MP = ['январе', 'феврале', 'марте', 'апреле', 'мае', 'июне', 'июле', 'августе', 'сентябре', 'октябре', 'ноябре', 'декабре'];
 
   // REDACTED_B64_1 движок
   var CFG = null, ST = { ctx: null, root: null, busy: false, tiles: [], cur: null, scrollTo: null };
@@ -328,7 +327,6 @@
     ];
   }
   function inP(d, p) { return d >= p.a && d <= p.b; }
-  function sgn(v) { return v == null ? '' : (v > 0 ? '+' : '') + n(v); }
   function perHTML(T, P) {
     if (!T || !T.rows || !T.rows.length) return '<p class="fh-ok">' + esc(T.msg || 'Данных по дням пока нет.') + '</p>';
     function td(c) {

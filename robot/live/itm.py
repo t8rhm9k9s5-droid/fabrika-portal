@@ -106,7 +106,7 @@ def imap_lock(L, wait=20):
 def password(L):
     p = os.path.join(L, 'itm_app_password')
     try: os.chmod(p, 0o600)                                 # файл делается в ISPmanager с правами 644
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try: return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
     except Exception: return ''
 
@@ -513,7 +513,6 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
         try: res['old_sent'] = send_old_drafts(M, fl, L, st, me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', log); res['old_diag'] = st.get('old_diag')
         except Exception as e: log('  ! itm старые черновики:', e.__class__.__name__, e); res['old_diag'] = {'err': '%s: %s' % (e.__class__.__name__, str(e)[:120])}
         # 1–3) новые письма во всех папках, кроме спама, корзины, отправленных и черновиков — только чтение
-        first = not st.get('folders')
         for raw, name, flags in fl:
             if any(f in flags for f in SKIP_FLAGS) or SKIP_NAMES.match(name.strip()): continue
             if time.time() - t0 > budget or res['new'] >= limit: break

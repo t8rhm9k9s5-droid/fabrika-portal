@@ -27,7 +27,7 @@ def creds(L):
     p = os.path.join(L, 'ozon_pks')
     if not os.path.exists(p): return None, None, 0
     try: os.chmod(p, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     cid = key = ''
     for line in open(p, encoding='utf-8', errors='replace').read().splitlines():
         m = re.match(r'\s*(client[_ -]?id|api[_ -]?key)\s*[=:]\s*(\S+)\s*$', line, re.I)

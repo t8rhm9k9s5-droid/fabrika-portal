@@ -392,7 +392,7 @@ def run(L, log, jload, jsave, publish, iso, now, KEY, budget=BUDGET):
     if do_fetch:
         if forced:
             try: os.remove(go)
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         if not crawling: crawl = {'day': today, 't0': iso(t), 'forced': forced}
         try:
             crawl = crawl_step(crawl, budget, log, save)

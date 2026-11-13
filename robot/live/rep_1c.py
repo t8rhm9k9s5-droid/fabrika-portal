@@ -11,7 +11,7 @@
 Разбор в те же схемы, что у сборки портала (build/recl/parse_recl.py → recl_open.json, parse_recl_all.py → recl_all.json, build/tz/parse_tz_1c.py → tz_1c.json),
 чтобы страница «Продажи» показывала свежие данные с хостинга (st/recl.bin, st/tz1c.bin) поверх тех, что вшиты в сборку.
 Python 3.6 (хостинг): без date.fromisoformat, без f-строк с «=»."""
-import collections, datetime as _dt, io, json, re, statistics, zipfile
+import collections, datetime as _dt, io, re, statistics, zipfile
 
 RECL_SUBJ = re.compile(r'Реестр\s+рекламаций', re.I)
 TZ_SUBJ = re.compile(r'ТЗ\s+в\s+работе|Реестр\s*Тех\s*Заданий', re.I)

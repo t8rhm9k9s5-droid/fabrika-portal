@@ -4,7 +4,7 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Loose ends of the networks and objects tied to nothing, in the model data (site_app.json, local metres) -> net_check.json"""
 from _cg1_build_io import read_json as _cg1_read_json
-import json, math, numpy as np
+import json
 from shapely.geometry import Point, LineString, Polygon
 B = '/home/claude/build/'
 S = _cg1_read_json(B + 'site_app.json')

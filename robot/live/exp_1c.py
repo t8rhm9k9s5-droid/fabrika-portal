@@ -63,7 +63,7 @@ def _cleanup(L, SITE, st, log):
     for f in os.listdir(d) if os.path.isdir(d) else []:
         if re.match(r'^exp_1c_[\w]+\.bin$', f):
             try: os.remove(os.path.join(d, f))
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     st['cleaned'] = IT._now().strftime('%Y-%m-%dT%H:%M')
     log('выгрузка 1c@: файлы удалены через %d дня (%s)' % (KEEP_DAYS, st.get('id')))
     return True
@@ -88,7 +88,7 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
     if not pw: res['state'] = 'нет пароля 1c@'; return res
     root = os.path.join(L, 'exp1c', 'files'); os.makedirs(root, exist_ok=True)
     try: os.chmod(os.path.join(L, 'exp1c'), 0o700)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     t0 = time.time(); pending = False
     login = (CFG.get('mail_1c') or 'user1@example.org').lower()
     M = imaplib.IMAP4_SSL('imap.gmail.com', 993, ssl_context=ssl.create_default_context())
@@ -195,7 +195,7 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
                     try:
                         with open(os.path.join(root, k), 'rb') as _cg1_file_2:
                             files[k] = base64.b64encode(_cg1_file_2.read()).decode()
-                    except Exception: pass
+                    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
             if publish('exp_1c_%d.bin' % p_, {'part': p_, 'files': files}): dirty.discard(p_)
         st['dirty'] = sorted(dirty)
         if not dirty:

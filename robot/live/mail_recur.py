@@ -69,7 +69,7 @@ def scan(L, code_dir, today=None):
             if t >= g['last']: g['last'] = t; g['s'] = r.get('s') or g['s']
             try:
                 if IT.report_like(g['fr'], (r.get('s') or ''), names): g['done'] = True
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     M = _map(code_dir)
     new, known, decided = [], 0, 0
     for k, g in G.items():

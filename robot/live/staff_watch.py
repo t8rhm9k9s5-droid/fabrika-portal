@@ -16,7 +16,7 @@
   3) вопросы руководителям уходят письмом с itm@ (очередь mail_q, отдельный процесс) — по каждому изменению один раз, запреты
      mx_poll_cfg.json → ban соблюдаются; итог — st/staff.bin (портал: Продажи → Коммерческий отдел → «Изменения штата»).
 Python 3.6."""
-import datetime, json, os, re, time
+import datetime, json, os, re
 try:
     import leaders as LD     # 03.11.2026: кому бот вопросов не задаёт (leaders.json)
 except Exception:
@@ -165,6 +165,6 @@ def run(L, log, jload, jsave, publish, mail_send=None, iso=None, force=False):
     publish('staff.bin', {'v': 1, 't': snap['t'], 'changes': changes or pend, 'quiet': quiet, 'n': len(snap['names'])})
     if os.path.exists(go):
         try: os.replace(go, go + '.done')
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     log('штат коммерческого отдела:', len(snap['names']), 'человек; изменений', len(changes), '; без активности', len(quiet))
     return {'state': 'ok', 'week': week, 'people': len(snap['names']), 'changes': len(changes), 'quiet': len(quiet)}

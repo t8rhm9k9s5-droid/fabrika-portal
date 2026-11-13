@@ -127,15 +127,13 @@
   // лев — знак компании перед словом «Фабрика» (тот же, что brand-mark у заголовков): левая часть логотипа
   var LION = LOGO.replace('viewBox="0 0 163 29" role="img" aria-label="Фабрикант"', 'viewBox="0 0 31 29" class="brand-mark" aria-hidden="true" width="15" height="14"');
   // [page, title, icon, tile colour, admins only] — прежний список (модель 3D его тоже знает)
-  var SECTIONS = [['index.html', 'Модель', 'model', '#007aff'], ['plan.html', 'План', 'plan', '#5856d6'], ['stock.html', 'Склад', 'stock', '#ff9500'], ['stores.html', 'Остатки ОП', 'stock', '#ff6b00'],
-    ['library.html', 'Документы', 'docs', '#30b0c7'], ['staff.html', 'Производство', 'staff', '#af52de'], ['admin.html', 'Управление', 'gear', '#8e8e93', true]];
-  var UNDER = { 'docs.html': 'library.html', 'archive.html': 'library.html' };   // pages that live inside a section
   // портал: десять разделов; [страница, название, значок, цвет, подпись]. 28.10.2026 — порядок, значки и цвета утверждённых макетов
   // (цепочка фабрики: производство ← снабжение ← продажи)
   // 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры, чат пока убери» — десять разделов по работе компании
   // (проект 12.11: work/portal_struct/struct.json); раздел — razdel.html#<id>: отчёты списком, ведут на прежние страницы. 6-й элемент — страница,
   // чьи цифры показывает карточка раздела на главной (T14M.card). Прежний список (до 13.11) — build/site.before-razdel1311.js
   var PORTAL = [['home.html', 'Главная', 's_home', 'var(--ic-home)', 'Пульс компании и что требует решения'],
+    ['poruch.html', 'Поручения', 's_docs', 'var(--ic-err)', 'Невыполненное: отметки бота, совещания, руководство, офисы'],
     ['razdel.html#sales', 'Продажи', 's_sales', 'var(--ic-sales)', 'Онлайн-продажи, план-факт, клиенты и заказы', 'sales.html'],
     ['razdel.html#prod', 'Производство', 's_prod', 'var(--ic-prod)', 'Выпуск, участки, мощность', 'staff.html'],
     ['razdel.html#quality', 'Качество', 's_file', 'var(--ic-err)', 'Рекламации, брак, сертификаты'],

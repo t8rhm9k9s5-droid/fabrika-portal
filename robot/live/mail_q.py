@@ -148,7 +148,7 @@ def _stale_kill(lp, log):
     """29.10.2026: замок держит зависший отправщик (письма стояли с утра: «в очереди 15, отправлено 0») — если ему больше BUDGET+10 мин
     и это действительно mail_q.py, завершить его; ничего не удаляется"""
     try:
-        pid, t = open(lp, encoding='utf-8').read().split()[:2]
+        with open(lp, encoding='utf-8') as _fl: pid, t = _fl.read().split()[:2]
         pids, t = [int(pid)], float(t)
     except Exception:                                  # замок старого вида (пустой): время — по файлу, процессы — по /proc
         try: t = os.path.getmtime(lp)
@@ -157,7 +157,8 @@ def _stale_kill(lp, log):
         for d in os.listdir('/proc') if os.path.isdir('/proc') else []:
             if d.isdigit() and int(d) != os.getpid():
                 try:
-                    if b'mail_q.py' in open('/proc/%s/cmdline' % d, 'rb').read(): pids.append(int(d))
+                    with open('/proc/%s/cmdline' % d, 'rb') as _fc:
+                        if b'mail_q.py' in _fc.read(): pids.append(int(d))
                 except Exception:
                     # намеренно: недоступный или уже завершившийся процесс не включаем в список кандидатов.
                     pass
@@ -166,11 +167,11 @@ def _stale_kill(lp, log):
     done = False
     for pid in pids:
         try:
-            cmd = open('/proc/%d/cmdline' % pid, 'rb').read().decode('utf-8', 'replace')
+            with open('/proc/%d/cmdline' % pid, 'rb') as _fc: cmd = _fc.read().decode('utf-8', 'replace')
         except Exception: continue
         if 'mail_q' not in cmd and 'live.py' not in cmd: continue
         try: os.kill(pid, _sg.SIGKILL); done = True; log('почта: завис отправщик (pid %d, %d мин) — завершён' % (pid, (time.time() - t) // 60))
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     if done: time.sleep(1)
     return done
 
@@ -227,7 +228,7 @@ def big_pending():
         try:
             with open(os.path.join(OUT, f), encoding='utf-8') as _cg2_big_file:
                 if is_big(json.load(_cg2_big_file)): return True
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     return False
 
 

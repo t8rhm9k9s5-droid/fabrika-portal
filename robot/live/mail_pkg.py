@@ -11,7 +11,7 @@ Claude шлёт письмо на itm@ с темой «Фабрика: паке�
 запоминаются (state/mail_pkg.json), повторно не читаются. Размер — до 24 МБ (Gmail), пакеты лучше ≤ 6 МБ.
 30.10.2026 аудит P4/P7: подпись — та же проверка, что у deploy.py (v2 по имени и sha256 пакета; v1 — только до первого v2; метка новее установленной),
 сравнение байтов (не-ASCII подпись не роняет разбор), каждое письмо — в своём try, seen сохраняется всегда; P17 — общий замок входа в itm@."""
-import email, email.policy, hashlib, hmac, imaplib, json, os, re, ssl, time
+import email, email.policy, hashlib, imaplib, os, re, ssl, time
 
 import itm as IT
 

@@ -27,6 +27,7 @@ function mx_dialog(u, m) {
     if (pm) return mx_ownerPoll(uid, pm[1] || '');
   }
   // 11.11.2026: ответ на вопрос бота по контрольным точкам в личке — в контроль сроков (TimersCtl), до зеркала и помощника
+  if (type === 'message_created' && typeof tm_remCtlDmAnswer_ === 'function' && tm_remCtlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;   // 13.11: автор контроля — срок/исполнители
   if (type === 'message_created' && typeof tm_ctlDmAnswer_ === 'function' && tm_ctlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;
   if (/^\/owner\b/.test(text)) { mx_sendUser(uid, own && own === uid ? 'Вы — владелец бота: пересылаю обращения к вам из групп.' : 'Код владельца выдаёт Т. В. Сотрудник1 (функция ownerCode в редакторе). Напишите: /owner 123456'); return; }
   var mirror = mx_mirrorOn();

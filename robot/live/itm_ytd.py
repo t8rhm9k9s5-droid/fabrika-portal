@@ -16,7 +16,7 @@
    письма «ТЗ №…» не скачиваются — для счёта хватает заголовков.
  • Шаг 3 — сводка: state/ytd_sum.json (ТЗ ПТО → ПЭО, письма с планами, сколько писем по папкам) и st/pf.bin для сайта (зашифрован, как ls.bin):
    выпуск по участкам по месяцам с января (факт; план — где он есть в out/plan_ГГГГ-ММ.json) и гальваника (план/факт месяца из отчёта ПЭО)."""
-import calendar, datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
+import datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
 import itm as IT
 
 SINCE = datetime.date(2026, 1, 1)
@@ -268,7 +268,7 @@ def parse_ved(rows):
         if om: orders.add(om.group(1)); continue
         nxt = flat[i + 1][0] if i + 1 < len(flat) else ''
         if ORDP_RE.match(nxt): models[nm] = models.get(nm, 0) + q        # строка модели — под ней заказы
-        else: cur_v = nm; vid[nm] = vid.get(nm, 0) + q                    # строка вида номенклатуры
+        else: vid[nm] = vid.get(nm, 0) + q                    # строка вида номенклатуры
     return (day, vid, models, len(orders)) if day else None
 
 
@@ -448,7 +448,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
                 try:
                     g = BO.parse_galv(p)
                     if g.get('month'): galv, gsrc = g, d
-                except Exception: pass
+                except Exception: pass  # необязательный шаг: сбой не мешает работе робота
                 break
     # --- планы месяцев, которые есть на хостинге (out/plan_ГГГГ-ММ.json)
     plans, plans_wd = {}, {}
@@ -505,7 +505,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
             if gd: G['cur'] = [gm, BO.work_days(gy, gm, gd), BO.work_days(gy, gm), gd]
             # 01.11.2026, пользователь: «Нужны данные к вчера» — последние дни отчёта (траверсы по дням) для строки «вчера» на странице
             G['d'] = [[k, v] for k, v in sorted((galv.get('days') or {}).items())][-7:]
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         # 01.11.2026, пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц» — траверсы по датам
         # за текущий и прошлый месяц: последний отчёт ПЭО каждого месяца (в нём таблица по дням своего месяца); неделя на стыке месяцев — из двух
         try:
@@ -525,7 +525,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
                 for k, v in g['days'].items():
                     if int(k) <= int(d[8:10]) + 3: gdd.setdefault('%s-%02d' % (d[:7], int(k)), v)
             G['dd'] = sorted([k, v] for k, v in gdd.items())
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     # 02.11.2026, пользователь: «до 5 числа их фиксируем и оставляем как есть» — закрытые месяцы выпуска и гальваники берутся из снимков
     # (period_lock.py, state/locked/); поздние отчёты за закрытый месяц не применяются и пишутся в реестр закрытий
     try:
@@ -539,7 +539,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
         if G and G.get('dd'):
             G['dd'] = sorted([k, v] for k, v in PL.hold_days('galv_days', dict((k, v) for k, v in G['dd']), 'отчёты ПЭО «Гальваника»').items())
     except Exception as e:
-        pass
+        pass  # необязательный шаг: сбой не мешает работе робота
     # --- ТЗ ПТО → ПЭО и письма с планами — из реестра
     tz, plan_letters, by_folder, seen, calc = {}, [], {}, set(), {}
     peo_first, req_first = {}, {}
@@ -740,7 +740,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
     if not pw: res['state'] = 'нет пароля itm@'; return res
     os.makedirs(os.path.join(L, 'ytd', 'raw'), exist_ok=True)
     try: os.chmod(os.path.join(L, 'ytd'), 0o700)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     idx = os.path.join(L, 'state', 'ytd_index.jsonl')
     t0 = time.time(); pending = 0; changed = False
     lk = IT.imap_lock(L, 20)                              # 30.10.2026 аудит P17: общий замок входа в ящик itm@
@@ -885,7 +885,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
                                 dj.write(json.dumps({'k': w[4:], 't': t, 'mid': mid, 'fr': fr or IT.addr(mm['From'])[1], 's': IT.clean(mm['Subject'])[:200],
                                                      'f': got, 'txt': _body_text(mm)[:1500]}, ensure_ascii=False) + '\n')
                             try: os.chmod(os.path.join(L, 'state', 'ytd_docs.jsonl'), 0o600)
-                            except Exception: pass
+                            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
                         if w == 'plan' and got:
                             out.write(json.dumps({'f': (st['folders'].get(raw) or {}).get('name', raw), 'u': u, 't': t, 'mid': mid + 'p', 's': IT.clean(
                                 email.message_from_bytes(full, policy=email.policy.default)['Subject'])[:200], 'fr': IT.addr(
@@ -905,7 +905,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
             pass
         lk.close()
     try: os.chmod(idx, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     st['t'] = res['t']; st['state'] = res.get('state')
     jsave('ytd.json', st)
     if changed or not os.path.exists(os.path.join(L, 'state', 'ytd_sum.json')) or (res.get('state') == 'готово' and st.get('sum_t', '') < res['t'][:13]):

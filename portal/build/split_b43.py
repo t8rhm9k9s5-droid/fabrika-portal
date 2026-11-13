@@ -7,7 +7,7 @@
    the short wing to the south at the east end — участок металлоизделий (area 2) → stays b43.
    Everything placed by position (cameras, emission sources) goes to the part it stands in; the documents (лит. С, cadastre,
    heating) belong to the whole building and are shown on both parts."""
-import json, copy, math
+import copy, math
 
 def _inside(p, poly):
     x, y = p[0], p[1]; c = False; n = len(poly)

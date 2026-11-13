@@ -1,0 +1,103 @@
+<title>Фабрика — поручения</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* «Поручения» — 13.11.2026, Т. В.: «сделаем на портале раздел Поручения… невыполненное в ботах и в совещаниях — всё в одно;
+   дальше работает робот». Данные — st/poruch.bin (бот MAX публикует каждые 30 мин: tm_poruch_ → «От ботов» → bots_drive.py),
+   до первой публикации — вшитый снимок задач совещаний (build/poruch/meet_tasks.json). */
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+.lead{color:var(--ios-2);margin:4px 0 0;font-size:15px;max-width:66ch}
+.pc-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.pc-chips button{border:0;border-radius:999px;padding:7px 12px;font:600 13.5px var(--f-body);background:var(--ios-fill);color:var(--ios-label);cursor:pointer}
+.pc-chips button[aria-pressed="true"]{background:var(--t-press,#0866c6);color:#fff}
+.pc-chips button b{font-weight:700;margin-left:4px;opacity:.8}
+.pc-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+.pc-sum div{background:var(--ios-group);border-radius:14px;padding:12px 14px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.pc-sum b{display:block;font:600 24px var(--f-display)}
+.pc-sum small{color:var(--ios-2);font-size:13px}
+.pc-list{display:grid;gap:10px;margin-top:10px}
+.pc-card{background:var(--ios-group);border-radius:14px;padding:12px 14px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.pc-card .pc-what{font-size:15px;line-height:1.4;color:var(--ios-label)}
+.pc-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:6px;font-size:13px;color:var(--ios-2)}
+.pc-tag{font:600 11.5px var(--f-body);border-radius:999px;padding:2px 8px;background:var(--ios-fill);color:var(--ios-label)}
+.pc-late{color:var(--t-red,#d70015);font-weight:600}
+.pc-ok{color:var(--t-green,#248a3d);font-weight:600}
+.pc-who{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pc-who span{font-size:12.5px;border-radius:8px;padding:2px 8px;background:var(--ios-fill)}
+.pc-who span.done{color:var(--t-green,#248a3d)}
+.pc-h{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:18px 2px 6px}
+.pfoot{color:var(--ios-2);font-size:12.5px;margin:14px 2px 0}
+</style>
+<main class="ios" id="poruch">
+  <a class="back" href="home.html">Главная</a>
+  <h1>Поручения</h1>
+  <p class="lead">Всё невыполненное в одном месте: что поставлено на контроль отметкой бота, поручения руководства, задачи утренних совещаний и контрольные точки офисов продаж.</p>
+  <div id="pcSum" class="pc-sum"></div>
+  <div class="pc-chips" id="pcChips" role="group" aria-label="Источник"></div>
+  <div id="pcView"><p class="lead">Загружаю…</p></div>
+  <p class="pfoot" id="pcFoot"></p>
+</main>
+<script>
+(function () {
+  var SNAP = __PORUCH__;
+  var D = null, F = 'all', today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+  try { F = sessionStorage.getItem('t14.pc.f') || 'all'; } catch (e) {}
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function dm(s) { s = String(s || ''); return s.length >= 10 ? s.slice(8, 10) + '.' + s.slice(5, 7) : ''; }
+  function late(due) { return due && due < today; }
+  var SRC = [['all', 'Все'], ['ctl', 'Отметки бота'], ['lead', 'Руководство'], ['meet', 'Совещания'], ['cp', 'Офисы продаж']];
+  function counts(d) {
+    return { ctl: (d.ctl || []).filter(function (e) { return e.who.some(function (w) { return w.st === 'open' || w.st === 'stale'; }); }).length,
+             lead: (d.lead || []).length, cp: (d.cp || []).length,
+             meet: (d.meet || []).reduce(function (s, m) { return s + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0) };
+  }
+  function cardCtl(e) {
+    var open = e.who.filter(function (w) { return w.st === 'open' || w.st === 'stale'; }).length;
+    return '<div class="pc-card"><div class="pc-what">' + esc(e.text) + '</div><div class="pc-meta"><span class="pc-tag">' + esc(e.g) + '</span><span>поставил(а): ' + esc(e.from) + ', ' + dm(e.t) + '</span>' +
+      (e.due ? '<span class="' + (late(e.due) && open ? 'pc-late' : '') + '">срок ' + dm(e.due) + (e.due_t ? ' ' + esc(e.due_t) : '') + '</span>' : '<span>срок уточняется у автора</span>') +
+      (open ? '' : '<span class="pc-ok">выполнено</span>') + '</div><div class="pc-who">' +
+      e.who.map(function (w) { return '<span class="' + (w.st === 'done' ? 'done' : '') + '">' + esc(w.n) + (w.st === 'done' ? ' ✓' : w.st === 'stale' ? ' · нет ответа' : '') + '</span>'; }).join('') + '</div></div>';
+  }
+  function cardRow(r, src) {
+    var st = r.st === 'lead' ? 'у руководителя' : r.st === 'stale' ? 'нет ответа' : r.st === 'answered' ? 'ответ получен' : '';
+    return '<div class="pc-card"><div class="pc-what">' + esc(r.what) + '</div><div class="pc-meta"><span class="pc-tag">' + esc(r.who || 'Коллеги') + '</span>' +
+      (r.due ? '<span class="' + (late(r.due) ? 'pc-late' : '') + '">срок ' + dm(r.due) + '</span>' : '') + (st ? '<span>' + st + '</span>' : '') +
+      (r.from && r.from !== r.who ? '<span>от: ' + esc(r.from) + '</span>' : '') + (src === 'cp' && r.at ? '<span>из отчёта ' + dm(r.at) + '</span>' : '') + '</div>' +
+      (r.ans ? '<div class="pc-meta"><span>ответ: ' + esc(r.ans) + '</span></div>' : '') + '</div>';
+  }
+  function cardMeet(x, m) {
+    return '<div class="pc-card"><div class="pc-what">' + esc(x.what) + '</div><div class="pc-meta"><span class="pc-tag">' + esc(x.who || 'не назначено') + '</span>' +
+      (x.due ? '<span class="' + (late(x.due) && x.st !== 'done' ? 'pc-late' : '') + '">срок ' + dm(x.due) + '</span>' : '') +
+      '<span>совещание ' + dm(m.date) + '</span>' + (x.st === 'done' ? '<span class="pc-ok">выполнено</span>' : '') + (x.note ? '<span>' + esc(x.note) + '</span>' : '') + '</div></div>';
+  }
+  function render() {
+    var d = D || { ctl: [], lead: [], cp: [], meet: (SNAP && SNAP.meetings) || [] }, c = counts(d), h = '';
+    document.getElementById('pcSum').innerHTML = [['ctl', 'на контроле у бота'], ['lead', 'поручений руководства'], ['meet', 'задач совещаний'], ['cp', 'контрольных точек офисов']]
+      .map(function (x) { return '<div><b>' + c[x[0]] + '</b><small>' + x[1] + '</small></div>'; }).join('');
+    document.getElementById('pcChips').innerHTML = SRC.map(function (s) { return '<button type="button" data-f="' + s[0] + '" aria-pressed="' + (F === s[0]) + '">' + s[1] + (s[0] !== 'all' ? '<b>' + c[s[0]] + '</b>' : '') + '</button>'; }).join('');
+    if (F === 'all' || F === 'ctl') { var L1 = (d.ctl || []); if (L1.length) h += '<div class="pc-h">Поставлено на контроль отметкой бота</div><div class="pc-list">' + L1.map(cardCtl).join('') + '</div>'; else if (F === 'ctl') h += '<p class="lead">Пока ничего не поставлено на контроль.</p>'; }
+    if (F === 'all' || F === 'lead') { var L2 = (d.lead || []); if (L2.length) h += '<div class="pc-h">Поручения руководства</div><div class="pc-list">' + L2.map(function (r) { return cardRow(r, 'lead'); }).join('') + '</div>'; }
+    if (F === 'all' || F === 'meet') (d.meet || []).forEach(function (m) {
+      var t = m.tasks.filter(function (x) { return x.st !== 'done' || F === 'meet'; }); if (!t.length) return;
+      h += '<div class="pc-h">Совещание ' + dm(m.date) + ' — ' + esc(m.title) + '</div><div class="pc-list">' + t.map(function (x) { return cardMeet(x, m); }).join('') + '</div>';
+    });
+    if (F === 'all' || F === 'cp') { var L4 = (d.cp || []); if (L4.length) h += '<div class="pc-h">Контрольные точки офисов продаж («Коммерческий отдел»)</div><div class="pc-list">' + L4.map(function (r) { return cardRow(r, 'cp'); }).join('') + '</div>'; }
+    document.getElementById('pcView').innerHTML = h || '<p class="lead">Невыполненных поручений нет.</p>';
+    document.getElementById('pcFoot').textContent = D ? 'Обновлено ботом: ' + String(D.t || '').replace('T', ' ') + '. Бот обновляет раздел каждые 30 минут; задачи совещаний добавляются после каждого утреннего совещания.'
+      : 'Пока показаны только задачи утренних совещаний (снимок ' + String((SNAP && SNAP.t) || '').replace('T', ' ') + '); остальное появится после первой публикации бота.';
+  }
+  document.getElementById('pcChips').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return; F = b.getAttribute('data-f'); try { sessionStorage.setItem('t14.pc.f', F); } catch (e) {} render();
+  });
+  render();
+  var tries = 0;
+  (function wait() {
+    if (window.T14Live && T14Live.bin) { T14Live.bin('poruch.bin').then(function (Z) { if (Z && Z.v) { D = Z; render(); } }).catch(function () {}); return; }
+    if (++tries < 40) setTimeout(wait, 250);
+  })();
+})();
+</script>

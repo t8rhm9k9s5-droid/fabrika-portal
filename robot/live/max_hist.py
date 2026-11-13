@@ -218,7 +218,7 @@ def run(L, log, jload, jsave, publish, iso):
                         if mid and mid not in H['msgs']:
                             H['msgs'][mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
                                               'text': mask(str(x.get('text') or '')), 'rmid': '', 'mentions': []}
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         H['export_in'] = True
     # новые
     code, j = MC.api(token, 'GET', '/messages', {'chat_id': cid, 'count': 100}); res['calls'] += 1

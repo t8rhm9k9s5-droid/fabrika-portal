@@ -8,7 +8,7 @@ build/omts/Сроки поставки материалов *.ods → build/omts
 Группы — по убыванию самого долгого срока в группе, строки внутри группы — тоже по убыванию. Срок в днях — для сортировки и
 «самый долгий»: рабочие дни × 1,4 → календарные; «в течение месяца» = 30; «каждую среду / пятницу» = 7; «среда и пятница» = 4."""
 from _cg1_build_io import read_file as _cg1_read_file
-import glob, json, math, os, re, sys
+import glob, json, math, os, re
 import pandas as pd
 
 B = os.path.dirname(os.path.abspath(__file__))

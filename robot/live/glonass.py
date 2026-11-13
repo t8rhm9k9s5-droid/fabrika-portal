@@ -62,14 +62,14 @@ def key_hint(L):
     out = []
     for d in (L, os.path.dirname(L)):
         try: out += [('~/' if d != L else '~/.fabrika_live/') + n for n in os.listdir(d) if re.search(r'glon|глон|gl[oa]n', n, re.I)]
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     www = os.path.join(os.path.dirname(L), 'www')               # файл с паролем в папке сайта открыт всему интернету — только назвать, не читать
     try:
         for root, dirs, files in os.walk(www):
             if root.count(os.sep) - www.count(os.sep) > 2: dirs[:] = []; continue
             out += ['ПАПКА САЙТА (открыто всем — перенесите в ~/.fabrika_live): ' + os.path.join(root, n).replace(os.path.dirname(L), '~')
                     for n in files if re.search(r'^(glon|глон)', n, re.I)]
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     return out[:6]
 
 
@@ -78,7 +78,7 @@ def creds(L):
     p = key_path(L)
     if not p: return None, None, 0
     try: os.chmod(p, 0o600)                               # файл создаётся в ISPmanager с правами 644
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     user = pw = ''
     try: text = open(p, encoding='utf-8-sig', errors='replace').read()
     except Exception: return '', '', 0
@@ -159,7 +159,7 @@ class Session:
 
     def _load(self):
         try:
-            j = json.load(open(self._path(), encoding='utf-8'))
+            with open(self._path(), encoding='utf-8') as _fj: j = json.load(_fj)
         except Exception: return None
         if j.get('mt') != self.mt or time.time() - float(j.get('ts') or 0) > TOKEN_AGE: return None   # ключ изменён или токен стар
         return j.get('token') or None
@@ -173,7 +173,7 @@ class Session:
 
     def drop(self):
         try: os.remove(self._path())
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
 
     def mask(self, s): return _mask(s, [self.pw] + self.seen)
 
@@ -1662,7 +1662,7 @@ def trk_report_text(rows, sm, now, cfg):
     try:
         import leaders as LD                                             # 03.11.2026: руководству бот вопросов не задаёт
         lead = bool(to) and all(LD.is_lead(mail=x) for x in to)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     L = [('%s, добрый день!' % cfg['greet']) if cfg.get('greet') and not lead else 'Добрый день!', '']
     head = 'Трекеры ГЛОНАСС на %s: молчат %d из %d' % (_dm_hm(_dt(sm['t'])), len(sil), sm['total'])
     L.append(head + (' — нет связи дольше %s %s (рабочее время — %s, по рабочим дням).' % (_h1(cfg['silent_h']), _hrs_word(cfg['silent_h']), sm['work']) if sil else '.'))

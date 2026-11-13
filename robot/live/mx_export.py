@@ -94,7 +94,7 @@ def run(L, log, jload, jsave, publish, iso):
     fp = os.path.join(ed, '%s_%s_%s.json' % (cid, job['from'], job['to']))
     with open(fp, 'w', encoding='utf-8') as f: json.dump(out, f, ensure_ascii=False)
     try: os.chmod(fp, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     publish('exp_%s.bin' % job['id'], out)
     done[job['id']] = dict(res, state='ok' if not err else 'частично: ' + err, n=len(msgs), calls=calls, chat=str(cid), title=info.get('title'))
     _save(dp, done)
@@ -105,5 +105,5 @@ def run(L, log, jload, jsave, publish, iso):
 def _save(dp, done):
     with open(dp + '.tmp', 'w', encoding='utf-8') as f: json.dump(done, f, ensure_ascii=False, indent=1)
     try: os.chmod(dp + '.tmp', 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     os.replace(dp + '.tmp', dp)

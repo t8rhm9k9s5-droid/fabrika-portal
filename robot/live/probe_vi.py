@@ -3,7 +3,7 @@
 переносить сбор на робота — проверить, отдаёт ли сайт страницы хостингу: раз в 6 ч одна карточка товара и одна страница каталога,
 в статус — код ответа, размер, есть ли цена (JSON-LD / «₽») и признаки защиты (Qrator / «проверка браузера»). Ничего не сохраняет, кроме
 итога в state/probe_vi.json. Python 3.6."""
-import json, re, time, urllib.request, urllib.error, ssl
+import re, time, urllib.request, urllib.error, ssl
 
 URLS = [('card', 'https://www.vseinstrumenti.REDACTED_B64_5'),
         ('list', 'https://www.vseinstrumenti.ru/category/ofisnye-stulya-4497/'),

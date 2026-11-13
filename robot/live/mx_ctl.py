@@ -587,7 +587,7 @@ def run(L, log, jload, jsave, iso):
                 for x in json.load(_cg2_file_2).get('messages') or []:
                     msgs.append({'ts': int(x.get('ts') or 0), 'mid': str(x.get('mid') or ''), 'uid': x.get('uid'), 'name': x.get('from') or 'без имени', 'bot': bool(x.get('bot')),
                                  'text': str(x.get('text') or ''), 'rmid': '', 'mentions': []})
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     code, j = api(token, 'GET', '/messages', {'chat_id': cid, 'count': 100})
     if code != 200:
         res['state'] = 'MAX: %s %s' % (code, str((j or {}).get('message') or (j or {}).get('code') or '')[:120]); return res
@@ -639,7 +639,7 @@ def run(L, log, jload, jsave, iso):
     st['seeded'] = True
     # 2) own items: the mail requests and the regular reports
     try: os.chmod(os.path.join(M, 'ctl_manual.json'), 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try:
         with open(os.path.join(M, 'ctl_manual.json'), encoding='utf-8') as _cg1_file_4:
             man = json.load(_cg1_file_4)

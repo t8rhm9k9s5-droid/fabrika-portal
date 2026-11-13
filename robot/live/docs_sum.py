@@ -247,7 +247,6 @@ def _prices(L, uniq, log, publish_file, cache, MAX_TXT=2):
         pk = [x for x in mains if x['dd'] >= (_dt.datetime.strptime(D, '%Y-%m-%d').date() - _dt.timedelta(days=3)).isoformat()]
         fm = {}
         for x in pk: fm.setdefault(x['ext'], x)                                  # один файл каждого формата — самый новый
-        shas = {x['sha'] for x in fm.values()}
         same_mail = {x['r'].get('mid') for x in fm.values()}
         upd = [x for x in U if x['role'] == 'upd' and x['r'].get('mid') in same_mail]
         pick.append({'role': 'main', 'dd': D, 'x': list(fm.values()) + upd[:1]})
@@ -310,7 +309,7 @@ def run(L, log, jload, jsave, publish, iso, now, publish_file=None):
     with open(p, encoding='utf-8') as _cg2_file_2:
         for ln in _cg2_file_2:
             try: recs.append(json.loads(ln))
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     seen, uniq = set(), []
     for r in sorted(recs, key=lambda r: r.get('t') or '', reverse=True):
         if r.get('mid') in seen: continue

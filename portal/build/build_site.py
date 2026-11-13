@@ -27,10 +27,11 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   # 04.11.2026, Т. В. (опрос): «раздел с показаниями счётчиков и откачки сточных вод» — под «Картой производства»
                   ('utils.html', '/home/claude/build/utils_frag.html'),
                   # 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры» — страница раздела (10 разделов, отчёты списком)
-                  ('razdel.html', '/home/claude/build/razdel_frag.html')):
+                  ('razdel.html', '/home/claude/build/razdel_frag.html'),
+                  ('poruch.html', '/home/claude/build/poruch_frag.html')):
     frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
            'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — счётчики и откачка'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
@@ -45,7 +46,7 @@ for _n in frags:
         frags[_n] = frags[_n].replace(_a, _b)
 # personal logins and the assistant on every page (22.10.2026): assets/acct.js = the core (also inlined into the public sign-in page) + the windows
 subprocess.run(['python3', '/home/claude/build/version.py', 'js', os.path.join(SITE, 'assets', 'version.js')], check=True)   # the version and what is new (CHANGELOG.txt)
-open(os.path.join(SITE, 'assets', 'acct.js'), 'w', encoding='utf-8').write(open('/home/claude/build/acct/acct_core.js', encoding='utf-8').read() + '\n' + open('/home/claude/build/acct/acct_ui.js', encoding='utf-8').read())
+with open('/home/claude/build/acct/acct_core.js', encoding='utf-8') as _a1, open('/home/claude/build/acct/acct_ui.js', encoding='utf-8') as _a2, open(os.path.join(SITE, 'assets', 'acct.js'), 'w', encoding='utf-8') as _a3: _a3.write(_a1.read() + '\n' + _a2.read())
 for _n in frags:
     if 'assets/acct.js' in frags[_n]: frags[_n] = frags[_n].replace('<script src="assets/acct.js"></script>', '<script src="assets/version.js"></script>\n<script src="assets/acct.js"></script>', 1) if 'assets/version.js' not in frags[_n] else frags[_n]
     elif '<script src="assets/site.js"></script>' in frags[_n]: frags[_n] = frags[_n].replace('<script src="assets/site.js"></script>', '<script src="assets/version.js"></script>\n<script src="assets/acct.js"></script>\n<script src="assets/site.js"></script>', 1)
@@ -168,6 +169,10 @@ try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
 except Exception as _e: print('план по менеджерам:', _e); _PM = None
+# 13.11.2026: «Поручения» — до первой публикации бота (st/poruch.bin) показываем снимок задач совещаний (build/poruch/meet_tasks.json)
+try: _PC = _cg1_read_json('/home/claude/build/poruch/meet_tasks.json', encoding='utf-8')
+except Exception: _PC = None
+if 'poruch.html' in frags: frags['poruch.html'] = frags['poruch.html'].replace('__PORUCH__', _js.dumps(_PC, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__PLANM__', _js.dumps(_PM, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 11.11.2026, Т. В.: «отчёт по менеджерам в разрезе ОП (базис поставки), ФТС и ПКС отдельно, накопленным итогом» (build/sales_mgr_op/<ГГГГ-ММ>.json) → #mgrop;
 # «отдельный раздел онлайн-продажи» (build/online/online.json — обновляет ежедневное облачное задание по ценам) → #online
@@ -520,7 +525,7 @@ for _m in re.finditer(r'<text[^>]*data-[a-z]+="(b[\w]+)"[^>]*>([^<]{2,80})</text
 try:
     _ar = _js.loads(re.search(r'<script id="areas-data"[^>]*>(.*?)</script>', frags['staff.html'], re.S).group(1)).get('areas') or []
     for _a in _ar: _S.append({'t': 'Участок %s · %s' % (_a.get('n'), _a.get('title') or ''), 'x': (_a.get('name') or '') if (_a.get('name') or '') != (_a.get('title') or '') else 'Производство', 'u': 'staff.html#u%s' % _a.get('n'), 'g': 'Производство', 'i': 'prod', 'c': 'var(--ic-prod)'})
-except Exception: pass
+except Exception: pass  # необязательный шаг: сбой не мешает сборке
 for _c in (_lib.get('cats') or []) + (_lib.get('int') or []):
     _S.append({'t': _c.get('t'), 'x': _c.get('x') or 'Документы', 'u': 'library.html#' + _c.get('k'), 'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)'})
 for _it in _lib.get('items') or []:

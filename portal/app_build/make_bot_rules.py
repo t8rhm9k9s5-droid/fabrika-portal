@@ -7,7 +7,7 @@
 Собирает host/live/bot_rules.json (для кода хостинга и Google-скрипта) и host/live/bot_prompt.txt (текст для помощника бота).
 Источники: docs_brand/org.json (кто есть кто — люди в филиалах менялись), правила из RULES.md (здесь — в явном виде).
 Ключей, паролей и телефонов в файлах нет. Запуск: python3 make_bot_rules.py"""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import load_json as _cg1_load_json
 import json, os, datetime
 
 A = '/home/claude/app_build'

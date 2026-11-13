@@ -109,7 +109,7 @@ def fetch(token, groups, M, res, t):
     """все группы с ботом → {cid: {'title', 'msgs': [norm_msg по времени]}}; новое — в hist/<cid>.json (60 дней)"""
     hd = os.path.join(M, 'hist'); os.makedirs(hd, exist_ok=True)
     try: os.chmod(hd, 0o700)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     out = {}
     lo = int((t - datetime.timedelta(days=KEEP_DAYS)).timestamp() * 1000)
     for cid, g in groups.items():

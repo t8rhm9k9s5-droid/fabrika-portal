@@ -15,7 +15,7 @@
 12.11.2026, Т. В.: «я сейчас тебе дал добро, ты проверил, больше ты ничего не трогаешь по ней» — проверка ОДНОРАЗОВАЯ:
 после первого полного прохода (state 'final') ящик itm@ этим модулем больше не открывается никогда; новые письма не читаются.
 """
-import base64, datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
+import base64, datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, os, re, ssl, time
 import itm as IT
 
 SINCE = '01-Jan-2026'
@@ -93,7 +93,7 @@ def run(L, CFG, log, jload, jsave, publish, budget=BUDGET):
             for f in os.listdir(sd) if os.path.isdir(sd) else []:
                 if re.match(r'^exp_pln_[\w]+\.bin$', f):
                     try: os.remove(os.path.join(sd, f))
-                    except Exception: pass
+                    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
             st['cleaned'] = IT._now().strftime('%Y-%m-%dT%H:%M'); jsave('itm_plans.json', st)
             log('Планы itm@: файлы удалены через 3 дня')
         res.update({'state': 'выполнено однократно %s — ящик не открывается%s' % (st['final'], '; файлы удалены %s' % st['cleaned'] if st.get('cleaned') else ''), 'msgs': len(st['msgs'])}); return res
@@ -101,7 +101,7 @@ def run(L, CFG, log, jload, jsave, publish, budget=BUDGET):
     if not pw: res['state'] = 'нет пароля itm@'; return res
     root = os.path.join(L, 'plans', 'files'); os.makedirs(root, exist_ok=True)
     try: os.chmod(os.path.join(L, 'plans'), 0o700)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     t0 = time.time(); pending = False
     if not st.get('final'):
         lk = IT.imap_lock(L, 20)

@@ -274,7 +274,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     if not force and not fresh_code and not os.path.exists(flag) and time.time() - (st.get('ts') or 0) < EVERY:
         return {k: st.get(k) for k in ('t', 'mail', 'max', 'n')}
     try: os.remove(flag)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     days = work_days(now.date(), 2)
     org = org_map()
     try: ms, mq = mail(L, CFG, days, log)

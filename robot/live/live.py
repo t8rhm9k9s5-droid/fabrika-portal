@@ -26,11 +26,10 @@
    read="gas" — ни imap.gmail.com, ни imap.mail.ru: отчёты приносит скрипт бота (st/in.php → ~/.fabrika_live/inbox_gas/*.json),
    участок reports разбирает их тем же ingest_message, что письма из Gmail (gas_inbox); блоки itm@, которым нужен IMAP, — «отключено»."""
 import base64, datetime, email, email.header, email.policy, email.utils, fcntl, hashlib, hmac, imaplib, json, os, re, secrets, smtplib, socket, ssl, sys, time
-import urllib.request
 
 L = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))          # ~/.fabrika_live
 CODE = os.path.join(L, 'code')
-CFG = json.load(open(os.path.join(L, 'cfg.json'), encoding='utf-8'))
+with open(os.path.join(L, 'cfg.json'), encoding='utf-8') as _cf: CFG = json.load(_cf)
 OUTD, STKD, STATE, LOGD = os.path.join(L, 'out'), os.path.join(L, 'stock'), os.path.join(L, 'state'), os.path.join(L, 'log')
 for _d in (OUTD, os.path.join(OUTD, 'raw'), STKD, os.path.join(STKD, 'raw'), STATE, LOGD): os.makedirs(_d, exist_ok=True)
 os.environ.update({'FABRIKA_OUT_DIR': OUTD, 'FABRIKA_OUT_JSON': os.path.join(STATE, 'output.json'), 'FABRIKA_PDF': 'pypdf'})
@@ -231,7 +230,7 @@ def _alerts_io(fn):
         except FileNotFoundError: S = None
         except Exception:                                               # сам журнал оповещений битый — заново (без оповещения о нём: иначе петля)
             try: os.replace(p, p + '.corrupt-' + time.strftime('%Y%m%d-%H%M%S'))
-            except OSError: pass
+            except OSError: pass  # необязательный шаг: сбой не мешает работе робота
             S = None
         if not isinstance(S, dict): S = {}
         if not isinstance(S.get('k'), dict): S['k'] = {}
@@ -314,7 +313,7 @@ OWNER_GMAIL_MSG = 'отключено: ящик владельца owner@ не �
 def app_password():
     p = os.path.join(L, 'gmail_app_password')
     try: os.chmod(p, 0o600)                                 # 27.10.2026: the file is made in ISPmanager with 644
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try: return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
     except Exception: return ''
 
@@ -1423,6 +1422,7 @@ def lane_reports():
     st_pub = {k: status.get(k) for k in ('t', 'mail', 'mail_t', 'expect', 'last', 'check_at', 'deploy', 'gas', 'itm', 'ozon', 'mail_q', 'mail_out',
                                          'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12')}   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
     st_pub['lanes'] = lanes_status()
+    st_pub['arch_prune'] = (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
     st_pub['alert'] = a if a and (a.get('miss') or a.get('none')) else None
     try:                                                   # 02.11.2026: «Реестр рекламаций» и «ТЗ в работе» из 1С → st/recl.bin, st/tz1c.bin (rep_1c.py)
         import rep_1c as R1C
@@ -1468,7 +1468,7 @@ def php_fails():
     if not first and S.get('ino') != stt.st_ino:           # файл переименован в .1 — дочитать хвост прежнего, новый — с начала
         try:
             if os.stat(FAIL_JSONL + '.1').st_ino == S.get('ino'): chunks.append(_fail_read(FAIL_JSONL + '.1', off)[0])
-        except OSError: pass
+        except OSError: pass  # необязательный шаг: сбой не мешает работе робота
         off = 0
     if off > stt.st_size: off = 0
     data, off = _fail_read(FAIL_JSONL, off)
@@ -1754,7 +1754,7 @@ def lane_mail():
                     iid = str(it.get('id') or '') if isinstance(it, dict) else ''
                     if iid and iid not in ms['sent']:
                         ms['tries'][iid] = int(ms['tries'].get(iid, 0)) + 1; ms.setdefault('err', {})[iid] = ('%s %s' % (e.__class__.__name__, e))[:200]
-                except Exception: pass
+                except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         jsave('mail_out.json', ms); status['mail_out'] = {'n': len(mo), 'sent': len(ms['sent'])}
         if bad:
             status['mail_out']['bad'] = bad

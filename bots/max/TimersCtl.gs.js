@@ -515,6 +515,7 @@ function tm_remScan_(st, G, namesOf, owner, bot, sinceMs, cfg, org) {
       seen[m.mid] = 1;
       var text = String(m.text || '').trim();
       if (text && ((m.mentions || []).map(String).indexOf(String(bot || TM_BOT_FALLBACK)) >= 0 || TM_BOT_RX.test(text))) { n += tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byMid); return; }   // 13.11: «@бот на контроль»
+      if (g.ctlOnly) return;                                                      // выключенная группа: кроме отметки бота — ничего
       if (!text || text.charAt(0) === '/' || !TM_ASK.test(text)) return;
       var ad = tm_addressee_(m, byMid, names, bot), to = ad[0], how = ad[1];
       var isOwner = (owner && String(m.uid) === String(owner)) || (!owner && TM_OWNER_RE.test(m.name || ''));
@@ -550,13 +551,20 @@ function tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byM
   // «@бот бери на контроль» ответом на сообщение: на контроле — то сообщение (его текст и отмеченные в нём; никого — его автор)
   var src = m.rmid && byMid ? byMid[m.rmid] : null;
   if (src && !src.bot && String(src.uid) !== bu) { (src.mentions || []).forEach(add); if (!to.length && String(src.uid || '') !== me) add(src.uid); }
+  if (!to.length) tm_namesInText_(src && src.text ? src.text + ' ' + text : text, names).forEach(add);   // 13.11: имена набраны текстом, без отметки
   if (!to.length) to = ['group'];
   var own = text.replace(TM_BOT_RX, '').replace(/^[\s,.:;!—-]+/, '').trim();
   var body = src && String(src.text || '').trim() ? String(src.text).trim() : (own || text), qmid = src ? src.mid : m.mid;
+  // 13.11 (Т. В.): срок не указан — спросить автора, к какому сроку; исполнители не отмечены — кто; до ответа исполнителям не напоминать каждые 2 ч
+  var dd = tm_ctlDue_(body + (src ? ' ' + own : ''), tm_msk_(m.ts).iso.slice(0, 10), true), need = [];
+  if (!dd) need.push('due'); if (to[0] === 'group') need.push('who');
   to.forEach(function (u) {
     var qid = tm_sha12_(String(cid) + qmid + ':' + u); if (st.q[qid]) return;   // то же сообщение второй раз на контроль — второй вопрос не заводим
+    var nb = tm_ctlNorm_(body).slice(0, 50);                                     // то же поручение тому же человеку перевыложено — второй вопрос не заводим
+    if (Object.keys(st.q).some(function (k) { var x = st.q[k]; return x.ctl && x.st === 'open' && String(x.cid) === String(cid) && String(x.to_uid || 'group') === u && tm_ctlNorm_(x.text).slice(0, 50) === nb; })) return;
     var q = { g: g.title, cid: String(cid), mid: qmid, cmd_mid: m.mid, t: tm_msk_(m.ts).iso, ts: m.ts, from: m.name || 'без имени', from_uid: m.uid, from_owner: isOwner,
               to_uid: u === 'group' ? null : u, to_name: u === 'group' ? 'Коллеги' : (names[u] || 'участник группы'), how: 'на контроль (отметка бота)', ctl: true,
+              due: dd ? dd.due : '', due_t: dd ? dd.t : '', need: need.slice(),
               text: body.slice(0, 600), st: 'open', rem: [] };
     if (q.to_uid) {
       var p = tm_person_(cfg, org, names[u] || '', q.to_uid) || {};
@@ -567,9 +575,172 @@ function tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byM
   });
   var q0 = st.q[tm_sha12_(String(cid) + qmid)];                                // обычный вопрос по тому же сообщению — теперь ведёт контроль, без двойных напоминаний
   if (n && q0 && !q0.ctl && q0.st === 'open' && (!q0.to_uid || to.indexOf(String(q0.to_uid)) >= 0)) { q0.st = 'dup'; q0.dup_t = tm_msk_(m.ts).iso; }
-  if (n) (st.ack = st.ack || {})[String(cid) + ':' + m.mid] = { cid: String(cid), mid: m.mid, qmid: qmid, t: tm_msk_(m.ts).iso,
+  if (n) (st.ack = st.ack || {})[String(cid) + ':' + m.mid] = { cid: String(cid), mid: m.mid, qmid: qmid, t: tm_msk_(m.ts).iso, g: g.title, author: me, own: isOwner,
+    need: need.slice(), due: dd ? dd.due : '', due_t: dd ? dd.t : '',
     who: to.map(function (u) { return u === 'group' ? '' : String(names[u] || 'участник группы').split(' (@')[0]; }).filter(Boolean) };
   return n;
+}
+/** 13.11: имена участников, набранные в тексте без отметки («Имя19 Имя18 Andrei Retrunin»): полное имя как в MAX — сразу;
+    одно слово (имя или фамилия) — только если такое слово у одного участника группы. */
+function tm_namesInText_(text, names) {
+  var low = ' ' + String(text || '').toLowerCase().replace(/ё/g, 'е').replace(/[^0-9a-zа-я]+/g, ' ') + ' ', out = [], words = {};
+  Object.keys(names).forEach(function (u) {
+    var nm = String(names[u] || '').split(' (@')[0].toLowerCase().replace(/ё/g, 'е').replace(/[^0-9a-zа-я]+/g, ' ').trim(); if (!nm) return;
+    if (nm.indexOf(' ') > 0 && low.indexOf(' ' + nm + ' ') >= 0) { out.push(u); return; }
+    nm.split(' ').forEach(function (w) { if (w.length >= 3) (words[w] = words[w] || []).push(u); });
+  });
+  Object.keys(words).forEach(function (w) { var us = words[w]; if (us.length === 1 && low.indexOf(' ' + w + ' ') >= 0 && out.indexOf(us[0]) < 0) out.push(us[0]); });
+  return out;
+}
+/** 13.11.2026 (Т. В.: «сделаем на портале раздел Поручения… невыполненное в ботах и в совещаниях — всё в одно; дальше работает робот»):
+    poruch.bin («От ботов» → хостинг st/poruch.bin, bots_drive.py) — отметки бота (контроль), поручения руководства, контрольные точки
+    офисов продаж («Коммерческий отдел»), задачи утренних совещаний (meet_tasks.json — из Plaud, пишет Claude после совещания). */
+function tm_poruch_(ctx, st, ctl) {
+  var today = ctx.today, wk = tm_addDays_(today, -7), nm = function (s) { return String(s || '').split(' (@')[0].trim(); };
+  var out = { v: 1, t: ctx.msk.iso, ctl: [], lead: [], cp: [], meet: [] }, by = {};
+  Object.keys(st.q).forEach(function (k) {
+    var q = st.q[k]; if (!q.ctl || q.st === 'dup') return;
+    var key = q.cid + ':' + q.mid, e = by[key];
+    if (!e) e = by[key] = { id: tm_sha12_(key), g: q.g || '', t: q.t || '', from: nm(q.from), text: tm_mask_(q.text).slice(0, 400), due: q.due || '', due_t: q.due_t || '', need: q.need || [], who: [] };
+    e.who.push({ n: q.to_uid ? nm(q.to_name) : 'все в группе', st: q.st, by: nm(q.ans_by), done_t: q.done_t || '', rem: (q.rem || []).filter(function (r) { return r.kind !== 'ack'; }).length });
+  });
+  out.ctl = Object.keys(by).map(function (k) { return by[k]; }).filter(function (e) {
+    return e.who.some(function (w) { return w.st === 'open' || w.st === 'stale'; }) || String(e.t).slice(0, 10) >= wk;
+  }).sort(function (a, b) { return a.t < b.t ? 1 : -1; }).slice(0, 200);
+  var items = (ctl && ctl.items) || {};
+  Object.keys(items).forEach(function (id) {
+    var it = items[id]; if (['open', 'stale', 'lead', 'answered'].indexOf(it.st) < 0) return;
+    var row = { id: id, what: tm_mask_(it.what).slice(0, 300), who: nm(it.who), due: it.due || '', st: it.st, from: nm(it.author), at: String(it.at || '').slice(0, 10), asks: it.asks || 0,
+                ans: it.answer ? tm_mask_(it.answer).slice(0, 200) : '' };
+    (it.src === 'manual' ? out.lead : out.cp).push(row);
+  });
+  out.cp.sort(function (a, b) { return a.due < b.due ? -1 : 1; }); out.lead.sort(function (a, b) { return a.due < b.due ? -1 : 1; });
+  if (out.cp.length > 300) out.cp = out.cp.slice(0, 300);
+  var M = tm_load_('meet_tasks.json', null);
+  if (M && Array.isArray(M.meetings)) out.meet = M.meetings.map(function (m) {
+    return { id: m.id, date: m.date, title: m.title, tasks: (m.tasks || []).map(function (x, i) { return { i: i, who: x.who, what: tm_mask_(x.what).slice(0, 300), due: x.due || '', st: x.st || 'open', note: x.note || '' }; }) };
+  });
+  out.stats = { ctl: out.ctl.filter(function (e) { return e.who.some(function (w) { return w.st === 'open'; }); }).length, lead: out.lead.length, cp: out.cp.length,
+                meet: out.meet.reduce(function (s, m) { return s + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0) };
+  return tm_publish_('poruch.bin', out) ? out.stats : 'не записан';
+}
+/** 13.11 (разово): контроль, поставленный до v36, — без срока: дубли одного текста (перевыложено) закрыть, имена текстом — исполнителями,
+    сегодняшним авторам (кроме Т. В.) — вопрос о сроке/исполнителях лично. */
+function tm_remMigCtl_(ctx, st, namesOf, cfg, org) {
+  var Q = Object.keys(st.q).map(function (k) { return [k, st.q[k]]; }).filter(function (p) { return p[1].ctl && p[1].st === 'open' && !p[1].need; });
+  Q.sort(function (a, b) { return (b[1].ts || 0) - (a[1].ts || 0); });
+  var seen = {}, groups = {}, n = 0;
+  Q.forEach(function (p) {
+    var q = p[1], key = q.cid + '|' + (q.to_uid || 'group') + '|' + tm_ctlNorm_(q.text).slice(0, 50);
+    if (seen[key]) { q.st = 'dup'; q.dup_t = ctx.msk.iso; n++; return; } seen[key] = 1;
+    var dd = tm_ctlDue_(q.text, String(q.t).slice(0, 10), true); q.due = dd ? dd.due : ''; q.due_t = dd ? dd.t : ''; q.need = dd ? [] : ['due'];
+    (groups[q.cid + '|' + q.mid] = groups[q.cid + '|' + q.mid] || []).push(q);
+  });
+  Object.keys(groups).forEach(function (gk) {
+    var L = groups[gk], gq = L.filter(function (q) { return !q.to_uid; })[0], names = namesOf[L[0].cid] || {};
+    if (gq) {
+      var who = tm_namesInText_(gq.text, names).filter(function (u) { return String(u) !== String(gq.from_uid); });
+      who.forEach(function (u) {
+        var qid = tm_sha12_(String(gq.cid) + gq.mid + ':' + u); if (st.q[qid]) return;
+        var key = gq.cid + '|' + u + '|' + tm_ctlNorm_(gq.text).slice(0, 50);
+        if (seen[key]) {                                                         // тот же человек и текст в старом (удалённом) сообщении — контроль переводим на новое
+          Object.keys(st.q).forEach(function (k2) { var o = st.q[k2]; if (o.ctl && o.st === 'open' && o.cid === gq.cid && String(o.to_uid) === String(u) && o.mid !== gq.mid && (o.ts || 0) < (gq.ts || 0) && tm_ctlNorm_(o.text).slice(0, 50) === tm_ctlNorm_(gq.text).slice(0, 50)) { o.mid = gq.mid; o.rem = []; } });
+          return;
+        }
+        seen[key] = 1;
+        var q = JSON.parse(JSON.stringify(gq)); q.to_uid = String(u); q.to_name = names[u] || 'участник группы'; q.rem = [];
+        var pp = tm_person_(cfg, org, q.to_name, q.to_uid) || {}; q.mail = pp.mail || ''; q.fio = pp.fio || ''; q.dep = pp.dep || ''; q.first = tm_firstName_(q.to_name, pp.fio); if (!q.mail) q.no_mail = true;
+        st.q[qid] = q;
+      });
+      if (who.length) { gq.st = 'dup'; gq.dup_t = ctx.msk.iso; } else gq.need.push('who');
+    }
+    var q0 = L[0];
+    if (q0.from_owner || !q0.from_uid || String(q0.t).slice(0, 10) !== ctx.today) return;
+    var live = Object.keys(st.q).map(function (k) { return st.q[k]; }).filter(function (q) { return q.ctl && q.st === 'open' && q.cid === q0.cid && q.mid === q0.mid; });
+    var need = []; if (live.some(function (q) { return (q.need || []).indexOf('due') >= 0; })) need.push('due'); if (live.every(function (q) { return !q.to_uid; })) need.push('who');
+    var whoN = live.filter(function (q) { return q.to_uid; }).map(function (q) { return String(q.to_name).split(' (@')[0]; });
+    tm_remAskAuthor_(ctx, st, q0.cid + ':' + (q0.cmd_mid || q0.mid) + ':m', { cid: q0.cid, qmid: q0.mid, mid: q0.mid, g: q0.g, author: q0.from_uid, need: need }, whoN, q0.due ? tm_ddmm_(q0.due) + (q0.due_t ? ' ' + q0.due_t : '') : '');
+  });
+  return n;
+}
+/** 13.11: срок из текста: {due:'ГГГГ-ММ-ДД', t:'ЧЧ:ММ'|''} | null. strict (текст поручения) — дата только с «до/к/срок», «завтра», день недели;
+    нестрогий (ответ автора) — любая будущая дата, «сегодня», время. */
+function tm_ctlDue_(text, d0, strict) {
+  var low = String(text || '').toLowerCase().replace(/ё/g, 'е'), best = null;
+  var hm = function (s) { var x = /^\s*(?:в|до|к)?\s*(\d{1,2})[:.](\d{2})(?!\d)/.exec(s); return x && +x[1] < 24 && +x[2] < 60 ? ('0' + x[1]).slice(-2) + ':' + x[2] : ''; };
+  tm_datesIn_(text, d0).forEach(function (x) {
+    if (best || x[0] < d0) return;
+    if (strict && x[3] === 'date' && !/(^|[^а-я])(до|к|срок[а-я]*:?)\s*$/.test(low.slice(Math.max(0, x[1] - 14), x[1]) + ' ') && !/^(до|к)\s/.test(low.slice(x[1], x[1] + 3))) return;
+    best = { due: x[0], t: hm(low.slice(x[2], x[2] + 14)) };
+  });
+  if (!best && /(^|[^а-я])(сегодня|до конца дня)([^а-я]|$)/.test(low)) { var tt = /(?:до|к)\s*(\d{1,2})[:.](\d{2})/.exec(low); best = { due: d0, t: tt && +tt[1] < 24 ? ('0' + tt[1]).slice(-2) + ':' + tt[2] : '18:00' }; }
+  if (!best && !strict) { var t2 = /(?:^|\s)(?:в|до|к)?\s*(\d{1,2})[:.](\d{2})(?!\d)/.exec(low); if (t2 && +t2[1] < 24 && +t2[2] < 60) best = { due: d0, t: ('0' + t2[1]).slice(-2) + ':' + t2[2] }; }
+  return best;
+}
+/** 13.11: автору постановки на контроль — лично: что взято, исполнители, срок; нет срока / исполнителей — спросить (кроме Т. В.) */
+function tm_remAskAuthor_(ctx, st, k, a, who, dl) {
+  var need = a.need || [], qs = [];
+  if (need.indexOf('due') >= 0) qs.push('к какому сроку ждать выполнения (дату, при необходимости время — например «16.11 12:00»)');
+  if (need.indexOf('who') >= 0) qs.push('кто основные исполнители (фамилии)');
+  var sn = ''; Object.keys(st.q).some(function (qk) { var q = st.q[qk]; if (q.ctl && q.mid === (a.qmid || a.mid) && String(q.cid) === String(a.cid)) { sn = tm_sq_(q.text).slice(0, 90); return true; } return false; });
+  var txt = '✅ Взял на контроль ваше сообщение в группе «' + (a.g || 'группа') + '»' + (sn ? ': «' + sn + (sn.length >= 90 ? '…' : '') + '»' : '') + (who.length ? '\nИсполнители: ' + who.join(', ') : '') + (dl ? (who.length ? ', срок ' : '\nСрок: ') + dl : '') + '.';
+  txt += qs.length ? '\n\nУточните, пожалуйста, ' + qs.join(' и ') + ' — ответьте здесь одним сообщением. До вашего ответа исполнителям не напоминаю; без ответа — напомню им со следующего рабочего дня.'
+                   : ' В срок проверю ответ и, если его не будет, напомню исполнителям.';
+  var r = tm_sendOnce_('ctl:auth:' + k, 'user', { uid: String(a.author), text: txt }, 'remind');
+  if (r.ok && qs.length) { var L0 = (st.ask_author = st.ask_author || {})[String(a.author)]; if (!Array.isArray(L0)) L0 = st.ask_author[String(a.author)] = L0 ? [L0] : [];
+    L0.push({ k: k, cid: a.cid, qmid: a.qmid || a.mid, t: ctx.msk.iso, need: need.slice(), g: a.g || '' }); if (L0.length > 10) L0.splice(0, L0.length - 10); }
+  return r.ok;
+}
+/** 13.11: ответ автора лично боту (срок / исполнители) — пишется в ctl_author.json (ядро, под замком), применяется здесь, под таймером */
+function tm_remAuthApply_(ctx, st, cfg, org) {
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(10000)) return 'замок';
+  var n = 0;
+  try {
+    var A = tm_load_('ctl_author.json', {}) || {};
+    Object.keys(A).forEach(function (id) {
+      var x = A[id]; if (!x || x.applied) { if (x && x.applied && String(x.applied) < tm_addDays_(ctx.today, -3)) delete A[id]; return; }
+      var L = (st.ask_author || {})[String(x.uid)]; if (L && !Array.isArray(L)) L = [L];
+      var ask = (L || []).filter(function (y) { return y.k === x.k; })[0]; if (!ask) { x.applied = ctx.msk.iso; x.why = 'нет вопроса'; return; }
+      var qs = Object.keys(st.q).map(function (k) { return st.q[k]; }).filter(function (q) { return q.ctl && q.st === 'open' && String(q.cid) === String(ask.cid) && q.mid === ask.qmid; });
+      if (x.due) qs.forEach(function (q) { q.due = x.due; q.due_t = x.due_t || ''; delete q.due_fb; q.need = (q.need || []).filter(function (w) { return w !== 'due'; }); });
+      if (x.who && x.who.length) qs.filter(function (q) { return !q.to_uid; }).forEach(function (gq) {
+        x.who.forEach(function (w) {
+          var qid = tm_sha12_(String(ask.cid) + ask.qmid + ':' + w[0]); if (st.q[qid]) return;
+          var q = JSON.parse(JSON.stringify(gq)); q.to_uid = String(w[0]); q.to_name = w[1]; q.rem = []; q.need = (q.need || []).filter(function (z) { return z !== 'who'; });
+          var p = tm_person_(cfg, org, w[1], q.to_uid) || {}; q.mail = p.mail || ''; q.fio = p.fio || ''; q.dep = p.dep || ''; q.first = tm_firstName_(w[1], p.fio); if (!q.mail) q.no_mail = true;
+          st.q[qid] = q;
+        });
+        gq.st = 'dup'; gq.dup_t = ctx.msk.iso;
+      });
+      ask.need = (ask.need || []).filter(function (w) { return !(w === 'due' && x.due) && !(w === 'who' && x.who && x.who.length); });
+      if (!ask.need.length) { L.splice(L.indexOf(ask), 1); if (L.length) st.ask_author[String(x.uid)] = L; else delete st.ask_author[String(x.uid)]; }
+      x.applied = ctx.msk.iso; n++;
+    });
+    tm_save_('ctl_author.json', A);
+  } finally { lock.releaseLock(); }
+  return n;
+}
+/** 13.11: ответ автора лично боту — срок и/или исполнители по его постановке на контроль (вызывается ядром из лички, до зеркала) */
+function tm_remCtlDmAnswer_(uid, name, text, m) {
+  try {
+    uid = String(uid || ''); text = String(text || '').trim(); if (!uid || !text || /^\//.test(text)) return false;
+    var st = tm_load_('remind.json', {}) || {}, L = (st.ask_author || {})[uid]; if (L && !Array.isArray(L)) L = [L];
+    var ask = (L || []).filter(function (y) { return (y.need || []).length; }).pop(); if (!ask) return false;   // последний открытый вопрос автору
+    var now = tm_msk_(Date.now()), d0 = now.iso.slice(0, 10); if (String(ask.t || '') < tm_addDays_(d0, -3)) return false;
+    var need = ask.need || [], dd = need.indexOf('due') >= 0 ? tm_ctlDue_(text, d0, false) : null, who = [];
+    var names = ((st.members || {})[ask.cid] || {}).names || {};
+    if (need.indexOf('who') >= 0) tm_namesInText_(text, names).forEach(function (u) { if (String(u) !== uid) who.push([String(u), String(names[u] || '').split(' (@')[0]]); });
+    if (!dd && !who.length) return false;
+    var lock = LockService.getScriptLock(); if (!lock.tryLock(10000)) return false;
+    try { var A = tm_load_('ctl_author.json', {}) || {}; A[uid + ':' + Date.now()] = { uid: uid, k: ask.k, t: now.iso, due: dd ? dd.due : '', due_t: dd ? dd.t : '', who: who, text: text.slice(0, 300) }; tm_save_('ctl_author.json', A); }
+    finally { lock.releaseLock(); }
+    var left = need.filter(function (w) { return !(w === 'due' && dd) && !(w === 'who' && who.length); });
+    var msg = 'Спасибо, записал' + (dd ? ': срок ' + tm_ddmm_(dd.due) + (dd.t ? ' ' + dd.t : '') : '') + (who.length ? (dd ? '; ' : ': ') + 'исполнители — ' + who.map(function (w) { return w[1]; }).join(', ') : '') + '.';
+    msg += left.length ? ' Уточните, пожалуйста, ещё ' + (left[0] === 'due' ? 'срок' : 'исполнителей') + '.' : ' В срок проверю ответ и, если его не будет, напомню исполнителям.';
+    tm_send_('user', { uid: uid, text: msg });
+    tm_log_('remind', 'ответ автора контроля: ' + (name || uid));
+    return true;
+  } catch (e) { tm_log_('remind', 'ответ автора контроля — ошибка: ' + e); return false; }
 }
 /** подтверждение «взял на контроль» — один раз на сообщение, ответом на него; старше суток — не шлём (подхвачено задним числом) */
 function tm_remAck_(ctx, st) {
@@ -579,13 +750,15 @@ function tm_remAck_(ctx, st) {
     var a = st.ack[k]; if (a.sent || (a.tries || 0) >= 3) return;
     if (tm_isoMs_(a.t) < ctx.msk.ms - 24 * 3600e3) { a.sent = 'old'; return; }
     var who = (a.who || []).filter(function (x, i, arr) { return arr.indexOf(x) === i; });
-    var txt = '✅ Взял на контроль. ' + (who.length ? 'Жду ответа: ' + who.join(', ') + '.' : 'Жду ответа в группе.') +
-              ' Ответьте, пожалуйста, ответом на это сообщение. Не будет ответа через 2 часа — напомню лично.';
-    var r = tm_sendOnce_('ctl:ack:' + k, 'chat', { cid: a.cid, text: txt, reply: a.mid }, 'remind');
+    var dl = a.due ? tm_ddmm_(a.due) + (a.due_t ? ' ' + a.due_t : '') : '';
+    var txt = '✅ Взял на контроль.' + (who.length ? ' Исполнители: ' + who.join(', ') + '.' : '') + (dl ? ' Срок: ' + dl + '.' : (a.own || !a.author ? '' : ' Срок уточняю у автора.')) +
+              ' Ответ — ответом на это сообщение.';
+    var r = tm_sendOnce_('ctl:ack:' + k, 'chat', { cid: a.cid, text: txt, reply: a.mid, ctl: true }, 'remind');
     a.tries = (a.tries || 0) + 1;
     if (r.ok) {
       a.sent = ctx.msk.iso; a.amid = r.mid || ''; n++;
       if (r.mid) Object.keys(st.q).forEach(function (qk) { var q = st.q[qk]; if (q.ctl && q.mid === (a.qmid || a.mid) && String(q.cid) === a.cid) q.rem.push({ t: ctx.msk.iso, kind: 'ack', mid: String(r.mid) }); });
+      if (a.author && !a.own) tm_remAskAuthor_(ctx, st, k, a, who, dl);
     }
   });
   var ks = Object.keys(st.ack); if (ks.length > 300) ks.slice(0, ks.length - 200).forEach(function (k) { delete st.ack[k]; });
@@ -664,7 +837,7 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
   Object.keys(st.q).forEach(function (k) {
     var q = st.q[k]; if (q.st !== 'open') return;
     var qms = tm_isoMs_(q.t), qd = q.t.slice(0, 10);
-    if (tm_wdBetween_(qd, today) > TM_REM_MAX_WD) {
+    if (tm_wdBetween_(q.ctl && q.due && q.due > qd ? q.due : qd, today) > TM_REM_MAX_WD) {
       if (q.ctl && q.to_uid && !q.from_owner && q.from_uid) {                  // 13.11: снято с напоминаний без ответа — сказать тому, кто ставил на контроль
         if (!ctx.workday || ctx.quiet || ctx.msk.h < 9) return;
         var st0 = '⚠️ ' + 'На контроле без ответа: ' + String(q.to_name).split(' (@')[0] + ' — ваше сообщение в группе «' + q.g + '» от ' + tm_dmy_(q.t) + ':\n«' + q.text.slice(0, 200) +
@@ -678,7 +851,12 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
     if (!ctx.workday || ctx.quiet) return;
     var rt = q.rem.filter(function (r) { return r.t.slice(0, 10) === today; }), gToday = rt.filter(function (r) { return r.kind === 'group'; });
     var gLast = q.rem.filter(function (r) { return r.kind === 'group'; }).map(function (r) { return r.t; }).sort().pop() || '';
-    // 13.11: поставлено на контроль отметкой бота — через 2 ч сначала лично в бота; в группу — только если лично не дошло или ещё через 2 ч без ответа
+    if (q.ctl) {                                                                // 13.11 (Т. В.): до срока — не напоминаем; срок не указан и автор не ответил — со следующего рабочего дня 10:00
+      if (!q.due) { var fb = tm_nextWorkday_(tm_addDays_(qd, 1)); if (today < fb || (today === fb && h < 10)) return; q.due = fb; q.due_t = '10:00'; q.due_fb = true; }
+      var sMs = tm_isoMs_(q.due + 'T' + (q.due_t || '10:00')); if (ctx.msk.ms < sMs) return;
+      qms = Math.max(qms, sMs - two);
+    }
+    // 13.11: поставлено на контроль отметкой бота — в срок сначала лично в бота; в группу — только если лично не дошло или ещё через 2 ч без ответа
     var dmR = q.rem.filter(function (r) { return r.kind === 'dm' || r.kind === 'dm_fail'; })[0];
     if (q.ctl && q.to_uid && !dmR && h >= 9 && h < 18 && ctx.msk.ms >= qms + two) {
       var dt = '🔔 ' + (q.first || tm_firstName_(q.to_name)) + ', ' + (q.from_owner ? 'Т. В. Сотрудник1' : String(q.from).split(' (@')[0]) + ' поставил(а) на контроль ваш ответ в группе «' + q.g + '» (' +
@@ -689,7 +867,7 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
     if (q.ctl && dmR && dmR.kind === 'dm' && ctx.msk.ms < tm_isoMs_(dmR.t) + two) return;
     if (h >= 9 && h < 18 && ctx.msk.ms >= qms + two && !gLast) {             // 12.11: в группу — одно напоминание на вопрос, не каждые 2 часа
       var text = q.to_uid ? '🔔 ' + (q.first || tm_firstName_(q.to_name)) + ', на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.' : TM_GROUP_TXT;
-      var r = tm_sendOnce_('rem:g:' + k + ':' + today + ':' + gToday.length, 'chat', { cid: q.cid, text: text, reply: q.mid }, 'remind');
+      var r = tm_sendOnce_('rem:g:' + k + ':' + today + ':' + gToday.length, 'chat', { cid: q.cid, text: text, reply: q.mid, ctl: !!q.ctl }, 'remind');
       if (r.ok) { q.rem.push({ t: ctx.msk.iso, kind: 'group', mid: r.mid || '' }); n++; }        // mid напоминания: ответ на него тоже закрывает вопрос (C-B1)
     }
     if (q.to_uid && h === 18 && ctx.msk.ms >= qms + two) {                // 12.11: письмо — один раз (18:00 в день вопроса), утром не повторяем
@@ -820,7 +998,9 @@ function tm_remind_(ctx) {
   var cfg = tm_pollCfg_(), org = tm_org_(), st = tm_remState_(), bot = tm_botUid_(), komCid = tm_komCid_(), res = {};
   var only = String(tm_cfgGet_('remind_groups', 'all')) === 'kom', G = {}, namesOf = {}, komOk = tm_chatOk_(komCid);
   var cids = (only ? [komCid] : tm_histGroups_()).filter(tm_chatOk_); if (!only && komOk && cids.indexOf(komCid) < 0) cids.push(komCid);   // F4 C-A7: только разрешённые группы
-  cids.forEach(function (cid) { var H = tm_hist_(cid), msgs = tm_histList_(H); if (!msgs.length && cid !== komCid) return; G[cid] = { title: H.title || tm_groupTitle_(cid), msgs: msgs }; });
+  if (!only) tm_histGroupsAll_().forEach(function (cid) { if (cids.indexOf(cid) < 0) { cids.push(cid); (G.__ctlOnly = G.__ctlOnly || {})[cid] = 1; } });   // 13.11: отметка бота — во всех группах
+  var ctlOnly = G.__ctlOnly || {}; delete G.__ctlOnly;
+  cids.forEach(function (cid) { var H = tm_hist_(cid), msgs = tm_histList_(H); if (!msgs.length && cid !== komCid) return; G[cid] = { title: H.title || tm_groupTitle_(cid), msgs: msgs, ctlOnly: !!ctlOnly[cid] }; });
   Object.keys(G).forEach(function (cid) {
     var names = {}, mem = st.members[cid] || {}, day = ctx.today, fails = mem.fd === day ? (mem.fail || 0) : 0;
     if (mem.d !== day && fails < 3) {
@@ -838,6 +1018,8 @@ function tm_remind_(ctx) {
   res.groups = Object.keys(G).length; res.owner = !!owner;
   res['new'] = tm_remScan_(st, G, namesOf, owner, bot, tm_isoMs_(st.since), cfg, org);
   res.done = tm_remAnswers_(st, G, owner, bot);
+  if (!st.mig1311c) { res.mig = tm_remMigCtl_(ctx, st, namesOf, cfg, org); st.mig1311c = ctx.msk.iso; }   // 13.11: постановки v33–v35 — срок/исполнители по новым правилам
+  res.auth = tm_remAuthApply_(ctx, st, cfg, org);                               // 13.11: ответы авторов (срок, исполнители) — до подтверждений и лестницы
   res.ack = tm_remAck_(ctx, st);                                                // 13.11: «взял на контроль» на отметку бота
   res.rem = tm_remLadder_(ctx, st, cfg, org, res);
   var ctl = tm_load_('ctl.json', {}), namesC = {};
@@ -861,6 +1043,7 @@ function tm_remind_(ctx) {
     summary: tm_overdueSummary_(st, ctl, ctx.today).map(tm_mask_) };
   tm_publish_('rem.bin', out);
   res.open = out.stats.open; res.stale = out.stats.stale;
+  try { res.poruch = tm_poruch_(ctx, st, ctl); } catch (ep) { res.poruch = 'ошибка: ' + tm_err_(ep); }   // 13.11: раздел портала «Поручения»
   if (res['new'] || res.rem || res.esc) tm_log_('remind', 'новых вопросов ' + res['new'] + ', напоминаний ' + res.rem + ', эскалаций ' + res.esc);
   return res;
 }

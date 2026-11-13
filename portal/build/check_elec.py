@@ -3,7 +3,7 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
-import json, numpy as np, cv2, io, contextlib
+import numpy as np, cv2, io, contextlib
 NS={}
 with contextlib.redirect_stdout(io.StringIO()): exec(_cg1_read_file('/home/claude/build/extra3d.py'),NS)
 loc=NS['loc']

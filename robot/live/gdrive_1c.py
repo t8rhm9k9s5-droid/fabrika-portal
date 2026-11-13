@@ -26,7 +26,7 @@ def _key(L):
         fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'w') as f: f.write(secrets.token_hex(32))
     try: os.chmod(p, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     return open(p).read().strip()
 
 

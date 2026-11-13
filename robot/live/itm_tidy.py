@@ -141,7 +141,7 @@ def work(M, fl, st, log, md=None, L=None):
                 try:
                     with open(p, encoding='utf-8') as _cg2_file_1:
                         old = json.load(_cg2_file_1).get('items') or []
-                except Exception: pass
+                except Exception: pass  # необязательный шаг: сбой не мешает работе робота
                 seen = set(x['uid'] for x in old)
                 old = (old + [x for x in plan if x['uid'] not in seen])[-300:]
                 _cg2_dump_2 = json.dump

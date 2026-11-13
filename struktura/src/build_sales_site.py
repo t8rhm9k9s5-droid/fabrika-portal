@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Отдельный сайт «Коммерческий отдел»: тот же раздел, что и в общем сайте оргструктуры (sales_section.py)."""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
 _ROOT = _os.path.dirname(_SRC)

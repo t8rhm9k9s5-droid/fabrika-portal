@@ -5,7 +5,7 @@
 """Sample table for loading cameras into the site (Терехина, 14): the current 76 cameras with the same columns
 the site exports and reads back, a legend, spare rows for new cameras, and a sheet with the rules and one example row."""
 from _cg1_build_io import read_json as _cg1_read_json
-import json, sys
+import sys
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.comments import Comment

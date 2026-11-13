@@ -37,7 +37,7 @@ FILES = [('lb.bin', 'st'), ('bd.bin', 'site'), ('mq.bin', 'st'), ('gl.bin', 'st'
          ('rem.bin', 'st'), ('poll.bin', 'st'), ('grp.bin', 'st'), ('grpp.bin', 'st'), ('diag.bin', 'st'), ('hs.bin', 'st'), ('recl.bin', 'st'),
          ('kb.bin', 'st'), ('ls.bin', 'st'), ('sales.bin', 'st'), ('omts.bin', 'st'), ('smvs.bin', 'st'), ('mxsurvey.bin', 'st'), ('docs.bin', 'st'), ('staff.bin', 'st'),
          ('bot_rules.json', 'code'), ('bot_prompt.txt', 'code'), ('price_now.json', 'code'), ('ko_staff.json', 'code'), ('unans_org.json', 'code')]
-DOWN = ('ev.bin', 'hb.json', 'mx_direct.json')                           # из «От ботов» (плюс папка dr/)
+DOWN = ('ev.bin', 'hb.json', 'mx_direct.json', 'poruch.bin')   # 13.11: poruch.bin — раздел «Поручения» (бот MAX, ключ сайта)                           # из «От ботов» (плюс папка dr/)
 GD = None                                                               # модуль gdrive_1c (подставляется в тестах)
 
 
@@ -229,6 +229,9 @@ def _store(L, SITE, name, data, log):
         if name == 'ev.bin':
             if not data.startswith(b'T14B1.'): return False                                     # обращения — только зашифрованные ключом владельца
             _atomic_write(os.path.join(SITE, 'st', 'ev.bin'), data); os.chmod(os.path.join(SITE, 'st', 'ev.bin'), 0o644)
+        elif name == 'poruch.bin':                                                            # 13.11: «Поручения» — только зашифрованный файл
+            if not data.startswith(b'T14B1.'): return False
+            _atomic_write(os.path.join(SITE, 'st', 'poruch.bin'), data); os.chmod(os.path.join(SITE, 'st', 'poruch.bin'), 0o644)
         elif name == 'hb.json':
             j = json.loads(data.decode('utf-8'))
             if not isinstance(j, dict) or not isinstance(j.get('t'), (int, float)): return False

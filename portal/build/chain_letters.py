@@ -3,7 +3,7 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 from _cg1_build_io import read_json as _cg1_read_json
-import json, math, numpy as np, cv2, subprocess, os, collections
+import json, math, cv2, subprocess, os, collections
 from concurrent.futures import ThreadPoolExecutor
 os.environ['TESSDATA_PREFIX']='/home/claude/tessdata'
 img=cv2.imread('/home/claude/work/img/topo300-45.png',0)

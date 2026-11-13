@@ -8,7 +8,7 @@ Views inside the page by the address: #  — the summary and the groups; #g1… 
 #free — free stock of ПКС that has no pair in the warehouse report; the search looks through models and variants.
 Writes build/stock_frag.html (a fragment; the skeleton is added by build_site.py) and build/stock_brief.json (for the model's card)."""
 from _cg1_build_io import read_json as _cg1_read_json
-import json, html, datetime, os
+import json, html
 B = '/home/claude/build/'
 D = _cg1_read_json('/home/claude/stock/stock.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)

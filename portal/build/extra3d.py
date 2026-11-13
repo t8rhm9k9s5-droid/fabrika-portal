@@ -6,7 +6,6 @@
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import json, math, io, contextlib, re
 import numpy as np
-from matplotlib.path import Path
 
 NS = {}
 with contextlib.redirect_stdout(io.StringIO()):

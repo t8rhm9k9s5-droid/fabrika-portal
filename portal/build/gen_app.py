@@ -6,7 +6,7 @@
 The scene code (terrain, buildings, fence, mounts, utilities, workshop, floor plans) is taken from the 3D page template,
 the UI is app/app.js. Writes /home/claude/site/index.html (a fragment: the artifact tool adds the skeleton)."""
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
-import json, os, re
+import json, os
 B = '/home/claude/build/'
 tpl = _cg1_read_file(B + 'site3d_template_v2.html', encoding='utf-8')
 script = tpl[tpl.index('(function(){\nif(!window.THREE)'):]

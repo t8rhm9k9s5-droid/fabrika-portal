@@ -37,7 +37,7 @@ def run(L, log, jload, jsave, publish, publish_file, iso):
     st = jload('pub_fetch.json', {}) or {}
     if time.time() - (st.get('ts') or 0) < EVERY and not os.path.exists(os.path.join(L, 'pub_go')): return {k: st.get(k) for k in ('t', 'n', 'ok', 'err')}
     try: os.remove(os.path.join(L, 'pub_go'))
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     here = os.path.dirname(os.path.abspath(__file__))
     try:
         with open(os.path.join(here, 'fabrikant_su.json'), encoding='utf-8') as _cg1_file_1:

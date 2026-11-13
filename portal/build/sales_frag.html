@@ -1039,8 +1039,6 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   function secMe() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function secLogged() { var p = secMe(); return !!(p && p.st !== 'pending' && window.T14Acct && T14Acct.tok && T14Acct.tok()); }
   function secFlag() { try { var f = JSON.parse(localStorage.getItem('t14.sec') || 'null'), p = secMe(); return !!(f && p && f.id === p.id); } catch (e) { return false; } }
-  function secSee() { var p = secMe(); return !!(p && p.st !== 'pending' && (p.id === SEC_OWNER || secFlag())); }
-  function secTile(href, t, sub) { return '<a class="irow" href="' + href + '"><span class="ic"><span class="ibody"><span class="ititle">' + esc(t) + '</span><span class="isub">' + esc(sub) + '</span></span><span class="chev">›</span></span></a>'; }
   function secLoad(part, ask) {
     if (!secLogged()) { SECR[part] = { err: 'login' }; return route(); }
     if (SECR[part] && SECR[part].busy) return;
@@ -1095,15 +1093,6 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   // 12.11.2026, Т. В.: «всё должно быть как на сайте по оформлению» — оргструктура и функционал КО рисуются самим порталом из данных пакета «Структура»
   // (orgstruktura.json, kommercheskiy_otdel.json), без встроенной чужой страницы; на компьютере — карточки во всю ширину
   function ogTel(x) { return 'tel:' + String(x).replace(/[^\d+]/g, ''); }
-  function ogPerson(p, head) {
-    if (!p) return '';
-    var ph = p.phones || [], em = p.emails || [], ex = p.extra || (p.notes || []).join(' · ');
-    var q = [p.name, p.role, ex].concat(ph, em).join(' ').toLowerCase();
-    return '<div class="who' + (head ? ' hd' : '') + '" data-q="' + esc(q) + '"><div class="wn">' + esc(p.name || '') + '</div>' + (p.role ? '<div class="wr">' + esc(p.role) + '</div>' : '') +
-      (ex ? '<div class="wx">' + esc(ex) + '</div>' : '') + (ph.length || em.length ? '<div class="acts">' + ph.map(function (x) { return '<a href="' + ogTel(x) + '">' + esc(x) + '</a>'; }).join('') +
-      em.map(function (x) { return '<a class="ml" href="mailto:' + esc(x) + '">' + esc(x) + '</a>'; }).join('') + '</div>' : '') + '</div>';
-  }
-  function ogCard(title, right, meta, body) { return '<div class="igroup og-card"><div class="og-h"><b>' + esc(title) + '</b>' + (right ? '<span>' + esc(right) + '</span>' : '') + '</div>' + (meta ? '<div class="og-m">' + meta + '</div>' : '') + body + '</div>'; }
   function ogWire(box) {                // поиск по людям и переходы к блокам страницы (без смены адреса)
     var inp = box.querySelector('.og-search');
     if (inp) inp.oninput = function () {
@@ -1115,7 +1104,6 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     box.querySelectorAll('[data-og]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = document.getElementById(a.getAttribute('data-og')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
   }
   function ogCount(O) { var n = 0; (O.departments || []).forEach(function (d) { n += Number(d.count) || 0; }); return n; }
-  function ogTxt(x) { return esc(x == null ? '' : x).replace(/\n/g, '<br>'); }
   // ================= 12.11.2026, Т. В.: «внутри тоже всё по-разному в каждом разделе… по СИМ-картам тоже — в виде блок-схемы».
   // Единый вид всех подразделов «Структуры»: шапка → контрольные точки (плитки как у входа раздела) → кнопки разделов и поиск →
   // блоки: схема (верхний узел → линия → карточки ниже) или сетка карточек. Таблиц нет — каждая строка таблицы стала карточкой.
@@ -1310,16 +1298,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1><p class="lead">' + esc(D.src || '') + '</p><iframe id="secfr" sandbox="allow-scripts" style="width:100%;height:80vh;border:0;border-radius:12px;background:#fff"></iframe>';
     document.getElementById('secfr').srcdoc = String(D.html || '');
   }
-  function koSt(p) { return p.status && p.status !== 'работает' ? ' <small class="kost">' + esc(p.status) + '</small>' : ''; }
   // 03.11.2026: ответ М. И. Сотрудник6 02.11 — ОП Самара без руководителя (в поиске, Сотрудник44 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
   var SPB = (function () { try { return JSON.parse(document.getElementById('spb-data').textContent || 'null'); } catch (e) { return null; } })();
-  function netBlock() {
-    var h = '<p class="ihdr">Сеть офисов · изменения</p><div class="igroup"><div class="cpl"><div><b>ОП Самара:</b> руководитель офиса не назначен (в поиске); Сотрудник44 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник6 напрямую.</div>';
-    if (SPB && SPB.list && SPB.list.length) h += '<div><b>ОП Санкт-Петербург закрыт с ' + esc(dd(SPB.closed)) + '.</b> Сотрудник7 переданы: ' + SPB.by.map(function (x) { return esc(x[0]) + ' — ' + n(x[1]); }).join(', ') + '.</div></div>' +
-      '<details style="margin:0 16px 12px"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary><div class="mtx"><table style="min-width:0"><thead><tr><th>Клиент</th><th>Передан</th></tr></thead><tbody>' + SPB.list.map(function (x) { return '<tr><td style="text-align:left;white-space:normal">' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td></tr>'; }).join('') + '</tbody></table></div></details></div>';
-    else h += '</div></div>';
-    return h;
-  }
   // 02.11.2026, пользователь: «лови отзывы» — отзывы покупателей Ozon из выгрузки кабинета (Excel → ozon_report/make_rev.py → ozrev-data).
   //   API отзывов Ozon закрыт без подписки Premium Plus; когда откроется — хостинг (ozon.py) отдаст их сам, а здесь останется выгрузка.
   var OZR = (function () { try { return JSON.parse(document.getElementById('ozrev-data').textContent || 'null'); } catch (e) { return null; } })();

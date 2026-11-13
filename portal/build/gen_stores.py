@@ -9,7 +9,7 @@
 в страницу встроены снимки, снятые при сборке (stock_op/ГГГГ-ММ-ДД.json, по моделям), — чтобы раздел работал и без сервера,
 и чтобы динамика начиналась с 26.10.2026."""
 from _cg1_build_io import read_json as _cg1_read_json
-import json, glob, os, html
+import json, glob
 B = '/home/claude/build/'
 base = []
 for f in sorted(glob.glob(B + 'stock_op/????-??-??.json')):

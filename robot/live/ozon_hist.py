@@ -8,7 +8,7 @@
 Запуск: раз в сутки (после 06:00 МСК) и сразу, если есть файл-команда ~/.fabrika_live/ozon_hist_go (переименовывается после).
 → state/ozon_hist.json: по дням (заказы FBS/rFBS и FBO: штуки, сумма, отмены, доставлено), аналитика Ozon (выручка, заказано
 штук по дням), финансы по месяцам (начисления за продажи, комиссии, возвраты), топ товаров. Python 3.6."""
-import datetime, json, os, time
+import datetime, os, time
 import ozon as OZ
 
 SINCE = datetime.date(2026, 7, 1)
@@ -247,6 +247,6 @@ def run(L, log, jload, jsave, iso, publish=None):
     if publish and res.get('analytics'): publish('ozh.bin', portal(res))
     if os.path.exists(go):
         try: os.replace(go, go + '.done')
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     log('ozon история:', res['state'], '; FBS', res.get('fbs'), '; FBO', res.get('fbo'), '; дней', res['days'], ('; ' + res['err']) if res['err'] else '')
     return {k: res.get(k) for k in ('state', 't', 'fbs', 'fbo', 'days', 'err')}

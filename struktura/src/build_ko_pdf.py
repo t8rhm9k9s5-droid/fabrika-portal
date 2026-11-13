@@ -4,7 +4,6 @@
 Результат: out/Коммерческий_отдел_функционал.pdf"""
 import os
 from xml.sax.saxutils import escape as X
-import build_sales_duties as B          # стили, шрифты, цвета (данные редакции 24.10 оттуда не берутся)
 from build_sales_duties import (st, W, H, M, RED, RED_D, GREY, LINE, MUTED, colors, mm, A4, Paragraph, Spacer, Table,
                                 TableStyle, KeepTogether, PageBreak, BaseDocTemplate, PageTemplate, Frame)
 from reportlab.platypus import ListFlowable, ListItem

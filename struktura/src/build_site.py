@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Сайт оргструктуры ГК «Фабрикант»: руководство, производственные участки, отделы, функции коммерческого отдела."""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
 _ROOT = _os.path.dirname(_SRC)
-import base64, html, re
-from data_fabrikant import (COMPANY, LEADERSHIP, DIRECTORS, SECRETARY, DEPARTMENTS, DEPT_ORDER,
-                            ROMANOV_V, AREAS, AREAS_STAFF, AREA_CARDS, NIGHT, dept_count, count_people)
+import base64, html
+from data_fabrikant import COMPANY, LEADERSHIP, DIRECTORS, SECRETARY, DEPARTMENTS, DEPT_ORDER, ROMANOV_V, AREAS, AREAS_STAFF, NIGHT, dept_count, count_people
 from build_sales_duties import PEOPLE as SALES_ROLES
 import sales_section as KO   # стили и скрипты раздела
 import ko_master as KOM       # сам раздел «Коммерческий отдел» — ko_master/*.html

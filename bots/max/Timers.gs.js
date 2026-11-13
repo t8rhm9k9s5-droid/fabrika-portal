@@ -313,7 +313,8 @@ function tm_core_(kind) { var fn = TM_CORE[kind] ? tm_global_()[TM_CORE[kind]] :
     Текст — не длиннее 3990 знаков (лимит MAX). Тихие часы и праздники проверяет вызывающий (tm_quiet_), владельцу — можно всегда. */
 function tm_send_(kind, payload) {
   var p = payload || {};
-  if (kind === 'chat' && !tm_chatOk_(p.cid)) return { ok: false, perm: true, err: 'группа ' + p.cid + ' выключена или её нет в листе groups — не шлём' };   // F4 C-A7
+  var g0 = kind === 'chat' ? tm_groups_()[String(p.cid)] : null;                // 13.11 (Т. В.: «бот должен везде брать на контроль, где его отметили, во всех группах»):
+  if (kind === 'chat' && !tm_chatOk_(p.cid) && !(p.ctl && g0 && !g0.channel)) return { ok: false, perm: true, err: 'группа ' + p.cid + ' выключена или её нет в листе groups — не шлём' };   // F4 C-A7; отметка бота — явное обращение
   var fn = tm_core_(kind);
   if (!fn) return { ok: false, stub: true, err: 'нет функции ядра ' + (TM_CORE[kind] || kind) };
   var text = String(p.text || '').slice(0, 3990), r;
@@ -505,6 +506,15 @@ function tm_ingest_(ctx) {
   if (!tm_save_('in.json', st)) res.err = 'курсор in.json не записан';
   if (q.more) res.more = true;
   return res;
+}
+/** 13.11: все группы с историей (кроме каналов) — для постановки на контроль отметкой бота и в выключенных группах */
+function tm_histGroupsAll_() {
+  var out = [], G = tm_groups_();
+  try {
+    var it = maxDir_(TM_SUB).getFiles();
+    while (it.hasNext()) { var m = /^hist_(.+)\.json$/.exec(it.next().getName()); if (m && G[m[1]] && !G[m[1]].channel) out.push(m[1]); }
+  } catch (e) { tm_log_('hist', tm_err_(e)); }
+  return out;
 }
 /** группы, по которым есть история (файлы hist_*.json), — только разрешённые для отправки (tm_chatOk_: appr && on, не канал, строка в листе есть; F4 C-A7) */
 function tm_histGroups_() {

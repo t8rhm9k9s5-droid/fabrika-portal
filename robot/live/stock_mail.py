@@ -11,7 +11,7 @@
  • с 10:00, если отчёт за сегодня уже пришёл;
  • в 11:30 — с последними данными и пометкой, что за сегодня отчёта нет.
 Состояние — state/stock_mail.json {'sent': {'ГГГГ-ММ-ДД': {'t', 'res', 'date'}}}."""
-import datetime, json, os
+import json, os
 
 from mx_ctl import HOLIDAYS                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
 SITE_URL = 'https://techfabrikant.ru/stock.html'

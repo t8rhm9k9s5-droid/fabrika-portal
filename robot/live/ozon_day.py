@@ -12,7 +12,7 @@
   • аналитика «заказано» (₽ и шт) — для сверки с отчётом Ozon;
   • вчерашние товары — топ-15 по сумме заказов.
 → st/ozd.bin (ключ портала, без покупателей), state/ozon_day.json. Python 3.6."""
-import datetime, json, os, time
+import datetime, os, time
 
 import ozon as OZ
 import ozon_hist as OH
@@ -88,7 +88,7 @@ def run(L, log, jload, jsave, publish, iso):
         log('  ! ozon вчера/сегодня: пустой ответ за прошедшие дни (было заказов %d) — данные не затёрты' % was)
         if os.path.exists(go):
             try: os.replace(go, go + '.done')
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         return {k: st.get(k) for k in ('state', 't', 'err', 'warn')}
     res = {'v': 1, 't': iso(now), 'ts': time.time(), 'state': 'ok' if ok or not errs else 'ошибка', 'err': '; '.join(errs)[:500] or None,
            'cab': 'ПКС', 'days': days, 'top_y': top}
@@ -98,7 +98,7 @@ def run(L, log, jload, jsave, publish, iso):
                             'days': days, 'top_y': top})
     if os.path.exists(go):
         try: os.replace(go, go + '.done')
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     y = days[1] if len(days) > 1 else {}
     log('ozon вчера/сегодня:', res['state'], '; вчера заказов', (y.get('orders') or {}).get('n'), 'на', (y.get('orders') or {}).get('s'),
         '; продажи', ((y.get('fin') or {}).get('accruals_for_sale')), ('; ' + res['err']) if res['err'] else '')

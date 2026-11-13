@@ -152,7 +152,7 @@ def _replies(L, st, mail_send, log):
                 if re.match(r'^(Опишите задачу|Задача\n)', tx): continue        # промежуточные шаги задачи — в письмо не нужны
                 if w and int(r.get('t', 0)) >= int(w['t0']) - 5: w.setdefault('out', []).append([int(r['t']), tx[:3500]])
         try: os.remove(q)
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     sent = 0
     for chat, w in list(st['wait'].items()):
         last = max([w['t0']] + [x[0] for x in w.get('out', [])])
@@ -166,7 +166,7 @@ def _replies(L, st, mail_send, log):
         st['wait'].pop(chat, None)
     if sent:
         try: _sync_wait(L, st)
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     return sent
 
 

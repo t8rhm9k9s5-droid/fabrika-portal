@@ -63,7 +63,8 @@ def prune(L, log, jload, jsave, keep_days=KEEP_DAYS):
     if not os.path.isdir(root): return None
     groups = {}
     if os.path.exists(idx):
-        for ln in open(idx, encoding='utf-8'):
+        with open(idx, encoding='utf-8') as _fi: _lines = _fi.readlines()
+        for ln in _lines:
             try: r = json.loads(ln)
             except Exception: continue
             ks = [a['sha'] + _ext(a.get('n') or '') for a in r.get('a') or [] if a.get('sha')]
@@ -102,7 +103,7 @@ def run(L, CFG, ingest, log, jload, jsave, budget=110, limit=150):
 def pw_1c(L):
     p = os.path.join(L, 'imap_1c')
     try: os.chmod(p, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try:
         return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
     except Exception: return ''
@@ -124,12 +125,12 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
     if not pw: res['state'] = 'нет пароля ' + who; return res
     if stname != 'arch.json':                                 # общий потолок места на диске — по основному архиву
         try: st['bytes'] = max(st.get('bytes') or 0, (jload('arch.json', {}) or {}).get('bytes') or 0)
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try: res['prune'] = prune(L, log, jload, jsave)            # 12.11.2026: файлы — не дольше KEEP_DAYS дней
     except Exception as e: res['prune'] = {'err': e.__class__.__name__}
     root = os.path.join(L, 'arch', 'files'); os.makedirs(root, exist_ok=True)
     try: os.chmod(os.path.join(L, 'arch'), 0o700)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     idx = os.path.join(L, 'state', 'arch_index.jsonl')
     t0 = time.time()
     lk = IT.imap_lock(L, 30) if host == IT.HOST else None   # 30.10.2026 аудит P17: общий замок входа в itm@ (1c@ — другой ящик, без замка)
@@ -233,7 +234,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
             pass
         if lk: lk.close()
     try: os.chmod(idx, 0o600)
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     st['t'] = res['t']; st['state'] = res.get('state')
     jsave(stname, st)
     res.update({'total': st['n'], 'stored': st['files'], 'mb': round(st['bytes'] / 1048576, 1),

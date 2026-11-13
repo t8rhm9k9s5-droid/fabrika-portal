@@ -8,7 +8,7 @@
   SCHEME_FN   — {ФИО: [краткие функции из блок-схемы]}
   TABLES      — {"Графики работы ОП": {...}, "Ответы и решения": {...}, "Подрядчики ОП": {...}}
 """
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os, re
 from html.parser import HTMLParser
 

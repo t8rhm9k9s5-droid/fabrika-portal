@@ -2,7 +2,7 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-import subprocess, json, math, os, cv2, numpy as np
+import subprocess, json, os, cv2, numpy as np
 from concurrent.futures import ThreadPoolExecutor
 os.environ['TESSDATA_PREFIX']='/home/claude/tessdata'
 src=cv2.imread('/home/claude/work/img/topo300-45.png',0)

@@ -3,7 +3,7 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 from pyproj import Transformer, CRS
-import math, json
+import math
 MSK='+proj=tmerc +lat_0=0 +lon_0=38.48333333333 +k=1 +x_0=1250000 +y_0=-5612900.56 +ellps=krass +towgs84=23.57,-140.95,-79.8,0,0.35,0.79,-0.22 +units=m +no_defs'
 t=Transformer.from_crs(CRS.from_proj4(MSK),'EPSG:4326',always_xy=True)
 # MSK: X north, Y east -> proj easting=Y, northing=X

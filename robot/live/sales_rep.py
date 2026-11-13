@@ -12,7 +12,7 @@
  2) ящик itm@ — только чтение (EXAMINE, BODY.PEEK): письма с адресов офисов продаж с 01.10, раз в 30 минут;
  3) по каждому офису продаж: ежедневные отчёты (вечернее сообщение менеджера со списком клиентов, правило группы с 07.10),
     сдача по рабочим дням, письма → st/sales.bin (зашифровано, как st/ls.bin)."""
-import datetime, email, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
+import datetime, email, email.policy, email.utils, imaplib, json, os, re, ssl, time
 import mx_ctl as MC, itm as IT
 
 SINCE = datetime.date(2026, 10, 1)
@@ -96,7 +96,7 @@ def max_part(L, st, res):
                     for x in json.load(_cg2_file_1).get('messages') or []:
                         mid = str(x.get('mid') or '')
                         if mid: arch[mid] = {'ts': int(x.get('ts') or 0), 'mid': mid, 'uid': x.get('uid'), 'name': x.get('from') or '', 'bot': bool(x.get('bot')), 'text': str(x.get('text') or '')}
-            except Exception: pass
+            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     code, j = MC.api(token, 'GET', '/messages', {'chat_id': cid, 'count': 100})
     if code == 200:
         for m in (j.get('messages') or []):

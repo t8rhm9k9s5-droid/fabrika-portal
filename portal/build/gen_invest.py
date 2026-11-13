@@ -7,7 +7,7 @@
 на участок → снабжение → выпуск и отгрузка) и косвенные признаки (клиент, договор и оригинал, отчёты офисов, сопоставимость заказа).
 Данные — build/invest/cases.json (ведёт Claude по выгрузкам 1С и материалам дела; источники почты на портале не пишем) → build/invest_frag.html,
 вставляется gen_staff.py после «Продажи, выпуск и план по линиям»."""
-import json, html
+import html
 from _cg1_build_io import read_json as _cg1_read_json
 B = '/home/claude/build/'
 D = _cg1_read_json(B + 'invest/cases.json', encoding='utf-8')

@@ -9,7 +9,7 @@
   ko_master/shapka_i_podval.txt              — шапка и подвал отдельной страницы
 Правка функционала = правка ОБОИХ html-файлов одинаково (проверка: python src/proverka.py).
 sales_section.py даёт только общие стили и скрипты раздела; его данные (редакция 24.10) на сайты больше не идут."""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os
 _SRC = os.path.dirname(os.path.abspath(__file__))
 _D = os.path.join(_SRC, "ko_master")

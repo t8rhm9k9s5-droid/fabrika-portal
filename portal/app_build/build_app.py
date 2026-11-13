@@ -8,7 +8,7 @@
            offline after the first sign-in (service worker). Only pages of ONLINE_HOST stay inside the app (and see the file-saving bridge);
            every other link opens in the browser. Asked for by the user on 22.10.2026 (APK that pulls the data from GitHub, with saving files).
    lite: everything but the archive documents (PDF scans); full: with phone copies of the archive (arch_small/)."""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os, re, sys, json, shutil, subprocess, glob
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'

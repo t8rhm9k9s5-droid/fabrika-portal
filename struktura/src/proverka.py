@@ -3,7 +3,7 @@
 1. Раздел «Коммерческий отдел» хранится в двух HTML (ko_master/): карточки сотрудников, блок-схема и таблицы
    в них должны совпадать. Расхождение — ошибка: правку внесли только в один файл.
 2. ФИО, почта и телефоны сотрудников коммерческого отдела в разделе и в data_fabrikant.py должны сходиться — иначе предупреждение."""
-from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+from _cg1_file_io import read_file as _cg1_read_file
 import os, re, sys
 import data_fabrikant as D
 import ko_data as K

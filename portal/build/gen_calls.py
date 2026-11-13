@@ -13,7 +13,7 @@
 Сторожа поимённо с телефонами сюда не входят (решение пользователя не принято); Имя1 С. А. — без подробностей.
 Пишет build/calls_frag.html (фрагмент; каркас добавляет build_site.py) и build/calls_search.json (строки общего поиска)."""
 from _cg1_build_io import read_json as _cg1_read_json
-import json, re, html, unicodedata
+import json, re
 
 B = '/home/claude/build/'
 OS = '/home/claude/fabrika/src/orgstruktura/out/'

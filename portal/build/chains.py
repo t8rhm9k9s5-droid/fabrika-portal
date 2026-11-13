@@ -3,7 +3,7 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 from _cg1_build_io import read_json as _cg1_read_json
-import json, math, numpy as np, cv2, subprocess, os, collections
+import json, numpy as np, os, collections
 os.environ['TESSDATA_PREFIX']='/home/claude/tessdata'
 S=150/72
 it=_cg1_read_json('filled.json')

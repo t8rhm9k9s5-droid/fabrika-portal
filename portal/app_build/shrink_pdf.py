@@ -4,7 +4,7 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """Phone copies of the archive documents: raster images inside the PDFs downsampled to <= TARGET ppi and stored as JPEG;
 text, vector drawings and 1-bit scans are left as they are. Usage: shrink_pdf.py <in.pdf> <out.pdf>"""
-import sys, io, re, subprocess, pikepdf
+import sys, io, subprocess, pikepdf
 from pikepdf import Name, PdfImage
 from PIL import Image
 TARGET, Q = 110, 52
@@ -23,7 +23,7 @@ smasks = set()
 for o in pdf.objects:
     if isinstance(o, pikepdf.Stream) and o.get('/Subtype') == '/Image' and '/SMask' in o:
         try: smasks.add(o.SMask.objgen[0])
-        except Exception: pass
+        except Exception: pass  # необязательный шаг: сбой не мешает сборке
 done = 0
 for o in pdf.objects:
     if not isinstance(o, pikepdf.Stream) or o.get('/Subtype') != '/Image': continue

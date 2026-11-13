@@ -14,7 +14,7 @@
     тот же файл за день перезаписывается). Отправляется только если содержимое изменилось.
   • Ключ k_check знают только хостинг и Claude; ключи сайта и владельца не нужны. Людей и тексты писем в сводку не кладём — только итоги и даты.
 Читает Claude: fabrika/tasks/sverka.py."""
-import base64, datetime, fcntl, hashlib, hmac, json, os, re, secrets, time
+import base64, datetime, fcntl, hashlib, hmac, json, os, re, secrets
 
 MSK = datetime.timezone(datetime.timedelta(hours=3))
 SUB = 'Сверка'
@@ -176,7 +176,7 @@ def letters(state_dir, recv, days=DAYS_BACK):
                         if k == 'pok' and not any('покупн' in str(a.get('n') or '').lower() for a in r.get('a') or []): break   # как omts_last()
                         out.append({'k': 'omts:' + k, 'day': t[:10], 'got': t[:16], 'subj': s[:120], 'fr': r.get('fr'), 'mid': r.get('id') or r.get('mid')})
                         break
-    except Exception: pass
+    except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     out.sort(key=lambda x: (str(x.get('got') or ''), str(x.get('k') or '')))
     return out
 
