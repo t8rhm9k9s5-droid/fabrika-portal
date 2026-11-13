@@ -6,6 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="assets/site.css">
 <style>
+.fhome #pulse li[hidden]{display:none!important}.fhome .pk-x{display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12.5px;line-height:1.3;color:var(--p-fg2)}.fhome .pk-x b{color:var(--p-fg);font-weight:700}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -34,15 +35,16 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     </div>
   </section>
 
-  <div class="fh-cap"><h2 id="pulseH">Пульс фабрики — контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество → отзывы клиентов</p></div>
+  <div class="fh-cap"><h2 id="pulseH">Пульс фабрики — контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество и отзывы → онлайн</p></div>
   <ul class="pk-grid" id="pulse" aria-labelledby="pulseH">
     <li><a class="pk" id="pkSales" href="sales.html#s1c" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Продажи</span><b class="pk-v">…</b><span class="pk-s">сумма продаж</span></a></li>
     <li><a class="pk" id="pkProd" href="staff.html#pf" style="--c:var(--ic-prod)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20V10l6 4V10l6 4V6l6 4v10z"/></svg>Выпуск · план/факт</span><b class="pk-v">…</b><span class="pk-s">отчёты выпуска и план ПДО</span></a></li>
     <li><a class="pk" id="pkAllwh" href="stock.html#s-whs" style="--c:var(--ic-stock)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 12 3l9 5v11H3z"/><path d="M8 19v-6h8v6"/></svg>Склад</span><b class="pk-v">…</b><span class="pk-s">все склады и филиалы — 1С «Товары на складах»</span></a></li>
     <li><a class="pk" id="pkOmts" href="omts.html#s-hist" style="--c:var(--ic-omts)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/></svg>ОМТС · снабжение</span><b class="pk-v">…</b><span class="pk-s">загружаю отчёт ОМТС</span></a></li>
-    <li><a class="pk" id="pkRecl" href="sales.html#recl" style="--c:var(--ic-docs)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Качество</span><span class="pk-v">—</span><span class="pk-s">рекламации и брак</span><span class="pk-tag">1С</span></a></li>
-    <li><a class="pk" id="pkRev" href="sales.html#rev" style="--c:var(--ic-calls)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>Отзывы клиентов</span><b class="pk-v">…</b><span class="pk-s">отзывы покупателей Ozon</span><span class="pk-tag">Ozon</span></a></li>
+    <li><a class="pk" id="pkRecl" href="sales.html#recl" style="--c:var(--ic-docs)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Качество и отзывы</span><span class="pk-v">—</span><span class="pk-s">рекламации и брак</span><span class="pk-tag">1С</span></a></li>
+    <li><a class="pk" id="pkOnl" href="sales.html#online" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Онлайн · наши модели</span><b class="pk-v">…</b><span class="pk-s">мониторинг сайтов</span></a></li>
   </ul>
+  <div hidden><a class="pk" id="pkRev" href="sales.html#rev" style="--c:var(--ic-calls)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>Отзывы клиентов</span><b class="pk-v">…</b><span class="pk-s">отзывы покупателей Ozon</span><span class="pk-tag">Ozon</span></a></div>
 
   <div class="fh-cols">
     <section class="fh-attn" aria-labelledby="attnH">
@@ -85,7 +87,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var a = document.getElementById(id); if (!a) return;
     a.setAttribute('data-tone', t || '');
     a.querySelector('.pk-v').innerHTML = v; a.querySelector('.pk-s').textContent = sub;
-    var b = a.querySelector('.pk-bar'); if (b) b.remove(); b = a.querySelector('.pk-gl'); if (b) b.remove();
+    var b = a.querySelector('.pk-bar'); if (b) b.remove(); b = a.querySelector('.pk-gl'); if (b) b.remove(); b = a.querySelector('.pk-x'); if (b) b.remove();
     if (extra) a.insertAdjacentHTML('beforeend', extra);
   }
   function mark(id, M0) { var a = document.getElementById(id); if (a && M0) { a.setAttribute('data-m', M0.k); a.setAttribute('data-mv', M0.v == null ? '' : String(M0.v)); a.setAttribute('data-md', M0.date || ''); a.setAttribute('data-src', M0.src || ''); } }
@@ -108,7 +110,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     // 02.11.2026, Т. В.: итог прошлого месяца, текущий месяц на дату и выполнение плана; план — план офисов продаж, процент — только по факту офисов
     var PL = M.snap('plan') || {}, yy = String(R.ym).slice(0, 4), ym = function (m) { return yy + '-' + String(m).padStart(2, '0'); };
     function plt(m) { var pv = PL[ym(m)], fv = (PL.fact || {})[ym(m)]; if (!pv) return ''; return fv ? ' · офисы ' + pc(fv, pv) + '% плана' + ((PL.fact_to || {})[ym(m)] ? ' по ' + PL.fact_to[ym(m)] : '') : ' · план офисов ' + mln(pv) + ' млн, факт офисов ещё не пришёл'; }
-    card('pkSales', F.mln2(R.v) + '<small>млн ₽</small>', MN[R.m - 1] + ' ' + R.when + ' · 1С, с НДС' + plt(R.m) + (R.prev ? ' · итог ' + MN[R.prev.m - 1].replace(/ь$/, 'я').replace(/й$/, 'я').replace(/т$/, 'та') + ' ' + mln(R.prev.v) + ' млн' + plt(R.prev.m) : ''), '', bars);
+    card('pkSales', F.mln2(R.v) + '<small>млн ₽</small>', MN[R.m - 1] + ' ' + R.when + plt(R.m), '', bars);   // 13.11.2026, Т. В.: «карточка продажи перегружена» — без итога прошлого месяца
     mark('pkSales', R); return R;
   }
   // ---------- 2. скорость поставки: просроченные позиции ОМТС (рассылки 1С) ----------
@@ -135,11 +137,13 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     }
     var per = (R.daily ? mn + ', ' + R.dn + (R.wd ? ' из ' + R.wd : '') + ' р. д. с отчётами' : mn + ', «План-факт» ПДО') + (R.last ? ' · по ' + dd(R.last) : '');
     G = G.slice().sort(function (a, b) { return (b.v == null ? -1 : b.v) - (a.v == null ? -1 : a.v) || (b.p || 0) - (a.p || 0); });   // 03.11, Т. В.: по убыванию
-    var list = '<span class="pk-gl">' + G.map(function (g) {
+    // 13.11.2026, Т. В.: «все 6 карточек одного размера» — в карточке только группы ниже 90 %, остальные одной строкой (весь список — во всплывающей подсказке и в разделе)
+    var low = G.filter(function (g) { return g.v != null && g.v < 90; }).sort(function (a, b) { return a.v - b.v; }), okN = gv.length - low.length;
+    var list = '<span class="pk-gl">' + low.slice(0, 3).map(function (g) {
       var t = g.v != null ? tone(g.v) : '', val = g.v != null ? g.v + '%' : (g.p ? 'нет факта' : (g.f != null ? 'нет плана' : '—'));
       return '<span data-tone="' + t + '" data-g="' + esc(g.n) + '" title="' + esc(g.n + (g.n === 'Кресла руководителя' ? ' (вместе с «Шеффилд»)' : '') + ': ' + (g.f != null ? n(g.f) : '—') + ' шт из ' + (g.p ? n(g.p) : '—') + ' по плану') + '"><b>' + esc(g.s) + '</b><i>' + val + '</i></span>';
-    }).join('') + '</span>';
-    card('pkProd', gv.length ? R.ok + '<small>из ' + gv.length + ' групп ≥ 90%</small>' : '—', '% = выпуск ÷ план группы · ' + per, gv.length ? tone(R.worst) : 'none', list);
+    }).join('') + (okN > 0 ? '<span data-tone="ok"><b>' + (low.length ? 'остальные ' + okN : 'все ' + okN) + '</b><i>≥ 90%</i></span>' : '') + '</span>';
+    card('pkProd', gv.length ? (gv.length - R.ok) + '<small>из ' + gv.length + ' групп &lt; 90%</small>' : '—', per, gv.length ? tone(R.worst) : 'none', list + PX);   // 13.11.2026, Т. В.: «жирные 4 из 6 групп меньше 90%»
     document.getElementById('pkProd').title = 'Выпуск ' + mn + ' по группам (у каждой свой план; «Шеффилд» — в «Кресла руководителя»): ' + G.map(function (g) { return g.n + ' ' + (g.f != null ? n(g.f) : '—') + '/' + (g.p ? n(g.p) : '—') + (g.v != null ? ' (' + g.v + '%)' : ''); }).join('; ');
     mark('pkProd', { k: 'prod', v: R.ok, date: R.date, src: R.src }); return R;
   }
@@ -151,7 +155,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     a.href = K.href;
     if (K.kind === 'all') {
       var A = K.all, T = A.tot, ch = T[3] - T[0];
-      card('pkAllwh', nf(T[3]) + '<small>шт</small>', 'все склады и ОП · Рязань ' + nf(A.rz) + ' · ОП ' + nf(A.op) + (A.brak ? ' · брак ' + nf(A.brak[3]) : '') + ' · за месяц ' + (ch > 0 ? '+' : '') + nf(ch) + ' · на ' + dd(A.date) + (K.stale ? ' (отчёт 1С за месяц, новее нет)' : '') + (K.rz ? ' · ежедневный отчёт «Складские остатки» (только склады ГП Рязани): ' + n(K.rz.v) + ' на ' + dd(K.rz.date) : ''), K.stale ? 'warn' : '');
+      card('pkAllwh', nf(T[3]) + '<small>шт</small>', 'все склады и ОП · за месяц ' + (ch > 0 ? '+' : '') + nf(ch) + ' · на ' + dd(A.date) + (K.rz ? ' · ГП Рязань ' + n(K.rz.v) + ' на ' + dd(K.rz.date) : ''), K.stale ? 'warn' : '');
       a.title = 'Отчёт 1С «Товары на складах» на ' + dd(A.date) + ': конечный остаток ' + nf(T[3]) + ' шт (начало ' + nf(T[0]) + ', приход ' + nf(T[1]) + ', расход ' + nf(T[2]) + '). По филиалам: ' +
         (A.g || []).map(function (g) { return (Array.isArray(g) ? g[0] : g.n) + ' ' + nf(Array.isArray(g) ? g[4] : (g.v || [])[3]); }).join('; ') + (A.brak ? '. В том числе брак и рекламации ' + nf(A.brak[3]) + ' шт.' : '.');
     } else {
@@ -177,7 +181,11 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var Q = M.get('recl'); if (!Q) { card('pkRecl', '—', 'отчёт 1С по рекламациям не загружен', 'none'); return null; }
     var a = document.getElementById('pkRecl');
     // 04.11.2026, Т. В. (опрос): крупно — всего незакрытых (как в «Продажи → Рекламации» и «Требует внимания»), месяц и ущерб — в подписи
-    card('pkRecl', n(Q.all), 'незакрытых всего · за ' + MN[+Q.m.slice(5) - 1].toLowerCase() + ' — ' + n(Q.n) + ' · ущерб за месяц ' + (Q.sum >= 1e6 ? mln(Q.sum) + ' млн' : n(Q.sum / 1000) + ' тыс') + ' ₽', Q.old30 ? 'warn' : 'ok');
+    // 13.11.2026, Т. В.: «качество соединить с карточкой отзывы клиентов — две цифры»: рекламации 1С + оценка маркетплейсов
+    var RV = M.get('rev'), rv = RV && RV.mode === 'export' && RV.M ? RV.M : null;
+    card('pkRecl', n(Q.all) + (rv ? '<small> · </small>' + String(rv.avg.toFixed(1)).replace('.', ',') + '<small>★</small>' : ''),
+      'рекламаций незакрыто · за ' + MN[+Q.m.slice(5) - 1].toLowerCase() + ' — ' + n(Q.n) + ' · ущерб ' + (Q.sum >= 1e6 ? mln(Q.sum) + ' млн' : n(Q.sum / 1000) + ' тыс') + ' ₽' +
+      (rv ? ' · отзывы маркетплейсов: оценка ' + String(rv.avg.toFixed(1)).replace('.', ',') + ', не обработано ' + n(rv.unproc) + (rv.neg ? ', плохих ' + n(rv.neg) : '') : ''), Q.old30 || (rv && rv.neg_unproc) ? 'warn' : 'ok');
     var g = a.querySelector('.pk-tag'); if (g) g.textContent = (Q.close_med != null ? 'закрываем за ' + n(Q.close_med) + ' дн. · ' : Q.age_med != null ? 'открыты ~' + n(Q.age_med) + ' дн. · ' : '') + 'на ' + dd(Q.asof);
     a.title = 'Рекламации из отчёта 1С «Закрыта = Нет» на ' + dd(Q.asof) + '. Всего незакрытых ' + n(Q.all) + ', из них старше 30 дней — ' + n(Q.old30) + '. За месяц: ' + n(Q.n) + ' док., ' + n(Q.q) + ' ед.; ущерб — сумма из 1С, указана в ' + n(Q.sum_n) + ' из ' + n(Q.n) + ' рекламаций месяца.';
     mark('pkRecl', Q); return Q;
@@ -203,8 +211,29 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     if (g) g.textContent = 'Ozon' + (V.stale ? ' · данные прошлого часа' : '');
     mark('pkRev', R); return V;
   }
+  // 13.11.2026, Т. В.: «Выпуск недогружен данными… по гальванике добавить снизу отдельно… загрузка линии в ноябре… незакрытые заказы»
+  var PX = '', PXG = '', PXB = '';
+  function pxSet() { PX = (PXG || PXB) ? '<span class="pk-x">' + PXG + PXB + '</span>' : ''; }
+  function galvLine(G) {
+    if (!G || !G.m || !G.m.length) return '';
+    var cur = G.cur || null, r = G.m[G.m.length - 1], m = r[0], p = r[1], f = r[2], part = cur && cur[0] === m && cur[1] < cur[2];
+    var pt = part ? Math.round(p * cur[1] / cur[2]) : p, v = pt ? Math.round(f / pt * 100) : null;
+    var ym = String(G.src || '').slice(0, 7), DL = (G.d || []).filter(function (x) { return x[1] > 0; }), avg = DL.length ? DL.reduce(function (a, x) { return a + x[1]; }, 0) / DL.length : null;
+    var load = avg != null ? Math.round(avg / (G.norm || 165) * 100) : null;
+    return '<span>Гальваника: <b>' + (v == null ? '—' : v + '%') + '</b> плана' + (load != null ? ' · загрузка <b>' + load + '%</b>' : '') + '</span>';
+  }
+  (function galvWait(k) {
+    if (window.T14Live && T14Live.bin) { T14Live.bin('pf.bin').then(function (D) { if (D && D.galv) { PXG = galvLine(D.galv); pxSet(); try { render(); } catch (eR) { /* следующий цикл */ } } }).catch(function () {}); return; }
+    if (k < 40) setTimeout(function () { galvWait(k + 1); }, 250);
+  })(0);
+  // 13.11.2026, Т. В.: «карточки 2 в ряд — всего шесть»: шестая — онлайн-продажи (наши модели в интернете, сводка мониторинга на момент сборки)
+  var ONS = __ONLSUM__;
+  function onlTile() {
+    if (!ONS || !ONS.total) { card('pkOnl', '—', 'мониторинг сайтов ещё не собран', 'none'); return; }
+    card('pkOnl', n(ONS.total) + '<small>предложений</small>', 'на ' + n(ONS.sites) + ' сайтах · проверено моделей ' + n(ONS.checked) + (ONS.low ? ' · ниже РРЦ — ' + n(ONS.low) : '') + (ONS.t ? ' · на ' + dd(ONS.t) : ''), ONS.low ? 'warn' : 'ok');
+  }
   function render() {
-    sales(); var Q = recl();
+    sales(); var Q = recl(); onlTile();
     var O = omts(), R = prod(), K = M.get('stockRz') || { neg: [] }, F2 = M.get('offices') || { lag: [], cp: null }, rows = [], badge = {}, V = revTile();
     stockTile();
     if (V && V.neg_new) rows.push(row('sales.html#rev', 'chat', 'var(--ic-calls)', 'Ozon: плохие отзывы без ответа', 'оценка ≤ 3★ — ' + n(V.neg_new) + (V.oldest_new ? ' · самый ранний без ответа от ' + dd(V.oldest_new) : ''), n(V.neg_new), 'bad'));

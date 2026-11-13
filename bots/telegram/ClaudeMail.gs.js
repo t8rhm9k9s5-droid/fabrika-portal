@@ -4,7 +4,7 @@
 //   mailsearch {q, max?}                         → {threads: [{id, n, last, subject, from, snippet}]}
 //   mailget    {thread}                          → {messages: [{id, date, from, to, cc, subject, text, att: [{i, name, size, type}]}]}
 //   mailatt    {msg, i}                          → {name, type, b64}
-//   mailsend   {to, cc?, subject, text?, html?, att?: [{name, type, b64}], draft?} → {ok, draft?}
+//   mailsend   {to, cc?, subject, text?, html?, att?: [{name, type, b64} | {name, drive}], draft?} → {ok, draft?}
 //   mailreply  {thread, text?, html?, cc?, all?, att?, draft?}               → ответ на последнее письмо треда
 // Адресаты — только @fabrikant.su, @techfabrikant.ru и адреса из свойства CM_EXTRA (через запятую). Отправка — от имени itm@ (псевдоним),
 // если он настроен. Не больше CM_DAY_LIMIT писем в сутки. В журнал g4_log — только тема и число адресатов, без текста.
@@ -58,7 +58,9 @@ function cm_send_(op, d) {
   var bad = cm_addrOk_([d.to, d.cc].filter(Boolean).join(','));
   if (bad.length) return { ok: false, error: 'адрес вне разрешённых: ' + bad.join(', ') };
   var opt = {}, atts = [];
-  (d.att || []).forEach(function (a) { atts.push(Utilities.newBlob(Utilities.base64Decode(String(a.b64 || '')), String(a.type || 'application/octet-stream'), String(a.name || 'файл'))); });
+  // 13.11.2026: большие вложения (подпись запроса ≤ 200 КБ) — файлом с Диска 1c@: {drive: id, name}
+  (d.att || []).forEach(function (a) { atts.push(a.drive ? DriveApp.getFileById(String(a.drive)).getBlob().setName(String(a.name || 'файл'))
+    : Utilities.newBlob(Utilities.base64Decode(String(a.b64 || '')), String(a.type || 'application/octet-stream'), String(a.name || 'файл'))); });
   if (atts.length) opt.attachments = atts;
   if (d.cc) opt.cc = String(d.cc);
   if (d.html) opt.htmlBody = String(d.html);

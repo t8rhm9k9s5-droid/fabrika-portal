@@ -43,6 +43,7 @@ def _ext(n):
 # «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
+SVC_FROM = {'user10@example.org': 'Сторожевая служба (Сотрудник34 С. В.)'}   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
 PRUNE_DRY = True
 _MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
@@ -184,6 +185,14 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                     row = {'f': label or name, 'u': u, 't': t, 'fr': frm, 'n': fname[:80], 's': subj[:240], 'sz': size, 'a': [],
                            'mid': hashlib.sha256(str(msg['Message-ID'] or (frm + subj + t)).encode('utf-8')).hexdigest()[:16]}
                     if full is None: row['big'] = True
+                    if full and frm in SVC_FROM:                   # 13.11.2026: письма служб (расходы транспорта, обходы охраны) — начало текста для портала (svc_mail.py)
+                        try:
+                            b_ = msg.get_body(preferencelist=('plain', 'html'))
+                            tx = b_.get_content() if b_ else ''
+                            tx = re.sub(r'<[^>]+>', ' ', tx) if b_ is not None and b_.get_content_subtype() == 'html' else tx
+                            tx = re.sub(r'(?im)^\s*(отправлено из|--\s*$|sent from).*', '', tx)
+                            row['x'] = re.sub(r'\s+', ' ', tx).strip()[:400]
+                        except Exception: pass  # необязательный шаг: сбой не мешает работе робота
                     for p in msg.walk():
                         fn = p.get_filename()
                         if not fn: continue

@@ -791,6 +791,24 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     var P = O.prices || [], low = P.filter(function (p) { return p.p && p.r && p.p / p.r - 1 < -thr; }).length, hi = P.filter(function (p) { return p.p && p.r && p.p / p.r - 1 > thr; }).length;
     h += '<p class="ihdr">Цены у продавцов на ' + esc((O.t || '').slice(8, 10) + '.' + (O.t || '').slice(5, 7)) + '</p><div class="igroup"><p class="ifoot" style="margin:10px 16px">Проверено ' + P.length + ' цен: ниже РРЦ больше чем на ' + Math.round(thr * 100) + '% — ' + low + ', выше — ' + hi + '. МОЦ пока не утверждена; РРЦ есть только для позиций прайса ВсеИнструменты.</p><div class="mtx"><table style="min-width:0"><thead><tr><th>модель</th><th>продавец</th><th>цена</th><th>РРЦ</th><th>статус</th></tr></thead><tbody>' +
       P.map(function (p) { var s2 = st(p); return '<tr><td>' + esc(p.m) + '</td><td>' + esc(p.s) + '</td><td>' + (p.p ? n(p.p) : '—') + '</td><td>' + (p.r ? n(p.r) : '—') + '</td><td style="color:' + s2[1] + '">' + s2[0] + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+    // 13.11.2026, Т. В. 12.11: «штудировать Рунет… наши модели на сайтах производителей и продавцов… сопоставлять с поставками из 1С… ежедневная статистика» — блок «В интернете» (online.json → web; work/online_watch/build_watch.py)
+    var OW = O.web;
+    if (OW && OW.total) {
+      var wt = function (hd, rows) { return '<div class="mtx"><table style="min-width:0"><thead><tr>' + hd.map(function (x) { return '<th>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>'; };
+      var wr = function (a) { return '<tr>' + a.map(function (x) { return '<td>' + x + '</td>'; }).join('') + '</tr>'; };
+      var wl = function (r) { return r.u ? '<a href="' + esc(r.u) + '" target="_blank" rel="noopener">' + esc(r.site) + '</a>' : esc(r.site); };
+      var WD = OW.days || [], last = WD.length ? WD[WD.length - 1] : null;
+      h += '<p class="ihdr">В интернете · ' + esc((OW.t || '').slice(8, 10) + '.' + (OW.t || '').slice(5, 7)) + '</p><div class="igroup"><p class="ifoot" style="margin:10px 16px">Найдено страниц с нашими моделями: <b>' + n(OW.total) + '</b> на ' + n(OW.sites || (OW.by_site || []).length) + ' сайтах' +
+        (last ? ' · сегодня проверено позиций ' + n(OW.checked || 0) + ', новых продавцов ' + n(last[2]) : '') + ' · ниже РРЦ больше 10% — ' + (OW.below || []).length + ' · без наших отгрузок — ' + (OW.no_ship || []).length + ' · под другим названием — ' + (OW.other_name || []).length + '. ' + esc(OW.note || '') + '</p>';
+      if (OW.below && OW.below.length) h += '<details class="rep" open><summary><b>Ниже РРЦ</b> · ' + OW.below.length + '</summary>' + wt(['продавец', 'модель, ШК', 'цена', 'РРЦ', 'откл.'], OW.below.map(function (r) { return wr([wl(r), esc(r.m) + '<br><span class="muted">' + esc(r.bc) + '</span>', n(r.p), n(r.rrc), '<b style="color:#ff3b30">' + Math.round(100 * r.dev) + '%</b>']); })) + '</details>';
+      if (OW.other_name && OW.other_name.length) h += '<details class="rep"><summary><b>Под другим названием</b> · ' + OW.other_name.length + '</summary>' + wt(['продавец', 'модель, ШК', 'цена'], OW.other_name.map(function (r) { return wr([wl(r), esc(r.m) + '<br><span class="muted">' + esc(r.bc) + '</span>', r.p ? n(r.p) : '—']); })) + '</details>';
+      if (OW.no_ship && OW.no_ship.length) h += '<details class="rep"><summary><b>Наших отгрузок нет</b> · ' + OW.no_ship.length + '</summary>' + wt(['продавец', 'модель', 'цена'], OW.no_ship.map(function (r) { return wr([wl(r), esc(r.m), r.p ? n(r.p) : '—']); })) + '<p class="ifoot" style="margin:8px 16px 12px">Не наши клиенты по листу «Продавцы»: товар получают через посредников — уточнить у ОП.</p></details>';
+      if (OW.new && OW.new.length) h += '<details class="rep"><summary><b>Новые продавцы за день</b> · ' + OW.new.length + '</summary>' + wt(['продавец', 'модель', 'цена'], OW.new.map(function (r) { return wr([wl(r), esc(r.m), r.p ? n(r.p) : '—']); })) + '</details>';
+      if (OW.by_model && OW.by_model.length) h += '<details class="rep"><summary><b>По моделям</b> · ' + OW.by_model.length + '</summary>' + wt(['модель', 'сайтов', 'мин. цена'], OW.by_model.map(function (m) { return wr([esc(m[0]), n(m[1]), m[2] ? n(m[2]) : '—']); })) + '</details>';
+      if (OW.by_site && OW.by_site.length) h += '<details class="rep"><summary><b>По сайтам</b> · ' + OW.by_site.length + '</summary>' + wt(['сайт', 'позиций', 'ниже РРЦ'], OW.by_site.map(function (s) { return wr([esc(s[0]), n(s[1]), s[2] ? '<b style="color:#ff3b30">' + n(s[2]) + '</b>' : '0']); })) + '</details>';
+      if (WD.length > 1) h += '<details class="rep"><summary><b>По дням</b></summary>' + wt(['дата', 'всего страниц', 'новых продавцов'], WD.slice().reverse().map(function (d) { return wr([esc(d[0].slice(8, 10) + '.' + d[0].slice(5, 7)), n(d[1]), n(d[2])]); })) + '</details>';
+      h += '</div>';
+    }
     // 11.11.2026, Т. В.: «по артикулу и визуалу … перекопаем интернет … сравним с конкурентами … по международной практике» — build/online/comp.json (work/online/comp_build.py), сливает build_site.py
     var tbl = function (hd, rows) { return '<div class="mtx"><table style="min-width:0"><thead><tr>' + hd.map(function (x) { return '<th>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>'; };
     var td = function (a) { return '<tr>' + a.map(function (x) { return '<td>' + x + '</td>'; }).join('') + '</tr>'; };
@@ -1039,19 +1057,28 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   function secMe() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function secLogged() { var p = secMe(); return !!(p && p.st !== 'pending' && window.T14Acct && T14Acct.tok && T14Acct.tok()); }
   function secFlag() { try { var f = JSON.parse(localStorage.getItem('t14.sec') || 'null'), p = secMe(); return !!(f && p && f.id === p.id); } catch (e) { return false; } }
+  // 13.11.2026, Т. В.: «почему этот раздел не прогружен сразу, а загружается при открытии» — последний ответ бота хранится на устройстве
+  //   (только у вошедшего лично, привязан к его id, 24 ч): раздел открывается сразу, свежие данные бот догружает фоном.
+  var SEC_TTL = 7 * 24 * 3600e3;   // показ — из сохранённого до 7 дней; свежее бот догружает фоном (здесь и на любой странице — acct.js secWarm)
+  function secCacheGet(part) { try { var p = secMe(), c = JSON.parse(localStorage.getItem('t14.secc.' + part) || 'null'); return c && p && c.id === p.id && Date.now() - c.t < SEC_TTL ? c.data : null; } catch (e) { return null; } }
+  function secCachePut(part, data) { try { var p = secMe(); if (p) localStorage.setItem('t14.secc.' + part, JSON.stringify({ id: p.id, t: Date.now(), data: data })); } catch (e) {} }
+  function secCacheDrop() { ['org', 'kos', 'ko', 'sim'].forEach(function (k) { try { localStorage.removeItem('t14.secc.' + k); } catch (e) {} }); }
+  var SEC_HYD = false;
+  function secHydrate() { if (SEC_HYD || !secLogged()) return; SEC_HYD = true; ['org', 'kos', 'ko', 'sim'].forEach(function (k) { var d = !SEC[k] && secCacheGet(k); if (d) { SEC[k] = d; if (k === 'ko') KO = d; } }); }
   function secLoad(part, ask) {
     if (!secLogged()) { SECR[part] = { err: 'login' }; return route(); }
     if (SECR[part] && SECR[part].busy) return;
     SECR[part] = { busy: true }; route();
     T14Acct.api('sec', { tok: T14Acct.tok(), part: part, ask: ask ? 1 : 0 }).then(function (r) {
       SECR[part] = r || {};
-      if (r && r.data) { SEC[part] = r.data; try { var p = secMe(); if (p) localStorage.setItem('t14.sec', JSON.stringify({ id: p.id, t: Date.now() })); } catch (e) {} if (part === 'ko') KO = r.data; }
-      else if (r && r.access === false) { try { localStorage.removeItem('t14.sec'); } catch (e) {} }
+      if (r && r.data) { SEC[part] = r.data; secCachePut(part, r.data); try { var p = secMe(); if (p) localStorage.setItem('t14.sec', JSON.stringify({ id: p.id, t: Date.now() })); } catch (e) {} if (part === 'ko') KO = r.data; }
+      else if (r && r.access === false) { secCacheDrop(); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { delete SEC[k]; }); KO = null; try { localStorage.removeItem('t14.sec'); } catch (e) {} }
       route();
     }, function (e) { SECR[part] = { err: String(e && e.message || e || 'ошибка') }; route(); });
   }
   function secGate(part, title) {     // → HTML-заглушка, пока данных нет; null — данные есть
-    if (SEC[part]) return null;
+    secHydrate();
+    if (SEC[part]) { if (!SECR[part]) setTimeout(function () { secLoad(part, false); }, 0); return null; }
     var R = SECR[part], h = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1>', p = secMe();
     var note = function (t) { return '<div class="igroup"><div class="cpl"><div>' + t + '</div></div></div>'; };
     if (!p || p.st === 'pending' || !secLogged()) return h + note('Закрытый раздел — только для Т. В. и А. В. Сотрудник1. Войдите личным входом («Профиль» → «Войти»), затем откройте раздел снова.');
@@ -1066,8 +1093,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   }
   document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-secre]'); if (!a) return; e.preventDefault(); var pt = a.getAttribute('data-secre'); SECR[pt] = null; secLoad(pt, true); });
   function struct() {                 // 12.11.2026, Т. В.: «раздел «Структура» должен выглядеть в едином стиле с остальными» — как вход раздела (hub.js): плитки-показатели и подразделы
-    var IC = window.T14_ICONS || {}, ic = function (k) { return IC[k] || IC.s_grid || ''; }, C = 'var(--ic-docs)', on = secLogged();
-    if (on) (SEC.org ? ['kos', 'ko', 'sim'] : ['org']).forEach(function (k) { if (!SEC[k] && !SECR[k]) setTimeout(function () { secLoad(k, false); }, 0); });   // сначала org (подтверждение в Telegram — одно), потом остальные
+    secHydrate(); var IC = window.T14_ICONS || {}, ic = function (k) { return IC[k] || IC.s_grid || ''; }, C = 'var(--ic-docs)', on = secLogged();
+    if (on) (SEC.org ? ['org', 'kos', 'ko', 'sim'] : ['org']).forEach(function (k) { if (!SECR[k]) setTimeout(function () { secLoad(k, false); }, 0); });   // 13.11: с сохранёнными данными — все части сразу и параллельно (фоновое обновление)   // сначала org (подтверждение в Telegram — одно), потом остальные
     var O = (SEC.org || {}).org, K = (SEC.kos || {}).ko, P = SEC.ko || null, M = SEC.sim || null;
     var st = function (k) { var R = SECR[k] || {}; return !on ? 'нужен личный вход' : SEC[k] ? '' : R.busy || !SECR[k] ? 'загружаю…' : R.access === false ? 'ждёт доступа в Telegram' : R.pin === 'wait' ? 'подтвердите в Telegram' : 'нет данных'; };
     var nSim = M ? (M.sheets || []).reduce(function (a, sh) { return a + (sh.rows || []).length; }, 0) : null;

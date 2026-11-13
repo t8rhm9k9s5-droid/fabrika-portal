@@ -71,7 +71,7 @@
   function me() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function tok() { try { return localStorage.getItem('t14.tok') || ''; } catch (e) { return ''; } }
   function saveMe(p, t) { try { localStorage.setItem('t14.me', JSON.stringify(p)); if (t) localStorage.setItem('t14.tok', t); } catch (e) { /* private mode */ } }
-  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
+  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
 
   // ---- the server (the «Фабрика» Google Apps Script)
   var CFG = G.T14_ACCT_CFG || null, cfgP = null;
@@ -165,6 +165,27 @@
   }
   G.T14Acct = { cfg: cfg, api: api, me: me, tok: tok, saveMe: saveMe, forget: forget, signIn: signIn, register: register, sharedKey: sharedKey, checkKey: checkKey,
     addUser: addUser, resetPw: resetPw, changePw: changePw, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
+  // 13.11.2026, Т. В.: «в Людях первоначально происходит загрузка — загрузки быть не должно». Закрытые части «Структуры» (org, kos, ko, sim)
+  //   подгружаются фоном на любой странице — только у вошедшего лично, чей доступ уже подтверждён (флаг t14.sec), не чаще раза в 30 мин.
+  function secWarm() {
+    try {
+      var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null');
+      if (!p || p.st === 'pending' || !f || f.id !== p.id || !tok() || !inApp()) return;
+      ['org', 'kos', 'ko', 'sim'].forEach(function (k, i) {
+        var c = null; try { c = JSON.parse(localStorage.getItem('t14.secc.' + k) || 'null'); } catch (e) { c = null; }
+        if (c && c.id === p.id && Date.now() - c.t < 30 * 60e3) return;
+        setTimeout(function () {
+          api('sec', { tok: tok(), part: k, ask: 0 }).then(function (r) {
+            try {
+              if (r && r.data) localStorage.setItem('t14.secc.' + k, JSON.stringify({ id: p.id, t: Date.now(), data: r.data }));
+              else if (r && r.access === false) { ['org', 'kos', 'ko', 'sim'].forEach(function (x) { localStorage.removeItem('t14.secc.' + x); }); localStorage.removeItem('t14.sec'); }
+            } catch (e) { /* место в памяти — без кэша */ }
+          }, function () { /* нет связи — в следующий раз */ });
+        }, 2500 + i * 700);
+      });
+    } catch (e) { /* без фоновой загрузки */ }
+  }
+  if (document.readyState === 'complete') setTimeout(secWarm, 0); else G.addEventListener('load', secWarm);
 })(window);
 
 /* ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):

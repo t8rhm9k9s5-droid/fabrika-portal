@@ -536,7 +536,7 @@
     anchor: function () { var v = document.getElementById('view'); return v && (v.querySelector(':scope > .igroup.hero') || v.querySelector(':scope > p.ihdr')); },
     intro: function () { var v = document.getElementById('view'); return v ? [v.querySelector(':scope > .igroup.hero')] : []; },
     // 02.11.2026, Т. В.: шесть карточек — продажи и план, буфер заказов, рекламации, визиты и звонки (с отчётами офисов), Ozon за месяц и день, отзывы
-    kpis: [{ id: 'rev', t: 'Продажи и план', ic: 's_sales', href: '#s-opm' }, { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf' },
+    kpis: [{ id: 'onl', t: 'Онлайн · наши модели в интернете', ic: 'store', href: '#online' }, { id: 'rev', t: 'Продажи и план', ic: 's_sales', href: '#s-opm' }, { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf' },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl' }, { id: 'prom', t: 'Визиты, звонки, отчёты', ic: 'phone', href: '#prom' },
       { id: 'mp', t: 'Ozon · месяц и день', ic: 'box', href: '#mp' }, { id: 'rv', t: 'Отзывы маркетплейсов', ic: 'chat', href: '#mp' }],
     // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник6, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
@@ -588,6 +588,11 @@
         tl.push({ id: 'recl', s: n(RC.n) + ' незакрытых · старше 30 дн. ' + n(RC.old30) });
       } else K.push({ id: 'recl', v: '—', s: 'отчёт 1С по рекламациям не загружен', tone: 'none' });
       var BF = x.DOC && x.DOC.buffer;
+      // 13.11.2026, Т. В.: «онлайн-продажи — приоритетная карточка, в продажах чуть ли не первой»: мониторинг наших моделей в интернете (build/online/online.json)
+      var ON = null; try { ON = JSON.parse((document.getElementById('online-data') || {}).textContent || 'null'); } catch (eO) { ON = null; }
+      if (ON && ON.web && ON.web.total) { var OW = ON.web, olow = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
+        K.push({ id: 'onl', v: n(OW.total) + '<small>предложений</small>', s: 'на ' + n(OW.sites) + ' сайтах · проверено моделей: ' + n(OW.checked) + (olow ? ' · ниже РРЦ — ' + n(olow) : '') + (OW.t ? ' · ' + String(OW.t).slice(8, 10) + '.' + String(OW.t).slice(5, 7) : ''), tone: olow ? 'warn' : '' });
+      } else K.push({ id: 'onl', v: '—', s: 'мониторинг сайтов ещё не собран', tone: 'none' });
       if (BF && BF.sum != null) {
         K.push({ id: 'buf', v: mln(BF.sum) + '<small>млн ₽</small>', s: 'не отгружено · ' + n(BF.n) + ' заказов' + (BF.late ? ' · дата прошла — ' + n(BF.late) : ''), tone: BF.late ? 'warn' : '' });
         if (BF.late) att.push({ href: '#buf', ic: 'box', t: 'Буфер: дата отгрузки прошла', s: n(BF.late) + ' заказов на ' + mln(BF.late_s || 0) + ' млн ₽ · выгрузка 1С от ' + dd(BF.t), v: n(BF.late), tone: 'warn' });

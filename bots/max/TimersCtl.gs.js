@@ -833,7 +833,7 @@ function tm_qMailText_(ctx, q, cfg, org, repeat) {
 }
 /** лестница: в группу через 2 ч и далее каждые 2 ч (09–18, до 4 в день); письмо — 18:00–18:59 (вопрос старше 2 ч) и 09:xx следующего дня */
 function tm_remLadder_(ctx, st, cfg, org, res) {
-  var h = ctx.msk.h, two = 2 * 3600e3, n = 0, today = ctx.today;
+  var h = ctx.msk.h, two = 2 * 3600e3, n = 0, today = ctx.today, G = {}, GO = [];   // G: напоминания в группу, собранные по сообщению
   Object.keys(st.q).forEach(function (k) {
     var q = st.q[k]; if (q.st !== 'open') return;
     var qms = tm_isoMs_(q.t), qd = q.t.slice(0, 10);
@@ -849,7 +849,6 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
     if (q.to_uid && tm_banned_(cfg, today, q.mail, q.to_name)) { q.ban = true; return; }
     delete q.ban;
     if (!ctx.workday || ctx.quiet) return;
-    var rt = q.rem.filter(function (r) { return r.t.slice(0, 10) === today; }), gToday = rt.filter(function (r) { return r.kind === 'group'; });
     var gLast = q.rem.filter(function (r) { return r.kind === 'group'; }).map(function (r) { return r.t; }).sort().pop() || '';
     if (q.ctl) {                                                                // 13.11 (Т. В.): до срока — не напоминаем; срок не указан и автор не ответил — со следующего рабочего дня 10:00
       if (!q.due) { var fb = tm_nextWorkday_(tm_addDays_(qd, 1)); if (today < fb || (today === fb && h < 10)) return; q.due = fb; q.due_t = '10:00'; q.due_fb = true; }
@@ -866,9 +865,11 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
     }
     if (q.ctl && dmR && dmR.kind === 'dm' && ctx.msk.ms < tm_isoMs_(dmR.t) + two) return;
     if (h >= 9 && h < 18 && ctx.msk.ms >= qms + two && !gLast) {             // 12.11: в группу — одно напоминание на вопрос, не каждые 2 часа
-      var text = q.to_uid ? '🔔 ' + (q.first || tm_firstName_(q.to_name)) + ', на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.' : TM_GROUP_TXT;
-      var r = tm_sendOnce_('rem:g:' + k + ':' + today + ':' + gToday.length, 'chat', { cid: q.cid, text: text, reply: q.mid, ctl: !!q.ctl }, 'remind');
-      if (r.ok) { q.rem.push({ t: ctx.msk.iso, kind: 'group', mid: r.mid || '' }); n++; }        // mid напоминания: ответ на него тоже закрывает вопрос (C-B1)
+      // 13.11 (Т. В.: «Вопросы ответственным в одном сообщении должны быть») — всем исполнителям одного сообщения — одно напоминание, имена выделены
+      var gk = q.cid + '|' + q.mid;
+      if (!G[gk]) { G[gk] = { cid: q.cid, mid: q.mid, ctl: !!q.ctl, who: [], ks: [], all: false }; GO.push(gk); }
+      G[gk].ks.push(k);
+      if (q.to_uid) { var fn0 = q.first || tm_firstName_(q.to_name); if (G[gk].who.indexOf(fn0) < 0) G[gk].who.push(fn0); } else G[gk].all = true;
     }
     if (q.to_uid && h === 18 && ctx.msk.ms >= qms + two) {                // 12.11: письмо — один раз (18:00 в день вопроса), утром не повторяем
       if (q.rem.some(function (r) { return r.kind === 'mail'; })) return;
@@ -877,6 +878,13 @@ function tm_remLadder_(ctx, st, cfg, org, res) {
       var rec = tm_remMail_(ctx, 'mail:q', m.subj, m.text, [q.mail], m.head ? [m.head] : [], res);
       if (rec) { q.rem.push(rec); n++; }
     }
+  });
+  GO.forEach(function (gk) {
+    var g = G[gk], named = g.who.length > 0;
+    var text = named ? '🔔 ' + g.who.map(function (x) { return '<b>' + tm_h_(x) + '</b>'; }).join(', ') + (g.all ? ' и коллеги' : '') +
+                       ', на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.' : TM_GROUP_TXT;
+    var r = tm_sendOnce_('rem:g:' + tm_sha12_(g.ks.slice().sort().join(',')) + ':' + today, 'chat', { cid: g.cid, text: text, reply: g.mid, ctl: g.ctl, html: named }, 'remind');
+    if (r.ok) { g.ks.forEach(function (k) { st.q[k].rem.push({ t: ctx.msk.iso, kind: 'group', mid: r.mid || '' }); }); n++; }   // mid напоминания: ответ на него тоже закрывает вопрос (C-B1)
   });
   return n;
 }

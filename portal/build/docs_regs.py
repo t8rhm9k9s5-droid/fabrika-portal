@@ -265,6 +265,10 @@ def to_pdf(src, dst):
 
 def build(force=False):
     os.makedirs(OUT, exist_ok=True)
+    # 13.11.2026: 12.11 21:24 повторный запуск без исходников (docs_in удалён) стёр все 42 файла регламентов — портал не открывал документы.
+    #   Теперь: нет исходной папки или в ней нет файлов — ничего не трогаем.
+    if not os.path.isdir(SRC) or not any(os.scandir(SRC)):
+        raise SystemExit('docs_regs: нет исходников ' + SRC + ' — файлы регламентов на сайте НЕ трогаю')
     for f in glob.glob(OUT + '*'): os.remove(f)    # numbering changes when documents are removed; old copies must not linger on the site (so every file is copied anew)
     reg = []
     for n, d in enumerate(D, 1):

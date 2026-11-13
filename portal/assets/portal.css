@@ -363,7 +363,7 @@ html body details.rq,html body details.rep{border-color:var(--p-line)}
 .fhome .pk-gl [data-tone="bad"] i{color:var(--t-bad)}
 #pkProd .pk-s{order:3;margin-top:auto;padding-top:4px;font-size:11.5px;color:var(--p-fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 03.11.2026, Т. В. (опрос «Все одной высоты»): плитки пульса — одной высоты во всех строках; выпуск — группы в две колонки, подробно — в «Производстве» */
-.fhome #pulse{grid-auto-rows:1fr}
+.fhome #pulse{grid-auto-rows:1fr}.fhome #pulse .pk{overflow:hidden}   /* 13.11.2026, Т. В.: «половина карточек пустые и слишком большие» — высота ряда по своим карточкам, не по самой высокой */
 #pkProd .pk-v{font-size:20px}
 #pkProd .pk-v small{font-size:12px}
 .fhome .pk-bar{display:flex;gap:3px;align-items:flex-end;height:22px;margin-top:auto;padding-top:4px}

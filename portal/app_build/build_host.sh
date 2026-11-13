@@ -9,6 +9,7 @@
 set -euo pipefail
 A=/home/claude/app_build; OUT=$A/enc_reg
 python3 "$A/build_enc.py" --base / --out "$OUT"
+python3 "$A/docs_registry.py" >/dev/null   # 13.11.2026: реестр портала и документов → host/live/docs_registry.json (робот сверяет раз в сутки)
 [[ -f /home/claude/sync/bot_done.json ]] && cp /home/claude/sync/bot_done.json "$OUT/bot_done.json"
 (cd /home/claude/bot && python3 bot_data.py >/dev/null && python3 bot_live.py "$OUT")
 rm -f "$OUT/.nojekyll" "$OUT/README.md" "$OUT/gs.bin"

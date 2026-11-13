@@ -192,6 +192,13 @@ try:
     if _ON is not None: _ON.update(_cg1_read_json('/home/claude/build/online/comp.json', encoding='utf-8'))
 except Exception as _e: print('конкуренты:', _e)
 frags['sales.html'] = frags['sales.html'].replace('__ONLINE__', _js.dumps(_ON, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+# 13.11.2026: «Главная» — шестая карточка «Онлайн · наши модели» (сводка мониторинга сайтов)
+try:
+    _W = (_ON or {}).get('web') or {}
+    _ONS = {'total': _W.get('total'), 'sites': _W.get('sites'), 'checked': _W.get('checked'), 't': (_W.get('t') or '')[:10],
+            'low': sum(1 for _q in (_ON or {}).get('prices') or [] if _q.get('p') and _q.get('r') and _q['p'] < _q['r'] * (1 - ((_ON or {}).get('thr') or 0)))}
+except Exception as _e: print('онлайн-сводка:', _e); _ONS = None
+frags['home.html'] = frags['home.html'].replace('__ONLSUM__', _js.dumps(_ONS, ensure_ascii=False, separators=(',', ':')), 1)
 frags['sales.html'] = frags['sales.html'].replace('__SHIP__', _js.dumps(_SHIP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 29.10.2026: «Коммерческий отдел» — люди, функционал, зоны, инструкции (make_ko_staff.py → data/ko_staff.json)
 try:

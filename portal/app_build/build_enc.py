@@ -73,6 +73,8 @@ for root, _, names in os.walk(SRC):
         open(f'{OUT}/b/{name}', 'wb').write(blob)
         files[rel] = [name, mime(rel), len(data)]
 pre = [p for p in PRE if p in files]
+# 13.11.2026, Т. В.: «раз в сутки проверка целостности портала и всех документов по реестру» — карта путь → блок для реестра (docs_registry.py; наружу не уходит)
+with open('/home/claude/app_build/enc_map.json', 'w', encoding='utf-8') as _em: json.dump(files, _em, ensure_ascii=False)
 docs = [p for p in DOCS if p in files]
 _H8 = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:8]
 # 28.10.2026: уведомления всем — только «крупный выпуск» (решает build_pwa.py → release_state.json → last.public). Скрипт уведомлений шлёт пуш всем,

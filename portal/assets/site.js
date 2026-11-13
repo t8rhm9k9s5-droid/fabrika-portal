@@ -961,7 +961,14 @@
     'plan.html': { deps: ['Служба главного инженера', 'Сторожевая служба'] }, 'library.html': { deps: ['Отдел кадров', 'Юрист'] },
     'admin.html': { deps: ['Бухгалтерия', 'Планово-экономический отдел', '1С-программисты', 'Системные администраторы'] } };
   function sxE(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function sxGet(part) { return window.T14Acct.api('sec', { tok: T14Acct.tok(), part: part, ask: 0 }).then(function (r) { return r && r.data ? r.data : null; }, function () { return null; }); }
+  // 13.11.2026, Т. В.: «блок Структура выводится с задержкой» — сначала сохранённый на устройстве ответ бота (t14.secc.*, acct.js secWarm), без ожидания сети
+  function sxCached(part) { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), c = JSON.parse(localStorage.getItem('t14.secc.' + part) || 'null'); return c && p && c.id === p.id && Date.now() - c.t < 7 * 864e5 ? c.data : null; } catch (e) { return null; } }
+  function sxGet(part) {
+    var c = sxCached(part); if (c) return Promise.resolve(c);
+    return window.T14Acct.api('sec', { tok: T14Acct.tok(), part: part, ask: 0 }).then(function (r) {
+      if (r && r.data) { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'); if (p) localStorage.setItem('t14.secc.' + part, JSON.stringify({ id: p.id, t: Date.now(), data: r.data })); } catch (e) { /* без кэша */ } }
+      return r && r.data ? r.data : null; }, function () { return null; });
+  }
   function sxWho(p, hd, fn) {
     if (!p) return '';
     var ch = (p.phones || []).map(function (x) { return '<a href="tel:' + sxE(String(x).replace(/[^\d+]/g, '')) + '">' + sxE(x) + '</a>'; })
@@ -1024,7 +1031,7 @@
     })();
   }
   function secFlagSX() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }
-  function sxStart() { try { setTimeout(function () { sxPart(here()); }, 1200); } catch (e) { } }
+  function sxStart() { try { var k = 0; (function go() { if (!window.T14Acct && ++k < 30) return setTimeout(go, 100); sxPart(here()); })(); } catch (e) { } }   // 13.11: без задержки 1,2 с — есть сохранённое — сразу, нет — сразу запрос
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sxStart); else sxStart();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountNav); else mountNav();
 })();

@@ -1357,6 +1357,11 @@ def lane_reports():
         except Exception as e:
             status['arch_1c'] = {'t': iso(t), 'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
             log('  ! ящик 1c@:', e.__class__.__name__, e)
+        try:                                                           # 13.11.2026: письма служб (расходы транспорта, обходы охраны) → st/svc.bin
+            import svc_mail as SVC
+            status['svc'] = SVC.publish_all(L, publish, log)
+        except Exception as e:
+            status['svc'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! письма служб:', e.__class__.__name__, e)
         try: status['sday_bf'] = sales_day_backfill()                  # 30.10.2026: «Продажи в разрезе…» из архива 1c@ (пришли до разборщика)
         except Exception as e:
             status['sday_bf'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! продажи за день (архив):', e.__class__.__name__, e)
@@ -1424,6 +1429,16 @@ def lane_reports():
     st_pub['lanes'] = lanes_status()
     st_pub['arch_prune'] = (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
     st_pub['alert'] = a if a and (a.get('miss') or a.get('none')) else None
+    try:                                                   # 13.11.2026, Т. В.: раз в сутки — целостность портала и документов по реестру (docs_check.py)
+        import docs_check as DCK
+        _dc = DCK.run(SITE, jload, jsave, log)
+        if _dc: st_pub['docs'] = {k: _dc.get(k) for k in ('t', 'state', 'n', 'docs', 'bad_n', 'bad_docs', 'm_ok', 'reg_t')}
+        _da = DCK.alert_of(_dc)
+        if _da:
+            if st_pub['alert']: _da = dict(st_pub['alert'], id=str(st_pub['alert'].get('id')) + '+' + _da['id'], text=str(st_pub['alert'].get('text') or '') + '\n' + _da['text'])
+            st_pub['alert'] = _da
+    except Exception as e:
+        st_pub['docs'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! проверка портала:', e.__class__.__name__, e)
     try:                                                   # 02.11.2026: «Реестр рекламаций» и «ТЗ в работе» из 1С → st/recl.bin, st/tz1c.bin (rep_1c.py)
         import rep_1c as R1C
         status['rep_1c'] = R1C.publish_all(jload, jsave, publish, lambda bn: os.path.exists(os.path.join(SITE, 'st', bn)))

@@ -31,6 +31,12 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .pc-who span.done{color:var(--t-green,#248a3d)}
 .pc-h{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:18px 2px 6px}
 .pfoot{color:var(--ios-2);font-size:12.5px;margin:14px 2px 0}
+/* 13.11.2026, Т. В.: «совещание за сегодня и вопросы совещания по дням внутри — сначала за сегодня, далее остальное» */
+.pc-day{margin-top:10px}.pc-day>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:var(--ios-group);box-shadow:0 0 0 .5px var(--ios-sep)}
+.pc-day>summary::-webkit-details-marker{display:none}.pc-day>summary::after{content:'';margin-left:auto;width:8px;height:8px;border-right:2px solid var(--ios-2);border-bottom:2px solid var(--ios-2);transform:rotate(45deg);transition:transform .2s}
+.pc-day[open]>summary::after{transform:rotate(-135deg)}.pc-day>summary .pc-dt{font:600 15px var(--f-body);color:var(--ios-label)}.pc-day>summary .pc-dtt{font-size:13px;color:var(--ios-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-day>summary .pc-n{font:600 13px var(--f-body);border-radius:999px;padding:2px 9px;background:var(--ios-fill);color:var(--ios-label)}.pc-day.today>summary{box-shadow:0 0 0 1.5px var(--t-press,#0866c6)}
+.pc-day>.pc-list{margin-top:8px}
 </style>
 <main class="ios" id="poruch">
   <a class="back" href="home.html">Главная</a>
@@ -74,17 +80,25 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       (x.due ? '<span class="' + (late(x.due) && x.st !== 'done' ? 'pc-late' : '') + '">срок ' + dm(x.due) + '</span>' : '') +
       '<span>совещание ' + dm(m.date) + '</span>' + (x.st === 'done' ? '<span class="pc-ok">выполнено</span>' : '') + (x.note ? '<span>' + esc(x.note) + '</span>' : '') + '</div></div>';
   }
+  var WDN = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  function dayLab(d) { var x = new Date(d + 'T12:00:00'); return (d === today ? 'Сегодня, ' : WDN[x.getDay()] + ', ') + dm(d); }
+  function meetDay(m, open) {
+    var t = m.tasks.filter(function (x) { return x.st !== 'done' || F === 'meet'; }); if (!t.length) return '';
+    return '<details class="pc-day' + (m.date === today ? ' today' : '') + '"' + (open ? ' open' : '') + '><summary><span class="pc-dt">' + dayLab(m.date) + '</span><span class="pc-dtt">' + esc(m.title) +
+      '</span><span class="pc-n">' + t.length + '</span></summary><div class="pc-list">' + t.map(function (x) { return cardMeet(x, m); }).join('') + '</div></details>';
+  }
   function render() {
     var d = D || { ctl: [], lead: [], cp: [], meet: (SNAP && SNAP.meetings) || [] }, c = counts(d), h = '';
-    document.getElementById('pcSum').innerHTML = [['ctl', 'на контроле у бота'], ['lead', 'поручений руководства'], ['meet', 'задач совещаний'], ['cp', 'контрольных точек офисов']]
+    var tdN = (d.meet || []).filter(function (m) { return m.date === today; }).reduce(function (s0, m) { return s0 + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0);
+    c.today = tdN;
+    document.getElementById('pcSum').innerHTML = [['today', 'задач совещания сегодня'], ['ctl', 'на контроле у бота'], ['lead', 'поручений руководства'], ['meet', 'задач всех совещаний'], ['cp', 'контрольных точек офисов']]
       .map(function (x) { return '<div><b>' + c[x[0]] + '</b><small>' + x[1] + '</small></div>'; }).join('');
     document.getElementById('pcChips').innerHTML = SRC.map(function (s) { return '<button type="button" data-f="' + s[0] + '" aria-pressed="' + (F === s[0]) + '">' + s[1] + (s[0] !== 'all' ? '<b>' + c[s[0]] + '</b>' : '') + '</button>'; }).join('');
+    var MS = (d.meet || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }), mt = MS.filter(function (m) { return m.date === today; }), mo = MS.filter(function (m) { return m.date !== today; });
+    if ((F === 'all' || F === 'meet') && mt.length) h += '<div class="pc-h">Совещание за сегодня</div>' + mt.map(function (m) { return meetDay(m, true); }).join('');
     if (F === 'all' || F === 'ctl') { var L1 = (d.ctl || []); if (L1.length) h += '<div class="pc-h">Поставлено на контроль отметкой бота</div><div class="pc-list">' + L1.map(cardCtl).join('') + '</div>'; else if (F === 'ctl') h += '<p class="lead">Пока ничего не поставлено на контроль.</p>'; }
     if (F === 'all' || F === 'lead') { var L2 = (d.lead || []); if (L2.length) h += '<div class="pc-h">Поручения руководства</div><div class="pc-list">' + L2.map(function (r) { return cardRow(r, 'lead'); }).join('') + '</div>'; }
-    if (F === 'all' || F === 'meet') (d.meet || []).forEach(function (m) {
-      var t = m.tasks.filter(function (x) { return x.st !== 'done' || F === 'meet'; }); if (!t.length) return;
-      h += '<div class="pc-h">Совещание ' + dm(m.date) + ' — ' + esc(m.title) + '</div><div class="pc-list">' + t.map(function (x) { return cardMeet(x, m); }).join('') + '</div>';
-    });
+    if ((F === 'all' || F === 'meet') && mo.length) h += '<div class="pc-h">Совещания по дням</div>' + mo.map(function (m, i) { return meetDay(m, F === 'meet' && !mt.length && i === 0); }).join('');
     if (F === 'all' || F === 'cp') { var L4 = (d.cp || []); if (L4.length) h += '<div class="pc-h">Контрольные точки офисов продаж («Коммерческий отдел»)</div><div class="pc-list">' + L4.map(function (r) { return cardRow(r, 'cp'); }).join('') + '</div>'; }
     document.getElementById('pcView').innerHTML = h || '<p class="lead">Невыполненных поручений нет.</p>';
     document.getElementById('pcFoot').textContent = D ? 'Обновлено ботом: ' + String(D.t || '').replace('T', ' ') + '. Бот обновляет раздел каждые 30 минут; задачи совещаний добавляются после каждого утреннего совещания.'
