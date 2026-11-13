@@ -237,7 +237,7 @@
   function getPref(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
-  // «Авто / Сотрудник13 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
+  // «Авто / Сотрудник14 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
   function theme() { var t = getPref('t14.theme', 'auto'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function applyLook() {
     var de = document.documentElement, t = theme();
@@ -256,7 +256,7 @@
   // Уровни на <html data-perf>: max — стекло с размытием, тени, движение; mid — размытие слабее, движение короче; eco — без размытия
   // (непрозрачный фон), без теней и анимаций (data-fx="lite"). Выученный уровень устройства — localStorage «t14.dev» (на 30 дней, свой для браузера).
   var FX = (function () {
-    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник13', eco: 'Экономно', mid: 'Среднее' };
+    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник14', eco: 'Экономно', mid: 'Среднее' };
     function rdJ(k) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
     var mem = rdJ('t14.dev'); if (!mem || mem.ua !== ua) mem = { ua: ua };
     function save() { mem.ua = ua; mem.t = Date.now(); try { localStorage.setItem('t14.dev', JSON.stringify(mem)); } catch (e) { } }
@@ -275,7 +275,7 @@
       if (rm) return ['mid', 'в системе включено «Уменьшение движения»'];
       if ((screen.width || 0) * (screen.height || 0) * dpr * dpr > 8.3e6 && dm && dm <= 4) return ['mid', 'большой экран при небольшой памяти'];
       // 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра — iOS всегда
-      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник13» — вручную
+      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник14» — вручную
       if (de.getAttribute('data-plat') === 'ios' && !dm) return ['mid', 'iPhone/iPad: размытие стекла только на малых поверхностях'];
       return ['max', ''];
     }
@@ -330,7 +330,7 @@
       subs.forEach(function (f) { try { f(); } catch (e) { } });
       return L;
     }
-    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник13» → высокое, «Авто» — по замеру
+    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник14» → высокое, «Авто» — по замеру
     function set(c) {
       if (c !== 'auto' && c !== 'max' && c !== 'eco') return;
       setPref('t14.power', c);
@@ -462,7 +462,7 @@
     ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['sales.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
     ['sales.html#mp', 'Маркетплейсы', 'маркетплейсы ozon озон wildberries вайлдберриз яндекс маркет'], ['sales.html#ship', 'График отгрузки', 'отгрузки график объекты'], ['sales.html#cp', 'Контрольные точки', 'контрольные точки сроки'],
     ['sales.html#prom', 'Обещанные визиты и звонки', 'визиты звонки обещания'], ['sales.html#buf', 'Буфер заказов', 'буфер заказы'], ['sales.html#prod', 'Заказы на производство', 'заказы производство'],
-    ['sales.html#cls', 'Сотрудник7', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
+    ['sales.html#cls', 'Сотрудник6', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
     ['sales.html#tz1c', 'ТЗ в работе · 1С', 'тз 1с в работе'], ['stock.html#move', 'Все склады и филиалы — движение за месяц', 'все склады филиалы товары на складах движение приход расход'],
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
@@ -554,8 +554,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник14 (пользователь: «Берем Gemini и Сотрудник14 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник14 из поиска и ИИ-интеграций портала» (Сотрудник14 Имя4 и Сотрудник14 Сотрудник15 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник24 (пользователь: «Берем Gemini и Сотрудник24 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник24 из поиска и ИИ-интеграций портала» (Сотрудник24 Имя3 и Сотрудник24 Сотрудник25 не трогаем)
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT'], ['gemini', 'Gemini']], prov = '';
         // 28.10.2026: показываем только подключённых помощников (сервер отдаёт их в «me» → ais; запоминаем на сутки)
         var conn = null; try { var cj = JSON.parse(localStorage.getItem('t14.ais') || 'null'); if (cj && Date.now() - cj.t < 864e5) conn = cj.v; } catch (e) { conn = null; }
@@ -592,7 +592,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник14' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник24' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '';
           ask(prov).then(null, function (e) {
@@ -630,7 +630,7 @@
       var acSync = function () { var p = null; try { p = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { } ac.querySelector('.ival').textContent = p ? (p.st === 'pending' ? 'ждёт' : String(p.name).split(' ')[0]) : 'войти'; };
       acSync(); window.addEventListener('t14acct', acSync);
       s.appendChild(h4('Оформление'));
-      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник13 / Экономно»; по умолчанию — «Авто» и «Авто»
+      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник14 / Экономно»; по умолчанию — «Авто» и «Авто»
       function seg(label, get, opts, put) {
         s.appendChild(el('p', 'psub', label));
         var w = el('div', 'pseg'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', label); s.appendChild(w);
@@ -639,9 +639,9 @@
         sync(); return sync;
       }
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
-      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник13'], ['eco', 'Экономно']], function (v) { FX.set(v); });
+      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник14'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
-      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник13» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
+      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник14» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
       pfs(); FX.on(pfs);
       s.appendChild(h4('Сервис'));
       var g3 = el('div', 'igroup'); s.appendChild(g3);
@@ -722,6 +722,9 @@
     function inBack() { if (!own) return null; var L = document.querySelectorAll('a.back, button.back'); for (var i = 0; i < L.length; i++) if (!top.contains(L[i]) && !panel.contains(L[i])) return L[i]; return null; }
     function phoneNav() { try { return getComputedStyle(side).display === 'none'; } catch (e) { return false; } }
     function upOf() {                                       // уровень выше текущего места: {u: адрес, sheet?: 'sections'} | {el: кнопка вида} | null (Главная)
+      // 13.11.2026 вечер, Т. В.: «кнопка назад плохо срабатывает» — из «Разделы → Продажи» (razdel.html#sales) открыл «Лиды», «Назад» вёл на
+      //   отдельную страницу sales.html, а не туда, откуда пришёл. Пришли со страницы раздела — туда и возвращаемся (шаг назад по истории).
+      try { var pv0 = (history.state || {}).t14p; if (own && pv0 && /^razdel\.html#\w+$/.test(pv0) && pv0 !== cur + location.hash) return { u: pv0, t: 'Назад' }; } catch (e0) { }
       var ib = inBack();
       if (ib) { var h = ib.getAttribute('href'); if (h == null) return { el: ib, t: (ib.textContent || '').trim() }; return { u: h.charAt(0) === '#' ? cur + location.search + (h.length > 1 ? h : '') : h.replace(/^\.\//, ''), t: (ib.textContent || '').trim() }; }
       if (location.hash.length > 1) return { u: cur + location.search, t: (cur === sec ? secName : subName) || 'Назад' };
@@ -952,7 +955,7 @@
     try { ['scrollY', 'pageYOffset'].forEach(function (k) { Object.defineProperty(window, k, { configurable: true, get: function () { return B.scrollTop; } }); }); } catch (e) { }
   }
   if (document.body) scrollMode(); else document.addEventListener('DOMContentLoaded', scrollMode);
-  // REDACTED_B64_38 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
+  // REDACTED_B64_35 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
   var SXP = { 'staff.html': { deps: ['Производство', 'Технологический отдел', 'Служба главного инженера', 'Служба главного механика'], areas: true, pd: true },

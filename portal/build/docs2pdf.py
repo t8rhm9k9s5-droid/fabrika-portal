@@ -34,6 +34,11 @@ def convert(src, dst):
     try:
         env = dict(os.environ, HOME=out)                                  # свой профиль LibreOffice: без замков от параллельных запусков
         inp = fit_xlsx(src, out) if src.lower().endswith('.xlsx') else src
+        if src.lower().endswith('.xls'):                                   # 13.11.2026, Т. В. («нулевые позиции» в отчётах Сотрудник5): старый .xls не
+            r0 = subprocess.run(['soffice', '--headless', '--norestore', '--convert-to', 'xlsx', '--outdir', out, src],   #   вписывался по ширине —
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180, env=env)                  #   недели уходили на другие листы,
+            x = os.path.join(out, os.path.splitext(os.path.basename(src))[0] + '.xlsx')                                #   строки выглядели пустыми.
+            if os.path.exists(x): inp = fit_xlsx(x, os.path.join(out, 'fit')) if os.makedirs(os.path.join(out, 'fit'), exist_ok=True) is None else x
         r = subprocess.run(['soffice', '--headless', '--norestore', '--convert-to', 'pdf', '--outdir', out, inp],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180, env=env)
         got = os.path.join(out, os.path.splitext(os.path.basename(src))[0] + '.pdf')

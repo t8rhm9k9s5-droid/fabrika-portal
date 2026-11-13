@@ -12,8 +12,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
 .back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
 .lead{color:var(--ios-2);margin:4px 0 0;font-size:15px;max-width:62ch}
-.rz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:14px}
-.rz-card{background:var(--ios-group);border-radius:14px;padding:14px 16px 10px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.rz-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:0;align-items:stretch}
+@media (max-width:1100px){.rz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:760px){.rz-grid{grid-template-columns:1fr}}
+.rz-card{background:var(--ios-group);border-radius:22px;padding:14px 16px 10px;box-shadow:0 0 0 .5px var(--ios-sep)}
 .rz-card.pri{box-shadow:0 0 0 1.5px var(--ios-blue)}
 .rz-card h2{font:600 17px/1.25 var(--f-display);margin:0 0 6px;display:flex;align-items:center;gap:8px;justify-content:space-between}
 .rz-tag{font:600 11.5px var(--f-body);color:#93370d;background:#fef0e6;border-radius:999px;padding:3px 9px;white-space:nowrap}
@@ -40,10 +41,10 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   // [название подраздела, [[отчёт, ссылка|'' (готовится), доступ: ''|'own'|'sec'|'gl']], приоритет]
   var D = [
     ['sales', 'Продажи', 'Онлайн-каналы, план-факт, клиенты и заказы, проекты ФТС/ВиТ, работа отдела продаж.', [
-      ['Онлайн-продажи', [['Сводка онлайн-каналов', 'sales.html#online'], ['Маркетплейсы: Ozon', 'sales.html#s-mp'], ['Интернет-партнёры: ВсеИнструменты, Онлайн Имя2, Первый мебельный', 'sales.html#online'],
+      ['Онлайн-продажи', [['Сводка онлайн-каналов', 'sales.html#online'], ['Маркетплейсы: Ozon', 'sales.html#s-mp'], ['Интернет-партнёры: ВсеИнструменты, Онлайн Имя4, Первый мебельный', 'sales.html#online'],
         ['Цены в интернете и РРЦ', 'sales.html#online'], ['Отзывы покупателей', 'sales.html#rev'], ['Наши модели в Рунете (поиск по названию, ШК, фото)', '']], 1],
       ['План и факт', [['Продажи 1С: типы и мощности', 'sales.html#s-s1c'], ['Выполнение плана по менеджерам', 'sales.html#planm'], ['Менеджеры по офисам продаж', 'sales.html#mgrop'], ['Офисы продаж: план-факт', 'sales.html#s-opm']]],
-      ['Сотрудник7 и заказы', [['Сотрудник7', 'sales.html#s-cls'], ['Буфер заказов', 'sales.html#s-buf'], ['Заказы на производство', 'sales.html#s-prod'], ['ТЗ в работе и расчёты', 'sales.html#s-tz'], ['Коммерческие предложения', 'library.html#kp']]],
+      ['Сотрудник6 и заказы', [['Сотрудник6', 'sales.html#s-cls'], ['Буфер заказов', 'sales.html#s-buf'], ['Заказы на производство', 'sales.html#s-prod'], ['ТЗ в работе и расчёты', 'sales.html#s-tz'], ['Коммерческие предложения', 'library.html#kp']]],
       ['Проекты и объекты (ФТС, ВиТ)', [['ФТС: план-факт и поступление денег', 'sales.html#fts'], ['Реестр объектов', 'library.html#reports']]],
       ['Работа отдела продаж', [['Лиды выставок: ход работы (особый контроль)', 'sales.html#leads'], ['Визиты, звонки, отчёты офисов', 'sales.html#s-prom'], ['Офисы продаж', 'sales.html#s-ops'], ['Сдача отчётов по дням', 'sales.html#s-days'], ['Контрольные точки', 'sales.html#s-cp']]]]],
     ['prod', 'Производство', 'Выпуск и план-факт, участки, мощность.', [
@@ -98,7 +99,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       h = '<div class="rz-map">' + D.map(function (x) { return '<a href="razdel.html#' + x[0] + '"><b>' + esc(x[1]) + '</b><small>' + esc(x[2]) + '</small></a>'; }).join('') + '</div>';
     } else {
       H.textContent = d[1]; L.textContent = d[2]; document.title = 'Фабрика — ' + d[1].toLowerCase();
-      h = '<div class="rz-grid">' + d[3].map(function (s) {
+      h = '<div id="pzHost"></div><div class="rz-grid">' + d[3].map(function (s) {
         var items = s[1].filter(function (r) { return can(r[2]); });
         if (!items.length) return '';
         return '<section class="rz-card' + (s[2] ? ' pri' : '') + '"><h2>' + esc(s[0]) + (s[2] ? '<span class="rz-tag">Приоритет 1</span>' : '') + '</h2><ul>' +
@@ -107,6 +108,8 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     }
     h += '<p class="pfoot">Структура портала — проект 12.11.2026: Главная → раздел → отчёт. Отчёты остаются на своих страницах, раздел ведёт прямо к ним.</p>';
     V.innerHTML = h;
+    // 13.11.2026, Т. В.: «в каждом разделе свой пульс — 6 одинаковых карточек и 2 большие диаграммы, как на главной» (assets/pulse.js)
+    var ph = document.getElementById('pzHost'); if (ph && d) { if (window.T14Pulse) T14Pulse.render(d[0], ph); else window.addEventListener('load', function () { if (window.T14Pulse) T14Pulse.render(d[0], ph); }); }
   }
   show();
   window.addEventListener('hashchange', show);

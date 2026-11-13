@@ -13,10 +13,10 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник19 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник7 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
-        ('marketing', 'Имя4: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -64,10 +64,10 @@ PUB = _cg1_read_json('/home/claude/library/fabrikant_su.json', encoding='utf-8')
 #   не было адресата. Решение пользователя (опрос): адресат и срок на портале; договоры, ЭДО, акты рекламации и политика ПДн — юристу,
 #   каталог, гарантии и сертификаты (замена файлов на сайте) — маркетологу (письмо 26.10, срок 30.10, ответа нет). Служебные пометки
 #   проверки («WebFetch…») из текста убраны — сотрудникам они не нужны.
-PUB_TO = {'agreements': 'юрист Сотрудник25 Н. Я.', 'edo': 'юрист Сотрудник25 Н. Я.', 'claims': 'юрист Сотрудник25 Н. Я.', 'policy': 'юрист Сотрудник25 Н. Я.',
-          'catalogs': 'маркетолог Сотрудник33 Д. Р.', 'warranty': 'маркетолог Сотрудник33 Д. Р.', 'certs': 'маркетолог Сотрудник33 Д. Р.'}
-PUB_ST = {'маркетолог Сотрудник33 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
-          'юрист Сотрудник25 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник33 придержано (ищем её письмо с прайсом)
+PUB_TO = {'agreements': 'юрист Сотрудник33 Н. Я.', 'edo': 'юрист Сотрудник33 Н. Я.', 'claims': 'юрист Сотрудник33 Н. Я.', 'policy': 'юрист Сотрудник33 Н. Я.',
+          'catalogs': 'маркетолог Сотрудник39 Д. Р.', 'warranty': 'маркетолог Сотрудник39 Д. Р.', 'certs': 'маркетолог Сотрудник39 Д. Р.'}
+PUB_ST = {'маркетолог Сотрудник39 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
+          'юрист Сотрудник33 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник39 придержано (ищем её письмо с прайсом)
 def _pub_clean(x):
     x = re.sub(r'\s*\((?:WebFetch|бинарные данные)[^)]*\)', '', x)
     x = re.sub(r'^Файл (\.\w+) не прочитан\s*—\s*', r'Файл \1 в старом формате — ', x)
@@ -116,6 +116,11 @@ for _r, _, _fs in os.walk('/home/claude/library/raw'):
         if _f.lower().endswith(('.doc', '.docx', '.xls', '.xlsx', '.rtf', '.odt', '.ods', '.ppt', '.pptx')) and os.path.exists(os.path.join(_r, _f + '.pdf')):
             _rel = 'library/' + os.path.relpath(os.path.join(_r, _f), '/home/claude/library/raw').replace(os.sep, '/')
             VIEW[_rel] = _rel + '.pdf'
+        elif _f.lower().endswith(('.doc', '.docx', '.xls', '.xlsx', '.rtf', '.odt', '.ods', '.ppt', '.pptx')) and os.path.exists(os.path.join(_r, os.path.splitext(_f)[0] + '.pdf')):
+            # 13.11.2026, Т. В.: «служебная записка … Word — чёрное окно, назад не выйти»: у Word есть свой PDF рядом (тот же документ) —
+            #   docs2pdf копию не делает, и ссылка вела на сам .docx. Смотреть — этот PDF в просмотрщике портала, Word — кнопкой.
+            _rel = 'library/' + os.path.relpath(os.path.join(_r, _f), '/home/claude/library/raw').replace(os.sep, '/')
+            VIEW[_rel] = 'library/' + os.path.relpath(os.path.join(_r, os.path.splitext(_f)[0] + '.pdf'), '/home/claude/library/raw').replace(os.sep, '/')
 data = json.dumps({'mbx': MBX, 'pub': PUB, 'cats': [{'k': k, 't': t, 'c': c, 'i': ic} for k, t, c, ic in CATS], 'int': [{'k': k, 't': t, 'c': c, 'i': ic, 'x': x} for k, t, c, ic, x in INT], 'items': [i for i in items if i['cat'] != 'regs'], 'links': links,
                    'docs': n_docs, 'arch': n_arch, 'upd': L.get('updated'), 'regs': REGS, 'econ': ECON, 'dog': DOG, 'view': VIEW,
                    # 29.10.2026: «Перевыпуск документов» — журнал замечаний по сканам/фото/не фирменному стилю (fabrika/tools/build_inventory.py → docs_reissue.json);
@@ -284,7 +289,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
     {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник19 К. В.: записки на возврат   // 11.11.2026, Сотрудник19 К. В.
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник7 К. В.: записки на возврат   // 11.11.2026, Сотрудник7 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -402,7 +407,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник19, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник7, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -534,7 +539,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64_38 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_35 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -598,7 +603,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64_38 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_35 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';

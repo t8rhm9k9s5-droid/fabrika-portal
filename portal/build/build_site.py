@@ -38,7 +38,7 @@ for _n, _t in _TITLES.items():
 # one look for every page (22.10.2026): the model's colours, type and glass (assets/ui.css) and the tab bar below (assets/site.js); no address
 for _n in frags:
     if _n == 'index.html': continue
-    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/portal.css">', 1)
+    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/portal.css">\n<link rel="stylesheet" href="assets/glass.css">', 1)   # 13.11: glass.css — стекло с бликом (Т. В.)
     # Чертежи and Архив live under «Документы» (22.10.2026): a back link instead of the eyebrow
     for _a, _b in (('<h1>План участка · Поляны, ул. Терехина, 14</h1>', '<h1>План участка</h1>'),
                    ('<p class="eyebrow">Поляны, ул. Терехина, 14 · архив</p>\n      <h1>Документы, по которым построены модель и сайт</h1>', '<a class="back" href="library.html">Документы</a>\n      <h1>Архив</h1>'),
@@ -55,7 +55,7 @@ for _n in frags:
 with open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8') + "\nwindow.T14SKY && T14SKY.mount('right');\n")
 frags['plan.html'] += '\n<script src="assets/sky.js"></script>\n'
-# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник14 Сотрудник15); ядро погоды без плашки — assets/sky0.js
+# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник24 Сотрудник25); ядро погоды без плашки — assets/sky0.js
 with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
@@ -148,12 +148,12 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник11 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник12 Имя2', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
     _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Офис продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
     print('график отгрузки:', _e); _SHIP = None
-# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник18 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
+# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник23 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
 try:
     _spl = sorted(_gl.glob('/home/claude/build/ship_plan/2*.json'))
     if _spl and _SHIP is not None:
@@ -193,7 +193,7 @@ try:
                     for _it in _o.get('items', []): _it.pop('ch', None)
         _SHIP['plan'] = _pl
 except Exception as _e: print('план отгрузки:', _e)
-# 11.11.2026, Сотрудник19 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
+# 11.11.2026, Сотрудник7 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
@@ -209,7 +209,7 @@ try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
     _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
-# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник19 из папки «Планы» itm@)
+# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник7 из папки «Планы» itm@)
 try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -337,7 +337,7 @@ if(document.readyState==='complete')setTimeout(go,400);else addEventListener('lo
 # assets/portal.css, оболочка в assets/site.js; тема по умолчанию тёмная — выставляется до отрисовки (выбор пользователя — в браузере)
 import json as _js
 # 28.10.2026 (утверждённые макеты): тема по умолчанию — «Авто» (как в системе), выбор «Светлая / Тёмная» — t14.theme;
-# производительность «Авто / Сотрудник13 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
+# производительность «Авто / Сотрудник14 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
 # при прокрутке), — t14.dev. Всё ставится на <html> до отрисовки: data-theme, data-perf (max|mid|eco; eco = прежний data-fx="lite"), data-plat.
 _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.userAgent||'',L=null;"
           "function g(k){try{return localStorage.getItem(k)}catch(e){return null}}"
@@ -350,7 +350,7 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           "else if((dm&&dm<=2)||(hc&&hc<=2)||cn.effectiveType==='3g'||rm||((screen.width*screen.height*(devicePixelRatio||1)*(devicePixelRatio||1))>8.3e6&&dm&&dm<=4))L='mid';"
           # 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра, поэтому iOS
           # всегда получал «max» (стекло с размытием на всю боковую панель). По умолчанию для iOS — «mid» (размытие только на малых поверхностях);
-          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник13» — вручную в «Профиль и настройки».
+          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник14» — вручную в «Профиль и настройки».
           "else if(d.getAttribute('data-plat')==='ios'&&!dm)L='mid'}}"
           "d.setAttribute('data-perf',L);if(L==='eco')d.setAttribute('data-fx','lite')})()</script>\n")
 # 04.11.2026, замечание Т. В. («Назад» водит по кругу): после шага «назад» по истории на другую страницу — сразу, до отрисовки, уровень выше того места,
@@ -395,6 +395,14 @@ with open(os.path.join(SITE, 'assets', 'fresh.js'), 'w', encoding='utf-8') as _f
     _ff1.write('window.FRESH=' + _fjs.dumps({'day': _FDAY, 'items': _FI}, ensure_ascii=False) + ';\n' + _cg1_read_file('/home/claude/build/fresh_client.js', encoding='utf-8'))
 for _n in frags:
     if _n != 'index.html' and 'assets/fresh.js' not in frags[_n]: frags[_n] += '\n<script src="assets/fresh.js"></script>\n'
+# 13.11.2026, Т. В.: «35 % мощности недели ушло в следующую — emergency call для всего портала, должно загораться (в стиле iPhone / macOS)»:
+#   тревоги — build/gen_alerts.py → assets/alerts_data.js (пороги там же), показ — assets/alerts.js на каждой странице
+subprocess.run(['python3', '/home/claude/build/gen_alerts.py'])
+for _n in frags:
+    if _n == 'index.html' or '<script src="assets/alerts.js">' in frags[_n]: continue
+    _gl1 = '<link rel="stylesheet" href="assets/glass.css">'          # данные — в начале страницы (главная строит «Требует внимания» сразу)
+    frags[_n] = frags[_n].replace(_gl1, _gl1 + '\n<script src="assets/alerts_data.js"></script>', 1) if _gl1 in frags[_n] else '<script src="assets/alerts_data.js"></script>\n' + frags[_n]
+    frags[_n] += '<script src="assets/alerts.js"></script>\n'
 print('подсветка нового: %d записей на %s' % (len(_FI), _FDAY))
 def _ddmm(s): return (s[8:10] + '.' + s[5:7]) if s and len(s) >= 10 else 'нет данных'
 def _nn(x): return '{:,}'.format(x).replace(',', ' ') if isinstance(x, int) else 'нет данных'
@@ -413,7 +421,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник6) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник8) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -456,7 +464,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         _AW = _SD.get('allwh') or {}
         if _AW.get('list'): _PU['stock']['allwh'] = {'date': _AW.get('date'), 'list': [{'n': w.get('n'), 'q': w.get('q'), 'd': w.get('d')} for w in _AW['list']]}
     except Exception as _e4: print('пульс, все склады:', _e4)
-    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник10; свежий — smvs.bin)
+    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник11; свежий — smvs.bin)
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:
@@ -557,7 +565,11 @@ try:
 except Exception as _e8:
     import traceback as _tb; _tb.print_exc()
     raise SystemExit('assets/metrics.js (один источник цифр) не собран: %r' % (_e8,))
-for _n in ('home.html', 'sales.html', 'stock.html', 'staff.html', 'omts.html'):
+# 13.11.2026 (Т. В., единый вид разделов): «Пульс раздела» на razdel.html — живые цифры T14M (metrics.js + live.js), сборочные — pulse_data.js (gen_pulse.py)
+subprocess.run(['python3', '/home/claude/build/gen_pulse.py'])
+if '<script src="assets/pulse.js"></script>' not in frags['razdel.html']:
+    frags['razdel.html'] = frags['razdel.html'].replace('<script src="assets/edits.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/edits.js"></script>\n<script src="assets/pulse_data.js"></script>\n<script src="assets/pulse.js"></script>', 1)
+for _n in ('home.html', 'sales.html', 'stock.html', 'staff.html', 'omts.html', 'razdel.html'):
     if '<script src="assets/metrics.js"></script>' in frags[_n]: continue
     if '<script src="assets/live.js"></script>' in frags[_n]: frags[_n] = frags[_n].replace('<script src="assets/live.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/metrics.js"></script>', 1)
     else: frags[_n] = frags[_n].replace('<script src="assets/edits.js"></script>', '<script src="assets/metrics.js"></script>\n<script src="assets/edits.js"></script>', 1)

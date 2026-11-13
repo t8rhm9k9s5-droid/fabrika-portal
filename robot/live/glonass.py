@@ -43,7 +43,7 @@ KEYFILE = 'glonass'
 MSK = datetime.timezone(datetime.timedelta(hours=3))
 
 
-# REDACTED_B64_37 ключ
+# REDACTED_B64_34 ключ
 KEY_NAMES = ('glonass', 'glonass.txt', 'Glonass', 'Glonass.txt', 'GLONASS', 'GLONASS.txt', 'glonass.ini', 'glonass.cfg', 'глонасс', 'глонасс.txt')
 
 
@@ -107,7 +107,7 @@ def file_token(L):
     return ''
 
 
-# REDACTED_B64_37 запросы
+# REDACTED_B64_34 запросы
 class GlonassError(Exception):
     def __init__(self, msg, code=0):
         Exception.__init__(self, msg)
@@ -207,7 +207,7 @@ class Session:
                 raise GlonassError(self.mask(e), e.code)
 
 
-# REDACTED_B64_37 терпимый разбор
+# REDACTED_B64_34 терпимый разбор
 def _num(v):
     if isinstance(v, bool) or v is None: return None
     if isinstance(v, (int, float)): return float(v)
@@ -344,7 +344,7 @@ def total_h(tot, pats, no):
     return (_hours(v, k), k) if k else (None, None)
 
 
-# REDACTED_B64_37 отрезки рейса (стоянки, простои, геозоны)
+# REDACTED_B64_34 отрезки рейса (стоянки, простои, геозоны)
 KIND_KEYS = ('Name', 'Alias', 'Type', 'Kind', 'StageName', 'Stage', 'Status')
 SKIP_KEYS = ('Total', 'PointStart', 'PointEnd', 'Params', 'Properties')
 IDLE_RE = re.compile(r'idle|простой|простои|холост', re.I)
@@ -478,7 +478,7 @@ def _trip_addr_end(t):
     return None
 
 
-# REDACTED_B64_37 геозоны
+# REDACTED_B64_34 геозоны
 def _find_pts(o, depth=0):
     """первый список точек (≥3) где-то внутри геозоны; параллельные массивы Lat[] и Lng[] — тоже"""
     if depth > 4: return None
@@ -566,7 +566,7 @@ def zone_of(p, zones):
     return best[1] if best else None
 
 
-# REDACTED_B64_37 части: справочники, где сейчас, день
+# REDACTED_B64_34 части: справочники, где сейчас, день
 def _vrn(props):
     """госномер из Properties [{Name, Value}]"""
     best = None
@@ -794,7 +794,7 @@ def day_data(S, ref, ids, day, deadline):
     return rows, hits, dbg, vrn
 
 
-# REDACTED_B64_37 адрес рядом
+# REDACTED_B64_34 адрес рядом
 NEAR_M, GEO_MAX = 300, 400
 
 
@@ -818,7 +818,7 @@ def near_fill(items, cache):
         else: c.pop('addr', None)
 
 
-# REDACTED_B64_37 треки: забрать, проверить, убрать сбои сигнала (30.10.2026)
+# REDACTED_B64_34 треки: забрать, проверить, убрать сбои сигнала (30.10.2026)
 # 30.10.2026 треки: пользователь: «В разделе транспорт нужно забирать треки из ГЛОНАСС и проверять их, и сбои сигнала убирать, там есть
 # что машина ехала-ехала и раз на 100 км правее оказалась и потом обратно или при стоянке перемещения!!!!». В gl.bin 29.10 «Газон NEXT»:
 # 864,1 км при 1,24 ч в движении (697 км/ч — так не бывает). GetTrack(session, schemaID, IDs, SD, ED) → {ID: [RTrackInfo{DT[], Speed[],
@@ -1316,13 +1316,13 @@ def tracks_pub(pub, st):
     return pub
 
 
-# REDACTED_B64_37 неработающие трекеры — отчёт раз в день (29.10.2026)
+# REDACTED_B64_34 неработающие трекеры — отчёт раз в день (29.10.2026)
 # Пользователь: «так же отчет каждый день по не рабочим устройствам». Утром (с DEV_AT МСК), один раз в сутки, только если такие есть:
 # письмо DEV_TO (через очередь хостинга → бот, Gmail от itm@) и копия владельцу в MAX. Неработающий — нет связи дольше DEV_OLD_H часов
 # или связь есть, но нет скорости и координат (GPS). Письмо логистам и АТП об этом — 29.10 (тред «ГЛОНАСС и список автопарка…»).
 DEV_AT, DEV_OLD_H = '08:30', 2
 DEV_TO = ['user2@example.org']                              # 30.10.2026: за трекеры отвечает Сотрудник1 А. В. (Камаева, ls@); пользователь: «mav@, копия auto@»
-DEV_CC = ['user9@example.org']                             # Сотрудник34 С. В. (АТП) — в копии; логистам (ls@) сводка больше не идёт
+DEV_CC = ['user9@example.org']                             # Сотрудник40 С. В. (АТП) — в копии; логистам (ls@) сводка больше не идёт
 
 
 def _ago(h):
@@ -1375,7 +1375,7 @@ def dev_report(st, now, notify, log, save=None):
     return st['dev']
 
 
-# REDACTED_B64_37 трекеры: молчат / стоят / с ошибками (04.11.2026)
+# REDACTED_B64_34 трекеры: молчат / стоят / с ошибками (04.11.2026)
 # Т. В. Сотрудник1 (бэклог после переноса ботов, п. 4): «ежедневный отчёт по неработающим трекерам ГЛОНАСС». По каждой машине:
 #   • молчит  — нет данных дольше N РАБОЧИХ часов (silent_h, 6 ч; work — 07:00–19:00, пн–пт, без праздников mx_ctl.HOLIDAYS):
 #               ночь и выходные машина может стоять со «спящим» трекером — это не поломка;
@@ -1728,7 +1728,7 @@ def trackers_pub(pub, st, today):
     return pub
 
 
-# REDACTED_B64_37 прогон
+# REDACTED_B64_34 прогон
 def _due(st, part, every, now_ts):
     last = st.get('ts_' + part) or 0
     return now_ts - last >= (every if st.get('ok_' + part, True) else min(every, RETRY))
@@ -1866,7 +1866,7 @@ def run(L, log, jload, jsave, publish, iso, notify=None):
         try:                                              # 13.11.2026, Т. В.: СКУД водителей против треков за месяц — «Транспорт» (только владелец).
             import kb_build as _KB                        #   Файл приходит пакетом кода уже зашифрованным ключом владельца (skud_sealed.t14) — на хостинге открытым текстом не лежит
             _hd = os.path.dirname(os.path.abspath(__file__))
-            _sp, _kp = os.path.join(_hd, 'skud_sealed.t14'), os.path.join(_hd, 'k_owner.txt')
+            _sp, _kp = os.path.join(_hd, 'skud_sealed.txt'), os.path.join(_hd, 'k_owner.txt')   # 13.11 вечер: .txt — deploy.py пропускает в code/ только py/json/txt
             if os.path.exists(_sp) and os.path.exists(_kp):
                 with open(_sp, encoding='utf-8') as _f1, open(_kp, encoding='utf-8') as _f2: _sk = _KB.unseal(_f1.read(), bytes.fromhex(_f2.read().strip()))
                 if _sk: pub['skud'] = _sk

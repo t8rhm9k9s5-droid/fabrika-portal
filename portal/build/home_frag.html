@@ -59,10 +59,10 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
         <a class="fm-f" href="plan.html"><span><b id="fmCnt">Карта производства</b><small>территория, инженерные сети и объекты</small></span><span class="ichev" aria-hidden="true" style="flex:none"></span></a>
       </div>
       <!-- 01.11.2026, пользователь (фото главной на iPad): «пусто — можно дальше»: справа под картой было пусто — «Разделы» перенесены сюда -->
-      <div class="fh-cap"><h2 id="secH">Разделы</h2></div>
-      <ul class="fh-secs" id="secs" aria-labelledby="secH"></ul>
     </section>
   </div>
+  <!-- 13.11.2026, Т. В.: «Территория и Требует внимания — одной высоты, Разделы симметрично» — «Разделы» на всю ширину под двумя карточками -->
+  <section class="fh-secs-wide" aria-labelledby="secH"><div class="fh-cap"><h2 id="secH">Разделы</h2></div><ul class="fh-secs" id="secs" aria-labelledby="secH"></ul></section>
 
 
 </main>
@@ -96,7 +96,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var el = document.getElementById('fhSub'), wxs = '';
     function day() { var d = new Date(), w = WD[d.getDay()]; return w.charAt(0).toUpperCase() + w.slice(1) + ', ' + d.getDate() + ' ' + MG[d.getMonth()]; }
     function put() { el.textContent = day() + (wxs ? ' · ' + wxs : ''); }
-    // погода — Сотрудник14 Сотрудник15 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник14 убираем только из поиска и ИИ)
+    // погода — Сотрудник24 Сотрудник25 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник24 убираем только из поиска и ИИ)
     window.addEventListener('t14sky', function (e) { var w = e.detail && e.detail.wx; if (!w || w.temp == null) return;
       var t = Math.round(w.temp); wxs = (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '°' + (w.text ? ', ' + String(w.text).toLowerCase() : ''); put(); });
     put(); setInterval(put, 60e3);
@@ -264,7 +264,10 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var PRm = M.get('promises'); if (PRm && PRm.st) { var pb = (PRm.st['нет подтверждения'] || 0) + (PRm.st['не выполнено'] || 0); if (pb) rows.push(row('sales.html#prom', 'sales', 'var(--ic-sales)', 'Продажи: визиты и звонки без отметки', 'обещали заехать или позвонить — отметки «сделано» нет', n(pb), 'warn')); }
     // 02.11.2026, замечания Т. В.: порядок — отрицательные остатки, план производства, план продаж, рекламации, ОМТС, продажи без отчётов;
     // строк не больше, чем карточек пульса; если тем нет — «Всё в норме на <дата>»
-    function prio(h) { return /stock\.html/.test(h) ? 1 : /staff\.html#pf/.test(h) ? 2 : /план продаж/i.test(h) ? 3 : /sales\.html#recl/.test(h) ? 4 : /omts\.html/.test(h) ? 5 : /без отчётов|не сдаются/.test(h) ? 6 : 7; }
+    // 13.11.2026, Т. В.: тревоги портала (assets/alerts.js, пороги — build/gen_alerts.py) — первыми строками, красным / оранжевым
+    var AL = (window.T14Alerts && T14Alerts.items) || (window.T14_ALERTS && T14_ALERTS.items) || [];
+    AL.forEach(function (a) { rows.push(row(a.href, IC[a.ic] ? a.ic : 'sales', a.lvl === 'crit' ? 'var(--ic-err)' : 'var(--ic-omts)', (a.lvl === 'crit' ? 'Критично. ' : '') + a.cat + ': ' + a.t, a.s, a.v, a.lvl === 'crit' ? 'bad' : 'warn').replace('class="irow"', 'class="irow al-row"')); });
+    function prio(h) { if (h.indexOf('al-row') >= 0) return 0; return /stock\.html/.test(h) ? 1 : /staff\.html#pf/.test(h) ? 2 : /план продаж/i.test(h) ? 3 : /sales\.html#recl/.test(h) ? 4 : /omts\.html/.test(h) ? 5 : /без отчётов|не сдаются/.test(h) ? 6 : 7; }
     rows = rows.map(function (h, i) { return [prio(h), i, h]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
     var nCards = document.querySelectorAll('#pulse .pk').length || 6;
     if (rows.length > nCards) {                       // сначала по одной строке каждой темы (чтобы ОМТС не вытеснялся тремя строками выпуска), потом остальные
