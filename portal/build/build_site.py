@@ -390,6 +390,37 @@ try:
     for _it in (_cg1_read_json('/home/claude/build/fresh_manual.json', encoding='utf-8') or {}).get('items', []):
         if _it.get('day') == _FDAY: _FI.append({k: _it[k] for k in ('k', 'r', 'href', 't') if k in _it})
 except Exception as _fe: print('подсветка: fresh_manual.json —', _fe)
+# 13.11.2026 поздно, Т. В.: «Продажи, Финансы горят жёлтым, хотя я всё посмотрел; если что-то не посмотрено — оно должно гореть ВНУТРИ раздела».
+#   Причина: раздел загорался по списку _FCAT, а ссылки на это место в разделе могло не быть (отчёты — «Продажи», протокол цен — «Снабжение»
+#   после перестройки разделов). Теперь раздел подсвечивается только там, где внутри есть ссылка на новое: роли берутся из самих разделов
+#   (razdel_frag.html, массив D) — по ссылке на категорию библиотеки или на страницу/вид; нет такой ссылки — раздел не горит.
+try:
+    _RZ = {}
+    _rt = frags.get('razdel.html', '') or _cg1_read_file('/home/claude/build/razdel_frag.html', encoding='utf-8')
+    _rd = _rt[_rt.index('var D = ['):_rt.index('window.T14_RAZDEL')]
+    for _mm in re.finditer(r"\n    \['(\w+)', '", _rd): _RZ[_mm.group(1)] = set()
+    _cur = None
+    for _ln in _rd.split('\n'):
+        _ms = re.match(r"    \['(\w+)', '", _ln)
+        if _ms: _cur = _ms.group(1)
+        if _cur: _RZ[_cur].update(re.findall(r"'((?:[\w-]+\.html)(?:#[^']*)?)'", _ln))
+    def _roles_for(x):
+        if x.get('cat'): want = {'library.html#' + x['cat']}
+        else:
+            h = x.get('href') or ''; want = {h} if h else set()
+        return [r for r, links in _RZ.items() if links & want]
+    _FI2, _sk2 = [], set()
+    for _x in _FI:
+        for _r in (_roles_for(_x) or []):
+            _y = dict(_x, r=_r); _y['k'] = ('l-%s-%s' % (_r, _x['file'])) if _x.get('file') else (_x['k'] if _r == _x.get('r') else _x['k'] + '@' + _r)
+            if _x['k'].startswith('lc-'): _y['k'] = 'lc-%s-%s' % (_r, _x.get('cat') or _x.get('href'))
+            if _y['k'] not in _sk2: _sk2.add(_y['k']); _FI2.append(_y)
+        if not _roles_for(_x) and not _x['k'].startswith('lc-'):         # нет раздела со ссылкой — горит только на своей странице, раздел не трогаем
+            _y = dict(_x, r=''); _y['k'] = _x['k'] + '@none'
+            if _y['k'] not in _sk2: _sk2.add(_y['k']); _FI2.append(_y)
+    print('подсветка: разделы по ссылкам —', ', '.join('%s %d' % (r, sum(1 for y in _FI2 if y['r'] == r and not y['k'].startswith('lc-'))) for r in sorted(set(y['r'] for y in _FI2))))
+    _FI = _FI2
+except Exception as _fe: print('подсветка: разделы по ссылкам —', _fe)
 _seenk = set(); _FI = [x for x in _FI if not (x['k'] in _seenk or _seenk.add(x['k']))]
 with open(os.path.join(SITE, 'assets', 'fresh.js'), 'w', encoding='utf-8') as _ff1:
     _ff1.write('window.FRESH=' + _fjs.dumps({'day': _FDAY, 'items': _FI}, ensure_ascii=False) + ';\n' + _cg1_read_file('/home/claude/build/fresh_client.js', encoding='utf-8'))
@@ -403,6 +434,9 @@ for _n in frags:
     _gl1 = '<link rel="stylesheet" href="assets/glass.css">'          # данные — в начале страницы (главная строит «Требует внимания» сразу)
     frags[_n] = frags[_n].replace(_gl1, _gl1 + '\n<script src="assets/alerts_data.js"></script>', 1) if _gl1 in frags[_n] else '<script src="assets/alerts_data.js"></script>\n' + frags[_n]
     frags[_n] += '<script src="assets/alerts.js"></script>\n'
+# 13.11.2026, Т. В.: «все баги фиксируем, даже движение мышкой; тепловые карты; где человек запутался» — assets/ux.js на каждой странице
+for _n in frags:
+    if '<script src="assets/ux.js">' not in frags[_n]: frags[_n] += '<script src="assets/ux.js"></script>\n'
 print('подсветка нового: %d записей на %s' % (len(_FI), _FDAY))
 def _ddmm(s): return (s[8:10] + '.' + s[5:7]) if s and len(s) >= 10 else 'нет данных'
 def _nn(x): return '{:,}'.format(x).replace(',', ' ') if isinstance(x, int) else 'нет данных'

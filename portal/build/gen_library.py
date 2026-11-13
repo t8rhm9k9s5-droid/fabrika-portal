@@ -17,6 +17,7 @@ CATS = [('cards', 'Карточки предприятий (реквизиты)'
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
         ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -121,8 +122,15 @@ for _r, _, _fs in os.walk('/home/claude/library/raw'):
             #   docs2pdf копию не делает, и ссылка вела на сам .docx. Смотреть — этот PDF в просмотрщике портала, Word — кнопкой.
             _rel = 'library/' + os.path.relpath(os.path.join(_r, _f), '/home/claude/library/raw').replace(os.sep, '/')
             VIEW[_rel] = 'library/' + os.path.relpath(os.path.join(_r, os.path.splitext(_f)[0] + '.pdf'), '/home/claude/library/raw').replace(os.sep, '/')
+# 13.11.2026, Т. В.: «нажимаю «Реестр объектов» — попадаю в «Отчёты и сводки». Хочу видеть реестр объектов ФТС» — ссылки на самый свежий документ
+#   по ключу: library.html#open=<ключ> открывает его сразу в просмотрщике (новый реестр подхватывается сам — по дате получения)
+_LT = {'reestr-fts': re.compile(r'реестр.*объектов.*(фтс|вит)', re.I)}
+LATEST = {}
+for _k, _rx in _LT.items():
+    _c = sorted([i for i in items if _rx.search(i.get('title', ''))], key=lambda i: (i.get('received') or i.get('date') or '', i.get('file', '')))
+    if _c: LATEST[_k] = _c[-1]['file']
 data = json.dumps({'mbx': MBX, 'pub': PUB, 'cats': [{'k': k, 't': t, 'c': c, 'i': ic} for k, t, c, ic in CATS], 'int': [{'k': k, 't': t, 'c': c, 'i': ic, 'x': x} for k, t, c, ic, x in INT], 'items': [i for i in items if i['cat'] != 'regs'], 'links': links,
-                   'docs': n_docs, 'arch': n_arch, 'upd': L.get('updated'), 'regs': REGS, 'econ': ECON, 'dog': DOG, 'view': VIEW,
+                   'docs': n_docs, 'arch': n_arch, 'upd': L.get('updated'), 'regs': REGS, 'econ': ECON, 'dog': DOG, 'view': VIEW, 'latest': LATEST,
                    # 29.10.2026: «Перевыпуск документов» — журнал замечаний по сканам/фото/не фирменному стилю (fabrika/tools/build_inventory.py → docs_reissue.json);
                    # прогресс в % по исполнителям — пользователь: «показать прогресс в % исполнителю», контроль каждые 2 рабочих дня
                    'reissue': (_cg1_read_json('/home/claude/build/docs_reissue.json', encoding='utf-8') if os.path.exists('/home/claude/build/docs_reissue.json') else None)}, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
@@ -535,11 +543,12 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     }
     h += pubBlock(k, c.c, c.i);
     if (ls.length) h += '<p class="ihdr">Папка компании</p><div class="igroup">' + ls.map(linkRow).join('') + '</div>';
-    if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Файлов здесь пока нет — ' + (ls.length > 1 ? 'они в папках' : 'они в папке') + ' выше.' : 'Пока нет документов.') + '</p>';
+    if (k === 'protocols' && !its.length) h += '<p class="empty">ОМТС собирает протоколы переговоров с поставщиками (цены, условия поставки, разногласия). Присылают файлом на user1@example.org с темой «Протокол переговоров — поставщик»; каждый появится здесь в течение дня.</p>';
+    else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Файлов здесь пока нет — ' + (ls.length > 1 ? 'они в папках' : 'они в папке') + ' выше.' : 'Пока нет документов.') + '</p>';
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64_35 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_24 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -603,7 +612,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64_35 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_24 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';
@@ -769,7 +778,14 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     T14PDF.open({src: pdf, title: title || (h ? h.textContent.trim() : 'Документ'), meta: sub ? sub.textContent.trim() : (/\\.xlsx?$/i.test(href) ? 'Excel' : 'Word'), orig: href,
                  name: a.getAttribute('download') || href.split('/').pop(), back: back});
   });
-  function route(){ var h = location.hash.slice(1); if (h) cat(h); else main(); window.scrollTo(0, 0); if (PUBF) [].forEach.call(document.querySelectorAll('a[href^="https://fabrikant.su/"]'), markPub); }
+  function openDoc(f, k){                                  // 13.11.2026: library.html#open=<ключ|путь> — сразу документ в просмотрщике
+    var it = (D.items || []).filter(function(x){ return x.file === f; })[0], pdf = D.view && D.view[f];
+    if (!k) cat(it ? it.cat : 'reports');
+    if (pdf && !window.T14PDF && (k || 0) < 50) { setTimeout(function(){ openDoc(f, (k || 0) + 1); }, 100); return; }   // просмотрщик грузится после страницы
+    if (pdf && window.T14PDF) T14PDF.open({src: pdf, title: it ? it.title : 'Документ', meta: /\\.xlsx?$/i.test(f) ? 'Excel' : 'Word', orig: f, name: f.split('/').pop(), back: 'Назад'});
+    else if (f) location.href = f;
+  }
+  function route(){ var h = location.hash.slice(1), mo = /^open=(.+)$/.exec(h); if (mo) { var k = decodeURIComponent(mo[1]); openDoc((D.latest || {})[k] || k); window.scrollTo(0, 0); return; } if (h) cat(h); else main(); window.scrollTo(0, 0); if (PUBF) [].forEach.call(document.querySelectorAll('a[href^="https://fabrikant.su/"]'), markPub); }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live && T14Live.bin) T14Live.bin('docs.bin').then(function(Z){ if (Z && Z.kinds) { MAIL = Z; var h = location.hash.slice(1); if (!h) main(); else if (/^mail-|^prices$|^kp$|^recl$|^reports$/.test(h)) cat(h); } });
   window.T14Library = D;

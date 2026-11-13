@@ -13,20 +13,12 @@ html body .igroup,html body .ios .igroup,.fhome .pk,.fhome .fh-map,.fhome .fh-ba
   -webkit-backdrop-filter:blur(24px) saturate(185%);backdrop-filter:blur(24px) saturate(185%);
   border:1px solid rgba(255,255,255,.78)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.28),0 12px 30px rgba(18,28,38,.09),0 1px 3px rgba(18,28,38,.06)!important}
-html body .igroup::after,.fhome .pk::after,.fhome .fh-map::after,.fhome .fh-ban::after,.pcard::after,.rz-card::after,.rz-map a::after,.fhome .fs::after,.gl::after{
-  content:"";position:absolute;top:-45%;bottom:-45%;width:34%;left:-60%;z-index:3;pointer-events:none;
-  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,.5) 50%,rgba(255,255,255,0) 70%,transparent 100%);
-  transform:skewX(-18deg);animation:t14glint 10s ease-in-out infinite;animation-delay:var(--gd,0s)}
-@keyframes t14glint{0%,80%{left:-60%}93%,100%{left:135%}}
-html body .igroup:hover::after,.fhome .pk:hover::after,.pcard:hover::after,.rz-card:hover::after,.rz-map a:hover::after,.fhome .fs:hover::after,.gl:hover::after{animation:t14glint-h 1.1s ease-out 1}
-@keyframes t14glint-h{from{left:-60%}to{left:135%}}
+/* 13.11.2026, Т. В.: «эффект молнии по карточкам ужасен» — блика нет, остаётся только стекло */
 :root[data-theme=dark] body .igroup,:root[data-theme=dark] .fhome .pk,:root[data-theme=dark] .fhome .fh-map,:root[data-theme=dark] .pcard,:root[data-theme=dark] .rz-card,:root[data-theme=dark] .rz-map a,:root[data-theme=dark] .fhome .fs,:root[data-theme=dark] .gl{
   background:linear-gradient(165deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 32%,rgba(255,255,255,0) 55%),linear-gradient(180deg,rgba(44,46,54,.66),rgba(28,30,36,.56))!important;
   border-color:rgba(255,255,255,.13)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 14px 36px rgba(0,0,0,.45)!important}
 :root[data-theme=dark] body{background:radial-gradient(900px 560px at 8% -6%,rgba(255,150,80,.12),transparent 62%),radial-gradient(860px 640px at 104% 6%,rgba(90,140,255,.14),transparent 62%),var(--p-bg,var(--bg))}
-:root[data-fx=lite] .gl::after,:root[data-fx=lite] .igroup::after,:root[data-fx=lite] .pk::after,:root[data-fx=lite] .rz-card::after,:root[data-fx=lite] .fs::after,:root[data-fx=lite] .pcard::after,:root[data-fx=lite] .fh-map::after,:root[data-fx=lite] .rz-map a::after{display:none}
 :root[data-fx=lite] .gl,:root[data-fx=lite] .igroup,:root[data-fx=lite] .pk,:root[data-fx=lite] .rz-card,:root[data-fx=lite] .pcard{-webkit-backdrop-filter:none;backdrop-filter:none}
-@media (prefers-reduced-motion:reduce){.gl::after,.igroup::after,.pk::after,.rz-card::after,.fs::after,.pcard::after,.fh-map::after,.rz-map a::after{animation:none!important;display:none}}
 /* главная: «Требует внимания» и «Территория и здания» — одной высоты, «Разделы» — на всю ширину под ними (симметрия) */
 .fhome .fh-cols{align-items:stretch}
 .fhome .fh-cols>section{display:flex;flex-direction:column}
@@ -65,7 +57,6 @@ html body .igroup:hover::after,.fhome .pk:hover::after,.pcard:hover::after,.rz-c
 @media (max-width:1100px){.pz-k{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:760px){.pz-k{grid-template-columns:repeat(2,minmax(0,1fr))}.pz-b{grid-template-columns:1fr}.pz-k .v{font-size:26px}.pz-b .gl{min-height:0}.pz-ch{height:170px}}
 /* главная по тому же шаблону, что разделы: сразу карточки пульса (без отдельной плашки сверху); «Разделы» — ровная сетка 6 × 2 (телефон — 2 в ряд) */
-.fhome .fh-ban{display:none!important}
 @media (min-width:1100px){.fhome .fh-secs-wide .fh-secs{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
 @media (min-width:760px) and (max-width:1099px){.fhome .fh-secs-wide .fh-secs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 .fhome .fh-secs-wide .fh-secs>li>a,.fhome .fh-secs-wide .fs{height:100%}
@@ -111,13 +102,9 @@ html body .t14al .al-warn .al-card.gl{background:linear-gradient(165deg,rgba(255
 @media (hover:none){.al-x{opacity:1;transform:none;top:10px;left:auto;right:10px;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.al-h{padding-right:22px}}
 @media (max-width:640px){.al-card{grid-template-columns:40px minmax(0,1fr);gap:12px;padding:14px 14px 14px 12px;align-items:start}.al-ic{width:40px;height:40px;border-radius:11px}.al-ic svg{width:23px;height:23px}
   .al-v{grid-column:2;font-size:22px;margin-top:-4px}.al-v i{display:none}.al-t{font-size:16px}.al-s{font-size:13.5px}.al-r{margin-top:4px}.al-h time{display:none}}
-.tabbar > button{position:relative}.tabbar .al-tb{position:absolute;top:6px;left:calc(50% + 6px);right:auto}
+
 /* значки разделов: красная точка с «!» на иконке раздела (меню, «Разделы»), плашка — в карте разделов, рамка — у карточки пульса */
-.pnav .pi,.fs .fs-i{position:relative}
-.al-dot{position:absolute;top:-6px;right:-7px;z-index:3;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:99px;background:var(--al-c);color:#fff;
-  font:700 11.5px/18px var(--f-body);font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--p-bg,#f2f2f7)}
-.al-dot.al-crit{animation:t14al-dot 2.8s ease-in-out infinite}
-@keyframes t14al-dot{0%,100%{box-shadow:0 0 0 2px var(--p-bg,#f2f2f7),0 0 0 2px rgba(255,59,48,0)}50%{box-shadow:0 0 0 2px var(--p-bg,#f2f2f7),0 0 0 6px rgba(255,59,48,.28)}}
+.al-dot{display:inline-block;width:7px;height:7px;margin-left:8px;border-radius:50%;background:var(--al-c);vertical-align:middle;font-style:normal}
 .al-tag{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:99px;font:600 12px/1.3 var(--f-body);color:var(--al-c);background:var(--al-bg)}
 html body .rz-map a.al-on-crit,html body .fhome .fh-secs .fs.al-on-crit,html body .pz-k a.gl.al-on-crit{border-color:rgba(255,59,48,.45)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 0 0 1px rgba(255,59,48,.35),0 12px 30px rgba(255,59,48,.14)!important}
 html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html body .pz-k a.gl.al-on-warn{border-color:rgba(255,149,0,.45)!important}
@@ -127,3 +114,82 @@ html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html bod
 :root[data-fx=lite] .al-n.al-crit::before{opacity:.5}
 @media (prefers-reduced-motion:reduce){.al-n,.al-n::before,.al-ic::after,.al-dot{animation:none!important}.al-n.al-crit::before{opacity:.5}}
 @media (max-width:640px){.al-r{display:none}.al-warn .al-s{display:none}}
+/* главная (13.11.2026, Т. В.: «карта — высотой в одну левую карточку»): в верхнем ряду «Требует внимания» и карта одной высоты; «Структура» — строкой ниже во всю ширину, в две колонки */
+.fhome .sx-home{margin-top:6px}
+@media (min-width:900px){.fhome .sx-home .igroup{column-count:2;column-gap:0}.fhome .sx-home .irow{break-inside:avoid;-webkit-column-break-inside:avoid}}
+/* тёмная тема «Авто» (по системе): портал не ставит data-theme — копия правил [data-theme=dark] (13.11.2026: «засвеченные поля» на Mac в тёмном режиме) */
+@media (prefers-color-scheme:dark){
+html:root:not([data-theme="light"]) body .igroup,html:root:not([data-theme="light"]) .fhome .pk,html:root:not([data-theme="light"]) .fhome .fh-map,html:root:not([data-theme="light"]) .pcard,html:root:not([data-theme="light"]) .rz-card,html:root:not([data-theme="light"]) .rz-map a,html:root:not([data-theme="light"]) .fhome .fs,html:root:not([data-theme="light"]) .gl{
+  background:linear-gradient(165deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 32%,rgba(255,255,255,0) 55%),linear-gradient(180deg,rgba(44,46,54,.66),rgba(28,30,36,.56))!important;
+  border-color:rgba(255,255,255,.13)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 14px 36px rgba(0,0,0,.45)!important}
+html:root:not([data-theme="light"]) body{background:radial-gradient(900px 560px at 8% -6%,rgba(255,150,80,.12),transparent 62%),radial-gradient(860px 640px at 104% 6%,rgba(90,140,255,.14),transparent 62%),var(--p-bg,var(--bg))}
+html:root:not([data-theme="light"]) .al-crit{--al-c:#ff453a;--al-c2:#d70015}
+html:root:not([data-theme="light"]) .al-warn{--al-c:#ff9f0a;--al-c2:#c86e00}
+html:root:not([data-theme="light"]) body .t14al .al-crit .al-card.gl{background:linear-gradient(165deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,0) 50%),linear-gradient(180deg,rgba(92,24,26,.74),rgba(60,16,18,.64))!important;border-color:rgba(255,69,58,.42)!important}
+html:root:not([data-theme="light"]) body .t14al .al-warn .al-card.gl{background:linear-gradient(165deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,0) 50%),linear-gradient(180deg,rgba(84,54,12,.74),rgba(56,36,8,.64))!important;border-color:rgba(255,159,10,.4)!important}
+html:root:not([data-theme="light"]) .al-x{background:rgba(58,58,62,.94)}
+html:root:not([data-theme="light"]) .al-x svg{stroke:#ebebf5}
+}
+/* тревоги компактно (13.11.2026, Т. В.: «два верхних алерта поуже, текста слишком много») — одна строка */
+.t14al{gap:8px;margin:2px 0 14px}
+.al-card{grid-template-columns:30px minmax(0,1fr) auto;gap:12px;padding:9px 16px 9px 10px;border-radius:16px}
+.al-n.al-crit::before{border-radius:16px}
+.al-ic{width:30px;height:30px;border-radius:8px}.al-ic svg{width:18px;height:18px}.al-crit .al-ic::after{border-radius:11px;inset:-3px}
+.al-b{display:flex;align-items:baseline;gap:10px;min-width:0;white-space:nowrap;overflow:hidden}
+.al-h{flex:none}.al-h time{display:none}
+.al-t{margin:0;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.al-s,.al-r{display:none}
+.al-v{font-size:20px;gap:10px}.al-v i{width:7px;height:7px;border-width:2px 2px 0 0}
+@media (max-width:640px){.al-card{grid-template-columns:28px minmax(0,1fr) auto;padding:9px 12px 9px 9px}.al-ic{width:28px;height:28px}
+  .al-v{grid-column:auto;font-size:17px;margin:0}.al-h span{display:none}.al-t{font-size:14px}.al-b{gap:8px}}
+@media (max-width:640px){.al-card{align-items:center}.al-h{display:none}}
+@media (hover:none){.al-x{display:none}.al-h{padding-right:0}}
+.pnav .pi,.fs .fs-i{position:relative}
+.al-dot.al-ic-dot{position:absolute;top:-3px;left:-3px;width:9px;height:9px;margin:0;box-shadow:0 0 0 2px var(--p-bg,#f2f2f7)}
+/* «Пульс фабрики» первой строкой главной (13.11.2026, Т. В.): три главные цифры; справа — тревоги плитками шириной в плитку раздела.
+   Без бликов и мигания: цвет цифры — зелёный / оранжевый / красный, точка у подписи того же цвета. Сетка — как у «Разделов» (6 / 3 / 2). */
+.al-n,.al-n::before,.al-ic::after,.al-dot{animation:none!important}
+.al-n.al-crit::before{opacity:.5}
+.fhome .fh-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0 6px}
+.fhome .fh-top .fh-ban{display:flex!important;flex-direction:column;gap:12px;grid-column:1/-1;margin:0;padding:16px 18px;border-radius:22px}
+.fhome .fh-top .fh-al{display:contents}
+.fhome .fb-h{display:flex;gap:12px;align-items:center}
+.fhome .fb-h p{margin:2px 0 0;font:400 13.5px/1.35 var(--f-body);color:var(--p-fg2)}
+.fhome .fb-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fhome .fb-m{--t:var(--p-fg3,#8e8e93);display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:14px;background:rgba(118,118,128,.1);text-decoration:none;color:inherit;min-width:0}
+.fhome .fb-m[data-tone=ok]{--t:#34c759}.fhome .fb-m[data-tone=warn]{--t:#ff9500}.fhome .fb-m[data-tone=bad]{--t:#ff3b30}
+.fhome .fb-l{display:flex;align-items:center;gap:7px;font:500 13px var(--f-body);color:var(--p-fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhome .fb-l i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--t)}
+.fhome .fb-v{font:700 28px/1.1 var(--f-display);letter-spacing:-.01em;color:var(--t);font-variant-numeric:tabular-nums}
+.fhome .fb-m[data-tone=none] .fb-v,.fhome .fb-m[data-tone=wait] .fb-v{color:var(--p-fg3,#8e8e93)}
+.fhome .fb-v small{font:600 15px var(--f-body);margin-left:2px}
+.fhome .fb-s{font:400 12.5px/1.3 var(--f-body);color:var(--p-fg2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fhome .fh-top .fh-flow{margin-top:0}
+.al-tile{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:22px;text-decoration:none;color:inherit;min-width:0}
+html body .al-tile.al-crit.gl{background:linear-gradient(180deg,rgba(255,238,236,.9),rgba(255,226,222,.74))!important;border-color:rgba(255,59,48,.35)!important}
+html body .al-tile.al-warn.gl{background:linear-gradient(180deg,rgba(255,246,232,.9),rgba(255,237,214,.74))!important;border-color:rgba(255,149,0,.35)!important}
+.al-tile .at-h{display:flex;align-items:center;gap:10px}
+.al-tile .al-ic{width:30px;height:30px;border-radius:8px}.al-tile .al-ic svg{width:18px;height:18px}
+.al-tile .at-c{display:flex;flex-direction:column;font:500 12px/1.2 var(--f-body);color:var(--ios-2,#6b7280);text-transform:uppercase;letter-spacing:.04em;min-width:0}
+.al-tile .at-c b{color:var(--al-c);font-weight:700}
+.al-tile .at-v{margin-top:auto;font:700 34px/1.05 var(--f-display);color:var(--al-c);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.al-tile .at-t{font:500 13px/1.3 var(--f-body);color:var(--ios-label,inherit);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media (min-width:901px) and (max-width:1339px){.fhome .fh-top{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1340px){.fhome .fh-top{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .fhome .fh-top.al-n1 .fh-ban{grid-column:1/span 5}.fhome .fh-top.al-n2 .fh-ban{grid-column:1/span 4}.fhome .fh-top.al-n3 .fh-ban{grid-column:1/span 3}}
+@media (max-width:700px){.fhome .fh-top .fh-ban{display:flex!important}.fhome .fb-k{grid-template-columns:1fr}.fhome .fb-m{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}
+  .fhome .fb-l{flex:1 1 100%}.fhome .fb-v{font-size:24px}.fhome .fb-s{flex:1;min-width:0}.fhome .fh-top .fh-flow{display:none}}
+@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]) body .al-tile.al-crit.gl{background:linear-gradient(180deg,rgba(92,24,26,.74),rgba(60,16,18,.64))!important;border-color:rgba(255,69,58,.42)!important}
+  html:root:not([data-theme="light"]) body .al-tile.al-warn.gl{background:linear-gradient(180deg,rgba(84,54,12,.74),rgba(56,36,8,.64))!important;border-color:rgba(255,159,10,.4)!important}
+  html:root:not([data-theme="light"]) .fhome .fb-m{background:rgba(118,118,128,.18)}}
+:root[data-theme=dark] body .al-tile.al-crit.gl{background:linear-gradient(180deg,rgba(92,24,26,.74),rgba(60,16,18,.64))!important;border-color:rgba(255,69,58,.42)!important}
+:root[data-theme=dark] body .al-tile.al-warn.gl{background:linear-gradient(180deg,rgba(84,54,12,.74),rgba(56,36,8,.64))!important;border-color:rgba(255,159,10,.4)!important}
+:root[data-theme=dark] .fhome .fb-m{background:rgba(118,118,128,.18)}
+/* ширины: ≥1340 — 6 колонок (как «Разделы»); 901–1339 — 3 (плитка тревоги — третья колонка); ≤900 — плитка во всю ширину строкой */
+.fhome .fh-top .fh-ban{align-items:stretch}
+@media (min-width:901px) and (max-width:1339px){.fhome .fh-top.al-n1 .fh-ban{grid-column:1/span 2}}
+@media (max-width:900px){.fhome .fh-top .al-tile{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:12px;padding:12px 14px;border-radius:18px}
+  .fhome .fh-top .al-tile .at-v{margin:0;font-size:26px;grid-column:3;grid-row:1}.fhome .fh-top .al-tile .at-h{grid-column:1;grid-row:1}
+  .fhome .fh-top .al-tile .at-t{grid-column:2;grid-row:1;-webkit-line-clamp:2}.fhome .fh-top .al-tile .at-c{display:none}}
+/* 13.11.2026, Т. В.: «значок клёво слева сверху — только на полрадиуса левее и в 2 раза меньше, чтобы не бросался в глаза» */
+.al-dot.al-ic-dot{width:5px;height:5px;top:-2px;left:-5px;box-shadow:0 0 0 1.5px var(--p-bg,#f2f2f7)}

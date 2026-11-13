@@ -2,11 +2,12 @@
 # большие с диаграммами — как на главной; структура везде одна»). Живые цифры (продажи, выпуск, склад, рекламации, отзывы, лиды, машины)
 # страница берёт у робота (assets/metrics.js, assets/live.js); здесь — то, что живёт в сборке: план менеджеров, график отгрузки, счётчики,
 # документы, каталог, люди, новые клиенты. → site/assets/pulse_data.js (window.T14_PULSE_STATIC). Запуск — из build_site.py.
-import json, os, re, glob, datetime
+import json, re, glob, datetime
 B = '/home/claude/build'; OUT = '/home/claude/site/assets/pulse_data.js'
 D = {'built': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M')}
 def J(p, d=None):
-    try: return json.load(open(p, encoding='utf-8'))
+    try:
+        with open(p, encoding='utf-8') as f: return json.load(f)
     except Exception: return d
 pm = sorted(glob.glob(B + '/sales_plan_mgr/2*.json'))
 if pm:
@@ -43,13 +44,21 @@ D['docs']['days'] = sorted(days.items())
 c = J(B + '/catalog/summary.json') or {}
 D['items'] = {'types': c.get('types'), 'models': c.get('models'), 'isp': c.get('isp'), 'prices': cats.get('prices', 0), 'catalogs': cats.get('catalogs', 0)}
 try:
-    t = open('/home/claude/fabrika/struktura/структура/src/data_fabrikant.py', encoding='utf-8').read()
+    with open('/home/claude/fabrika/struktura/структура/src/data_fabrikant.py', encoding='utf-8') as f: t = f.read()
     D['people'] = {'n': len(set(re.findall(r'P\(\s*"([^"]+)"', t)))}
 except Exception: D['people'] = {}
 ko = J('/home/claude/app_build/host/live/ko_staff.json') or {}
 D['people']['ko'] = len(ko.get('staff') or ko.get('people') or []) if isinstance(ko, dict) else 0
 cs = J(B + '/calls_search.json')
 D['people']['contacts'] = len(cs) if isinstance(cs, list) else len((cs or {}).get('items') or [])
+ON = J(B + '/online/online.json') or {}                     # 13.11.2026: «Онлайн-продажи» — отдельный раздел: сводка мониторинга сайтов (build/online)
+W = ON.get('web') or {}
+if W:
+    thr = ON.get('thr') or 0
+    D['online'] = {'t': (W.get('t') or '')[:10], 'total': W.get('total'), 'sites': W.get('sites'), 'checked': W.get('checked'),
+                   'low': sum(1 for q in ON.get('prices') or [] if q.get('p') and q.get('r') and q['p'] < q['r'] * (1 - thr)),
+                   'below': len(W.get('below') or []), 'noship': len(W.get('no_ship') or []),
+                   'by_site': (W.get('by_site') or [])[:8], 'by_model': [[m[0], m[1]] for m in (W.get('by_model') or [])[:8]]}
 s = 'window.T14_PULSE_STATIC = ' + json.dumps(D, ensure_ascii=False, separators=(',', ':')) + ';\n'
-open(OUT, 'w', encoding='utf-8').write(s)
+with open(OUT, 'w', encoding='utf-8') as f: f.write(s)
 print('pulse data', len(s), 'bytes:', ', '.join(k for k in D if k != 'built'))

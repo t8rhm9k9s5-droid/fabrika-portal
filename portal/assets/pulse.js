@@ -26,13 +26,13 @@
     sales: function () {
       var P = ST.planm || {}, T = P.tot || {}, S = bin('sales.bin'), Ld = bin('leads.bin'), ld = lastDay(S), NC = ST.newcl || {};
       var ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null, td = MSK(), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null;
-      var cp = S && S.cp;
+      var cp = S && S.cp, SH = ST.ship || {};
       var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на дату надо ' + mln(T.need) : 'нет данных', T.pct, 'sales.html#planm'),
         K('Продажи за день', C.b, ld ? d1(ld[1].types.tot[1] / 1e6) : '—', 'млн ₽', ld ? dd(ld[0]) + ' · ' + n(ld[1].types.tot[0]) + ' шт' : 'данные робота ещё не пришли', null, 'sales.html#s-s1c'),
         K('Отчёты офисов', C.g, rep != null ? rep : '—', ops ? 'из ' + ops.length : '', ops ? 'сдали вечерний отчёт сегодня' : 'данные робота ещё не пришли', ops ? Math.round(rep / ops.length * 100) : null, 'sales.html#s-prom'),
         K('Лиды выставок', C.v, Ld && Ld.tot ? n(Ld.tot.done) : '—', Ld && Ld.tot ? 'из ' + n(Ld.tot.rows) : '', Ld && Ld.tot ? 'отмечено ' + Math.round(Ld.tot.done / Ld.tot.rows * 100) + ' % · сверка 20.11' : 'робот собирает раз в час', Ld && Ld.tot ? Ld.tot.done / Ld.tot.rows * 100 : null, 'sales.html#leads'),
         K('Новые клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
-        K('Контрольные точки', C.r, cp ? cp.open : '—', 'открыто', cp ? cp.late + ' просрочено из ' + cp.n : 'данные робота ещё не пришли', cp && cp.open ? Math.round(cp.late / cp.open * 100) : null, 'sales.html#cp')];
+        K('Отгрузка недели', C.r, SH.tot && SH.tot.s ? d1(SH.tot.s / 1e6) : '—', 'млн ₽', SH.from ? n(SH.tot.q) + ' шт · ' + dd(SH.from) + '–' + dd(SH.to) : 'график отгрузки 1С', null, 'sales.html#ship')];   // 13.11.2026: отгрузки — в продажах
       var D = S && S.sday && S.sday.days, ym = MSK().slice(0, 7), days = D ? Object.keys(D).filter(function (x) { return x.slice(0, 7) === ym && D[x].types && D[x].types.tot && D[x].types.tot[1] > 1e5 && D[x].types.tot[1] < 6e7; }).sort().slice(-12) : [];
       var b1 = ['Продажи по дням — ' + ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'][+ym.slice(5) - 1], 'млн ₽ · рассылки 1С «Продажи по номенклатурным группам»', 'bars',
         days.map(function (x) { var v = D[x].types.tot[1] / 1e6; return [dd(x), v, d1(v)]; })];
@@ -82,21 +82,36 @@
       var b2 = ['Движение за месяц — все склады', 'шт · начало, приход, расход, конец', 'bars', t.length === 4 ? [['начало', t[0], n(t[0])], ['приход', t[1], n(t[1])], ['расход', t[2], n(t[2])], ['конец', t[3], n(t[3])]] : []];
       return [k, [b1, b2]];
     },
-    log: function () {
-      var G = bin('gl.bin'), S = ST.ship || {}, T = S.tot || {}, days = S.days || [];
+    log: function () {                                     // 13.11.2026, Т. В.: «логистика — только автотранспорт, перемещение грузов, свой транспорт; отгрузки — продажи»
+      var G = bin('gl.bin');
       var cars = G && G.cars || [], nm = {}; cars.forEach(function (c) { nm[c.id] = c.name + (c.vrn ? ' ' + c.vrn.split(' ').slice(0, 2).join(' ') : ''); });
       var dk = G && G.day ? Object.keys(G.day).sort() : [], yd = dk.length > 1 ? dk[dk.length - 2] : dk[0], rows = yd ? (G.day[yd] || []) : [];
       var km = rows.reduce(function (a, r) { return a + (r.km || 0); }, 0), moving = rows.filter(function (r) { return (r.km || 0) > 1; }).length;
       var sk = G && G.skud, skn = sk && sk.rows ? sk.rows.filter(function (r) { return r.fails || r.bad; }).length : null;
       var k = [K('Машин в учёте', C.b, cars.length || '—', '', G ? 'ГЛОНАСС · обновлено ' + (G.t || '').slice(11, 16) : 'нужен доступ к ГЛОНАСС', null, 'transport.html'),
-        K('Пробег вчера', C.o, G ? n(km) : '—', 'км', G ? dd(yd) + ' · в движении ' + moving + ' из ' + rows.length : '', null, 'transport.html'),
-        K('Отгрузка недели', C.g, T.s ? d1(T.s / 1e6) : '—', 'млн ₽', T.q ? n(T.q) + ' шт · ' + dd(S.from) + '–' + dd(S.to) : 'график отгрузки', null, 'sales.html#ship'),
-        K('Клиентов в отгрузке', C.v, days.length ? days.reduce(function (a, d) { return a + (d[3] || 0); }, 0) : '—', '', 'по дням недели, с повторами', null, 'sales.html#ship'),
-        K('Металлоизделия', C.t, T.qx != null ? n(T.qx) : '—', 'шт', T.sx ? d1(T.sx / 1e6) + ' млн ₽ в графике недели' : '', null, 'sales.html#ship'),
-        K('СКУД и треки', C.r, skn != null ? skn : '—', skn != null ? 'с расхождениями' : '', sk ? 'за ' + (sk.month || '') : 'водители территориального транспорта — уточняем', null, 'transport.html#skud')];
-      var b1 = ['Отгрузка по дням недели', 'млн ₽ · 1С «График отгрузки за неделю»', 'bars', days.map(function (d) { return [dd(d[0]), (d[2] || 0) / 1e6, d1((d[2] || 0) / 1e6)]; })];
+        K('Пробег вчера', C.o, G ? n(km) : '—', 'км', G ? dd(yd) : '', null, 'transport.html'),
+        K('В движении вчера', C.g, G ? moving : '—', G ? 'из ' + rows.length : '', G ? 'машин с пробегом больше 1 км' : '', G && rows.length ? Math.round(moving / rows.length * 100) : null, 'transport.html'),
+        K('СКУД и треки', C.r, skn != null ? skn : '—', skn != null ? 'с расхождениями' : '', sk ? 'водители территориального транспорта · ' + (sk.month || '') : 'водители территориального транспорта — уточняем', null, 'transport.html#skud'),
+        K('Расход ГСМ', C.y, '—', '', 'нормы и путевые листы — ждём от Камаевой М. В.', null, ''),
+        K('Перемещение грузов', C.t, '—', '', 'своим транспортом между складами и офисами — готовится', null, '')];
+      var tl = dk.slice(-10).map(function (d) { var s = (G.day[d] || []).reduce(function (a, r) { return a + (r.km || 0); }, 0); return [dd(d), s, n(s)]; });
+      var b1 = ['Пробег по дням', 'км в сутки, все машины · ГЛОНАСС', 'bars', tl];
       var top = rows.filter(function (r) { return (r.km || 0) > 0; }).sort(function (a, b) { return b.km - a.km; }).slice(0, 8), mk = top.length ? top[0].km : 1;
       var b2 = ['Пробег по машинам — ' + dd(yd), 'км за сутки · ГЛОНАСС', 'hbars', top.map(function (r) { return [nm[r.id] || 'машина', r.km / mk * 100, C.o, n(r.km)]; }), null];
+      return [k, [b1, b2]];
+    },
+    online: function () {                                  // 13.11.2026, Т. В.: «онлайн-продажи — отдельный блок» (мониторинг сайтов build/online + отзывы Ozon)
+      var O = ST.online || {}, R = M('rev') || {};
+      var rv = R.v != null ? d1(R.v) : '—', nw = R.mode === 'api' ? R.nw : (R.M && R.M.neg_new);
+      var k = [K('Предложений в Рунете', C.b, O.total != null ? n(O.total) : '—', '', O.t ? 'наши модели · на ' + dd(O.t) : 'мониторинг сайтов ещё не собран', null, 'sales.html#online'),
+        K('Сайтов-продавцов', C.i, O.sites != null ? n(O.sites) : '—', '', 'маркетплейсы и интернет-магазины', null, 'sales.html#online'),
+        K('Проверено моделей', C.g, O.checked != null ? n(O.checked) : '—', '', 'поиск по названию, штрихкоду и фото', null, 'sales.html#online'),
+        K('Ниже РРЦ', C.r, O.below != null ? n(O.below) : '—', 'предлож.', O.low != null ? 'у партнёров ниже РРЦ больше чем на 10 % — ' + O.low : '', null, 'sales.html#online'),
+        K('Отзывы Ozon', C.y, rv, R.v != null ? 'из 5' : '', R.date ? 'средняя оценка · на ' + dd(R.date) : (R.src || 'отзывы ещё не пришли'), R.v != null ? R.v / 5 * 100 : null, 'sales.html#rev'),
+        K('Без наших отгрузок', C.o, O.noship != null ? n(O.noship) : '—', '', 'товар продаётся, а отгрузок этому продавцу нет', null, 'sales.html#online')];
+      var bs = O.by_site || [], ms = bs.length ? bs[0][1] : 1, bm = O.by_model || [], mm = bm.length ? bm[0][1] : 1;
+      var b1 = ['Предложения по сайтам', 'сколько наших позиций продаёт сайт · на ' + dd(O.t), 'hbars', bs.map(function (x) { return [x[0], x[1] / ms * 100, C.b, n(x[1])]; }), null];
+      var b2 = ['Предложения по моделям', 'на скольких сайтах продаётся модель', 'hbars', bm.map(function (x) { return [x[0], x[1] / mm * 100, C.i, n(x[1])]; }), null];
       return [k, [b1, b2]];
     },
     fin: function () {
@@ -179,7 +194,8 @@
     var f = SEC[sec]; if (!f || !host) return;
     var x = f(), K = x[0], B = x[1];
     var h = '<p class="pz-h">Пульс раздела</p><div class="pz-k">' + K.map(function (k, i) {
-      return '<a class="gl" style="--c:' + k[1] + ';--gd:' + (i * 0.7).toFixed(1) + 's" href="' + esc(k[6]) + '"><span class="t"><i></i>' + esc(k[0]) + '</span><span class="v">' + esc(k[2]) + (k[3] ? '<small>' + esc(k[3]) + '</small>' : '') + '</span><span class="s">' + esc(k[4]) + '</span>' + (k[5] != null ? '<span class="bar"><b style="width:' + Math.max(2, Math.min(100, k[5])) + '%"></b></span>' : '') + '</a>';
+      var tg = k[6] ? 'a' : 'div';                          // нет отчёта (готовится) — карточка без ссылки
+      return '<' + tg + ' class="gl" style="--c:' + k[1] + ';--gd:' + (i * 0.7).toFixed(1) + 's"' + (k[6] ? ' href="' + esc(k[6]) + '"' : '') + '><span class="t"><i></i>' + esc(k[0]) + '</span><span class="v">' + esc(k[2]) + (k[3] ? '<small>' + esc(k[3]) + '</small>' : '') + '</span><span class="s">' + esc(k[4]) + '</span>' + (k[5] != null ? '<span class="bar"><b style="width:' + Math.max(2, Math.min(100, k[5])) + '%"></b></span>' : '') + '</' + tg + '>';
     }).join('') + '</div><div class="pz-b">' + B.map(function (b, i) {
       return '<div class="gl" style="--gd:' + (4.2 + i * 0.7).toFixed(1) + 's"><h3>' + esc(b[0]) + '</h3><p class="sub">' + esc(b[1]) + '</p>' + (b[2] === 'bars' ? bars(b[3]) : hbars(b[3], b[4])) + '</div>';
     }).join('') + '</div><p class="pz-h">Отчёты раздела</p>';

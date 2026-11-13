@@ -798,7 +798,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   // 11.11.2026, Т. В.: «отдельный раздел онлайн-продажи: артикулы, объём продаж, другие продавцы наших артикулов, сравнение цен». Данные — build/online/online.json
   var ONLINE = (function () { try { return JSON.parse(document.getElementById('online-data').textContent || 'null'); } catch (e) { return null; } })();
   function online() {
-    var O = ONLINE, h = '<a class="back" href="#">Продажи</a><h1>Онлайн-продажи</h1>';
+    var O = ONLINE, h = '<a class="back" href="razdel.html#online">Онлайн-продажи</a><h1>Онлайн-продажи</h1>';
     if (!O) { V.innerHTML = h + '<p class="lead">Данных пока нет.</p>'; return; }
     var M = O.months || ['авг', 'сен', 'окт'], chs = [];
     O.arts.forEach(function (a) { if (chs.indexOf(a.ch) < 0) chs.push(a.ch); });
@@ -1435,7 +1435,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   }
   // 03.11.2026, пользователь: «Корягин и ПКС… выгрузка по качеству… почему не взято в раздел?» — отзывы покупателей отдельной страницей #rev
   function rev() {
-    var h = '<a class="back" href="#">Продажи</a><h1>Отзывы покупателей</h1><p class="lead">Ozon · магазины ' + esc(Object.keys((OZR && OZR.shops) || {}).join(' и ') || '—') + (VIR && VIR.all ? ' · ВсеИнструменты' : '') + '. Отзывы — отдельный показатель от рекламаций: <a href="#recl">рекламации</a>.</p>';
+    var h = '<a class="back" href="razdel.html#online">Онлайн-продажи</a><h1>Отзывы покупателей</h1><p class="lead">Ozon · магазины ' + esc(Object.keys((OZR && OZR.shops) || {}).join(' и ') || '—') + (VIR && VIR.all ? ' · ВсеИнструменты' : '') + '. Отзывы — отдельный показатель от рекламаций: <a href="#recl">рекламации</a>.</p>';
     var b = revAll() + revBlock() + viRevBlock(); V.innerHTML = h + (b || '<p class="lead">Выгрузки отзывов ещё нет.</p>');
     Array.prototype.forEach.call(V.querySelectorAll('[data-vim]'), function (a) { a.addEventListener('click', function (e) { e.preventDefault(); VIM = 1; rev(); }); });
     Array.prototype.forEach.call(V.querySelectorAll('[data-rs]'), function (a) { a.addEventListener('click', function (e) { e.preventDefault(); REVSH = a.getAttribute('data-rs'); rev(); }); });
@@ -1479,7 +1479,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   }
   function mp() {
     var S = ozStat();
-    var h = '<a class="back" href="#">Продажи</a><h1>Маркетплейсы</h1><p class="lead"><b style="display:inline-block;padding:2px 9px;border-radius:999px;background:#005bff;color:#fff;font-size:13px;vertical-align:2px">Ozon</b> ' +
+    var h = '<a class="back" href="razdel.html#online">Онлайн-продажи</a><h1>Маркетплейсы</h1><p class="lead"><b style="display:inline-block;padding:2px 9px;border-radius:999px;background:#005bff;color:#fff;font-size:13px;vertical-align:2px">Ozon</b> ' +
       'Статистика Ozon по кабинету ООО «ПКС»: заказы покупателей на Ozon по дням и по товарам (SKU) с 1 июля 2026. Источник — Ozon Seller API, раздел «Аналитика».</p>';
     h += odBlock() + revLink() + mpsBlock();
     if (!S) { V.innerHTML = h + (OD || OZR ? '' : '<p class="lead">Данных Ozon пока нет: хостинг забирает их раз в сутки.</p>'); return; }

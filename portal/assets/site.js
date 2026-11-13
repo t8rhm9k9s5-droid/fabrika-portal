@@ -112,6 +112,7 @@
     s_apk: SVG('<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>'),
     s_back: SVG('<path d="m15 18-6-6 6-6"/>'),
     s_sliders: SVG('<path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>'),
+    s_web: SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>'),   // 13.11.2026: «Онлайн-продажи»
     s_store: SVG('<path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/>'),
     s_arch: SVG('<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>'),
     s_meter: SVG('<path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/>'),   // 04.11.2026: «Счётчики и откачка»
@@ -134,12 +135,13 @@
   // чьи цифры показывает карточка раздела на главной (T14M.card). Прежний список (до 13.11) — build/site.before-razdel1311.js
   var PORTAL = [['home.html', 'Главная', 's_home', 'var(--ic-home)', 'Пульс компании и что требует решения'],
     ['poruch.html', 'Поручения', 's_docs', 'var(--ic-err)', 'Невыполненное: отметки бота, совещания, руководство, офисы'],
-    ['razdel.html#sales', 'Продажи', 's_sales', 'var(--ic-sales)', 'Онлайн-продажи, план-факт, клиенты и заказы', 'sales.html'],
+    ['razdel.html#sales', 'Продажи', 's_sales', 'var(--ic-sales)', 'Деньги: план-факт, ФТС, ПКС, ЖПС, ПК Регин, клиенты, отгрузки', 'sales.html'],
+    ['razdel.html#online', 'Онлайн-продажи', 's_web', 'var(--ic-items)', 'Маркетплейсы, интернет-партнёры, цены и отзывы'],   // 13.11.2026, Т. В.: «онлайн-продажи — отдельный блок»
     ['razdel.html#prod', 'Производство', 's_prod', 'var(--ic-prod)', 'Выпуск, участки, мощность', 'staff.html'],
     ['razdel.html#quality', 'Качество', 's_file', 'var(--ic-err)', 'Рекламации, брак, сертификаты'],
     ['razdel.html#supply', 'Снабжение и склад', 's_stock', 'var(--ic-stock)', 'Заявки ОМТС и остатки складов', 'stock.html'],
-    ['razdel.html#log', 'Логистика', 's_omts', 'var(--ic-omts)', 'Отгрузки и транспорт'],
-    ['razdel.html#fin', 'Финансы и экономика', 's_sliders', 'var(--ic-ai)', 'Выручка, деньги, экономика ПЭО'],
+    ['razdel.html#log', 'Логистика', 's_omts', 'var(--ic-omts)', 'Автотранспорт, перемещение грузов, ГСМ'],
+    ['razdel.html#fin', 'Финансы и экономика', 's_sliders', 'var(--ic-ai)', 'Экономика ПЭО: цены, объёмы, мощность'],
     ['razdel.html#items', 'Продукция', 's_items', 'var(--ic-items)', 'Каталог, модели, материалы, прайсы'],
     ['razdel.html#people', 'Люди', 's_org', 'var(--ic-calls)', 'Структура, контакты, кадры'],
     ['razdel.html#docs', 'Документы', 's_docs', 'var(--ic-docs)', 'Договоры, регламенты, чертежи, архив'],
@@ -724,7 +726,7 @@
     function upOf() {                                       // уровень выше текущего места: {u: адрес, sheet?: 'sections'} | {el: кнопка вида} | null (Главная)
       // 13.11.2026 вечер, Т. В.: «кнопка назад плохо срабатывает» — из «Разделы → Продажи» (razdel.html#sales) открыл «Лиды», «Назад» вёл на
       //   отдельную страницу sales.html, а не туда, откуда пришёл. Пришли со страницы раздела — туда и возвращаемся (шаг назад по истории).
-      try { var pv0 = (history.state || {}).t14p; if (own && pv0 && /^razdel\.html#\w+$/.test(pv0) && pv0 !== cur + location.hash) return { u: pv0, t: 'Назад' }; } catch (e0) { }
+      try { var pv0 = (history.state || {}).t14p; if (own && cur !== 'razdel.html' && pv0 && /^razdel\.html#\w+$/.test(pv0) && pv0 !== cur + location.hash) return { u: pv0, t: 'Назад' }; } catch (e0) { }   // 13.11.2026, Т. В.: «Назад — на уровень вверх, не по кругу»: со страницы раздела — всегда на Главную
       var ib = inBack();
       if (ib) { var h = ib.getAttribute('href'); if (h == null) return { el: ib, t: (ib.textContent || '').trim() }; return { u: h.charAt(0) === '#' ? cur + location.search + (h.length > 1 ? h : '') : h.replace(/^\.\//, ''), t: (ib.textContent || '').trim() }; }
       if (location.hash.length > 1) return { u: cur + location.search, t: (cur === sec ? secName : subName) || 'Назад' };
@@ -824,6 +826,13 @@
     crumb.innerHTML = '<a href="home.html">' + LION + 'Фабрика</a>' + (secName && sec !== 'home.html' ? ' / ' + (cur !== sec ? '<a href="' + sec + '"></a>' : '<span></span>') : ' / <span>Главная</span>') + (cur !== sec && subName ? ' / <span></span>' : '');
     var cl = crumb.querySelectorAll('a:not(:first-child),span'); if (cl[0] && sec !== 'home.html') cl[0].textContent = secName; if (cl[1]) cl[1].textContent = subName;
     top.appendChild(crumb);
+    // 13.11.2026: на razdel.html разделы переключаются хэшем без перезагрузки — пункт меню, цвет и «Где я» обновляются вслед
+    if (cur === 'razdel.html') window.addEventListener('hashchange', function () {
+      var row = PORTAL.filter(function (p) { return onSec(p[0]); })[0];
+      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { if (onSec(a.dataset.p)) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      var sp = crumb.querySelector('span'); if (sp && row) sp.textContent = row[1];
+      if (row) document.body.style.setProperty('--sec', row[3]);
+    });
     // Android-планшет: строка поиска Material 3 вместо круглой кнопки
     var asr = trigger('search', 'pasrch', 's_search', 'Поиск по порталу: документ, объект, изделие'); top.appendChild(asr);
     if (!isPlan) conf.tabs.forEach(function (t) { var lb = titles[t[0]] || t[1], pb = trigger(t[0], 'pbtn plocal', t[2], lb); pb.setAttribute('aria-label', lb); pb.title = lb; top.appendChild(pb); });
@@ -955,7 +964,7 @@
     try { ['scrollY', 'pageYOffset'].forEach(function (k) { Object.defineProperty(window, k, { configurable: true, get: function () { return B.scrollTop; } }); }); } catch (e) { }
   }
   if (document.body) scrollMode(); else document.addEventListener('DOMContentLoaded', scrollMode);
-  // REDACTED_B64_35 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
+  // REDACTED_B64_24 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
   var SXP = { 'staff.html': { deps: ['Производство', 'Технологический отдел', 'Служба главного инженера', 'Служба главного механика'], areas: true, pd: true },
@@ -1021,7 +1030,7 @@
       var ko = DP.filter(function (d) { return /коммерческ/i.test(d.title); })[0], pd = O.production_director || (O.directors || [])[0];
       var sh = function (nm) { var w = String(nm || '').split(/\s+/); return w[0] + (w[1] ? ' ' + w[1][0] + '.' : '') + (w[2] ? ' ' + w[2][0] + '.' : ''); };
       var row = function (href, ic, t, s, v) { return '<a class="irow" href="' + href + '"><span class="itile" style="--c:var(--ic-docs)">' + (I[ic] || I.s_org || '') + '</span><span class="ic"><span class="ibody"><span class="ititle">' + sxE(t) + '</span><span class="isub">' + sxE(s) + '</span></span><span class="ival">' + sxE(v) + '</span><span class="ichev"></span></span></a>'; };
-      var el = document.createElement('div'); el.id = 'sx-home'; el.className = 'sx-home'; el.style.marginTop = '14px';   // внутри левой колонки — под «Требует внимания»
+      var el = document.createElement('section'); el.id = 'sx-home'; el.className = 'sx-home';   // 13.11.2026, Т. В.: «карта — высотой в одну левую карточку» — «Структура» отдельной строкой во всю ширину под «Требует внимания» и картой, в две колонки
       el.innerHTML = '<div class="fh-cap"><h2>Структура</h2></div><div class="igroup">' +
         row('sales.html#sec-org', 's_org', 'Руководство', lead.map(function (p) { return sh(p.name); }).join(' · '), lead.length) +
         (pd ? row('sales.html#sec-org', 's_prod', 'Производство: ' + sh(pd.name), 'участков ' + A.length + ' · ≈ ' + aS + ' человек · ночная смена', A.length) : '') +
@@ -1030,7 +1039,7 @@
         (ko ? row('sales.html#sec-kos', 's_sales', 'Коммерческий отдел', 'функционал, блок-схема, графики офисов продаж', ko.count || '') : '') +
         row('sales.html#ko', 's_person', 'Зоны ответственности', 'кто за что отвечает в продажах', '') +
         row('sales.html#sec-sim', 's_phone', 'СИМ-карты МТС', 'номера по отделам, устройства, машины', '') + '</div>';
-      at.appendChild(el);
+      var cols = at.closest('.fh-cols'); if (cols && cols.parentNode) cols.parentNode.insertBefore(el, cols.nextSibling); else at.appendChild(el);
     })();
   }
   function secFlagSX() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }

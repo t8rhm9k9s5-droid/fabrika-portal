@@ -33,7 +33,7 @@
   function card(a) {
     var lv = a.lvl === 'crit' ? 'Критично' : 'Внимание';
     return '<div class="al-n al-' + a.lvl + '" data-id="' + esc(a.id) + '" role="' + (a.lvl === 'crit' ? 'alert' : 'status') + '">' +
-      '<a class="al-card gl" href="' + esc(a.href) + '">' +
+      '<a class="al-card gl" href="' + esc(a.href) + '" title="' + esc(a.s + (a.rule ? ' · Порог: ' + a.rule : '')) + '">' +
       '<span class="al-ic">' + TRI + '</span>' +
       '<span class="al-b"><span class="al-h"><b>' + lv + '</b><span>' + esc(a.cat) + '</span><time>' + esc(when()) + '</time></span>' +
       '<span class="al-t">' + esc(a.t) + '</span><span class="al-s">' + esc(a.s) + '</span>' +
@@ -50,7 +50,22 @@
     var top = document.querySelector('.ptop');
     return top ? { p: top.parentNode, before: top.nextSibling, loose: true } : null;
   }
+  // главная (13.11.2026, Т. В.): тревоги — плитками справа от «Пульса фабрики», шириной в плитку раздела; план продаж уже в «Пульсе» — не дублируем
+  function tiles(box) {
+    var V = L.filter(function (a) { return a.kpi !== 'plan'; }), top = document.getElementById('fhTop');
+    var k = V.map(function (a) { return a.id; }).join('|');
+    if (box.getAttribute('data-k') === k) return;
+    box.setAttribute('data-k', k);
+    box.innerHTML = V.map(function (a) {
+      return '<a class="al-tile gl al-' + a.lvl + '" href="' + esc(a.href) + '" title="' + esc(a.s + (a.rule ? ' · Порог: ' + a.rule : '')) + '">' +
+        '<span class="at-h"><span class="al-ic">' + TRI + '</span><span class="at-c"><b>' + (a.lvl === 'crit' ? 'Критично' : 'Внимание') + '</b>' + esc(a.cat) + '</span></span>' +
+        '<span class="at-v">' + esc(a.v) + '</span><span class="at-t">' + esc(a.short || a.t) + '</span></a>';
+    }).join('');
+    if (top) { top.classList.remove('al-n0', 'al-n1', 'al-n2', 'al-n3'); top.classList.add('al-n' + Math.min(3, V.length)); }
+  }
   function mount() {
+    var fa = document.getElementById('fhAl');
+    if (fa) { tiles(fa); var o0 = document.getElementById('t14al'); if (o0) o0.remove(); return; }
     var V = L.filter(function (a) { return forHere(a) && !hidden(a.id); });
     var old = document.getElementById('t14al');
     if (!V.length) { if (old) old.remove(); return; }
@@ -75,11 +90,13 @@
     Object.keys(by).forEach(function (s) {
       var x = by[s];
       [].forEach.call(document.querySelectorAll('a[href="razdel.html#' + s + '"], a[data-p="razdel.html#' + s + '"]'), function (el) {
-        if (el.querySelector('.al-dot, .al-tag')) return;
+        if (el.classList.contains('al-on-crit') || el.classList.contains('al-on-warn')) return;
         el.classList.add('al-on-' + x.lvl);
+        // 13.11.2026, Т. В.: «огромные счётчики-значки не нужны» — без кружков с цифрами; меню: тонкая цветная точка у названия, плитки — рамка, карта разделов — строка
+        // 13.11.2026, Т. В.: «значок — не справа от текста, а у иконки, в углу» — маленькая точка в левом верхнем углу иконки раздела (меню и «Разделы»)
         var ic = el.querySelector('.pi, .fs-i');
-        if (ic) { var d = document.createElement('i'); d.className = 'al-dot al-' + x.lvl; d.textContent = x.n > 1 ? String(x.n) : '!'; d.title = x.a.t; ic.appendChild(d); }
-        else { var t = document.createElement('span'); t.className = 'al-tag al-' + x.lvl; t.textContent = (x.lvl === 'crit' ? 'Критично: ' : 'Внимание: ') + x.a.t; el.appendChild(t); }
+        if (ic) { var d = document.createElement('i'); d.className = 'al-dot al-ic-dot al-' + x.lvl; d.title = x.a.t; ic.appendChild(d); }
+        else { var t = document.createElement('span'); t.className = 'al-tag al-' + x.lvl; t.textContent = x.a.t; el.appendChild(t); }
       });
     });
     L.forEach(function (a) {
@@ -101,7 +118,7 @@
     });
   }
   var busy = false;
-  function run() { if (busy) return; busy = true; try { mount(); paint(); tab(); } catch (e) { } busy = false; }
+  function run() { if (busy) return; busy = true; try { mount(); paint(); } catch (e) { } busy = false; }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
   window.addEventListener('hashchange', function () { setTimeout(run, 30); });
   // страницы дорисовывают меню, «Разделы» и пульс позже (данные с хостинга) — досматриваем первые полминуты и при перерисовках
