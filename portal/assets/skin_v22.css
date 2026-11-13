@@ -1,0 +1,110 @@
+/* 14.11.2026, Т. В.: «зачем заменил цвета — убери зелёное, всё было и так отлично», затем «контрасты тоже не надо» — тёмный «Пульс», тёмная панель слева и внизу убраны (классические светлые); цвета классические (графит, оранжевый), зелёного нет; раскладка V22 та же.
+ «Фабрика» — оформление «V22» по видео «Dashboard V22» (14.11.2026, Т. В.: «делаем как обсудили на примере последних видео, давай визуал
+   весь сделаем — я посмотрю»). Включается только html[data-skin="v22"][data-skin][data-skin] (ссылка ?skin=v22 или «Профиль → Вид»), ?skin=classic — обратно.
+   Без бликов; движение — короткое и один раз при открытии; «Экономно» и «уменьшить движение» — без анимации.
+   Палитра видео: мятно-кремовый фон, белые карточки с мягкой тенью, тёмно-зелёный «герой», зелёный и персиковый акценты,
+   тёмная панель-капсула слева с зелёной активной кнопкой. */
+html[data-skin="v22"][data-skin][data-skin]{
+  --v-bg1:#eef0f3;--v-bg2:#f6f1ea;--v-card:#ffffff;--v-card2:#f5f5f7;--v-ink:#1c1c1e;--v-ink2:#6e6e73;--v-ink3:#a1a1a6;
+  --v-line:rgba(20,22,26,.08);--v-shadow:0 1px 2px rgba(20,22,26,.05),0 10px 30px rgba(20,22,26,.07);
+  --v-dark:#1c1e22;--v-dark2:#2c2f35;--v-green:#c2410c;--v-green2:rgba(255,255,255,.18);--v-mint:#ececf0;--v-peach:#f4a27c;--v-peach2:#fbd9c7;--v-r:22px}
+@media (prefers-color-scheme:dark){html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]){
+  --v-bg1:#111113;--v-bg2:#161618;--v-card:#1c1c1e;--v-card2:#232326;--v-ink:#f2f2f7;--v-ink2:#a1a1a6;--v-ink3:#6e6e73;
+  --v-line:rgba(255,255,255,.07);--v-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.28);--v-mint:#2a2a2e;--v-peach2:#3a2a22}}
+html[data-skin="v22"][data-skin][data-skin][data-theme="dark"]{
+  --v-bg1:#111113;--v-bg2:#161618;--v-card:#1c1c1e;--v-card2:#232326;--v-ink:#f2f2f7;--v-ink2:#a1a1a6;--v-ink3:#6e6e73;
+  --v-line:rgba(255,255,255,.07);--v-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.28);--v-mint:#2a2a2e;--v-peach2:#3a2a22}
+
+/* фон и текст */
+html[data-skin="v22"][data-skin][data-skin] body,html[data-skin="v22"][data-skin][data-skin] .ititle,html[data-skin="v22"][data-skin][data-skin] h1,html[data-skin="v22"][data-skin][data-skin] h2,html[data-skin="v22"][data-skin][data-skin] h3{color:var(--v-ink)}
+
+/* карточки: белые, мягкая тень, без стекла */
+html[data-skin="v22"][data-skin][data-skin] body .gl,html[data-skin="v22"][data-skin][data-skin] body .igroup,html[data-skin="v22"][data-skin][data-skin] .fhome .pk,html[data-skin="v22"][data-skin][data-skin] .fhome .fs,html[data-skin="v22"][data-skin][data-skin] .fhome .fh-map,
+html[data-skin="v22"][data-skin][data-skin] body .rz-card,html[data-skin="v22"][data-skin][data-skin] body .rz-map a,html[data-skin="v22"][data-skin][data-skin] body .pcard{
+  background:var(--v-card)!important;border:1px solid var(--v-line)!important;box-shadow:var(--v-shadow)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:var(--v-r)!important}
+html[data-skin="v22"][data-skin][data-skin] body .gl::before,html[data-skin="v22"][data-skin][data-skin] body .gl::after{display:none!important}
+html[data-skin="v22"][data-skin][data-skin] .fhome .pk-t,html[data-skin="v22"][data-skin][data-skin] .pz-k .t,html[data-skin="v22"][data-skin][data-skin] .isub,html[data-skin="v22"][data-skin][data-skin] .fhome .fs small,html[data-skin="v22"][data-skin][data-skin] .pz-k .s,html[data-skin="v22"][data-skin][data-skin] .fhome .pk-s{color:var(--v-ink2)!important}
+html[data-skin="v22"][data-skin][data-skin] .fhome .pk-v,html[data-skin="v22"][data-skin][data-skin] .pz-k .v{color:var(--v-ink)!important;font-weight:600;letter-spacing:-.02em}
+
+
+/* тревоги — светлые плашки в цвет видео */
+html[data-skin="v22"][data-skin][data-skin] body .t14al .al-crit .al-card.gl,html[data-skin="v22"][data-skin][data-skin] body .al-tile.al-crit.gl{background:#fff1ec!important;border-color:rgba(226,92,58,.28)!important}
+html[data-skin="v22"][data-skin][data-skin] body .t14al .al-warn .al-card.gl,html[data-skin="v22"][data-skin][data-skin] body .al-tile.al-warn.gl{background:#fff7ec!important;border-color:rgba(230,150,40,.28)!important}
+html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body .t14al .al-crit .al-card.gl,html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body .al-tile.al-crit.gl{background:#2a1a16!important}
+html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body .t14al .al-warn .al-card.gl,html[data-skin="v22"][data-skin][data-skin][data-theme="dark"] body .al-tile.al-warn.gl{background:#2a2216!important}
+
+
+/* верхние кнопки и нижняя панель телефона */
+html[data-skin="v22"][data-skin][data-skin] .ptop .pbtn,html[data-skin="v22"][data-skin][data-skin] .ptop .pback,html[data-skin="v22"][data-skin][data-skin] .psrch,html[data-skin="v22"][data-skin][data-skin] .fav-top{background:var(--v-card)!important;border:1px solid var(--v-line)!important;box-shadow:var(--v-shadow)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+
+/* значки разделов и строки списков */
+html[data-skin="v22"][data-skin][data-skin] .fhome .fs .fs-i,html[data-skin="v22"][data-skin][data-skin] .itile{border-radius:12px!important}
+html[data-skin="v22"][data-skin][data-skin] .igroup .irow+.irow,html[data-skin="v22"][data-skin][data-skin] .igroup .irow .ic{border-color:var(--v-line)!important}
+
+/* диаграммы: персиковые капсулы, последний день — зелёный (как «Focus this week») */
+html[data-skin="v22"][data-skin][data-skin] .pz-ch b{background:linear-gradient(180deg,#ff8a3d,#e8590c)!important}
+html[data-skin="v22"][data-skin][data-skin] .pz-ch.pz-day div:last-child b{background:var(--v-green)!important;opacity:1!important}
+html[data-skin="v22"][data-skin][data-skin] .pz-ch.pz-day b{opacity:1!important}
+html[data-skin="v22"][data-skin][data-skin] .pz-ch div::before{background:rgba(20,22,26,.06)!important}
+html[data-skin="v22"][data-skin][data-skin] .pk-bar i{background:linear-gradient(180deg,#ff8a3d,#e8590c)!important;opacity:1!important}
+html[data-skin="v22"][data-skin][data-skin] .pk-bar i.cur{background:var(--v-green)!important}
+html[data-skin="v22"][data-skin][data-skin] .pz-k .bar{background:rgba(20,22,26,.06)!important}
+
+/* сегменты и вкладки — как «Weekly | Monthly» */
+html[data-skin="v22"][data-skin][data-skin] .pseg,html[data-skin="v22"][data-skin][data-skin] .fav-chips{background:var(--v-card2);border-radius:99px;padding:4px;gap:4px;display:inline-flex}
+html[data-skin="v22"][data-skin][data-skin] .pseg button[aria-pressed="true"],html[data-skin="v22"][data-skin][data-skin] .fav-chip.on{background:var(--v-card)!important;color:var(--v-ink)!important;box-shadow:0 1px 3px rgba(20,22,26,.12)!important}
+html[data-skin="v22"][data-skin][data-skin] .fav-chip{background:transparent}
+
+/* неделя-календарь на главной (motion.js рисует .v22-week) */
+.v22-week{display:none}
+html[data-skin="v22"][data-skin][data-skin] .v22-week{display:flex;gap:6px;align-items:stretch;margin:2px 0 12px;overflow-x:auto;scrollbar-width:none}
+html[data-skin="v22"][data-skin][data-skin] .v22-week span{flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:16px;font:500 11px var(--f-body);color:var(--v-ink2)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week b{font:600 16px var(--f-display);color:var(--v-ink)}
+html[data-skin="v22"][data-skin][data-skin] .v22-week span.today{background:rgba(255,138,61,.14);color:#c2410c}
+html[data-skin="v22"][data-skin][data-skin] .v22-week span.today b,html[data-skin="v22"][data-skin][data-skin] .v22-week span.today.off b{color:#c2410c}
+html[data-skin="v22"][data-skin][data-skin] .v22-week span.off b{color:var(--v-ink3)}
+
+/* «Сохранённое» — плитками, как «Saved for later» */
+html[data-skin="v22"][data-skin][data-skin] .fav-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;background:transparent!important;border:0!important;box-shadow:none!important}
+@media (min-width:700px){html[data-skin="v22"][data-skin][data-skin] .fav-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .irow{display:flex;flex-direction:column;align-items:stretch;background:var(--v-card);border:1px solid var(--v-line);border-radius:18px;box-shadow:var(--v-shadow);padding:10px;gap:10px}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .irow .ic{border:0!important;padding:0!important;display:flex;align-items:center}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .fav-ic{width:100%!important;height:96px!important;border-radius:14px!important}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .fav-ic.doc{background:var(--v-mint)!important}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .fav-ic.rep{background:var(--v-peach2)!important}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .fav-ic svg{width:30px!important;height:30px!important;stroke:var(--v-dark)!important}
+html[data-skin="v22"][data-skin][data-skin] .fav-list .ichev{display:none}
+
+/* движение: карточки появляются волной, при наведении чуть приподнимаются (только компьютер) */
+html[data-skin="v22"][data-skin][data-skin].t14-intro .pz-k>*,html[data-skin="v22"][data-skin][data-skin].t14-intro .fhome .pk-grid>li,html[data-skin="v22"][data-skin][data-skin].t14-intro .fhome .fh-secs>li,html[data-skin="v22"][data-skin][data-skin].t14-intro .rz-card,html[data-skin="v22"][data-skin][data-skin].t14-intro .pz-b>*{
+  animation:v22-in .45s cubic-bezier(.2,.8,.2,1) both}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(2){animation-delay:.04s}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(3){animation-delay:.08s}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(4){animation-delay:.12s}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(5){animation-delay:.16s}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(6){animation-delay:.2s}
+html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-secs)>:nth-child(n+7){animation-delay:.24s}
+@keyframes v22-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (hover:hover){html[data-skin="v22"][data-skin][data-skin] :is(.pz-k>a.gl,.fhome .pk,.fhome .fs,.rz-map a,.fav-list .irow){transition:transform .18s ease,box-shadow .18s ease}
+  html[data-skin="v22"][data-skin][data-skin] :is(.pz-k>a.gl,.fhome .pk,.fhome .fs,.rz-map a,.fav-list .irow):hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(20,22,26,.06),0 18px 36px rgba(20,22,26,.12)!important}}
+html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *,html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *:hover{animation:none!important;transition:none!important;transform:none!important}
+@media (prefers-reduced-motion:reduce){html[data-skin="v22"][data-skin][data-skin] *{animation:none!important;transition:none!important}}
+@media (min-width:900px){html[data-skin="v22"][data-skin][data-skin] .v22-week{max-width:460px;margin:-4px 0 12px auto}html[data-skin="v22"][data-skin][data-skin] .v22-week span{padding:6px 4px;border-radius:14px}}
+@media (prefers-color-scheme:dark){
+  html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .t14al .al-crit .al-card.gl,html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .al-tile.al-crit.gl{background:#2a1a16!important}
+  html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .t14al .al-warn .al-card.gl,html[data-skin="v22"][data-skin][data-skin]:not([data-theme="light"]) body .al-tile.al-warn.gl{background:#2a2216!important}}
+/* 14.11.2026, Т. В.: «основное было взять из видео левую панель, а не цвета — цвета всё было отлично». Узкая панель-капсула с иконками
+   на всех компьютерах (как в видео), цвета классические: светлая карточка, иконки своих цветов, выбранный раздел — серый круг, как в классике. */
+@media (min-width:701px){
+  html[data-skin="v22"][data-skin][data-skin]{--p-side:72px!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside{padding:16px 10px!important;align-items:center;background:var(--v-card)!important;border:1px solid var(--v-line)!important;border-radius:28px!important;box-shadow:var(--v-shadow)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .plogo{width:40px;overflow:hidden;padding:2px 0 0!important;margin:0 auto 16px!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .plogo svg{width:176px!important;max-width:none}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pcap,html[data-skin="v22"][data-skin][data-skin] .pside .pt,html[data-skin="v22"][data-skin][data-skin] .pside .pbadge{display:none!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnavs,html[data-skin="v22"][data-skin][data-skin] .pside .pfoot{justify-items:center}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnav{width:44px;min-height:44px!important;padding:0!important;justify-content:center;border-radius:50%!important;background:transparent!important;box-shadow:none!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnav .pi svg{width:21px;height:21px}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnav:hover{background:rgba(120,120,128,.1)!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnav[aria-current="page"]{background:rgba(120,120,128,.18)!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px var(--v-card)}
+}

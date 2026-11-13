@@ -1,0 +1,86 @@
+<title>Фабрика — инфографика</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* «Инфографика» (Онлайн-продажи) — 14.11.2026, Т. В.: «по онлайн-продажам нужно создать раздел инфографики, где промтами будут описаны
+   основные принципы её оформления, и запроси API «Фабулы», чтобы подключить её здесь и контролировать её работу».
+   Данные — build/infografika/infografika.json (вшиваются при сборке). Промты копируются кнопкой; ничего не уходит на сервер. */
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+.lead{color:var(--ios-2);margin:4px 0 0;font-size:15px;max-width:72ch}
+.ig-h{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:22px 2px 8px}
+.ig-card{background:var(--ios-group);border-radius:16px;padding:14px 16px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.ig-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.ig-brand{display:grid;gap:8px}
+.ig-brand>div:not(.ig-sw){display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;font-size:14px}
+.ig-brand b{font-weight:600;color:var(--ios-label)}
+.ig-sw{display:flex;gap:8px;margin:2px 0 6px}
+.ig-sw span{width:44px;height:44px;border-radius:12px;box-shadow:0 0 0 .5px var(--ios-sep);display:grid;place-items:end center;font:600 9px var(--f-body);padding-bottom:3px;color:#fff}
+.ig-pr{counter-reset:p;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.ig-pr .ig-card{position:relative;padding-left:52px}
+.ig-pr .ig-card::before{counter-increment:p;content:counter(p);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:var(--ios-fill);display:grid;place-items:center;font:600 13px var(--f-body);color:var(--ios-label)}
+.ig-pr b{display:block;font:600 15px var(--f-body);color:var(--ios-label);margin-bottom:3px}
+.ig-pr p{margin:0;font-size:14px;color:var(--ios-2)}
+.ig-p{display:grid;gap:10px}
+.ig-p details{background:var(--ios-group);border-radius:16px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.ig-p summary{list-style:none;cursor:pointer;padding:13px 16px;display:flex;gap:10px;align-items:center}
+.ig-p summary::-webkit-details-marker{display:none}
+.ig-p summary b{font:600 15px var(--f-body);color:var(--ios-label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.ig-p summary small{color:var(--ios-2);font-size:12.5px;display:none}
+.ig-p summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--ios-2);border-bottom:2px solid var(--ios-2);transform:rotate(45deg);flex:none}
+.ig-p details[open] summary::after{transform:rotate(-135deg)}
+.ig-p .ig-in{padding:0 16px 14px}
+.ig-p .ig-use{color:var(--ios-2);font-size:14px;margin:0 0 8px}
+.ig-p pre{white-space:pre-wrap;word-break:break-word;margin:0;font:14px/1.45 var(--f-body);background:var(--ios-fill);border-radius:12px;padding:12px 14px;color:var(--ios-label)}
+.ig-p .ig-chk{font-size:13px;color:var(--ios-2);margin:8px 0 0}
+.ig-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ig-row button{border:0;border-radius:999px;padding:8px 14px;font:600 14px var(--f-body);background:var(--t-press,#0866c6);color:#fff;cursor:pointer}
+.ig-row button.ok{background:var(--t-green,#248a3d)}
+.ig-fab{display:grid;gap:8px}
+.ig-fab .st{display:inline-flex;align-self:start;justify-self:start;font:600 12px var(--f-body);border-radius:999px;padding:3px 10px;background:rgba(255,159,10,.16);color:#a35a00}
+.ig-fab ol{margin:4px 0 0;padding-left:20px;color:var(--ios-2);font-size:14px}
+.pfoot{color:var(--ios-2);font-size:12.5px;margin:16px 2px 0;max-width:80ch}
+</style>
+<main class="ios" id="infografika">
+  <a class="back" href="razdel.html#online">Онлайн-продажи</a>
+  <h1>Инфографика</h1>
+  <p class="lead">Как оформлять слайды карточек на маркетплейсах в стиле «Фабрикант»: принципы и готовые промты для нейросети или задания дизайнеру. Скопируйте промт, подставьте данные модели в фигурных скобках.</p>
+  <div id="igView"></div>
+</main>
+<script id="ig-data" type="application/json">__INFOGR__</script>
+<script>
+(function () {
+  'use strict';
+  var D = {}; try { D = JSON.parse(document.getElementById('ig-data').textContent); } catch (e) { D = {}; }
+  var V = document.getElementById('igView');
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var h = '';
+  var B = D.brand || {};
+  h += '<p class="ig-h">Стиль «Фабрикант» на слайдах</p><div class="ig-card ig-brand">' +
+    '<div class="ig-sw" aria-hidden="true"><span style="background:#F2F2F2;color:#6E6E73">F2F2F2</span><span style="background:#1D1E19">1D1E19</span><span style="background:#6E6E73">6E6E73</span><span style="background:#EB493C">EB493C</span></div>' +
+    [['Формат', B.format], ['Шрифт', B.font], ['Фон', B.bg], ['Текст', B.ink], ['Акцент', B.accent], ['Логотип', B.logo]].map(function (r) { return r[1] ? '<div><b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span></div>' : ''; }).join('') + '</div>';
+  h += '<p class="ig-h">Принципы</p><div class="ig-pr">' + (D.principles || []).map(function (p) { return '<div class="ig-card"><b>' + esc(p[0]) + '</b><p>' + esc(p[1]) + '</p></div>'; }).join('') + '</div>';
+  h += '<p class="ig-h">Промты · ' + (D.prompts || []).length + '</p><div class="ig-p">' + (D.prompts || []).map(function (p, i) {
+    return '<details id="p-' + esc(p.id) + '"' + (i === 0 ? ' open' : '') + '><summary><b>' + esc(p.title) + '</b></summary><div class="ig-in"><p class="ig-use">' + esc(p.use) + '</p><pre>' + esc(p.text) + '</pre>' +
+      (p.check ? '<p class="ig-chk">Проверить: ' + esc(p.check) + '</p>' : '') + '<div class="ig-row"><button type="button" data-cp="' + i + '">Скопировать промт</button></div></div></details>';
+  }).join('') + '</div>';
+  var F = D.fabula || {};
+  h += '<p class="ig-h" id="fabula">«Фабула» — подключение и контроль</p><div class="ig-card ig-fab"><span class="st">' + esc(F.state || '') + '</span><p class="lead" style="margin:0">' + esc(F.text || '') + '</p>' +
+    (F.next && F.next.length ? '<ol>' + F.next.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') + '</div>';
+  h += '<p class="pfoot">' + esc(D.sources_note || '') + '</p>';
+  V.innerHTML = h;
+  V.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-cp]'); if (!b) return;
+    var p = (D.prompts || [])[+b.getAttribute('data-cp')]; if (!p) return;
+    var st = (D.prompts || []).filter(function (x) { return x.id === 'style'; })[0];
+    var txt = p.text.indexOf('[Стиль серии]') >= 0 && st ? p.text.replace('[Стиль серии]', st.text) : p.text;
+    function ok() { b.classList.add('ok'); b.textContent = 'Скопировано'; setTimeout(function () { b.classList.remove('ok'); b.textContent = 'Скопировать промт'; }, 1600); }
+    try { navigator.clipboard.writeText(txt).then(ok, function () { fallback(); }); } catch (x) { fallback(); }
+    function fallback() { var t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); ok(); } catch (y) { } t.remove(); }
+  });
+  if (location.hash) { var el = document.getElementById(location.hash.slice(1)); if (el) { if (el.tagName === 'DETAILS') el.open = true; setTimeout(function () { el.scrollIntoView({ block: 'start' }); }, 60); } }
+})();
+</script>

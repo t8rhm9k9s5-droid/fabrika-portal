@@ -60,7 +60,7 @@ def run(L, log, jload, jsave, publish):
     for f in files:                                                     # сырьё старше 14 дней — удалить
         try:
             if now - os.path.getmtime(f) > KEEP_DAYS * 86400: os.remove(f)
-        except Exception: pass
+        except OSError as e: log('  ! ux: старый файл не удалён ', os.path.basename(f), e.__class__.__name__)
     out = {'t': res['t'], 'days': {}}
     for f in sorted(glob.glob(os.path.join(D, '2*.jsonl')))[-SUM_DAYS:]:
         try: out['days'][os.path.basename(f)[:10]] = summarize(f)

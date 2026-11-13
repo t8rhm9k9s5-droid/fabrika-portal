@@ -13,11 +13,13 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник7 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник20 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
         ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
         ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
+        # 14.11.2026: график ППР и ТО (Сотрудник1 А. В., 13.11) — «Производство → Оборудование»
+        ('equip', 'Оборудование: графики ППР и ТО', '#ff9500', 'chart'),
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -297,7 +299,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
     {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник7 К. В.: записки на возврат   // 11.11.2026, Сотрудник7 К. В.
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник20 К. В.: записки на возврат   // 11.11.2026, Сотрудник20 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -415,7 +417,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник7, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник20, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -548,7 +550,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64_24 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_2 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -612,7 +614,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64_24 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_2 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';

@@ -25,6 +25,7 @@
   }
   var TRI = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.27 3.98a2 2 0 0 1 3.46 0l8.02 13.9A2 2 0 0 1 20.02 20.9H3.98a2 2 0 0 1-1.73-3.02z" fill="currentColor"/>' +
     '<path d="M12 9.2v4.7" stroke="var(--al-c)" stroke-width="2.3" stroke-linecap="round"/><circle cx="12" cy="17.1" r="1.3" fill="var(--al-c)"/></svg>';
+  var XBTN = '<button class="al-x" type="button" aria-label="Скрыть до завтра" title="Скрыть до завтра"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>';
   function forHere(a) {
     if (a.lvl === 'crit' || page === 'home.html') return true;
     return (a.secs || []).indexOf(secOf()) >= 0 || String(a.href || '').split('#')[0] === page;
@@ -39,7 +40,7 @@
       '<span class="al-t">' + esc(a.t) + '</span><span class="al-s">' + esc(a.s) + '</span>' +
       (a.rule ? '<span class="al-r">Порог: ' + esc(a.rule) + '</span>' : '') + '</span>' +
       '<span class="al-v">' + esc(a.v) + '<i></i></span></a>' +
-      '<button class="al-x" type="button" aria-label="Скрыть до завтра" title="Скрыть до завтра"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button></div>';
+      XBTN + '</div>';
   }
   function host() {
     if (page === 'plan.html') return null;                                     // карта во весь экран — только точки в меню
@@ -52,15 +53,19 @@
   }
   // главная (13.11.2026, Т. В.): тревоги — плитками справа от «Пульса фабрики», шириной в плитку раздела; план продаж уже в «Пульсе» — не дублируем
   function tiles(box) {
-    var V = L.filter(function (a) { return a.kpi !== 'plan'; }), top = document.getElementById('fhTop');
+    // 13.11.2026 23:30, Т. В.: «на компьютере алерт закрывается крестиком, на телефоне — нет; должно быть одинаково» — «×» и у плиток на главной
+    var V = L.filter(function (a) { return a.kpi !== 'plan' && !hidden(a.id); }), top = document.getElementById('fhTop');
     var k = V.map(function (a) { return a.id; }).join('|');
-    if (box.getAttribute('data-k') === k) return;
+    if (box.getAttribute('data-k') === k && box.childElementCount === V.length) return;
     box.setAttribute('data-k', k);
     box.innerHTML = V.map(function (a) {
-      return '<a class="al-tile gl al-' + a.lvl + '" href="' + esc(a.href) + '" title="' + esc(a.s + (a.rule ? ' · Порог: ' + a.rule : '')) + '">' +
+      return '<div class="al-tile gl al-' + a.lvl + '" data-id="' + esc(a.id) + '"><a class="at-a" href="' + esc(a.href) + '" title="' + esc(a.s + (a.rule ? ' · Порог: ' + a.rule : '')) + '">' +
         '<span class="at-h"><span class="al-ic">' + TRI + '</span><span class="at-c"><b>' + (a.lvl === 'crit' ? 'Критично' : 'Внимание') + '</b>' + esc(a.cat) + '</span></span>' +
-        '<span class="at-v">' + esc(a.v) + '</span><span class="at-t">' + esc(a.short || a.t) + '</span></a>';
+        '<span class="at-v">' + esc(a.v) + '</span><span class="at-t">' + esc(a.short || a.t) + '</span></a>' + XBTN + '</div>';
     }).join('');
+    [].forEach.call(box.querySelectorAll('.al-x'), function (b) {
+      b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); hide(b.closest('.al-tile').getAttribute('data-id')); tiles(box); });
+    });
     if (top) { top.classList.remove('al-n0', 'al-n1', 'al-n2', 'al-n3'); top.classList.add('al-n' + Math.min(3, V.length)); }
   }
   function mount() {
@@ -94,9 +99,10 @@
         el.classList.add('al-on-' + x.lvl);
         // 13.11.2026, Т. В.: «огромные счётчики-значки не нужны» — без кружков с цифрами; меню: тонкая цветная точка у названия, плитки — рамка, карта разделов — строка
         // 13.11.2026, Т. В.: «значок — не справа от текста, а у иконки, в углу» — маленькая точка в левом верхнем углу иконки раздела (меню и «Разделы»)
-        var ic = el.querySelector('.pi, .fs-i');
-        if (ic) { var d = document.createElement('i'); d.className = 'al-dot al-ic-dot al-' + x.lvl; d.title = x.a.t; ic.appendChild(d); }
-        else { var t = document.createElement('span'); t.className = 'al-tag al-' + x.lvl; t.textContent = x.a.t; el.appendChild(t); }
+        // 13.11.2026 23:30, Т. В. (телефон): в листе «Разделы» текст тревоги сжимал «Продажи» в столбик — везде только точка у иконки, без текста
+        var ic = el.querySelector('.pi, .fs-i, .itile, .rz-i');
+        var d = document.createElement('i'); d.className = 'al-dot al-ic-dot al-' + x.lvl; d.title = x.a.t;
+        if (ic) ic.appendChild(d); else { d.className = 'al-dot al-lead al-' + x.lvl; var bt = el.querySelector('b, .ititle, .pt') || el; bt.insertBefore(d, bt.firstChild); }
       });
     });
     L.forEach(function (a) {
@@ -108,13 +114,6 @@
         var p = document.createElement('span'); p.className = 'al-pill al-' + a.lvl; p.textContent = a.t;
         var bar = el.querySelector('.bar'); el.insertBefore(p, bar || null);
       });
-    });
-  }
-  function tab() {                                                          // телефон: точка на «Разделах» в нижней панели, как значок на вкладке iOS
-    var c = L.filter(function (a) { return a.lvl === 'crit'; }).length ? 'crit' : 'warn';
-    [].forEach.call(document.querySelectorAll('.tabbar > button'), function (b) {
-      if (!/Разделы/.test(b.textContent) || b.querySelector('.al-dot')) return;
-      var d = document.createElement('i'); d.className = 'al-dot al-tb al-' + c; d.textContent = String(L.length); b.appendChild(d);
     });
   }
   var busy = false;

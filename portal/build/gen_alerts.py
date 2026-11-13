@@ -35,12 +35,12 @@ if len(sp) > 1:
         A.append({'id': 'carry-' + a.get('from', ''), 'lvl': 'crit' if p >= R['crit'] else 'warn', 'cat': 'Отгрузка', 'secs': ['sales'],   # 13.11.2026, Т. В.: отгрузки — продажи, не логистика
                  
                   'href': 'sales.html#ship', 'card': 'sales.html#ship', 'ic': 'omts', 'v': pct(p) + ' %',
-                  't': pct(p) + ' % недели — перенос с прошлой', 'short': 'графика отгрузки — перенос с прошлой недели',
+                  't': pct(p) + ' % недели — перенос с прошлой', 'short': 'перенос с прошлой недели',
                   's': '%d %s на %s млн ₽ из графика %s–%s не отгружены и снова стоят в графике %s–%s' % (
                       len(car), 'заказ' if len(car) % 10 == 1 and len(car) % 100 != 11 else ('заказа' if 2 <= len(car) % 10 <= 4 and not 12 <= len(car) % 100 <= 14 else 'заказов'),
                       mln(cs), dm(b.get('from')), dm(b.get('to')), dm(a.get('from')), dm(a.get('to'))),
                   'rule': 'тревога от %s %%, критично от %s %% графика недели' % (pct(R['warn']), pct(R['crit'])), 'since': a.get('from')})
-# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник7, build/sales_plan_mgr/<ГГГГ-ММ>.json)
+# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник20, build/sales_plan_mgr/<ГГГГ-ММ>.json)
 pm = sorted(glob.glob(B + '/sales_plan_mgr/2*.json'))
 if pm:
     x = J(pm[-1]) or {}; T = x.get('total') or {}

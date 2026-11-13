@@ -193,3 +193,101 @@ html body .al-tile.al-warn.gl{background:linear-gradient(180deg,rgba(255,246,232
   .fhome .fh-top .al-tile .at-t{grid-column:2;grid-row:1;-webkit-line-clamp:2}.fhome .fh-top .al-tile .at-c{display:none}}
 /* 13.11.2026, Т. В.: «значок клёво слева сверху — только на полрадиуса левее и в 2 раза меньше, чтобы не бросался в глаза» */
 .al-dot.al-ic-dot{width:5px;height:5px;top:-2px;left:-5px;box-shadow:0 0 0 1.5px var(--p-bg,#f2f2f7)}
+/* 13.11.2026 23:30, Т. В. (телефон): «перенос строк ужасен — его не должно быть, все надписи в одну строчку»; «на компьютере алерт закрывается
+   крестиком, на телефоне нет — должно быть одинаково»; «если алерты всё время горят — ещё уменьшить»; «количество карточек симметричное на любом
+   устройстве: 6 → 3 × 2 → 2 × 3, а не 5». Одна строка: заголовки, строки списков, подписи плиток; длинное — многоточием. */
+.irow .ic,.irow .ibody{min-width:0}
+.irow .ititle,.irow .isub{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow .ival{flex:none;white-space:nowrap}
+.pnav .pt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhome .fs b,.fhome .fs small,.rz-map a b,.rz-map a small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhome .pk-t,.pz-k .t,.fh-sub,.fb-h,.fb-h *,.fb-l,.fb-s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fhome .pk-s{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pz-k .s{-webkit-line-clamp:2}
+.fh-flow{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;white-space:nowrap}.fh-flow::-webkit-scrollbar{display:none}
+.al-dot.al-ic-dot{width:5px;height:5px;top:-2px;left:-5px}
+.al-dot.al-lead{margin:0 6px 2px 0;width:6px;height:6px}
+/* тревоги: «×» видна везде (и на телефоне), строка ниже и тоньше */
+.t14al{gap:8px;margin:2px 0 14px}
+.t14al .al-card{grid-template-columns:24px minmax(0,1fr) auto!important;gap:10px!important;padding:6px 42px 6px 8px!important;border-radius:14px!important;align-items:center!important}
+.t14al .al-n.al-crit::before{border-radius:14px}
+.t14al .al-ic,.al-tile .al-ic{width:24px!important;height:24px!important;border-radius:7px!important}.t14al .al-ic svg,.al-tile .al-ic svg{width:15px!important;height:15px!important}
+.t14al .al-t{font-size:14px!important}.t14al .al-v{font-size:16px!important;gap:0}.t14al .al-v i{display:none}
+.al-x,.al-x:focus-visible{display:grid!important;opacity:1!important;position:absolute!important;top:50%!important;right:8px!important;left:auto!important;transform:translateY(-50%)!important;
+  width:28px!important;height:28px!important;background:rgba(120,120,128,.16)!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.al-x svg{width:11px!important;height:11px!important}
+@media (max-width:640px){.t14al .al-t{font-size:13px!important}.t14al .al-v{font-size:14px!important}.t14al .al-card{padding:5px 40px 5px 7px!important}}
+/* плитки тревог на главной: «×» в углу; на телефоне — одна тонкая строка, как на других страницах */
+.al-tile{position:relative}
+.al-tile .at-a{display:contents;color:inherit;text-decoration:none}
+.al-tile .at-t{-webkit-line-clamp:2}
+.al-tile .al-x{top:16px!important;transform:none!important;right:10px!important;width:24px!important;height:24px!important}
+@media (max-width:900px){.fhome .fh-top .al-tile{grid-template-columns:24px minmax(0,1fr) auto!important;column-gap:10px!important;padding:6px 42px 6px 8px!important;border-radius:14px!important;min-height:0}
+  .fhome .fh-top .al-tile .at-t{display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+  .fhome .fh-top .al-tile .at-v{font-size:15px!important}
+  .al-tile .al-x{top:50%!important;transform:translateY(-50%)!important;right:8px!important;width:28px!important;height:28px!important}}
+/* симметрия карточек: 6 в ряд → 3 × 2 → 2 × 3, никогда не 5 и не 4 */
+.fhome .pk-grid,.fhome.hub .pk-grid,.fhome #pulse:has(> li:nth-child(7)),.fhome .fh-secs,.fhome.hub .fh-secs,.fhome:not(.hub) .fh-cols .fh-secs,.fhome .fh-secs-wide .fh-secs,.pz-k,.rz-map{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media (min-width:700px){.fhome .pk-grid,.fhome.hub .pk-grid,.fhome #pulse:has(> li:nth-child(7)),.fhome .fh-secs,.fhome.hub .fh-secs,.fhome:not(.hub) .fh-cols .fh-secs,.fhome .fh-secs-wide .fh-secs,.pz-k,.rz-map{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (min-width:1100px){.fhome .pk-grid,.fhome.hub .pk-grid,.fhome #pulse:has(> li:nth-child(7)),.fhome .fh-secs,.fhome.hub .fh-secs,.fhome .fh-secs-wide .fh-secs,.pz-k,.rz-map{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+.al-tile .at-t{display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhome,.fhome>*,.fhome .fh-top>*,.fhome .fh-ban>*,.fhome .fb-h>*,.fhome .fb-k>*,.fhome .fb-m>*,.fhome .pk-grid>li,.fhome .fh-secs>li{min-width:0;max-width:100%}
+.fhome .fh-top,.fhome .fh-sub{min-width:0;max-width:100%}
+@media (max-width:899px){.fhome .fh-cols{grid-template-columns:minmax(0,1fr)!important}}
+.fhome .fh-cols>*{min-width:0}
+.fhome .fh-cap{min-width:0}.fhome .fh-chain{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fhome .pk-t{display:flex;align-items:center;gap:6px}.fhome .pk-t svg{flex:none}
+/* 13.11.2026, Т. В. (опрос по «Dashboard V22»): столбики-капсулы, цифры «набегают», узкая панель с иконками, «Сохранённое».
+   Без бликов; движение — один раз при открытии (html.t14-intro, assets/motion.js), «экономный режим» и «уменьшить движение» — без него. */
+.pz-ch div{position:relative}
+.pz-ch div::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,30px);height:calc(100% - 20px);border-radius:99px;background:rgba(120,120,128,.12)}
+.pz-ch b{position:relative;z-index:1;max-width:30px!important;border-radius:99px!important;min-height:8px}
+.pz-ch em{position:relative;z-index:1}
+.pz-ch.pz-day b{opacity:.5}
+.pz-ch.pz-day div:last-child b{opacity:1}
+.pz-ch.pz-day div:last-child em{font-weight:700;color:var(--ios-label,inherit)}
+.pz-ch{border-bottom:0!important}
+.pk-bar i{border-radius:99px!important}
+.pz-hb .tr b,.pz-k .bar b{border-radius:99px}
+html.t14-intro .pz-ch b,html.t14-intro .pk-bar i{transform-origin:bottom;animation:t14-up .7s cubic-bezier(.2,.8,.2,1) both}
+html.t14-intro .pz-hb .tr b,html.t14-intro .pz-k .bar b,html.t14-intro .fb-m .fb-bar b{transform-origin:left;animation:t14-right .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes t14-up{from{transform:scaleY(0)}to{transform:none}}
+@keyframes t14-right{from{transform:scaleX(0)}to{transform:none}}
+:root[data-fx=lite] .pz-ch b,:root[data-fx=lite] .pk-bar i,:root[data-fx=lite] .pz-hb .tr b,:root[data-fx=lite] .pz-k .bar b{animation:none!important}
+@media (prefers-reduced-motion:reduce){html.t14-intro *{animation:none!important}}
+/* узкая панель с иконками — ноутбуки и планшеты 701–1279 px (как в «Dashboard V22»): названия — подсказкой при наведении */
+@media (min-width:701px) and (max-width:1279px){
+  :root{--p-side:68px!important}
+  .pside{padding:14px 8px!important;align-items:center;background:rgba(28,30,34,.9)!important;border:0!important;box-shadow:0 10px 30px rgba(0,0,0,.18)!important}
+  .pside .plogo{width:40px;overflow:hidden;padding:2px 0 0!important;margin:0 auto 14px!important;color:#fff}
+  .pside .plogo svg{width:176px!important;max-width:none}
+  .pside .pcap,.pside .pt,.pside .pbadge{display:none!important}
+  .pside .pnavs{justify-items:center}
+  .pside .pnav{width:44px;min-height:44px!important;padding:0!important;justify-content:center;border-radius:14px!important;color:#ebebf5!important}
+  .pside .pnav .pi svg{width:22px;height:22px}
+  .pside .pnav:hover{background:rgba(255,255,255,.1)!important}
+  .pside .pnav[aria-current="page"]{background:rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important}
+  .pside .pfoot{justify-items:center}
+  .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px rgba(28,30,34,.9)}
+}
+.t14-tip{position:fixed;z-index:999;transform:translateY(-50%);padding:6px 10px;border-radius:10px;background:rgba(28,30,34,.94);color:#fff;font:500 13px/1.2 var(--f-body);
+  pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+/* «Сохранённое»: звёздочки и страница */
+.fav-b{flex:none;display:inline-grid;place-items:center;width:30px;height:30px;margin:0 2px 0 6px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;color:var(--ios-3,#aeaeb2)}
+.fav-b svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.fav-b.on{color:#ff9f0a}.fav-b.on svg{fill:currentColor}
+.fav-b:hover{background:rgba(120,120,128,.12)}
+@media (hover:hover){.fav-host .fav-b:not(.on),.fav-li .fav-b:not(.on){opacity:0}.fav-host:hover .fav-b,.fav-li:hover .fav-b,.fav-b:focus-visible{opacity:1}}
+.fav-li{display:flex;align-items:center}.fav-li>a{flex:1;min-width:0}
+.fav-top{width:40px;height:40px;margin-left:8px;background:var(--p-glass,rgba(255,255,255,.7));-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur)}
+.fav-chips{display:flex;gap:8px;margin:4px 0 14px;overflow-x:auto;scrollbar-width:none}
+.fav-chip{flex:none;border:0;border-radius:99px;padding:8px 14px;font:500 14px var(--f-body);background:rgba(120,120,128,.12);color:var(--ios-label,inherit);cursor:pointer}
+.fav-chip span{color:var(--ios-2,#8e8e93);margin-left:4px}
+.fav-chip.on{background:var(--ios-label,#1c1c1e);color:var(--p-bg,#fff)}.fav-chip.on span{color:inherit;opacity:.7}
+.fav-ic{display:grid;place-items:center}.fav-ic svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.8}
+.fav-ic.doc{background:#5ac8fa!important}.fav-ic.rep{background:#ff9500!important}
+.fav-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:48px 16px;color:var(--ios-2,#8e8e93)}
+.fav-empty b{font:600 17px var(--f-display);color:var(--ios-label,inherit)}
+.fav-empty-i{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(255,159,10,.14);color:#ff9f0a;margin-bottom:6px}
+.fav-empty-i svg{width:28px;height:28px;fill:currentColor}
+@media (min-width:701px) and (max-width:1279px){.pside .plogo svg{filter:brightness(0) invert(1)}}

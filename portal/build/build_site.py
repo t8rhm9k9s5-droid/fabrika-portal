@@ -28,10 +28,12 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   ('utils.html', '/home/claude/build/utils_frag.html'),
                   # 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры» — страница раздела (10 разделов, отчёты списком)
                   ('razdel.html', '/home/claude/build/razdel_frag.html'),
-                  ('poruch.html', '/home/claude/build/poruch_frag.html')):
+                  ('poruch.html', '/home/claude/build/poruch_frag.html'),
+                  # 14.11.2026, Т. В.: «по онлайн-продажам — раздел инфографики: промтами основные принципы её оформления»
+                  ('infografika.html', '/home/claude/build/infografika_frag.html')):
     frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
            'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — счётчики и откачка'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
@@ -148,7 +150,7 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник12 Имя2', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник11 Имя2', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
     _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Офис продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
@@ -193,7 +195,7 @@ try:
                     for _it in _o.get('items', []): _it.pop('ch', None)
         _SHIP['plan'] = _pl
 except Exception as _e: print('план отгрузки:', _e)
-# 11.11.2026, Сотрудник7 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
+# 11.11.2026, Сотрудник20 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
@@ -202,6 +204,10 @@ except Exception as _e: print('план по менеджерам:', _e); _PM = 
 try: _PC = _cg1_read_json('/home/claude/build/poruch/meet_tasks.json', encoding='utf-8')
 except Exception: _PC = None
 if 'poruch.html' in frags: frags['poruch.html'] = frags['poruch.html'].replace('__PORUCH__', _js.dumps(_PC, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+# 14.11.2026: «Инфографика» — принципы и промты (build/infografika/infografika.json)
+try: _IG = _cg1_read_json('/home/claude/build/infografika/infografika.json', encoding='utf-8')
+except Exception: _IG = {}
+if 'infografika.html' in frags: frags['infografika.html'] = frags['infografika.html'].replace('__INFOGR__', _js.dumps(_IG, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__PLANM__', _js.dumps(_PM, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 11.11.2026, Т. В.: «отчёт по менеджерам в разрезе ОП (базис поставки), ФТС и ПКС отдельно, накопленным итогом» (build/sales_mgr_op/<ГГГГ-ММ>.json) → #mgrop;
 # «отдельный раздел онлайн-продажи» (build/online/online.json — обновляет ежедневное облачное задание по ценам) → #online
@@ -209,7 +215,7 @@ try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
     _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
-# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник7 из папки «Планы» itm@)
+# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник20 из папки «Планы» itm@)
 try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -272,7 +278,7 @@ except Exception as _e:
     print('отзывы ВИ:', _e); _virj = 'null'
 assert frags['sales.html'].count('__VIREV__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__VIREV__', _virj, 1)
-# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник5 02.11, build/sales_op/spb_clients.json)
+# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник6 02.11, build/sales_op/spb_clients.json)
 try: _spbj = _js.dumps(_cg1_read_json('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('клиенты СПб:', _e); _spbj = 'null'
 assert frags['sales.html'].count('__SPB__') == 1
@@ -281,7 +287,7 @@ frags['sales.html'] = frags['sales.html'].replace('__SPB__', _spbj, 1)
 try: _tz1 = _js.dumps(_cg1_read_json('/home/claude/build/tz/tz_1c.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('ТЗ 1С:', _e); _tz1 = 'null'
 frags['sales.html'] = frags['sales.html'].replace('__TZ1C__', _tz1, 1)
-# 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник5 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
+# 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник6 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
 # план продаж по менеджерам октябрь → ноябрь с группами производства (build/sales_op/2026-10.json). Нет файла — пустой объект, блок не показывается
 _sopp = '/home/claude/build/sales_op/2026-10.json'
 def _sop_clean(d):
@@ -337,11 +343,13 @@ if(document.readyState==='complete')setTimeout(go,400);else addEventListener('lo
 # assets/portal.css, оболочка в assets/site.js; тема по умолчанию тёмная — выставляется до отрисовки (выбор пользователя — в браузере)
 import json as _js
 # 28.10.2026 (утверждённые макеты): тема по умолчанию — «Авто» (как в системе), выбор «Светлая / Тёмная» — t14.theme;
-# производительность «Авто / Сотрудник14 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
+# производительность «Авто / Сотрудник13 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
 # при прокрутке), — t14.dev. Всё ставится на <html> до отрисовки: data-theme, data-perf (max|mid|eco; eco = прежний data-fx="lite"), data-plat.
 _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.userAgent||'',L=null;"
           "function g(k){try{return localStorage.getItem(k)}catch(e){return null}}"
           "var t=g('t14.theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);"
+          # 14.11.2026: оформление «V22» на просмотр — ?skin=v22 включает (запоминается), ?skin=classic выключает
+          "var sp=/[?&]skin=(v22|classic)/.exec(location.search);if(sp){try{localStorage.setItem('t14.skin',sp[1])}catch(e){}}if((sp?sp[1]:g('t14.skin'))==='v22')d.setAttribute('data-skin','v22');"
           "d.setAttribute('data-plat',/Android/i.test(u)?'android':(/iPhone|iPad|iPod/.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))?'ios':'desk');"
           "var c=g('t14.power');if(!c){var f=g('t14.fx');c=f==='lite'?'eco':f==='full'?'max':'auto'}"
           "if(c==='eco'||c==='max')L=c;else{try{var m=JSON.parse(g('t14.dev')||'null');if(m&&m.ua===u&&m.base&&Date.now()-(m.t||0)<2592e6)L=m.base}catch(e){}"
@@ -350,7 +358,7 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           "else if((dm&&dm<=2)||(hc&&hc<=2)||cn.effectiveType==='3g'||rm||((screen.width*screen.height*(devicePixelRatio||1)*(devicePixelRatio||1))>8.3e6&&dm&&dm<=4))L='mid';"
           # 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра, поэтому iOS
           # всегда получал «max» (стекло с размытием на всю боковую панель). По умолчанию для iOS — «mid» (размытие только на малых поверхностях);
-          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник14» — вручную в «Профиль и настройки».
+          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник13» — вручную в «Профиль и настройки».
           "else if(d.getAttribute('data-plat')==='ios'&&!dm)L='mid'}}"
           "d.setAttribute('data-perf',L);if(L==='eco')d.setAttribute('data-fx','lite')})()</script>\n")
 # 04.11.2026, замечание Т. В. («Назад» водит по кругу): после шага «назад» по истории на другую страницу — сразу, до отрисовки, уровень выше того места,
@@ -437,6 +445,10 @@ for _n in frags:
 # 13.11.2026, Т. В.: «все баги фиксируем, даже движение мышкой; тепловые карты; где человек запутался» — assets/ux.js на каждой странице
 for _n in frags:
     if '<script src="assets/ux.js">' not in frags[_n]: frags[_n] += '<script src="assets/ux.js"></script>\n'
+    # 13.11.2026, Т. В. (опрос по «Dashboard V22»): цифры «набегают», узкая панель, «Сохранённое»
+    if '<link rel="stylesheet" href="assets/skin_v22.css">' not in frags[_n]: frags[_n] = '<link rel="stylesheet" href="assets/skin_v22.css">\n' + frags[_n]
+    for _mjs in ('motion.js', 'fav.js'):                # не _js: так в файле назван модуль json
+        if '<script src="assets/%s">' % _mjs not in frags[_n]: frags[_n] += '<script src="assets/%s"></script>\n' % _mjs
 print('подсветка нового: %d записей на %s' % (len(_FI), _FDAY))
 def _ddmm(s): return (s[8:10] + '.' + s[5:7]) if s and len(s) >= 10 else 'нет данных'
 def _nn(x): return '{:,}'.format(x).replace(',', ' ') if isinstance(x, int) else 'нет данных'
@@ -455,7 +467,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник8) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник5) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -498,7 +510,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         _AW = _SD.get('allwh') or {}
         if _AW.get('list'): _PU['stock']['allwh'] = {'date': _AW.get('date'), 'list': [{'n': w.get('n'), 'q': w.get('q'), 'd': w.get('d')} for w in _AW['list']]}
     except Exception as _e4: print('пульс, все склады:', _e4)
-    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник11; свежий — smvs.bin)
+    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник10; свежий — smvs.bin)
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:
@@ -688,6 +700,9 @@ with open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8') as _cg1_outpu
     _cg1_output_file.write(frags['index.html'])
 _lib = '/home/claude/library/raw'
 # 28.10.2026: PDF-копии Word/Excel для просмотра внутри портала (docs2pdf.py; gen_library.py → D.view). Старые копии переделываются только при смене исходника
+# 14.11.2026, Т. В.: «все файлы на портале, какими бы они ни были, обязаны иметь только фирменный стиль, кроме каталогов и презентаций» —
+#   brand_all.py ставит новые и заменённые файлы library/raw на фирменный бланк (оригиналы — library/orig), уже оформленные пропускает
+subprocess.run(['python3', '/home/claude/build/brand_all.py'])
 subprocess.run(['python3', '/home/claude/build/docs2pdf.py'])
 if os.path.exists(os.path.join(SITE, 'library')): shutil.rmtree(os.path.join(SITE, 'library'))
 if os.path.isdir(_lib) and any(f for _, _, fs in os.walk(_lib) for f in fs): shutil.copytree(_lib, os.path.join(SITE, 'library'))

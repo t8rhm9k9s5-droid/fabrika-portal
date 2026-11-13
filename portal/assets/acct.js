@@ -163,8 +163,104 @@
       .then(function (x) { C = x; return api('mypw', { tok: tok(), id: p.id, salt: C.salt, iter: C.iter, ver: C.ver, slot: C.slot, kr: C.kr, seal: C.seal, tokh: C.tokh }); })
       .then(function () { saveMe(p, C._tok); return aes(C._K); }).then(function (k) { return kvSet('uk', k); });
   }
+  // ---------------- быстрый вход (14.11.2026, Т. В.: «в айфон и где есть Face ID — добавь: или пароль короткий для входа, или Face ID»)
+  //   После входа паролем на ЭТОМ устройстве можно включить Face ID / Touch ID / отпечаток / Windows Hello (WebAuthn, ключ в устройстве)
+  //   и/или код из 4–6 цифр. Логин и пароль остаются только здесь (IndexedDB) и зашифрованы дважды: ключом устройства (неизвлекаемый
+  //   CryptoKey — копия базы на другом устройстве бесполезна) и ключом из кода (PBKDF2, 310 000 шагов) или из Face ID (расширение PRF,
+  //   где браузер его даёт; иначе Face ID — обязательная проверка владельца перед расшифровкой). 5 неверных кодов подряд — быстрый вход
+  //   стирается, нужен пароль. На сервер ничего нового не уходит: быстрый вход просто делает обычный вход паролем за человека.
+  function qlDev() {
+    return kvGet('qldk').then(function (k) {
+      if (k) return k;
+      return S.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then(function (n) { return kvSet('qldk', n).then(function () { return n; }); });
+    });
+  }
+  function qlGet() { return kvGet('ql').then(function (q) { return q && q.v === 1 && (q.pin || q.bio) ? q : null; }, function () { return null; }); }
+  function qlOff() { try { localStorage.removeItem('t14.qlx'); } catch (e) { /* */ } return kvSet('ql', null).catch(function () { }); }
+  function bioName() { var u = navigator.userAgent || ''; return /iPhone|iPad|iPod/.test(u) ? 'Face ID' : /Macintosh/.test(u) ? 'Touch ID' : /Android/.test(u) ? 'отпечаток пальца' : /Windows/.test(u) ? 'Windows Hello' : 'Face ID / отпечаток'; }
+  function bioOk() {
+    var P = G.PublicKeyCredential;
+    return P && P.isUserVerifyingPlatformAuthenticatorAvailable && navigator.credentials ? P.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; }) : Promise.resolve(false);
+  }
+  function seal2(dev, k2, obj, aad) { return gcm(k2, te.encode(JSON.stringify(obj)), aad).then(function (c1) { return gcm(dev, c1, aad); }).then(b64); }
+  function open2(dev, k2, ct, aad) { return ungcm(dev, unb64(ct), aad).then(function (c1) { return ungcm(k2, c1, aad); }).then(function (raw) { return JSON.parse(td.decode(raw)); }); }
+  function prfKey(prf) {
+    return S.importKey('raw', prf, 'HKDF', false, ['deriveBits'])
+      .then(function (h) { return S.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: te.encode('fabrika-ql'), info: te.encode('bio') }, h, 256); }).then(u8);
+  }
+  function qlSave(login, f) { return qlGet().then(function (q) { q = q && q.l === login ? q : { v: 1, l: login }; f(q); return kvSet('ql', q); }); }
+  function qlReset() { try { localStorage.removeItem('t14.qlx'); } catch (e) { /* */ } }
+  function qlSetPin(login, pw, pin) {
+    if (!/^\d{4,6}$/.test(pin)) return Promise.reject(new Error('Код — от 4 до 6 цифр.'));
+    var salt = rnd(16), it = 310000;
+    return Promise.all([qlDev(), pbkdf(pin, salt, it)]).then(function (x) { return seal2(x[0], x[1], { l: login, p: pw }, 'ql-pin'); })
+      .then(function (ct) { qlReset(); return qlSave(login, function (q) { q.pin = { s: hex(salt), i: it, c: ct, n: pin.length }; }); });
+  }
+  function bioAssert(id, salt) {
+    var o = { challenge: rnd(32), allowCredentials: [{ type: 'public-key', id: unb64(id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 };
+    if (salt) o.extensions = { prf: { eval: { first: salt } } };
+    return navigator.credentials.get({ publicKey: o }).then(function (a) {
+      var ad = u8(a.response.authenticatorData);
+      if (!(ad[32] & 4)) throw new Error(bioName() + ' не подтвердил вход.');
+      var ex = a.getClientExtensionResults ? a.getClientExtensionResults() : {};
+      return { prf: ex.prf && ex.prf.results && ex.prf.results.first ? u8(ex.prf.results.first) : null };
+    }, function (e) { throw new Error(e && e.name === 'NotAllowedError' ? bioName() + ': вход отменён или время вышло.' : (bioName() + ' недоступен: ' + (e && e.message || e))); });
+  }
+  function qlSetBio(login, name, pw) {
+    var dev, salt = rnd(32), cid;
+    return qlDev().then(function (d) {
+      dev = d;
+      return navigator.credentials.create({ publicKey: { rp: { name: 'Фабрика' }, user: { id: rnd(16), name: login, displayName: name || login }, challenge: rnd(32),
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }], timeout: 60000, attestation: 'none',
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+        extensions: { prf: { eval: { first: salt } } } } });
+    }).then(function (c) {
+      cid = b64(c.rawId);
+      var ex = c.getClientExtensionResults ? c.getClientExtensionResults() : {};
+      if (ex.prf && ex.prf.results && ex.prf.results.first) return u8(ex.prf.results.first);
+      if (ex.prf && ex.prf.enabled) return bioAssert(cid, salt).then(function (a) { return a.prf; });
+      return null;
+    }, function (e) { throw new Error(e && e.name === 'NotAllowedError' ? bioName() + ': отменено.' : bioName() + ' не включился: ' + (e && e.message || e)); })
+      .then(function (prf) {
+        return (prf ? prfKey(prf) : Promise.resolve(rnd(32))).then(function (k2) {
+          return seal2(dev, k2, { l: login, p: pw }, 'ql-bio').then(function (ct) {
+            return qlSave(login, function (q) { q.bio = { id: cid, s: b64(salt), c: ct, prf: !!prf }; if (!prf) q.bio.k = b64(k2); });
+          });
+        });
+      });
+  }
+  function qlByPin(pin) {
+    var q;
+    return qlGet().then(function (x) {
+      q = x; if (!q || !q.pin) throw new Error('Вход по коду не включён.');
+      return Promise.all([qlDev(), pbkdf(String(pin || ''), unhex(q.pin.s), q.pin.i)]).then(function (k) {
+        return open2(k[0], k[1], q.pin.c, 'ql-pin').then(function (sec) { qlReset(); return sec; }, function () {
+          var n = 1; try { n = +(localStorage.getItem('t14.qlx') || 0) + 1; localStorage.setItem('t14.qlx', String(n)); } catch (e) { /* */ }
+          if (n >= 5) return qlOff().then(function () { throw new Error('Пять неверных кодов подряд — быстрый вход выключен. Войдите паролем и включите его заново.'); });
+          throw new Error('Неверный код. Осталось попыток: ' + (5 - n) + '.');
+        });
+      });
+    });
+  }
+  function qlByBio() {
+    var q;
+    return qlGet().then(function (x) { q = x; if (!q || !q.bio) throw new Error(bioName() + ' для входа не включён.'); return bioAssert(q.bio.id, q.bio.prf ? unb64(q.bio.s) : null); })
+      .then(function (a) {
+        if (q.bio.prf && !a.prf) throw new Error('Браузер не отдал ключ ' + bioName() + ' — войдите паролем.');
+        return Promise.all([qlDev(), q.bio.prf ? prfKey(a.prf) : Promise.resolve(unb64(q.bio.k))]);
+      })
+      .then(function (k) { return open2(k[0], k[1], q.bio.c, 'ql-bio'); })
+      .then(function (sec) { qlReset(); return sec; });
+  }
+  function qlSignIn(sec) {
+    return signIn(sec.l, sec.p).catch(function (e) {
+      if (/парол|неверн/i.test(e && e.message || '')) return qlOff().then(function () { throw new Error('Пароль сменился — войдите паролем и включите быстрый вход заново.'); });
+      throw e;
+    });
+  }
   G.T14Acct = { cfg: cfg, api: api, me: me, tok: tok, saveMe: saveMe, forget: forget, signIn: signIn, register: register, sharedKey: sharedKey, checkKey: checkKey,
-    addUser: addUser, resetPw: resetPw, changePw: changePw, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
+    addUser: addUser, resetPw: resetPw, changePw: changePw,
+    ql: { get: qlGet, off: qlOff, setPin: qlSetPin, setBio: qlSetBio, byPin: qlByPin, byBio: qlByBio, signIn: qlSignIn, bioName: bioName, bioOk: bioOk }, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
   // 13.11.2026, Т. В.: «в Людях первоначально происходит загрузка — загрузки быть не должно». Закрытые части «Структуры» (org, kos, ko, sim)
   //   подгружаются фоном на любой странице — только у вошедшего лично, чей доступ уже подтверждён (флаг t14.sec), не чаще раза в 30 мин.
   function secWarm() {
@@ -226,6 +322,79 @@
   }
 
   // ---------------- личный вход
+  // ---------------- быстрый вход: окна (14.11.2026, Т. В.: «и в айфон, и где есть Face ID — добавь: или пароль короткий для входа, или Face ID»)
+  function qlDone(s) { s.close(); toast('Вы вошли: ' + ((A.me() || {}).name || '')); G.dispatchEvent(new Event('t14acct')); }
+  function pinField(label, ph, n) {
+    var f = field(label, 'password', ph || '', 'off'), i = f.lastChild;
+    i.inputMode = 'numeric'; i.pattern = '[0-9]*'; i.maxLength = n || 6; i.setAttribute('autocomplete', 'off');
+    i.addEventListener('input', function () { var v = i.value.replace(/\D/g, '').slice(0, n || 6); if (v !== i.value) i.value = v; });
+    return f;
+  }
+  // окно входа: если на этом устройстве включён быстрый вход — сверху кнопка Face ID и поле кода
+  function qlBlock(s, before) {
+    A.ql.get().then(function (q) {
+      if (!q) return;
+      var box = el('div', 'iform iql');
+      box.appendChild(el('p', 'ihdr', 'Быстрый вход'));
+      var who = el('p', 'ifoot'); who.textContent = 'Логин ' + q.l + ' · на этом устройстве'; box.appendChild(who);
+      function go(pr, b) {
+        msg(box, ''); if (b) busy(b, true, 'Проверяю…');
+        pr.then(A.ql.signIn).then(function () { qlDone(s); }, function (e) { if (b) busy(b, false); msg(box, e.message, true); A.ql.get().then(function (x) { if (!x) box.remove(); }); });
+      }
+      if (q.bio) { var bb = btn('Войти через ' + A.ql.bioName(), 'pri'); bb.addEventListener('click', function () { go(A.ql.byBio(), bb); }); box.appendChild(bb); }
+      if (q.pin) {
+        var g = el('div', 'igroup iflds'), pf = pinField('Код из ' + q.pin.n + ' цифр', '', q.pin.n), inp = pf.lastChild;
+        g.appendChild(pf); box.appendChild(g);
+        var pb = btn('Войти по коду', q.bio ? '' : 'pri');
+        pb.addEventListener('click', function () { var v = inp.value; inp.value = ''; go(A.ql.byPin(v), pb); });
+        inp.addEventListener('input', function () { if (inp.value.length === q.pin.n) pb.click(); });
+        box.appendChild(pb);
+      }
+      box.appendChild(el('p', 'ifoot', 'Или войдите логином и паролем ниже.'));
+      if (before && before.parentNode === s.body) s.body.insertBefore(box, before); else s.body.prepend(box);
+    });
+  }
+  // включить Face ID и/или код (pw — пароль, только что проверенный входом)
+  function qlSetup(box, login, name, pw, after) {
+    Promise.all([A.ql.bioOk(), A.ql.get()]).then(function (x) {
+      var bio = x[0], q = x[1] && x[1].l === login ? x[1] : null, g = el('div', 'iform');
+      if (bio) {
+        var bb = btn(q && q.bio ? A.ql.bioName() + ' включён · включить заново' : 'Включить ' + A.ql.bioName(), 'pri');
+        bb.addEventListener('click', function () {
+          msg(g, ''); busy(bb, true, 'Подтвердите ' + A.ql.bioName() + '…');
+          A.ql.setBio(login, name, pw).then(function () { busy(bb, false); bb.textContent = A.ql.bioName() + ' включён ✓'; bb.disabled = true; if (after) after('bio'); }, function (e) { busy(bb, false); msg(g, e.message, true); });
+        });
+        g.appendChild(bb);
+      }
+      var pg = el('div', 'igroup iflds'), c1 = pinField('Код: 4–6 цифр', 'лучше 6 цифр'), c2 = pinField('Код ещё раз', '');
+      pg.append(c1, c2);
+      var pb = btn(q && q.pin ? 'Сменить код' : 'Задать код', bio ? '' : 'pri');
+      pb.addEventListener('click', function () {
+        var a = c1.lastChild.value, b = c2.lastChild.value;
+        if (!/^\d{4,6}$/.test(a)) return msg(g, 'Код — от 4 до 6 цифр.', true);
+        if (a !== b) return msg(g, 'Коды не совпадают.', true);
+        if (/^(\d)\1+$/.test(a) || '01234567890'.indexOf(a) >= 0 || '9876543210'.indexOf(a) >= 0) return msg(g, 'Слишком простой код (одинаковые цифры или подряд) — выберите другой.', true);
+        msg(g, ''); busy(pb, true, 'Сохраняю…');
+        A.ql.setPin(login, pw, a).then(function () { busy(pb, false); c1.lastChild.value = c2.lastChild.value = ''; pb.textContent = 'Сменить код'; msg(g, 'Код сохранён — входите по нему на этом устройстве.'); if (after) after('pin'); }, function (e) { busy(pb, false); msg(g, e.message, true); });
+      });
+      g.append(el('p', 'ihdr', bio ? 'Или короткий код' : 'Короткий код'), pg, pb);
+      box.appendChild(g);
+    });
+  }
+  // сразу после входа паролем — предложить быстрый вход (если на этом устройстве его ещё нет)
+  function qlOffer(s, login, pw) {
+    Promise.all([A.ql.get(), A.ql.bioOk()]).then(function (x) {
+      if (x[0] && x[0].l === login) return qlDone(s);
+      var me = A.me() || {};
+      s.body.innerHTML = '';
+      var hi = el('p', 'idone'); hi.textContent = 'Вы вошли: ' + (me.name || login) + '.'; s.body.appendChild(hi);
+      s.body.appendChild(el('p', 'ifoot', 'Чтобы в следующий раз не вводить пароль, включите быстрый вход на этом устройстве' + (x[1] ? ': ' + A.ql.bioName() + ' или короткий код.' : ' — короткий код.') +
+        ' Пароль останется только здесь, в зашифрованном виде; на сервер ничего не уходит.'));
+      var box = el('div'); s.body.appendChild(box);
+      qlSetup(box, login, me.name, pw);
+      var ok = btn('Готово'); ok.style.marginTop = '12px'; ok.addEventListener('click', function () { qlDone(s); }); s.body.appendChild(ok);
+    });
+  }
   function account() {
     var p = A.me();
     var s = sheet('Личный вход', p ? null : 'Свой логин и пароль: вас видно по имени в чате, уведомления приходят лично вам.');
@@ -233,12 +402,14 @@
     var seg = el('div', 'iseg', '<button type="button" aria-pressed="true">Войти</button><button type="button" aria-pressed="false">Сотрудник4 доступ</button>');
     var f1 = el('div', 'iform'), f2 = el('div', 'iform'); f2.hidden = true;
     s.body.append(seg, f1, f2);
+    qlBlock(s, seg);
     seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); f1.hidden = b !== seg.children[0]; f2.hidden = !f1.hidden; });
     var lg = field('Логин', 'text', 'например, ivanov', 'username'), pw = field('Пароль', 'password', '', 'current-password'), go = btn('Войти', 'pri');
     f1.append(el('div', 'igroup iflds'), go); f1.firstChild.append(lg, pw);
     go.addEventListener('click', function () {
       msg(f1, ''); busy(go, true, 'Проверяю…');
-      A.signIn(lg.lastChild.value, pw.lastChild.value).then(function () { s.close(); toast('Вы вошли: ' + (A.me() || {}).name); G.dispatchEvent(new Event('t14acct')); }, function (e) { busy(go, false); msg(f1, e.message, true); });
+      var L0 = lg.lastChild.value, P0 = pw.lastChild.value;
+      A.signIn(L0, P0).then(function () { G.dispatchEvent(new Event('t14acct')); qlOffer(s, L0.trim(), P0); }, function (e) { busy(go, false); msg(f1, e.message, true); });
     });
     var nm = field('Имя и фамилия', 'text', 'Имя1 Имя1', 'name'), lg2 = field('Логин', 'text', 'латиницей, например ivanov', 'username'), p1 = field('Пароль', 'password', 'не короче 8 знаков', 'new-password'),
       p2 = field('Пароль ещё раз', 'password', '', 'new-password'), sp = field('Общий пароль сайта', 'password', 'тот, которым вы вошли', 'off'), go2 = btn('Отправить запрос', 'pri');
@@ -266,11 +437,38 @@
     var out = btn('Выйти из личного входа', 'red');
     f.append(el('p', 'ihdr', 'Пароль'), el('div', 'igroup iflds'), go, out); f.children[1].append(np);
     s.body.appendChild(f);
+    // быстрый вход на этом устройстве (14.11.2026)
+    var qf = el('div', 'iform'), qs = el('p', 'ifoot');
+    qf.append(el('p', 'ihdr', 'Быстрый вход на этом устройстве'), qs);
+    s.body.insertBefore(qf, f);
+    function qlStatus() {
+      return A.ql.get().then(function (q) {
+        q = q && q.l === p.login ? q : null;
+        qs.textContent = q ? 'Включён: ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'код из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' и ') + '. Пароль хранится только здесь, в зашифрованном виде.'
+          : 'Выключен. Включите ' + A.ql.bioName() + ' или короткий код — чтобы не вводить пароль, когда вход истечёт.';
+        return q;
+      });
+    }
+    function qlPaint() {
+      [].slice.call(qf.querySelectorAll('.qlx')).forEach(function (n) { n.remove(); });
+      qlStatus().then(function (q) {
+        var g = el('div', 'igroup iflds qlx'), pw = field('Ваш пароль', 'password', q ? 'для изменения' : 'для включения', 'current-password'), nx = btn(q ? 'Изменить' : 'Включить', 'qlx');
+        g.appendChild(pw); qf.append(g, nx);
+        nx.addEventListener('click', function () {
+          var v = pw.lastChild.value; if (!v) return msg(qf, 'Введите пароль.', true);
+          msg(qf, ''); busy(nx, true, 'Проверяю пароль…');
+          A.signIn(p.login, v).then(function () { g.remove(); nx.remove(); var box = el('div', 'qlx'); qf.appendChild(box); qlSetup(box, p.login, p.name, v, qlStatus); },
+            function (e) { busy(nx, false); msg(qf, e.message, true); });
+        });
+        if (q) { var off = btn('Выключить быстрый вход', 'qlx'); off.addEventListener('click', function () { A.ql.off().then(qlPaint); }); qf.appendChild(off); }
+      });
+    }
+    qlPaint();
     go.addEventListener('click', function () {
       if (np.lastChild.value.length < 8) return msg(f, 'Пароль — не короче 8 знаков.', true);
-      busy(go, true); A.changePw(np.lastChild.value).then(function () { busy(go, false); np.lastChild.value = ''; msg(f, 'Пароль сменён. На других устройствах теперь нужно войти заново.'); }, function (e) { busy(go, false); msg(f, e.message, true); });
+      busy(go, true); A.changePw(np.lastChild.value).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(qlPaint); msg(f, 'Пароль сменён. На других устройствах теперь нужно войти заново; быстрый вход здесь включите снова — выше.'); }, function (e) { busy(go, false); msg(f, e.message, true); });
     });
-    out.addEventListener('click', function () { if (out.dataset.arm) { A.forget().then(function () { s.close(); toast('Личный вход на этом устройстве выключен'); G.dispatchEvent(new Event('t14acct')); }); } else { out.dataset.arm = 1; out.textContent = 'Точно выйти? Нажмите ещё раз'; } });
+    out.addEventListener('click', function () { if (out.dataset.arm) { A.ql.off().then(A.forget).then(function () { s.close(); toast('Личный вход на этом устройстве выключен'); G.dispatchEvent(new Event('t14acct')); }); } else { out.dataset.arm = 1; out.textContent = 'Точно выйти? Нажмите ещё раз'; } });
   }
 
   // ---------------- помощник

@@ -47,6 +47,7 @@
   // ---------- the tab bar below (22.10.2026): the same as in the model; the last tab «Ещё» holds the sections, the edits and the service ----------
   var SVG = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
   var ICON = {
+    s_star: SVG('<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.6l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>'),   // 13.11.2026: «Сохранённое»
     trend: SVG('<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>'),
     phone: SVG('<path d="M5 3.5h3.2l1.6 4.2-2 1.4a11.5 11.5 0 0 0 7.1 7.1l1.4-2 4.2 1.6v3.2A1.8 1.8 0 0 1 18.7 21 16 16 0 0 1 3 5.3 1.8 1.8 0 0 1 5 3.5z"/>'),
     model: SVG('<path d="M12 3 4 7.5v9L12 21l8-4.5v-9z M4 7.5 12 12l8-4.5 M12 12v9"/>'),
@@ -239,7 +240,7 @@
   function getPref(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
-  // «Авто / Сотрудник14 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
+  // «Авто / Сотрудник13 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
   function theme() { var t = getPref('t14.theme', 'auto'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function applyLook() {
     var de = document.documentElement, t = theme();
@@ -258,7 +259,7 @@
   // Уровни на <html data-perf>: max — стекло с размытием, тени, движение; mid — размытие слабее, движение короче; eco — без размытия
   // (непрозрачный фон), без теней и анимаций (data-fx="lite"). Выученный уровень устройства — localStorage «t14.dev» (на 30 дней, свой для браузера).
   var FX = (function () {
-    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник14', eco: 'Экономно', mid: 'Среднее' };
+    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник13', eco: 'Экономно', mid: 'Среднее' };
     function rdJ(k) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
     var mem = rdJ('t14.dev'); if (!mem || mem.ua !== ua) mem = { ua: ua };
     function save() { mem.ua = ua; mem.t = Date.now(); try { localStorage.setItem('t14.dev', JSON.stringify(mem)); } catch (e) { } }
@@ -277,7 +278,7 @@
       if (rm) return ['mid', 'в системе включено «Уменьшение движения»'];
       if ((screen.width || 0) * (screen.height || 0) * dpr * dpr > 8.3e6 && dm && dm <= 4) return ['mid', 'большой экран при небольшой памяти'];
       // 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра — iOS всегда
-      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник14» — вручную
+      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник13» — вручную
       if (de.getAttribute('data-plat') === 'ios' && !dm) return ['mid', 'iPhone/iPad: размытие стекла только на малых поверхностях'];
       return ['max', ''];
     }
@@ -332,7 +333,7 @@
       subs.forEach(function (f) { try { f(); } catch (e) { } });
       return L;
     }
-    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник14» → высокое, «Авто» — по замеру
+    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник13» → высокое, «Авто» — по замеру
     function set(c) {
       if (c !== 'auto' && c !== 'max' && c !== 'eco') return;
       setPref('t14.power', c);
@@ -464,7 +465,7 @@
     ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['sales.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
     ['sales.html#mp', 'Маркетплейсы', 'маркетплейсы ozon озон wildberries вайлдберриз яндекс маркет'], ['sales.html#ship', 'График отгрузки', 'отгрузки график объекты'], ['sales.html#cp', 'Контрольные точки', 'контрольные точки сроки'],
     ['sales.html#prom', 'Обещанные визиты и звонки', 'визиты звонки обещания'], ['sales.html#buf', 'Буфер заказов', 'буфер заказы'], ['sales.html#prod', 'Заказы на производство', 'заказы производство'],
-    ['sales.html#cls', 'Сотрудник6', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
+    ['sales.html#cls', 'Сотрудник7', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
     ['sales.html#tz1c', 'ТЗ в работе · 1С', 'тз 1с в работе'], ['stock.html#move', 'Все склады и филиалы — движение за месяц', 'все склады филиалы товары на складах движение приход расход'],
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
@@ -519,6 +520,7 @@
       PORTAL.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], onSec(p[0]) ? 'сейчас' : ''); a.href = p[0]; if (onSec(p[0])) a.setAttribute('aria-current', 'page'); g.appendChild(a); });
       s.appendChild(h4('Внутри разделов'));
       var g2 = el('div', 'igroup'); s.appendChild(g2);
+      var fvr = irow('a', ICON.s_star, 'var(--ic-stock)', 'Сохранённое', ''); fvr.href = 'razdel.html#saved'; g2.appendChild(fvr);
       SUBS.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], p[0] === cur ? 'сейчас' : ''); a.href = p[0]; if (p[0] === cur) a.setAttribute('aria-current', 'page'); g2.appendChild(a); });
       if (isAdmin()) { var ad = irow('a', ICON.gear, 'var(--ic-grey)', 'Управление', cur === 'admin.html' ? 'сейчас' : ''); ad.href = 'admin.html'; g2.appendChild(ad); }
       s.appendChild(h4('Боты и приложение'));   // 28.10.2026, пользователь: «где ссылки на чат-боты»; 23:05: «меню «Скачать APK» пропало — исправь»
@@ -632,7 +634,7 @@
       var acSync = function () { var p = null; try { p = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { } ac.querySelector('.ival').textContent = p ? (p.st === 'pending' ? 'ждёт' : String(p.name).split(' ')[0]) : 'войти'; };
       acSync(); window.addEventListener('t14acct', acSync);
       s.appendChild(h4('Оформление'));
-      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник14 / Экономно»; по умолчанию — «Авто» и «Авто»
+      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник13 / Экономно»; по умолчанию — «Авто» и «Авто»
       function seg(label, get, opts, put) {
         s.appendChild(el('p', 'psub', label));
         var w = el('div', 'pseg'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', label); s.appendChild(w);
@@ -641,9 +643,11 @@
         sync(); return sync;
       }
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
-      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник14'], ['eco', 'Экономно']], function (v) { FX.set(v); });
+      // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
+      seg('Вид', function () { return getPref('t14.skin', 'classic') === 'v22' ? 'v22' : 'classic'; }, [['classic', 'Классика'], ['v22', 'V22 (проба)']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
+      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник13'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
-      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник14» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
+      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник13» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
       pfs(); FX.on(pfs);
       s.appendChild(h4('Сервис'));
       var g3 = el('div', 'igroup'); s.appendChild(g3);
@@ -695,6 +699,8 @@
     }
     PORTAL.forEach(function (p) { var a = navItem(p[0], p[2], p[3], p[1]); if (onSec(p[0])) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
     if (isAdmin()) { var ad = navItem('admin.html', 'gear', 'var(--ic-grey)', 'Управление'); if (cur === 'admin.html') ad.setAttribute('aria-current', 'page'); nav.appendChild(ad); }
+    // 13.11.2026, Т. В. (опрос по «Dashboard V22»): «Сохранённое» — звёздочки у документов и отчётов (assets/fav.js)
+    var fv = navItem('razdel.html#saved', 's_star', 'var(--ic-stock)', 'Сохранённое'); if (cur === 'razdel.html' && location.hash === '#saved') fv.setAttribute('aria-current', 'page'); nav.appendChild(fv);
     side.appendChild(el('div', 'pcap pai-cap', 'Помощник'));
     var ask = trigger('search', 'pnav pask', 'spark', 'Спросить у портала'); ask.innerHTML = '<span class="pi" style="--c:var(--ic-ai)">' + ICON.spark + '</span><span class="pt">Спросить у портала</span>'; side.appendChild(ask);
     BOTS.forEach(function (x) {   // 28.10.2026: ссылки на чат-боты — всегда на виду
@@ -964,7 +970,7 @@
     try { ['scrollY', 'pageYOffset'].forEach(function (k) { Object.defineProperty(window, k, { configurable: true, get: function () { return B.scrollTop; } }); }); } catch (e) { }
   }
   if (document.body) scrollMode(); else document.addEventListener('DOMContentLoaded', scrollMode);
-  // REDACTED_B64_24 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
+  // REDACTED_B64_2 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
   var SXP = { 'staff.html': { deps: ['Производство', 'Технологический отдел', 'Служба главного инженера', 'Служба главного механика'], areas: true, pd: true },

@@ -26,7 +26,7 @@
     sales: function () {
       var P = ST.planm || {}, T = P.tot || {}, S = bin('sales.bin'), Ld = bin('leads.bin'), ld = lastDay(S), NC = ST.newcl || {};
       var ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null, td = MSK(), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null;
-      var cp = S && S.cp, SH = ST.ship || {};
+      var SH = ST.ship || {};
       var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на дату надо ' + mln(T.need) : 'нет данных', T.pct, 'sales.html#planm'),
         K('Продажи за день', C.b, ld ? d1(ld[1].types.tot[1] / 1e6) : '—', 'млн ₽', ld ? dd(ld[0]) + ' · ' + n(ld[1].types.tot[0]) + ' шт' : 'данные робота ещё не пришли', null, 'sales.html#s-s1c'),
         K('Отчёты офисов', C.g, rep != null ? rep : '—', ops ? 'из ' + ops.length : '', ops ? 'сдали вечерний отчёт сегодня' : 'данные робота ещё не пришли', ops ? Math.round(rep / ops.length * 100) : null, 'sales.html#s-prom'),
@@ -102,7 +102,7 @@
     },
     online: function () {                                  // 13.11.2026, Т. В.: «онлайн-продажи — отдельный блок» (мониторинг сайтов build/online + отзывы Ozon)
       var O = ST.online || {}, R = M('rev') || {};
-      var rv = R.v != null ? d1(R.v) : '—', nw = R.mode === 'api' ? R.nw : (R.M && R.M.neg_new);
+      var rv = R.v != null ? d1(R.v) : '—';
       var k = [K('Предложений в Рунете', C.b, O.total != null ? n(O.total) : '—', '', O.t ? 'наши модели · на ' + dd(O.t) : 'мониторинг сайтов ещё не собран', null, 'sales.html#online'),
         K('Сайтов-продавцов', C.i, O.sites != null ? n(O.sites) : '—', '', 'маркетплейсы и интернет-магазины', null, 'sales.html#online'),
         K('Проверено моделей', C.g, O.checked != null ? n(O.checked) : '—', '', 'поиск по названию, штрихкоду и фото', null, 'sales.html#online'),
@@ -181,10 +181,10 @@
       return [k, [b1, b2]];
     }
   };
-  function bars(rows) {
+  function bars(rows, day) {   // 13.11.2026 (опрос по «Dashboard V22»): столбики-капсулы на «дорожке»; по дням — последний день выделен
     if (!rows.length) return '<p class="pz-none">Данных для диаграммы пока нет.</p>';
     var mx = Math.max.apply(null, rows.map(function (r) { return r[1] || 0; })) || 1;
-    return '<div class="pz-ch">' + rows.map(function (r) { return '<div><em>' + esc(r[2]) + '</em><b style="height:' + Math.max(2, Math.round((r[1] || 0) / mx * 86)) + '%"></b></div>'; }).join('') + '</div><div class="pz-chx">' + rows.map(function (r) { return '<span>' + esc(r[0]) + '</span>'; }).join('') + '</div>';
+    return '<div class="pz-ch' + (day ? ' pz-day' : '') + '">' + rows.map(function (r) { return '<div><em>' + esc(r[2]) + '</em><b style="height:' + Math.max(2, Math.round((r[1] || 0) / mx * 86)) + '%"></b></div>'; }).join('') + '</div><div class="pz-chx">' + rows.map(function (r) { return '<span>' + esc(r[0]) + '</span>'; }).join('') + '</div>';
   }
   function hbars(rows, mark) {
     if (!rows.length) return '<p class="pz-none">Данных для диаграммы пока нет.</p>';
@@ -197,7 +197,7 @@
       var tg = k[6] ? 'a' : 'div';                          // нет отчёта (готовится) — карточка без ссылки
       return '<' + tg + ' class="gl" style="--c:' + k[1] + ';--gd:' + (i * 0.7).toFixed(1) + 's"' + (k[6] ? ' href="' + esc(k[6]) + '"' : '') + '><span class="t"><i></i>' + esc(k[0]) + '</span><span class="v">' + esc(k[2]) + (k[3] ? '<small>' + esc(k[3]) + '</small>' : '') + '</span><span class="s">' + esc(k[4]) + '</span>' + (k[5] != null ? '<span class="bar"><b style="width:' + Math.max(2, Math.min(100, k[5])) + '%"></b></span>' : '') + '</' + tg + '>';
     }).join('') + '</div><div class="pz-b">' + B.map(function (b, i) {
-      return '<div class="gl" style="--gd:' + (4.2 + i * 0.7).toFixed(1) + 's"><h3>' + esc(b[0]) + '</h3><p class="sub">' + esc(b[1]) + '</p>' + (b[2] === 'bars' ? bars(b[3]) : hbars(b[3], b[4])) + '</div>';
+      return '<div class="gl" style="--gd:' + (4.2 + i * 0.7).toFixed(1) + 's"><h3>' + esc(b[0]) + '</h3><p class="sub">' + esc(b[1]) + '</p>' + (b[2] === 'bars' ? bars(b[3], /по дням|в сутки/.test(b[0] + ' ' + b[1])) : hbars(b[3], b[4])) + '</div>';
     }).join('') + '</div><p class="pz-h">Отчёты раздела</p>';
     host.innerHTML = h;
   }
