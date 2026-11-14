@@ -8,11 +8,12 @@
 (function () {
   'use strict';
   if (!navigator.sendBeacon || /^file:/.test(location.protocol) || window.T14UX) return;
-  var URL_ = 'st/ux.php', EV = [], MV = Object.create(null), nEv = 0, nMv = 0;
+  var URL_ = 'st/ux.php', EV = [], MV = new Map(), nEv = 0, nMv = 0;
   function rnd(n) { var s = '', a = 'abcdefghijkmnpqrstuvwxyz23456789'; for (var i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
   var dev = ''; try { dev = localStorage.getItem('t14.uxd') || ''; if (!/^[a-z0-9]{12}$/.test(dev)) { dev = rnd(12); localStorage.setItem('t14.uxd', dev); } } catch (e) { dev = rnd(12); }
   function usr() { try { var me = JSON.parse(localStorage.getItem('t14.me') || 'null'); return me && me.id ? String(me.id).slice(0, 8) : ''; } catch (e) { return ''; } }
   function pg() { return (location.pathname.split('/').pop() || 'index.html') + (location.hash.length > 1 ? location.hash.split('?')[0].slice(0, 40) : ''); }
+  function mvObj() { var ps = []; MV.forEach(function (m, p) { var qs = []; m.forEach(function (v, c) { qs.push(JSON.stringify(c) + ':' + v); }); ps.push(JSON.stringify(p) + ':{' + qs.join(',') + '}'); }); return JSON.parse('{' + ps.join(',') + '}'); }   // формат прежний: {страница: {клетка: число}}, без записи свойств по ключу из адреса
   function now() { return Math.round(Date.now() / 1000); }
   function push(e) { if (nEv > 3000) return; EV.push(e); nEv++; if (EV.length >= 150) flush(); }
   function docW() { return Math.max(document.documentElement.scrollWidth, window.innerWidth || 1); }
@@ -58,8 +59,9 @@
   document.addEventListener('mousemove', function (e) {
     var t = Date.now(); if (t - mvT < 200 || nMv > 6000) return; mvT = t;
     var p = pg(), c = Math.min(39, Math.floor(e.pageX / docW() * 40)) + '_' + Math.min(99, Math.floor(e.pageY / docH() * 100));
-    if (!Object.prototype.hasOwnProperty.call(MV, p)) MV[p] = Object.create(null);   // ключ — из адреса страницы: без прототипа
-    MV[p][c] = (MV[p][c] || 0) + 1; nMv++;
+    // 14.11.2026 CodeQL js/remote-property-injection: ключ — из адреса страницы, поэтому Map, а не объект
+    var mp = MV.get(p); if (!mp) { mp = new Map(); MV.set(p, mp); }
+    mp.set(c, (mp.get(c) || 0) + 1); nMv++;
   }, { passive: true });
   // ---------- ошибки и время загрузки ----------
   window.addEventListener('error', function (e) {
@@ -72,11 +74,11 @@
   // ---------- отправка ----------
   function flush() {
     if (!EV.length && !nMv) return;
-    var body = { d: dev, u: usr(), w: window.innerWidth || 0, h: window.innerHeight || 0, p: document.documentElement.getAttribute('data-plat') || '', ev: EV, m: MV };
+    var body = { d: dev, u: usr(), w: window.innerWidth || 0, h: window.innerHeight || 0, p: document.documentElement.getAttribute('data-plat') || '', ev: EV, m: mvObj() };
     var s = JSON.stringify(body);
     if (s.length > 45000) { body.m = Object.create(null); s = JSON.stringify(body); if (s.length > 45000) { body.ev = EV.slice(-150); s = JSON.stringify(body); } }
     try { navigator.sendBeacon(URL_, new Blob([s], { type: 'text/plain' })); } catch (e) { }
-    EV = []; MV = Object.create(null); nMv = 0;
+    EV = []; MV = new Map(); nMv = 0;
   }
   window.addEventListener('hashchange', view);
   window.addEventListener('pagehide', function () { leave(); cur = ''; flush(); });

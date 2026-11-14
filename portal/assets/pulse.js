@@ -72,7 +72,7 @@
         K('Продажи за день', C.b, ld ? d1(ld[1].types.tot[1] / 1e6) : '—', 'млн ₽', ld ? dd(ld[0]) + ' · ' + n(ld[1].types.tot[0]) + ' шт' : 'данные робота ещё не пришли', null, 'sales.html#s-s1c'),
         K('Отчёты офисов', C.g, rep != null ? rep : '—', ops ? 'из ' + ops.length : '', ops ? 'сдали вечерний отчёт сегодня' : 'данные робота ещё не пришли', ops ? Math.round(rep / ops.length * 100) : null, 'sales.html#s-prom'),
         K('Лиды выставок', C.v, Ld && Ld.tot ? n(Ld.tot.done) : '—', Ld && Ld.tot ? 'из ' + n(Ld.tot.rows) : '', Ld && Ld.tot ? 'отмечено ' + Math.round(Ld.tot.done / Ld.tot.rows * 100) + ' % · сверка 20.11' : 'робот собирает раз в час', Ld && Ld.tot ? Ld.tot.done / Ld.tot.rows * 100 : null, 'sales.html#leads'),
-        K('Новые клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
+        K('Сотрудник5 клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
         K('Отгрузка недели', C.r, SH.tot && SH.tot.s ? d1(SH.tot.s / 1e6) : '—', 'млн ₽', SH.from ? n(SH.tot.q) + ' шт · ' + dd(SH.from) + '–' + dd(SH.to) : 'график отгрузки 1С', null, 'sales.html#ship')];   // 13.11.2026: отгрузки — в продажах
       var D = SD && SD.days, ym = MSK().slice(0, 7), days = D ? Object.keys(D).filter(function (x) { return x.slice(0, 7) === ym && D[x].types && D[x].types.tot && D[x].types.tot[1] > 1e5 && D[x].types.tot[1] < 6e7; }).sort().slice(-12) : [];
       var b1 = ['Продажи по дням — ' + ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'][+ym.slice(5) - 1], 'млн ₽ · рассылки 1С «Продажи по номенклатурным группам»', 'bars',
@@ -104,7 +104,7 @@
       var k = [K('Рекламации', C.r, R.all != null ? n(R.all) : '—', 'открыто', R.all_sum ? 'на ' + mln(R.all_sum) + ' млн ₽ · ' + (R.date ? 'на ' + dd(R.date) : '') : 'реестр 1С', null, 'sales.html#s-recl'),
         K('Старше 30 дней', C.o, R.old30 != null ? n(R.old30) : '—', 'шт', R.age_med ? 'медиана ' + R.age_med + ' дн.' : '', R.all ? R.old30 / R.all * 100 : null, 'sales.html#s-recl'),
         K('Старше 90 дней', C.r, R.old90 != null ? n(R.old90) : '—', 'шт', 'нужно закрыть в первую очередь', R.all ? R.old90 / R.all * 100 : null, 'sales.html#s-recl'),
-        K('Новые за месяц', C.y, R.n != null ? n(R.n) : '—', 'шт', R.sum ? 'ущерб ' + n(R.sum) + ' ₽' : '', null, 'sales.html#s-recl'),
+        K('Сотрудник5 за месяц', C.y, R.n != null ? n(R.n) : '—', 'шт', R.sum ? 'ущерб ' + n(R.sum) + ' ₽' : '', null, 'sales.html#s-recl'),
         K('Отзывы — оценка', C.g, X.avg != null ? d1(X.avg) : '—', '★', X.n ? n(X.n) + ' отзывов · не обработано ' + n(X.unproc) : 'выгрузка кабинетов', X.avg ? X.avg / 5 * 100 : null, 'sales.html#rev'),
         K('Плохие без ответа', C.r, X.neg_unproc != null ? X.neg_unproc : '—', 'шт', X.neg != null ? 'плохих всего ' + X.neg + (X.oldest_neg_unproc ? ' · самый ранний ' + dd(X.oldest_neg_unproc) : '') : '', null, 'sales.html#rev')];
       var b1 = ['Рекламации по возрасту', 'шт · реестр рекламаций 1С', 'bars', R.all != null ? [['до 30 дн.', R.all - R.old30, n(R.all - R.old30)], ['30–90 дн.', R.old30 - R.old90, n(R.old30 - R.old90)], ['больше 90', R.old90, n(R.old90)]] : []];
@@ -138,7 +138,8 @@
         K('Пробег вчера', C.o, yd ? n(km) : '—', 'км', yd ? dd(yd) : G ? 'нет данных за вчера' : '', null, 'transport.html'),
         K('В движении вчера', C.g, yd ? moving : '—', yd ? 'из ' + rows.length : '', yd ? 'машин с пробегом больше 1 км' : G ? 'нет данных за вчера' : '', yd && rows.length ? Math.round(moving / rows.length * 100) : null, 'transport.html'),
         K('СКУД и треки', C.r, skn != null ? skn : '—', skn != null ? 'из ' + sk.rows.length + ' с расхождениями' : '', sk ? 'турникет против треков · ' + (['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'][+String(sk.month || '').slice(5, 7) - 1] || sk.month || '') : G ? 'сверка турникета с треками ещё не пришла' : 'водители территориального транспорта — уточняем', skn != null && sk.rows.length ? skn / sk.rows.length * 100 : null, 'transport.html#skud'),
-        K('Расход ГСМ', C.y, '—', '', 'нормы и путевые листы — ждём от Камаевой М. В.', null, ''),
+        // 14.11.2026, Т. В.: «почему карточка пустая?» — была заглушка; теперь последний месяц от логиста (ST.gsm, build/gsm/make_gsm.py)
+        K('Расход ГСМ', C.y, ST.gsm ? n(ST.gsm.out) : '—', ST.gsm ? 'л' : '', ST.gsm ? ST.gsm.name + (ST.gsm.above ? ' · выше нормы: ' + ST.gsm.above : '') + (ST.gsm.next ? ' · ' + ST.gsm.next : '') : 'отчёт логиста — до 25-го следующего месяца', null, ''),
         K('Перемещение грузов', C.t, '—', '', 'своим транспортом между складами и офисами — готовится', null, '')];
       // 14.11.2026: по дням — история км (km), свежие вчера/сегодня — из day; без истории — как раньше, только day
       var KT = kmTot(G && G.km) || {}, dset = {}; Object.keys(KT).concat(dk).forEach(function (d) { if (/^\d{4}-\d\d-\d\d$/.test(d)) dset[d] = 1; });
@@ -208,9 +209,9 @@
     },
     docs: function () {
       var Dd = ST.docs || {}, cats = Dd.cats || [], mx = cats.length ? cats[0][1] : 1;
-      var NM = { regs: 'Регламенты', dog: 'Договоры', marketing: 'Имя3', reports: 'Отчёты и сводки', prices: 'Прайсы', catalogs: 'Каталоги', memo: 'Служебные записки', other: 'Прочее', cards: 'Карточки предприятий', hr: 'Кадры', forms: 'Бланки', econ: 'Экономика', recl: 'Рекламации', certs: 'Сертификаты', brand: 'Фирменный стиль', kp: 'КП' };
+      var NM = { regs: 'Регламенты', dog: 'Договоры', marketing: 'Имя4', reports: 'Отчёты и сводки', prices: 'Прайсы', catalogs: 'Каталоги', memo: 'Служебные записки', other: 'Прочее', cards: 'Карточки предприятий', hr: 'Кадры', forms: 'Бланки', econ: 'Экономика', recl: 'Рекламации', certs: 'Сертификаты', brand: 'Фирменный стиль', kp: 'КП' };
       var k = [K('Документов', C.o, Dd.n || '—', '', 'в разделе «Документы»', null, 'library.html'),
-        K('Новых сегодня', C.y, Dd.today != null ? Dd.today : '—', '', 'подсвечены до полуночи', null, 'library.html'),
+        K('Сотрудник5 сегодня', C.y, Dd.today != null ? Dd.today : '—', '', 'подсвечены до полуночи', null, 'library.html'),
         K('Договоров', C.b, Dd.dog || '—', '', 'типовые и действующие', null, 'library.html#dog'),
         K('Регламентов', C.v, Dd.regs || '—', '', 'инструкции и положения', null, 'library.html#regs'),
         K('Категорий', C.g, cats.length || '—', '', 'договоры, отчёты, прайсы…', null, 'library.html'),

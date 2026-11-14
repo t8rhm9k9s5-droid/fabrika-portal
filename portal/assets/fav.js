@@ -69,7 +69,7 @@
   var host = null, flt = 'all';
   function render(el) {
     host = el;
-    var A = load(), n = { all: A.length, doc: 0, rep: 0 }; A.forEach(function (x) { n[x.k] = (n[x.k] || 0) + 1; });
+    var A = load(), n = { all: A.length, doc: 0, rep: 0 }; A.forEach(function (x) { if (x.k === 'doc' || x.k === 'rep') n[x.k]++; });   // 14.11.2026 CodeQL: только известные виды
     var V = A.filter(function (x) { return flt === 'all' || x.k === flt; });
     var chips = [['all', 'Все'], ['doc', 'Документы'], ['rep', 'Отчёты']].map(function (c) {
       return '<button type="button" class="fav-chip' + (flt === c[0] ? ' on' : '') + '" data-flt="' + c[0] + '">' + c[1] + ' <span>' + (n[c[0]] || 0) + '</span></button>';
@@ -77,7 +77,7 @@
     var rows = V.map(function (x) {
       var ext = x.k === 'doc' ? ' target="_blank" rel="noopener"' : '';
       var ic = x.k === 'doc' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>';
-      return '<a class="irow fav-host" href="' + esc(safeHref(x.h)) + '"' + ext + '><span class="itile fav-ic ' + x.k + '">' + ic + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x.t) +
+      return '<a class="irow fav-host" href="' + esc(safeHref(x.h)) + '"' + ext + '><span class="itile fav-ic ' + (x.k === 'doc' ? 'doc' : 'rep') + '">' + ic + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x.t) +
         '</span><span class="isub">' + esc((x.f ? x.f + ' · ' : '') + 'сохранено ' + x.d.split('-').reverse().join('.')) + '</span></span>' +
         '<button type="button" class="fav-b on" data-h="' + esc(x.h) + '" data-t="' + esc(x.t) + '" data-f="' + esc(x.f) + '" aria-label="Убрать из сохранённого">' + STAR + '</button><span class="ichev"></span></span></a>';
     }).join('');

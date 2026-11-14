@@ -11,8 +11,8 @@ const SITE = process.argv[2], SHOTS = process.argv[3], BASE = 'http://localhost:
   const ctx = await br.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'dark', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' });
   await ctx.route('**/*', r => { const u = new URL(r.request().url()); if (u.host !== 'localhost:8123') return r.abort();
     let p = decodeURIComponent(u.pathname); if (p === '/') p = '/index.html'; const f = path.join(SITE, p);
-    if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
-    r.fulfill({ body: fs.readFileSync(f), contentType: f.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' }); });
+    let body; try { body = fs.readFileSync(f); } catch (e) { return r.fulfill({ status: 404, body: '' }); }   // 14.11 CodeQL: без проверки «есть ли файл» до чтения
+    r.fulfill({ body, contentType: f.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' }); });
   await ctx.addInitScript(() => {
     delete Navigator.prototype.serviceWorker;                     // как WKWebView в Telegram
     window.__tg = []; window.TelegramWebviewProxy = { postEvent: (t, d) => window.__tg.push([t, d]) };

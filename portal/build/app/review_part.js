@@ -227,7 +227,7 @@ function buildDG(b){
     const z = s * (W / 2 - .01 + .004);
     for (const [a, e] of [d1, d2]) ln.push([a, y0, z], [e, y0, z], [e, y0, z], [e, y1, z], [e, y1, z], [a, y1, z], [a, y1, z], [a, y0, z]);
     for (const yy of [y0 + .22, y1 - .22]) box((d1[0] + d1[1]) / 2 + .02, yy, z, .44, .2, .006, GRILL);           // grilles of door 1
-    for (const [a, e] of [d1, d2]) box(a + .06, (y0 + y1) / 2, z + s * .01, .07, .1, .02, BLACK);              // handles
+    for (const [a] of [d1, d2]) box(a + .06, (y0 + y1) / 2, z + s * .01, .07, .1, .02, BLACK);              // handles
     box(-.115, cb + .38, z, .12, .16, .006, 0x15497d);                                                           // fuel filler recess
     if (s > 0){
       box((d2[0] + d2[1]) / 2, y1 - .2, z, .44, .27, .008, BLACK); box((d2[0] + d2[1]) / 2, y1 - .2, z + .003, .38, .21, .006, 0xdfe3e6);   // control panel window

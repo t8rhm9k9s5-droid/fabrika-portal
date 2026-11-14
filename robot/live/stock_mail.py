@@ -13,7 +13,7 @@
 Состояние — state/stock_mail.json {'sent': {'ГГГГ-ММ-ДД': {'t', 'res', 'date'}}}."""
 import json, os
 
-from mx_ctl import HOLIDAYS                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
+from mx_ctl import HOLIDAYS, WORKSAT                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
 SITE_URL = 'https://techfabrikant.ru/stock.html'
 
 
@@ -44,7 +44,7 @@ def _d1(v):
 
 def mv_last(MV):
     """03.11.2026, опрос Т. В. (Р1а): главная цифра остатков — итог 1С «Товары на складах» (все склады и филиалы, как в отчёте
-    М. М. Сотрудник10). state/stock_mv.json (stock_mv.py) → {'to', 'tot', 'rz', 'op'} последнего дня; None — отчёта ещё нет."""
+    М. М. Сотрудник12). state/stock_mv.json (stock_mv.py) → {'to', 'tot', 'rz', 'op'} последнего дня; None — отчёта ещё нет."""
     if not MV: return None
     D = MV.get('days') or {}
     A = D[max(D)] if D else None
@@ -133,7 +133,7 @@ def run(L, now, jload, jsave, mail_send, log, brief=None):
     day = t.date().isoformat()
     S = jload('stock_mail.json', {'sent': {}})
     if day in S['sent']: return {'state': 'уже отправлено', 'day': day, 'res': S['sent'][day].get('res')}
-    if t.weekday() >= 5 or day in HOLIDAYS: return {'state': 'выходной'}
+    if (t.weekday() >= 5 and day not in WORKSAT) or day in HOLIDAYS: return {'state': 'выходной'}
     hm = t.strftime('%H:%M')
     if hm < '10:00' or hm >= '20:00': return {'state': 'ждёт 10:00'}
     p = os.path.join(L, 'state', 'stock.json')

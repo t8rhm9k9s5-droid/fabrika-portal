@@ -12,7 +12,7 @@
  1) Почта user5@example.org (Mail.ru, только чтение: EXAMINE, BODY.PEEK) — письма людей лично или в копии с вопросом или просьбой.
     Ответ — письмо с itm@ или user4@example.org (папка «Отправленные» или копия во «Входящих») со ссылкой на это письмо
     (In-Reply-To / References) или с той же темой этому человеку позже. Роботы, рассылки и отчёты не считаются.
- 2) MAX, группа «Коммерческий отдел» (история ~/.fabrika_max/history_all.json, max_hist.py): обращение к Сотрудник81 Отчество42 —
+ 2) MAX, группа «Коммерческий отдел» (история ~/.fabrika_max/history_all.json, max_hist.py): обращение к Сотрудник82 Отчество41 —
     упоминание, ответ на его сообщение, имя («Сотрудник2», «Т. В.»), — с вопросом. Ответ — его сообщение ответом (reply) на это или с упоминанием автора.
     Другие группы — с 28.10 по журналу пересылок владельцу (~/.fabrika_max/grp_owner.jsonl, max/hook.php).
  3) Боты (Telegram и MAX, личные чаты) отвечают сами; открытые заявки и карточки писем дописывает скрипт бота.
@@ -27,7 +27,7 @@ import itm as IT
 
 MSK = IT.MSK
 EVERY = 55 * 60
-from mx_ctl import HOLIDAYS                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
+from mx_ctl import HOLIDAYS, WORKSAT                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
 OWNER_NAMES = re.compile(r'(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\s+Отчество1(а|у|ем|е)?)?|Т\.\s?В\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])')
 ASK = re.compile(r'\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|согласуете|направьте|предоставьте|пришлите|'
                  r'ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|'
@@ -49,7 +49,7 @@ def work_days(today, n=2):
     out, d = [today.isoformat()], today
     while len(out) < n + 1:
         d -= datetime.timedelta(days=1)
-        if d.weekday() < 5 and d.isoformat() not in HOLIDAYS: out.append(d.isoformat())
+        if (d.weekday() < 5 or d.isoformat() in WORKSAT) and d.isoformat() not in HOLIDAYS: out.append(d.isoformat())
     return out
 
 
@@ -77,7 +77,7 @@ def clean_text(txt, surname=''):
 
 
 def to_other(txt):
-    """обращение к другому человеку по имени («Юля, просим…») — письмо не Сотрудник81 Отчество42"""
+    """обращение к другому человеку по имени («Юля, просим…») — письмо не Сотрудник82 Отчество41"""
     m = GREET.match(txt or '')
     return bool(m) and m.group(1).lower() not in NOT_NAMES
 
@@ -165,7 +165,7 @@ def mail(L, CFG, days, log, budget=100):
                 sur = (fname.split() or [''])[0] if fname and not re.search(r'[@.]', fname.split()[0] if fname.split() else '') else ''
                 txt = clean_text(txt, sur)
                 if not ASK.search(subj + '\n' + txt[:4000]): continue
-                if not direct and to_other(txt): continue          # в копии, а обращаются к другому («Юля, …») — не вопрос Сотрудник81 Отчество42
+                if not direct and to_other(txt): continue          # в копии, а обращаются к другому («Юля, …») — не вопрос Сотрудник82 Отчество41
                 seen.add(mid)
                 cand.append({'src': 'mail', 'mid': mid, 't': t.strftime('%Y-%m-%dT%H:%M'), 'day': t.date().isoformat(), 'f': frm, 'n': fname[:80],
                              's': subj[:160], 'x': qtext(subj, txt), 'd': direct, 'fo': name[:40], 'ns': nsubj(subj)})
@@ -191,7 +191,7 @@ def mail(L, CFG, days, log, budget=100):
 
 
 def max_group(L, days):
-    """группа «Коммерческий отдел»: обращения к Сотрудник81 Отчество42 с вопросом, на которые он не ответил в группе"""
+    """группа «Коммерческий отдел»: обращения к Сотрудник82 Отчество41 с вопросом, на которые он не ответил в группе"""
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     try:
         cfg = json.loads(_rd(os.path.join(M, 'config.json'), encoding='utf-8'))
@@ -294,7 +294,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     for q in xq:
         v = None
         fam = [w for w in re.split(r'\s+', q['n']) if w]
-        for w in fam:                                        # «Сотрудник15 Имя5» / «Имя5 Сотрудник15» → по фамилии из оргструктуры
+        for w in fam:                                        # «Сотрудник16 Имя6» / «Имя6 Сотрудник16» → по фамилии из оргструктуры
             if w.lower() in names: v = names[w.lower()]; break
         items.append({'src': 'max', 'day': q['day'], 't': q['t'], 'fio': v[0] if v else q['n'], 'role': (v[1] if v and len(v) > 1 else ''),
                       'dep': (v[2] if v and len(v) > 2 else ''), 'new': not v, 'g': q['g'], 'why': q['why'], 'x': q['x']})

@@ -113,7 +113,7 @@
     A.api('me', { tok: A.tok() }).then(function (r) { var q = Object.assign({}, p, { name: r.me.name, role: r.me.role, st: r.me.st }); A.saveMe(q); g.querySelector('.isub').textContent = 'логин ' + q.login + ' · ' + (q.role === 'admin' ? 'администратор' : 'сотрудник'); G.dispatchEvent(new Event('t14acct')); }, function (e) { if (/подтвержд/.test(e.message)) g.querySelector('.isub').textContent = 'логин ' + p.login + ' · ждёт подтверждения';
       // 02.11.2026 замечание 02: срок входа истёк (30 дней без пароля) или пароль сменили на другом устройстве — выйти и показать вход
       else if (/войдите заново|нет доступа/.test(e.message)) A.forget().then(function () { s.close(); toast(/нет доступа/.test(e.message) ? 'Личный вход отключён — обратитесь к администратору' : 'Срок входа истёк — войдите заново'); G.dispatchEvent(new Event('t14acct')); account(); }); });
-    var f = el('div', 'iform'), np = field('Новый пароль', 'password', 'не короче 8 знаков', 'new-password'), go = btn('Сменить пароль');
+    var f = el('div', 'iform'), np = field('Сотрудник5 пароль', 'password', 'не короче 8 знаков', 'new-password'), go = btn('Сменить пароль');
     var out = btn('Выйти из личного входа', 'red');
     f.append(el('p', 'ihdr', 'Пароль'), el('div', 'igroup iflds'), go, out); f.children[1].append(np);
     s.body.appendChild(f);
@@ -226,7 +226,7 @@
   }
   // ---------------- «На iPhone» (14.11.2026, Т. В., опрос «приложение для iPhone без затрат»: значок, Face ID, пуши о тревогах, Siri, Telegram)
   function iphone() {
-    var s = sheet('Пароль приложения', 'Портал как приложение — без App Store и без затрат')   // 14.11.2026 17:27, Т. В.: раздел называется «Пароль приложения»;
+    var s = sheet('Пароль приложения', 'Портал как приложение — без App Store и без затрат');   // 14.11.2026 17:27, Т. В.: раздел называется «Пароль приложения»;
     var B = 'https://techfabrikant.ru/';
     function step(n, t, x) { var d = el('div', 'iph-st', '<b></b><p></p>'); d.firstChild.textContent = n + '. ' + t; d.lastChild.textContent = x; s.body.appendChild(d); }
     var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');

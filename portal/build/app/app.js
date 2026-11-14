@@ -23,7 +23,10 @@ await (window.__T14LIBS || Promise.resolve());       // the 3D library: own lib/
 if (!window.THREE || !THREE.OrbitControls) { fail('Не загрузилась 3D-библиотека: проверьте интернет и обновите страницу.'); return; }
 { let ok = false; try { const t = document.createElement('canvas'); ok = !!(t.getContext('webgl') || t.getContext('experimental-webgl')); } catch(e){}
   if (!ok){ fail('Этот браузер или телефон не дал странице доступ к 3D-графике (WebGL). В настройках Safari проверьте, что WebGL не выключен, или откройте сайт в другом браузере.'); return; } }
-const SITE = JSON.parse(document.getElementById('site-json').textContent);
+// 14.11.2026 CodeQL js/xss-through-dom: данные модели вставляются в карточки как HTML — угловые скобки из строк убираем при чтении
+//   (в данных их нет; правки людей с телефонов и из формы тоже чистятся — clean())
+const clean = v => String(v == null ? '' : v).replace(/[<>]/g, '');
+const SITE = JSON.parse(document.getElementById('site-json').textContent, (k, v) => typeof v === 'string' ? clean(v) : v);
 const S = SITE, E = window.T14Edits;
 await E.ready();
 const SITE_SRC = E.source();                     // 'file' when this is the downloaded single file
@@ -35,7 +38,7 @@ const round2 = v => Math.round(v*100)/100;
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const S0 = {b:{}, c:{}, wsf:JSON.parse(JSON.stringify(S.ws_frame||{})), proj:JSON.parse(JSON.stringify(S.proj||{wells:[],sewer:[]}))};
 S.buildings.forEach(b=>{S0.b[b.k]={poly:b.poly.map(p=>p.slice()),h:b.h,name:b.name,roof:b.roof?JSON.parse(JSON.stringify(b.roof)):null,openings:b.openings?JSON.parse(JSON.stringify(b.openings)):null,columns:b.columns?b.columns.map(p=>p.slice()):null,base:b.base}});
-let planOn = {};
+let planOn = new Set();   // 14.11.2026 CodeQL js/remote-property-injection: ключ здания приходит из адреса (#…) — Set, не объект
 let CAMS = [];
 const lay = {};
 
@@ -761,7 +764,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник14 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник15 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -896,7 +899,7 @@ function ndvInfo(u){
     return {k:'Расчётная точка · расчёт рассеивания 2025', t:`Р${r.n} — ${r.name}`, d:
       `<dl class="kv"><dt>Тип</dt><dd>${R25_TYPE[r.type]}</dd><dt>МСК-62</dt><dd class="mono">X ${nf(r.X, 2)}<br>Y ${nf(r.Y, 2)}</dd><dt>Высота</dt><dd>2 м</dd>
        ${r.type === 'szz' ? `<dt>На границе СЗЗ</dt><dd>${r.dszz < .5 ? 'да — точка лежит на границе 2019 г. (расхождение < 0,5 м)' : 'в ' + nf(r.dszz, 1) + ' м от границы'}</dd>` : ''}</dl>
-       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и главные источники</p>
+       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и Имя2 источники</p>
        ${a ? `<table class="inv szzt"><tr><th>Вещество / группа</th><th>ПДК</th><th>вклад</th></tr>${a}</table>` : '<p class="note">Всё меньше 0,05 ПДК.</p>'}
        <p><b>Гальванический цех</b> (≥ 0,01 ПДК)</p>${g ? `<table class="inv szzt"><tr><th>Вещество</th><th>ПДК</th><th>вклад</th></tr>${g}</table>` : '<p class="note">Всё меньше 0,01 ПДК.</p>'}
        ${r.type === 'prom' ? '<p class="note">Граница производственной зоны — это забор предприятия; гигиенические нормативы для населения проверяются на границе СЗЗ и у жилья.</p>' : ''}
@@ -906,10 +909,10 @@ function ndvInfo(u){
     return {k:'Выбросы в атмосферу · 2025', t:'Инвентаризация и НДВ, 2025 г.', d:
       `<p>${esc(s.dev)}; ${esc(s.date)}.</p>
        ${s.objects.map(o=>`<p><b>${esc(o.name)}</b> — объект НВОС ${o.cat} категории, код <span class="mono">${o.code}</span></p><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org, 'организованный', 'организованных', 'организованных')}, ${ruN(o.unorg, 'неорганизованный', 'неорганизованных', 'неорганизованных')})</dd><dt>Выброс</dt><dd>${nf(o.ty, 3)} т/год: твёрдые ${nf(o.solid, 3)}, газообразные и жидкие ${nf(o.gas, 3)}; ${esc(o.subst)}</dd><dt>Классы</dt><dd>${esc(o.classes)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd>${o.place ? `<dt>Где</dt><dd>${esc(o.place)}</dd>` : ''}</dl>`).join('')}
-       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Новых — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
-       <details class="info"><summary>Новые источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
+       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
+       <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник14 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник15 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -1000,7 +1003,7 @@ function updateLabels(){
   const dist = camera.position.distanceTo(controls.target), near = dist < 170;
   const ar = chipOn.areas ? areaNow : null;
   for (const k in bLab){ const {el, b} = bLab[k]; const c = E.centroid(b.poly);
-    placeLab(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn[k] && lay.buildings !== false && inSolo2(c)); }
+    placeLab(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn.has(k) && lay.buildings !== false && inSolo2(c)); }
   for (const k in areaLab){ const el = areaLab[k], b = S.buildings.find(o=>o.k===k), a = ar && ar[k];
     if (!a || !b){ el.hidden = true; continue; }
     const c = E.centroid(b.poly); placeLab(el, tmpV.copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !b.hidden && inSolo2(c)); }
@@ -1099,14 +1102,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник9 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник14 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник15 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */
@@ -1141,14 +1144,14 @@ function infoBuilding(b){
    ${b.det&&b.det.src?`<dt>Облик</dt><dd>${esc(b.det.src)}</dd>`:''}
    <dt>Центр</dt><dd class="mono">${nf(b.lat,6)}, ${nf(b.lon,6)}</dd>`;
   const ar = areaOf(b.k);
-  let d = (ar ? areaBox(ar) : '') + (b.note2 ? `<p class="warn">Заметка: ${esc(b.note2)}</p>` : '') + (b.edited && b.name !== S0.b[b.k].name ? `<p>В документах: ${esc(S0.b[b.k].name)}</p>` : '') + (b.note ? `<p>${b.note}</p>` : '');
+  let d = (ar ? areaBox(ar) : '') + (b.note2 ? `<p class="warn">Заметка: ${esc(b.note2)}</p>` : '') + (b.edited && b.name !== S0.b[b.k].name ? `<p>В документах: ${esc(S0.b[b.k].name)}</p>` : '') + (b.note ? `<p>${esc(b.note)}</p>` : '');
   if (b.k === STOCK_BLD && STOCK) d = stockRow() + d;   // the warehouse: today's stock on top
   d += regBox(b) + ndvBld(b) + szzBld(b);
   // 01.11.2026, пользователь (журнал бота №12): фото здания от сотрудников (бот) — сверху карточки, нажатие открывает фото целиком
   const bp = (S.bphotos || {})[b.k];
-  if (bp && bp.length) d = `<div class="bphotos-w"><div class="bphotos">${bp.map((p, i)=>`<button type="button" class="photo" data-bphoto="${b.k}:${i}" title="Открыть фото"><img src="${p.src}" alt="${esc(p.cap)}" loading="lazy"></button>`).join('')}</div><p class="bpcap">Фото: ${esc(bp.map(p=>p.by).filter((x, i, a)=>x && a.indexOf(x) === i).join(', '))}${bp[0].date ? ', ' + bp[0].date.split('-').reverse().join('.') : ''}</p></div>` + d;
+  if (bp && bp.length) d = `<div class="bphotos-w"><div class="bphotos">${bp.map((p, i)=>`<button type="button" class="photo" data-bphoto="${esc(b.k)}:${i}" title="Открыть фото"><img src="${esc(p.src)}" alt="${esc(p.cap)}" loading="lazy"></button>`).join('')}</div><p class="bpcap">Фото: ${esc(bp.map(p=>p.by).filter((x, i, a)=>x && a.indexOf(x) === i).join(', '))}${bp[0].date ? ', ' + bp[0].date.split('-').reverse().join('.') : ''}</p></div>` + d;
   d += `<details class="info"><summary>Данные из документов</summary><dl class="kv">${rows}</dl>${b.k==='ws'?'<p><b>Электроснабжение цеха (75/23-ИОС5.1)</b></p>'+wsPower():''}${mapLinks(b.lat,b.lon)}</details>`;
-  if (cams.length) d += `<details class="info" open><summary>Камеры: ${cams.length}</summary><div class="camlist">${cams.map(c=>`<button type="button" data-cam="${c.key}">${c.num?`<b>${c.num}</b>`:''}${esc(c.isNew||!c.num?c.name:c.name)}</button>`).join('')}</div></details>`;
+  if (cams.length) d += `<details class="info" open><summary>Камеры: ${cams.length}</summary><div class="camlist">${cams.map(c=>`<button type="button" data-cam="${esc(c.key)}">${c.num?`<b>${esc(c.num)}</b>`:''}${esc(c.isNew||!c.num?c.name:c.name)}</button>`).join('')}</div></details>`;
   return d;
 }
 // the warehouse: one row with today's stock from 1С, a tap opens «Склад» (22.10.2026); the numbers are put in by gen_app.py
@@ -1318,7 +1321,7 @@ function objCard(picked){
     </div>
     <p class="note" data-applynote ${changed ? '' : 'hidden'}>Пока не нажато «Применить», правка только показана. Камеры, пристройки и план внутри двигаются вместе со зданием.</p>
     <div class="acts">
-      ${PLANS[sel.ek] || sel.ek==='ws' ? `<button type="button" class="btn" data-act="plan" aria-pressed="${sel.ek==='ws'?wsInside:!!planOn[sel.ek]}">${sel.ek==='ws'?(wsInside?'Вернуть кровлю и стены':'Показать цех изнутри'):'План внутри'}</button>` : ''}
+      ${PLANS[sel.ek] || sel.ek==='ws' ? `<button type="button" class="btn" data-act="plan" aria-pressed="${sel.ek==='ws'?wsInside:planOn.has(sel.ek)}">${sel.ek==='ws'?(wsInside?'Вернуть кровлю и стены':'Показать цех изнутри'):'План внутри'}</button>` : ''}
       <button type="button" class="btn" data-act="hide">${eb.hidden ? 'Показать снова' : 'Скрыть'}</button>
       <button type="button" class="btn danger" data-act="reset" ${E.saved(id) ? '' : 'disabled'}>Вернуть как в документах</button>
     </div>
@@ -1360,7 +1363,7 @@ cardEdit.addEventListener('input', e=>{
   const inp = e.target; if (!sel) return;
   if (sel.kind === 'obj'){
     if (inp.dataset.k){ const v = numIn(inp); if (v == null) return; TE[inp.dataset.k] = v; tentative(); objRefresh(); }
-    if (inp.dataset.t){ TE[inp.dataset.t] = inp.value.trim(); objRefresh(); }
+    if (inp.dataset.t){ TE[inp.dataset.t] = clean(inp.value).trim(); objRefresh(); }
   } else if (sel.kind === 'cam' && inp.dataset.ck){
     if (inp.type === 'number'){ const v = numIn(inp); if (v != null) camField(inp.dataset.ck, v); }
     else if (inp.tagName !== 'SELECT') camField(inp.dataset.ck, inp.value);
@@ -1392,8 +1395,8 @@ function objAct(a, btn){
   if (a === 'reset'){ if (btn.dataset.sure !== '1'){ btn.dataset.sure = '1'; btn.textContent = 'Точно вернуть?'; return; } E.reset(id, `«${eb.name}»: как в документах`); TE = {}; objCard(); }
   if (a === 'plan'){
     if (sel.ek === 'ws'){ wsView(!wsInside); objCard(); return; }
-    planOn[sel.ek] = !planOn[sel.ek]; rebuildEdited();
-    if (planOn[sel.ek]){ const c = bCenter(sel.ek, 0); flyTo(c.clone().add(new THREE.Vector3(0, bRadius(sel.ek)*2.6, bRadius(sel.ek)*0.9)), c, 800); }
+    if (planOn.has(sel.ek)) planOn.delete(sel.ek); else planOn.add(sel.ek); rebuildEdited();
+    if (planOn.has(sel.ek)){ const c = bCenter(sel.ek, 0); flyTo(c.clone().add(new THREE.Vector3(0, bRadius(sel.ek)*2.6, bRadius(sel.ek)*0.9)), c, 800); }
     objCard();
   }
 }
@@ -1475,7 +1478,7 @@ function distRefresh(){
 
 // ---------- cameras ----------
 function lensText(c){ const l = LENS.find(x=>x[2] && x[0] === c.lens); return l ? `объектив ${l[0].replace('.',',')} мм` : 'свой угол обзора'; }
-function camTitle(c){ return c.num ? `<span class="n">${c.num}</span>${esc(c.name)}` : esc(c.name) + (c.ip && !c.isNew ? ' · ' + c.ip.split('.').slice(-2).join('.') : ''); }
+function camTitle(c){ return c.num ? `<span class="n">${esc(c.num)}</span>${esc(c.name)}` : esc(c.name) + (c.ip && !c.isNew ? ' · ' + c.ip.split('.').slice(-2).join('.') : ''); }
 function mountText(c, g){
   const ce = E.get(c.key) || {}, fixH = t => (ce.hr != null && t) ? t.replace(/(≈\s?)?\d+(?:[.,]\d+)?\s?м(?![а-яё])/, '≈' + fm(c.hr) + ' м') : t;
   if (c.moved) return g.mt.txt ? fixH(g.mt.txt) + ' (передвинута)' : 'передвинута';
@@ -1483,11 +1486,11 @@ function mountText(c, g){
 function camInfo(c){
   const g = camObjs[c.key] ? camObjs[c.key].g : camGeo(c), [la, lo] = ll(c.x, c.y), [X, Y] = ms(c.x, c.y);
   let d = `<dl class="kv">${c.ip ? `<dt>IP</dt><dd class="mono">${esc(c.ip)}</dd>` : ''}${c.model ? `<dt>Модель</dt><dd>${esc(c.model)}</dd>` : ''}${c.port ? `<dt>Коммутатор</dt><dd class="mono">${esc(c.port)}</dd>` : ''}${c.chan ? `<dt>Регистратор</dt><dd class="mono">канал ${esc(c.chan)}</dd>` : ''}<dt>Крепление</dt><dd>${esc(mountText(c, g))}${c.floor ? ', ' + c.floor + ' этаж' : ''}</dd>
-    ${c.host ? `<dt>Здание</dt><dd><button type="button" class="go" style="margin:0;height:26px" data-b="${c.host}">${esc(bname(c.host))}</button></dd>` : ''}
+    ${c.host ? `<dt>Здание</dt><dd><button type="button" class="go" style="margin:0;height:26px" data-b="${esc(c.host)}">${esc(bname(c.host))}</button></dd>` : ''}
     <dt>Обзор</dt><dd>${lensText(c)}, ${Math.round(c.fov)}° по горизонтали, на ${DIRW[pt16(c.az)]} (${Math.round(c.az)}°), наклон ${Math.round(c.tilt)}°, высота ${fm(c.hr)} м</dd>
     ${c.orig ? `<dt>На схеме</dt><dd class="mono">${esc(c.orig)}</dd>` : ''}</dl>`;
   if (c.note2) d = `<p class="warn">Заметка: ${esc(c.note2)}</p>` + d;
-  if (c.photo) d = `<button type="button" class="photo" data-photo-open title="Открыть фото"><img src="${photoSrc(c)}" alt="Фото с места: ${esc(c.name)}" loading="lazy" onerror="this.parentNode.hidden=true"></button>` + d;
+  if (c.photo) d = `<button type="button" class="photo" data-photo-open title="Открыть фото"><img src="${esc(photoSrc(c))}" alt="Фото с места: ${esc(c.name)}" loading="lazy" onerror="this.parentNode.hidden=true"></button>` + d;
   if (c.src2026) d += '<p>' + ({'новая':'Новая камера на схеме видеокамер от 24.09.2026 (А. Сотрудник1); на схеме 2023 г. её не было.', 'перенесена':'На схеме от 24.09.2026 камера нарисована в другом месте, чем на схеме 2023 г.; место перенесено' + (c.was_pos ? '' : '') + '.',
     'переименована':'На схеме от 24.09.2026 камера подписана по-новому' + (c.was ? ' (было «' + esc(c.was) + '»)' : '') + '.', 'новый IP':'На схеме от 24.09.2026 у камеры новый IP' + (c.was_ip ? ' (был ' + esc(c.was_ip) + ')' : '') + '.'}[c.src2026] || '') + '</p>';
   if (c.approx) d += '<p>Место по схеме условное: схема не в масштабе, а точка выходила за ограждение или здание вне съёмки.</p>';
@@ -1590,6 +1593,7 @@ function camEdit(c, patch, why, now){
 function camCommit(){ if (!camPend) return; const p = camPend; camPend = null; clearTimeout(p.timer); E.put(p.key, p.rec, p.why); }
 function camField(k, raw){
   const c = camByKey(sel.key); if (!c) return;
+  if (typeof raw === 'string') raw = clean(raw);   // 14.11.2026 CodeQL: текст из формы — без угловых скобок
   if (k === 'name'){ const v = String(raw).trim().slice(0,50); camEdit(c, {name: v || (c.isNew ? 'Камера' : null)}); return; }
   if (k === 'note'){ camEdit(c, {note:String(raw).trim().slice(0,200) || null}); return; }
   if (k === 'model' || k === 'port' || k === 'chan'){ camEdit(c, {[k]:String(raw).trim().slice(0,60) || null}); return; }
@@ -1862,7 +1866,7 @@ const LIST = {
     const camM = c => m([c.num||'', c.name, c.ip, c.orig, c.model, c.port, c.chan].join(' '));
     const camsOf = {}; CAMS.forEach(c=>{ if (c.host && S.buildings.some(b=>b.k===c.host)) (camsOf[c.host] = camsOf[c.host] || []).push(c); });
     const sortCams = a => a.slice().sort((x,y)=>String(x.num||'999').localeCompare(String(y.num||'999')) || String(x.ip||x.name).localeCompare(String(y.ip||y.name), 'ru', {numeric:true}));
-    const row = (c, noHost) => `<li><button type="button" data-cam="${c.key}" class="${c.edited?'edited':''}">${c.num ? `<span class="num">${c.num}</span>` : '<i class="camdot"></i>'}<span class="nm">${esc(c.name)}</span><small>${Math.round(c.fov)}° · ${pt16(c.az)}${c.hidden?' · скрыта':''}</small></button></li>`;
+    const row = (c, noHost) => `<li><button type="button" data-cam="${esc(c.key)}" class="${c.edited?'edited':''}">${c.num ? `<span class="num">${esc(c.num)}</span>` : '<i class="camdot"></i>'}<span class="nm">${esc(c.name)}</span><small>${Math.round(c.fov)}° · ${pt16(c.az)}${c.hidden?' · скрыта':''}</small></button></li>`;
     const sec = (id, title, cnt, body, def, cls) => `<details class="${cls||'sec'}" data-sec="${esc(id)}"${(q || isOpen(id, def)) ? ' open' : ''}><summary><span>${title}</span><span class="cnt">${cnt}</span></summary>${body}</details>`;
     const used = new Set(), parts = [];
     for (const [g, f] of GROUPS){
@@ -1874,7 +1878,7 @@ const LIST = {
         const cs = camsOf[b.k] || [], nameHit = m(b.name) || m(SHORT[b.k]||''), csq = q && !nameHit ? cs.filter(camM) : cs, sid = 'b:' + b.k;
         const open = cs.length > 0 && (q && !nameHit ? true : isOpen(sid, false));
         const tog = cs.length ? `<button type="button" class="subt" data-sub="${sid}" aria-expanded="${open?'true':'false'}" title="Камеры здания" aria-label="Камеры здания: ${cs.length}"><i class="camdot"></i>${cs.length}</button>` : '';
-        return `<li class="b"><button type="button" data-obj="${b.k}" class="${E.saved('b:'+b.k)?'edited':''}"><span class="nm">${esc(b.name)}</span>${b.hidden?'<small>скрыто</small>':''}</button>${tog}${open ? `<ul class="subl">${sortCams(csq).map(c=>row(c, true)).join('')}</ul>` : ''}</li>`;
+        return `<li class="b"><button type="button" data-obj="${esc(b.k)}" class="${E.saved('b:'+b.k)?'edited':''}"><span class="nm">${esc(b.name)}</span>${b.hidden?'<small>скрыто</small>':''}</button>${tog}${open ? `<ul class="subl">${sortCams(csq).map(c=>row(c, true)).join('')}</ul>` : ''}</li>`;
       }).join('');
       parts.push(sec('g:' + g, esc(g), shown.length, `<ul>${rows}</ul>`, true));
     }
@@ -1885,7 +1889,7 @@ const LIST = {
     cams.filter(c=>!c.isNew).forEach(c=>{ const h = c.host ? bname(c.host) : 'Территория'; (byHost[h] = byHost[h] || []).push(c); });
     const nc = cams.filter(c=>c.isNew);
     let body = Object.keys(byHost).sort((a,b)=>a.localeCompare(b,'ru')).map(h=>sec('h:' + h, esc(h), byHost[h].length, `<ul>${sortCams(byHost[h]).map(c=>row(c)).join('')}</ul>`, false, 'grp')).join('');
-    if (nc.length) body += sec('h:new', 'Новые камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
+    if (nc.length) body += sec('h:new', 'Сотрудник5 камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
     if (cams.length) parts.push(sec('cams', '<i class="camdot"></i>Камеры', q ? cams.length : CAMS.length, body || '', false, 'sec cams'));
     if (!parts.length) parts.push('<p class="none">Ничего не найдено</p>');
     parts.push('<button type="button" class="btn primary addcam" id="addCam">+ Добавить камеру</button>');

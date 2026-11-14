@@ -67,6 +67,11 @@ if RN.get('offers'):
                         'noship': (J(B + '/online/client_check.json') or {}).get('shops') or sum(1 for x in RN.get('sites') or [] if x[1] == 'магазин'),   # 14.11: без соцсетей, площадок и поддоменов клиентов
                         'by_site': [[x[0], x[3]] for x in (RN.get('sites') or [])[:8]],
                         'by_model': [[m[0], m[1]] for m in sorted(RN.get('models') or [], key=lambda m: -m[1])[:8]]})
+GS = J(B + '/gsm/gsm.json') or {}                     # 14.11.2026, Т. В.: «почему карточка ГСМ пустая?» — месяцы от логиста (build/gsm/make_gsm.py)
+if GS.get('months'):
+    m = GS['months'][-1]
+    D['gsm'] = {'m': m['m'], 'name': m['name'], 'out': m['out'], 'n': len(m['rows']), 'above': len(GS.get('above') or []), 'next': GS.get('next'),
+                'top': [[r['ts'].title()[:22] + (' ' + ' '.join(r['num'].split()[:2]) if r['num'] else ''), round(r['out'])] for r in sorted(m['rows'], key=lambda r: -r['out'])[:8]]}
 s = 'window.T14_PULSE_STATIC = ' + json.dumps(D, ensure_ascii=False, separators=(',', ':')) + ';\n'
 with open(OUT, 'w', encoding='utf-8') as f: f.write(s)
 print('pulse data', len(s), 'bytes:', ', '.join(k for k in D if k != 'built'))

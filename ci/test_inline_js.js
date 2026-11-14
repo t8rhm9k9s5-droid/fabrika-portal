@@ -8,7 +8,7 @@ const dir = path.resolve(process.argv[2] || path.join(__dirname, '..', '..', '..
 let bad = 0, n = 0;
 for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.html'))) {
   const h = fs.readFileSync(path.join(dir, f), 'utf8');
-  const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi; let m;
+  const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script\s*>/gi; let m;   // 14.11 CodeQL: и «</script >»
   while ((m = re.exec(h))) {
     const attrs = m[1] || '';
     if (/\ssrc\s*=/.test(attrs)) continue;
@@ -17,7 +17,7 @@ for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.html'))) {
     n++;
     try { new vm.Script(m[2], { filename: f }); }
     catch (e) {
-      const ln = h.slice(0, m.index).split('\n').length, el = +((e.stack.match(new RegExp(f.replace(/\./g, '\\.') + ':(\\d+)')) || [])[1] || 1);
+      const ln = h.slice(0, m.index).split('\n').length, el = +((e.stack.match(new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':(\\d+)')) || [])[1] || 1);
       console.log('✗ ' + f + ':' + (ln + el - 1) + ' — ' + e.message); bad++;
     }
   }

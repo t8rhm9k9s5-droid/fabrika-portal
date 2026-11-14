@@ -27,8 +27,9 @@ function alertsFor(sec) {
     if (u.pathname.startsWith('/__live/')) { const f = path.join(DATA, path.basename(u.pathname)); return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f), contentType: 'application/json' }) : r.fulfill({ status: 404, body: '' }); }
     if (u.pathname.startsWith('/st/')) return r.fulfill({ status: 404, body: '' });
     const f = path.join(SITE, decodeURIComponent(u.pathname));
-    if (!f.startsWith(SITE) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
-    r.fulfill({ body: fs.readFileSync(f), contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
+    if (!f.startsWith(SITE)) return r.fulfill({ status: 404, body: '' });
+    let body; try { body = fs.readFileSync(f); } catch (e) { return r.fulfill({ status: 404, body: '' }); }   // 14.11 CodeQL: читаем сразу, без гонки existsSync → read
+    r.fulfill({ body, contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
   });
   await ctx.addInitScript(() => {                                                  // настоящий live.js остаётся; подменяются только bin/load
     let real;

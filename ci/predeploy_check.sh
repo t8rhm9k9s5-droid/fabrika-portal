@@ -32,6 +32,21 @@ else
   if [ $RC = 0 ]; then echo 'ruff: ок'; else echo "$OUT" | head -30; bad "ruff: код $RC"; fi
 fi
 
+step '2а. Рабочий календарь: один список праздников у сборки, робота и портала'
+# 14.11.2026, Т. В.: «сделай себе рабочий календарь» — выходные и праздники по производственному календарю; списки не должны разойтись
+python3 - <<'EOP' || bad 'рабочий календарь: списки праздников различаются'
+import re, sys
+def py(p):
+    s = open(p, encoding='utf-8').read()
+    return set(re.findall(r"'(\d{4}-\d\d-\d\d)'", re.search(r'^HOLIDAYS = \{([^}]*)\}', s, re.M).group(1))), set(re.findall(r"'(\d{4}-\d\d-\d\d)'", re.search(r'^WORKSAT = \{([^}]*)\}', s, re.M).group(1)))
+a = py('build/output/build_output.py'); b = py('app_build/host/live/mx_ctl.py')
+s = open('site/assets/hub.js', encoding='utf-8').read()
+c = (set(re.findall(r"'(\d{4}-\d\d-\d\d)': 1", re.search(r'var HOL = \{([^}]*)\}', s).group(1))), set(re.findall(r"'(\d{4}-\d\d-\d\d)': 1", re.search(r'WS = \{([^}]*)\}', s).group(1))))
+ok = a == b == c
+print('календарь: ок' if ok else 'календарь: сборка %d/%d, робот %d/%d, портал %d/%d' % (len(a[0]), len(a[1]), len(b[0]), len(b[1]), len(c[0]), len(c[1])))
+sys.exit(0 if ok else 1)
+EOP
+
 step '3. JS: синтаксис файлов и встроенных скриптов страниц'
 for f in site/assets/*.js build/acct/*.js build/app/*.js build/*.js; do
   case "$f" in *before*) continue;; esac
