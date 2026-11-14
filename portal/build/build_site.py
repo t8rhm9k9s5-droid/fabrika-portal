@@ -6,6 +6,7 @@
    /home/claude/site      — for publishing as a Claude artifact (the main page stays a fragment; the tool adds the skeleton)
    /home/claude/site_zip  — standalone static site for any web server or a local folder (full documents, local three.js fallback)"""
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import os, re, shutil, subprocess, zipfile
 
 SITE = '/home/claude/site'
@@ -81,8 +82,8 @@ for _n in frags:
 # fresh data from the hosting (27.10.2026): assets/live.js reads st/ls.bin (the hosting takes the reports from the mail itself);
 # the key is derived from the bot key (bot/bot_key.txt) and lives only inside the encrypted site
 import hmac as _hm, hashlib as _hl
-_lk = _hm.new(bytes.fromhex(open('/home/claude/bot/bot_key.txt').read().strip()), b'fabrika-live-v1', _hl.sha256).hexdigest()
-open(os.path.join(SITE, 'assets', 'live.js'), 'w', encoding='utf-8').write(open('/home/claude/build/app/live.js', encoding='utf-8').read().replace('__LIVE_KEY__', _lk))
+_lk = _hm.new(bytes.fromhex(pathlib.Path('/home/claude/bot/bot_key.txt').read_text().strip()), b'fabrika-live-v1', _hl.sha256).hexdigest()
+open(os.path.join(SITE, 'assets', 'live.js'), 'w', encoding='utf-8').write(pathlib.Path('/home/claude/build/app/live.js').read_text(encoding='utf-8').replace('__LIVE_KEY__', _lk))
 assert frags['stock.html'].count('<script id="stock-data"') == 1
 frags['stock.html'] = frags['stock.html'].replace('<script id="stock-data"', '<script src="assets/live.js"></script>\n<script id="stock-data"', 1)
 # 28.10.2026: index.html читается из site/ и записывается туда же — без проверки строка дописывалась на каждой сборке (live.js грузился 7 раз)
@@ -223,7 +224,7 @@ try:
 except Exception as _e: _DI = {}; print('docidx', _e)
 if 'razdel.html' in frags: frags['razdel.html'] = frags['razdel.html'].replace('__DOCIDX__', _js.dumps(_DI, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 14.11.2026, Т. В.: «Календарь ППР» — график ППР и ТО (build/ppr/ppr_data.json из fabrika/work/ppr/ppr_parse.py)
-try: _PPR = open('/home/claude/build/ppr/ppr_data.json', encoding='utf-8').read().replace('<', '\\u003c')
+try: _PPR = pathlib.Path('/home/claude/build/ppr/ppr_data.json').read_text(encoding='utf-8').replace('<', '\\u003c')
 except Exception: _PPR = '{}'
 if 'ppr.html' in frags: frags['ppr.html'] = frags['ppr.html'].replace('__PPR__', _PPR, 1)
 # 14.11.2026: «Инфографика» — принципы и промты (build/infografika/infografika.json)
@@ -251,6 +252,10 @@ except Exception as _e: print('конкуренты:', _e)
 # 14.11.2026, Т. В.: «файл со всеми артикулами… проверить весь Рунет и показать всех продавцов» — build/online/runet.json (work/online_watch/rn, поиск Google по номенклатуре 1С)
 try:
     if _ON is not None: _ON['runet'] = _cg1_read_json('/home/claude/build/online/runet.json', encoding='utf-8')
+    # 14.11.2026, Т. В.: «эти клиенты мне нужны прям Google Sheets … Розаховой на разбор … у себя связать и там связать» —
+    #   сверка «магазинов» с базой 1С (work/client_check): реальные магазины, не-магазины, поддомены клиентов, ссылка на таблицу
+    if _ON is not None and _ON.get('runet') and os.path.exists('/home/claude/build/online/client_check.json'):
+        _ON['runet']['check'] = _cg1_read_json('/home/claude/build/online/client_check.json', encoding='utf-8')
 except Exception as _e: print('рунет:', _e)
 # 14.11.2026, Т. В.: «по Онлайн Имя4 и ВсеИнструментам — их склад, продажи, динамика… подсветки, рекомендации» — витрина ВИ (ежедневная
 #   проверка vi_*.json: есть / мало / нет / под заказ) против нашего склада (ctx.json → our_stock), ошибки карточек ВИ (weekly_extra)
@@ -737,7 +742,7 @@ _S += [{'t': 'ОСЛО', 'x': 'Стул с мягкой спинкой · вел
 _S += _cg1_read_json('/home/claude/build/calls_search.json', encoding='utf-8')   # люди и вопросы «Кому звонить» (27.10.2026)
 # 14.11.2026, Т. В.: «куда ты засунул ППР? На портале не могу найти» — в поиск идут все пункты разделов (razdel_frag: название раздела, группа, пункт)
 try:
-    _RZ, _sec = open('/home/claude/build/razdel_frag.html', encoding='utf-8').read(), ''
+    _RZ, _sec = pathlib.Path('/home/claude/build/razdel_frag.html').read_text(encoding='utf-8'), ''
     for _ln in _RZ.split('\n'):
         _ms = re.match(r"^    \['(\w+)', '([^']+)', '", _ln)
         if _ms: _sec = _ms.group(2); continue

@@ -9,6 +9,7 @@
 Выход: /home/claude/out/Fabrikant_UZ_chat_<период>.xlsx — листы «Сводка», «Темы», «Хронология», «Вопросы без ответа», «Договорённости и сроки»,
 «Люди». Темы — по ключевым словам (несколько тем на сообщение допускаются); телефоны и номера карт замаскированы."""
 from _cg1_build_io import read_json as _cg1_read_json
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import argparse, base64, collections, datetime, hashlib, hmac, json, os, re, sys
 
 TOPICS = [
@@ -21,7 +22,7 @@ TOPICS = [
     ('Качество и рекламации', r'брак|рекламац|поврежд|царапин|сломан|не работает|дефект|замен|возврат|претенз|качеств'),
     ('Ассортимент и цены', r'прайс|цена|стоимост|скидк|модел|кресл|стул|ткан|цвет|каталог|новинк|образц|ассортимент'),
     ('Производство и сроки', r'производств|срок|готов|когда|дата|план|график|недел|месяц|задерж|перенос'),
-    ('Имя4 и продажи', r'клиент|покупател|продаж|выставк|реклам|сайт|соцсет|презентац|тендер|объект'),
+    ('Имя3 и продажи', r'клиент|покупател|продаж|выставк|реклам|сайт|соцсет|презентац|тендер|объект'),
     ('Организационное', r'встреч|созвон|звонок|совещан|командиров|виза|билет|отпуск|праздник|поздрав|день рожд|с днём|с днем'),
     ('Контроль исполнения', r'почему нет|нет ответ|ответов|жду\b|ждём|ждем|срочно|быстро|напомина|до сих пор|сколько можно|висит|когда будет|сразу должны|как положено'),
     ('Согласование', r'согласу|согласов|утверд|разреш|одобр'),
@@ -46,15 +47,14 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--bin'); ap.add_argument('--json'); a = ap.parse_args()
     if a.bin:
         # 29.10: владельческие файлы (exp_*.bin) зашифрованы ключом k_owner = HMAC(BOT_KEY, 'fabrika-owner-v1'); старые пакеты — k_live
-        key = hmac.new(bytes.fromhex(open('/home/claude/bot/bot_key.txt').read().strip()), b'fabrika-owner-v1', hashlib.sha256).hexdigest()
-        if '--live' in sys.argv: key = re.search(r"KEY_HEX = '([0-9a-f]+)'", open('/home/claude/site/assets/live.js', encoding='utf-8').read()).group(1)
-        D = unseal(open(a.bin, encoding='utf-8').read().strip(), key)
+        key = hmac.new(bytes.fromhex(pathlib.Path('/home/claude/bot/bot_key.txt').read_text().strip()), b'fabrika-owner-v1', hashlib.sha256).hexdigest()
+        if '--live' in sys.argv: key = re.search(r"KEY_HEX = '([0-9a-f]+)'", pathlib.Path('/home/claude/site/assets/live.js').read_text(encoding='utf-8')).group(1)
+        D = unseal(pathlib.Path(a.bin).read_text(encoding='utf-8').strip(), key)
     elif a.json: D = _cg1_read_json(a.json, encoding='utf-8')
     else: sys.exit(__doc__)
     if D.get('state') == 'нет группы': sys.exit('бот не состоит в группе; группы бота: ' + ', '.join(D.get('titles') or []))
     M = [m for m in D.get('messages') or [] if not m.get('bot')]
     if not M: sys.exit('сообщений нет')
-    by = {m['mid']: m for m in M}
     rows, topic_cnt, people = [], collections.Counter(), collections.Counter()
     for m in M:
         t = mask(m.get('text') or ''); tp = [name for name, rx in TOPICS if re.search(rx, t, re.I)] or (['Вложение без текста'] if m.get('att') and not t.strip() else ['Короткий ответ (да, ок, спасибо)'] if re.fullmatch(r'[\s!?.,)(+:-]*(да|нет|ок|окей|ok|хорошо|понял[аи]?|принято|спасибо( большое| вам)?|благодарю|подписано|согласовано|сделано|готово|добрый день|здравствуйте|\?+|\++|👍|🙏)[\s!?.,)(+:-]*', t.strip(), re.I) else ['Прочее'])

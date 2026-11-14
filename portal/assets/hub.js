@@ -386,7 +386,7 @@
     },
     fill: function (x) {
       var R = prodMonth(x.pf), G = galvCur(x.pf && x.pf.galv), K = [], att = [], tl = [];
-      var ppl = 0, ar = (x.A && x.A.areas) || []; ar.forEach(function (a) { var m = /≈?\s*(\d+)/.exec(String(a.free || '')); });
+      var ppl = 0;
       var hc = [].slice.call(document.querySelectorAll('details[id^="u"] .ival')).map(function (e) { var m = /(\d+)/.exec(e.textContent); return m ? +m[1] : 0; });
       ppl = hc.reduce(function (s, v) { return s + v; }, 0);
       if (R) {
@@ -521,7 +521,7 @@
           var v = c.p ? pc(c.f, c.p) : null; return { v: n(c.f), s: v == null ? 'без плана' : v + '% плана', tone: v == null ? '' : tone(v) };
         }) });
       });
-      var y = P[0], have = dk.length ? dk[dk.length - 1] : '';
+      var have = dk.length ? dk[dk.length - 1] : '';
       return { rows: rows, more: more, moreT: 'по строкам (' + more.length + ')',
         note: (D.dl ? '' : 'Выпуск по дням появится после обновления хостинга (02.11) — пока вчера и неделя без данных. ') +
           'План на день — план месяца ÷ рабочие дни месяца; на неделю и месяц — за дни с отчётом. Источник — отчёты ПДО «Отчёт выпуска производства» и ПЭО по гальванике' +
@@ -593,7 +593,7 @@
       // 14.11.2026: весь Рунет (Google + Сотрудник9) по номенклатуре 1С — главнее старой выборки по 11 моделям
       var RNk = ON && ON.runet;
       if (RNk && RNk.offers) { var olow2 = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
-        K.push({ id: 'onl', v: n(RNk.models_found) + '<small>из ' + n(RNk.models_n) + ' моделей</small>', s: 'в Рунете: ' + n(RNk.offers) + ' предложений на ' + n(RNk.sites_n) + ' сайтах · не клиенты — ' + n((RNk.sites_by_type || {})['магазин'] || 0) + (olow2 ? ' · ниже РРЦ — ' + n(olow2) : '') + ' · ' + String(RNk.t || '').slice(8, 10) + '.' + String(RNk.t || '').slice(5, 7), tone: 'warn' });
+        K.push({ id: 'onl', v: n(RNk.models_found) + '<small>из ' + n(RNk.models_n) + ' моделей</small>', s: 'в Рунете: ' + n(RNk.offers) + ' предложений на ' + n(RNk.sites_n) + ' сайтах · ' + (RNk.check ? 'магазинов на сверке с 1С — ' + n(RNk.check.shops) : 'не клиенты — ' + n((RNk.sites_by_type || {})['магазин'] || 0)) + (olow2 ? ' · ниже РРЦ — ' + n(olow2) : '') + ' · ' + String(RNk.t || '').slice(8, 10) + '.' + String(RNk.t || '').slice(5, 7), tone: 'warn' });
       } else if (ON && ON.web && ON.web.total) { var OW = ON.web, olow = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
         K.push({ id: 'onl', v: n(OW.total) + '<small>предложений</small>', s: 'на ' + n(OW.sites) + ' сайтах · проверено моделей: ' + n(OW.checked) + (olow ? ' · ниже РРЦ — ' + n(olow) : '') + (OW.t ? ' · ' + String(OW.t).slice(8, 10) + '.' + String(OW.t).slice(5, 7) : ''), tone: olow ? 'warn' : '' });
       } else K.push({ id: 'onl', v: '—', s: 'мониторинг сайтов ещё не собран', tone: 'none' });
@@ -710,7 +710,7 @@
     fill: function (x) {
       var D = x.D, K = [], att = [], tl = [];
       function kind(k) { return ((D && D.kinds) || []).filter(function (r) { return r.k === k; })[0] || null; }
-      var z = kind('zps'), f = kind('fts'), p = kind('pok');
+      var z = kind('zps'), f = kind('fts');
       var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник10), не утверждён Сотрудник5
       if (!D) return { kpis: ['yday', 'late', 'open', 'old', 'med', 'term'].map(function (k) { return k === 'term' && TK ? TK : { id: k, v: '—', s: k === 'late' ? 'нет связи с отчётами ОМТС — данные приходят с хостинга' : '', tone: 'none' }; }), attn: [], attnMsg: 'Отчёты ОМТС ещё не загрузились — данные приходят с хостинга раз в 10 минут.' };
       var tz = z && z.total, tf = f && f.total, tot = (tz || 0) + (tf || 0);

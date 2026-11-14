@@ -4,8 +4,8 @@
    Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. */
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
-   Сотрудник15 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник14 Сотрудник15 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   Сотрудник25 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
+   На techfabrikant.ru — Сотрудник9 Сотрудник25 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -69,7 +69,7 @@
   }
   // 26.10.2026 (пользователь): предупреждения — ТОЛЬКО гроза, сильный снегопад (снег/снегопад ≥ 7 мм за 12 ч), шторм (порывы ≥ 20 м/с),
   // ураган (порывы ≥ 33 м/с) в ближайшие 24 часа. Обычно их считает сервер (wx/f.php → alerts) — тогда сайт и боты пишут одно и то же;
-  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник14]
+  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник9]
   function dmhm(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
   function span(t0, t1){ return dmhm(t0) + ' с ' + hm(new Date(t0)) + ' до ' + (dmhm(t1 + 36e5) !== dmhm(t0) ? dmhm(t1 + 36e5) + ' ' : '') + hm(new Date(t1 + 36e5)) + ' МСК'; }
   function alerts(rows){
@@ -121,24 +121,12 @@
   // ---- official warnings (Гидрометцентр России, Рязанская обл.) and gusts: {gmc: {ok, t, w: [{lv, h, x, t0, t1}]}, gust: [[t, m/s]] | null, got} ----
   var off = null, offGot = 0, offBusy = false;
   try { var oc = JSON.parse(ls(K_OFF) || 'null'); if (oc && Date.now() - oc.got < 6 * 3600e3) { off = oc; offGot = oc.got; } } catch (e) {}
-  var LVC = { 2: '🟡', 3: '🟠', 4: '🔴' };
-  function dmh(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ' ' + hm(new Date(t)); }
   function offList(){ var now = Date.now(); return off && off.gmc && off.gmc.w ? off.gmc.w.filter(function(w){ return w.t1 > now; }) : []; }
-  function offTxt(w){ var x = String(w.x || '').replace(/\.\s*$/, ''); if (/^[А-ЯЁ][а-яё]/.test(x)) x = x.charAt(0).toLowerCase() + x.slice(1);
-    return (LVC[w.lv] || '⚠️') + ' ' + w.h + (x && x.toLowerCase() !== String(w.h).toLowerCase() ? ': ' + x : '') + ', ' + (w.t0 > Date.now() ? 'с ' + dmh(w.t0) + ' ' : '') + 'до ' + dmh(w.t1); }
   function gustAt(t){ var b = null; ((off && off.gust) || []).forEach(function(g){ if (g[1] != null && Math.abs(g[0] - t) <= 95 * 6e4 && (!b || Math.abs(g[0] - t) < Math.abs(b[0] - t))) b = g; }); return b ? b[1] : null; }
   function gustAlert(){ var now = Date.now(), m = null; ((off && off.gust) || []).forEach(function(g){ if (g[1] != null && g[0] > now - 90 * 6e4 && g[0] <= now + 12 * 36e5 && (!m || g[1] > m[1])) m = g; });
     return m && m[1] >= 25 ? '🌪 Очень сильный ветер: порывы до ' + Math.round(m[1]) + ' м/с около ' + hm(new Date(m[0])) : m && m[1] >= 15 ? '💨 Порывы ветра до ' + Math.round(m[1]) + ' м/с около ' + hm(new Date(m[0])) : ''; }
   function loadOff(){ return; }   // 26.10.2026: предупреждения Гидрометцентра и порывы OpenWeatherMap больше не показываем — только свои 4 явления
-  function loadOffOld(){
-    if (offBusy || (offGot && Date.now() - offGot < 20 * 6e4)) return; offBusy = true;
-    var keep = function(o, live){ if (!o || !o.gmc) return false; off = { gmc: o.gmc, gust: o.gust || null, gm: o.gm || null, live: live, got: Date.now() }; offGot = off.got; ls(K_OFF, JSON.stringify(off)); return true; };
-    var baked = function(){ return fetch('assets/wx.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(js){ if (js && js.gmc && (!off || !off.live)) keep({ gmc: js.gmc }, false); }).catch(function(){}); };
-    fetch('push.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(c){ if (!c || !c.url) throw 0; var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 15000);
-        return fetch(c.url + '?op=wx', ctl ? { signal: ctl.signal } : {}).then(function(r){ clearTimeout(to); return r.json(); }).then(function(o){ if (!keep(o, true)) throw 0; }); })
-      .catch(baked).then(function(){ offBusy = false; emit(); });
-  }
+  // 14.11.2026: старая загрузка предупреждений (loadOffOld) удалена — с 26.10 не вызывалась
   var wx = null, wxGot = 0, wxErr = '', listeners = [], mode = ls(K_MODE) === 'day' ? 'day' : 'now';
   try { var c = JSON.parse(ls(K_WX) || 'null'); if (c && Date.now() - c.got < 3 * 3600e3) { wx = c.w; wxGot = c.got; } } catch (e) {}
   function state(){
@@ -152,9 +140,9 @@
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник14 Сотрудник15; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник14 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник9 Сотрудник25; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник9 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
-    // Теперь: Сотрудник14 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
+    // Теперь: Сотрудник9 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
       clearTimeout(to); var ctl2 = window.AbortController ? new AbortController() : null, to2 = setTimeout(function(){ if (ctl2) ctl2.abort(); }, 20000);
       var good = function(w){ wx = w; wxGot = Date.now(); wxErr = ''; ls(K_WX, JSON.stringify({ w: w, got: wxGot })); };
@@ -248,7 +236,7 @@
   }
   function close(){ if (win) { win.remove(); win = null; } if (pill) pill.setAttribute('aria-expanded', 'false'); }
   function open(){
-    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник15 на площадке');
+    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник25 на площадке');
     // 29.10.2026 (прогон «нажать всё»): у окна погоды не было кнопки «Закрыть» и оно не закрывалось по Esc — кнопка × сверху, Esc закрывает
     win.addEventListener('click', function(e){ e.stopPropagation(); if (e.target.closest && e.target.closest('.skyx')) { close(); return; } var b = e.target.closest && e.target.closest('button[data-m]'); if (b) setMode(b.getAttribute('data-m')); });
     document.body.appendChild(win); fill(state()); load();
@@ -281,9 +269,9 @@
           return '<tr><td>' + hm(new Date(r[0])) + '</td><td class="t">' + deg(r[1]) + '</td><td>' + esc(p.text || '') + (r[3] >= 0.1 ? ', ' + num1(r[3]) + ' мм' : '') + '</td><td class="wd">' + (r[4] != null ? Math.round(r[4]) + (r[5] != null && r[5] >= r[4] + 1 ? '–' + Math.round(r[5]) : '') + ' м/с' : '') + '</td></tr>'; }).join('') + '</table></div>';
     }
     var dm = function(iso){ if (isNaN(Date.parse(iso))) return '—'; var d = new Date(Date.parse(iso) + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ' в ' + hm(new Date(Date.parse(iso))); };
-    var src = w ? (w.label ? 'Сотрудник15: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник15: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
-                           : 'Сотрудник15: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
-                : (st.wxErr ? 'Сотрудник15 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
+    var src = w ? (w.label ? 'Сотрудник25: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник25: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
+                           : 'Сотрудник25: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
+                : (st.wxErr ? 'Сотрудник25 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
     var al = alOf(w), lv = al.reduce(function(a, x){ return Math.max(a, x.lv || 1); }, 0);
     win.innerHTML = '<button type="button" class="skyx" aria-label="Закрыть">×</button><h3>Поляны, ул. Терехина, 14</h3><div class="big">' + svg(iconFor(st)) + '<b>' + (tempOf(st) != null ? deg(tempOf(st)) : st.time) + '</b><span>' + esc(w ? w.text : st.phase) + '</span></div>' +
       (al.length ? '<div class="alerts' + (lv >= 2 ? ' l2' : '') + '"><b>Предупреждение · ближайшие 24 часа</b>' + al.map(function(a){ return '<div>' + esc(a.text) + '</div>'; }).join('') + '</div>' : '') +

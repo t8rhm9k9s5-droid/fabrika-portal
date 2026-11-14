@@ -6,6 +6,7 @@
    python3 build_pwa.py -> /home/claude/app_build/pwa/terekhina14  and  /mnt/user-data/outputs/Фабрика — сайт со всеми документами.zip
    Put the folder on any HTTPS web server; on the iPhone: Safari -> Поделиться -> На экран «Домой»."""
 from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import os, re, sys, json, shutil, glob, time, zipfile, hashlib
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
@@ -51,15 +52,15 @@ if os.path.exists(PUSH): shutil.copy(PUSH, f'{OUT}/push.json')
 SYNC = '/home/claude/push/sync_secret.json'
 # switched on once the Apps Script accepts edits (op 'edits'): touch /home/claude/push/sync_live
 if os.path.exists(SYNC) and os.path.exists('/home/claude/push/sync_live'):
-    _sc = json.load(open(SYNC, encoding='utf-8'))
-    json.dump({'url': _sc['url'], 'tok': _sc['tok'], 'key': _sc['key']}, open(f'{OUT}/sync.json', 'w', encoding='utf-8'))
+    _sc = json.loads(pathlib.Path(SYNC).read_text(encoding='utf-8'))
+    pathlib.Path(f'{OUT}/sync.json').write_text(json.dumps({'url': _sc['url'], 'tok': _sc['tok'], 'key': _sc['key']}), encoding='utf-8')
 # personal logins, chat, «Управление», the assistant: the server and Claude's public key (22.10.2026); on once /home/claude/push/acct_live exists
 if os.environ.get('T14_ACCT_URL') or os.path.exists('/home/claude/push/acct_live'):
     import sys as _sys; _sys.path.insert(0, B); import acct as _ACCT
-    _SEC = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'; _S = json.load(open(_SEC))
+    _SEC = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'; _S = json.loads(pathlib.Path(_SEC).read_text())
     _M, _why = _ACCT.plan_master(_S, _ACCT.load_keyring())      # a new site key is decided here, so acct.json already says «shared: false»
     if _why != 'same key': _ACCT.save_enc_secret(_S, _SEC); print('site key:', _why)
-    json.dump({'url': os.environ.get('T14_ACCT_URL') or json.load(open(PUSH))['url'], 'pub': _ACCT.keys()['pub'], 'salt': _S['salt'], 'iter': _S['iter'], 'shared': not _S.get('master_hex')}, open(f'{OUT}/acct.json', 'w', encoding='utf-8'))
+    json.dump({'url': os.environ.get('T14_ACCT_URL') or json.loads(pathlib.Path(PUSH).read_text())['url'], 'pub': _ACCT.keys()['pub'], 'salt': _S['salt'], 'iter': _S['iter'], 'shared': not _S.get('master_hex')}, open(f'{OUT}/acct.json', 'w', encoding='utf-8'))
 _cg1_json_value_63 = {'name': 'Фабрика', 'short_name': 'Фабрика', 'description': 'Портал «Фабрика»: карта производства, производство, склад, документы, изделия и чат', 'lang': 'ru', 'start_url': './home.html', 'scope': './',
            'display': 'standalone', 'background_color': '#141A26', 'theme_color': '#242528',
            'icons': [{'src': 'icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png'}, {'src': 'icons/icon-512.png', 'sizes': '512x512', 'type': 'image/png'},

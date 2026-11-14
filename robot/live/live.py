@@ -26,6 +26,8 @@
    read="gas" — ни imap.gmail.com, ни imap.mail.ru: отчёты приносит скрипт бота (st/in.php → ~/.fabrika_live/inbox_gas/*.json),
    участок reports разбирает их тем же ingest_message, что письма из Gmail (gas_inbox); блоки itm@, которым нужен IMAP, — «отключено»."""
 import base64, datetime, email, email.header, email.policy, email.utils, fcntl, hashlib, hmac, imaplib, json, os, re, secrets, smtplib, socket, ssl, sys, time
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 L = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))          # ~/.fabrika_live
 CODE = os.path.join(L, 'code')
@@ -1055,8 +1057,6 @@ def watch_d(t, hb, alerts, status):
 #             29.10.2026, send="bot" (code/mail_cfg.json) — без SMTP: очередь → st/mo.bin, письма отправляет скрипт бота через Gmail.
 # Состояние участков — state/lane_<имя>.json и st/hs.bin; в st/ls.bin → status.lanes. Python 3.6.
 import signal, subprocess
-def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
-    with open(p, mode, **kw) as _f: return _f.read()
 
 
 class LaneTimeout(BaseException):

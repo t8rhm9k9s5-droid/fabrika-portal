@@ -75,7 +75,7 @@
     px = g.getImageData(0, 0, W, H).data;
     var M = new Uint8Array(W * H), blind = 0; for (var k = 0, i2 = 0; k < M.length; k++, i2 += 4) if (px[i2] > 127) { M[k] = 1; blind++; }
     // где слепые зоны: квадраты 20 × 20 м с заметной слепой площадью (одна сплошная зона на весь двор ничего не говорит)
-    var CELL = 20 * S, nx = Math.ceil(W / CELL), ny = Math.ceil(H / CELL), acc = {};
+    var CELL = 20 * S, nx = Math.ceil(W / CELL), acc = {};
     for (var yy = 0; yy < H; yy++) for (var xx = 0; xx < W; xx++) { if (!M[yy * W + xx]) continue; var key = ((yy / CELL) | 0) * nx + ((xx / CELL) | 0), a2 = acc[key] || (acc[key] = { n: 0, sx: 0, sy: 0 }); a2.n++; a2.sx += xx; a2.sy += yy; }
     var zones = Object.keys(acc).map(function (key) { var a3 = acc[key], cx = (+key % nx), cy = Math.floor(+key / nx);
       return { a: a3.n / (S * S), cx: x0 + a3.sx / a3.n / S, cy: y0 + a3.sy / a3.n / S, box: [x0 + cx * 20, y0 + cy * 20, 20, 20] }; })

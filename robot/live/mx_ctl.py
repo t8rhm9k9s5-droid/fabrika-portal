@@ -16,6 +16,8 @@
     ответ — ответом (reply) на сообщение бота: пункты закрываются; есть новая дата — пункт переносится на неё;
  5) ничего не удаляет и не правит в группе; пишет только эти вопросы. Состояние — ~/.fabrika_max/ctl.json."""
 import calendar, datetime, hashlib, json, os, re, ssl, time, urllib.error, urllib.request
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 try:
     import leaders as LD     # 03.11.2026: руководству бот вопросов не задаёт (leaders.json)
 except Exception:           # нет файла на хостинге — хотя бы владелец по имени («Сотрудник2 …»), чтобы не падал весь участок
@@ -389,8 +391,6 @@ def api(token, method, path, query=None, body=None):
 
 
 import urllib.parse   # noqa: E402  (after the function on purpose: Python 3.6 on the hosting)
-def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
-    with open(p, mode, **kw) as _f: return _f.read()
 
 
 # 30.10.2026, пользователь: «опубликуй в группе или личном сообщении в чат макс» (скан сверки документов Сотрудник17 — почтой не ушёл)

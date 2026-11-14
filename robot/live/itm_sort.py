@@ -13,10 +13,10 @@
     (оригинал остаётся во «Входящих»). Ничего не удаляется: ни \\Deleted, ни EXPUNGE. Свои папки пользователя
     (экономика, производство, ОМТС и другие) не трогаются. После переноса — state/itm_sort_done.json, файл-команда переименовывается.
 Новые письма после переноса раскладываются так же при следующей команде (файл itm_sort_go)."""
-import base64, datetime, email, email.policy, imaplib, json, os, re, ssl, time
+import email, email.policy, imaplib, json, os, re, ssl, time
 import itm as IT
 
-from itm_rules import SINCE, PARENT, TARGET, RULES, ROBOT_SKIP, utf7_encode, uid_move, classify   # 13.11.2026: правила — в itm_rules.py (без круга импортов)
+from itm_rules import SINCE, PARENT, TARGET, ROBOT_SKIP, utf7_encode, uid_move, classify   # 13.11.2026: правила — в itm_rules.py (без круга импортов)
 
 
 def run(L, CFG, log, jload, jsave, budget=100):
@@ -69,7 +69,7 @@ def run(L, CFG, log, jload, jsave, budget=100):
         if typ != 'OK': raise imaplib.IMAP4.error('нет папки Входящие')
         typ, data = M.uid('SEARCH', None, 'SINCE', SINCE.strftime('%d-%b-%Y'))
         uids = [int(u) for u in (data[0] or b'').split()] if typ == 'OK' else []
-        plan, unk, rows = {}, {}, []
+        plan, unk = {}, {}
         for i in range(0, len(uids), 200):
             if time.time() - t0 > budget: res['partial'] = True; break
             chunk = ','.join(str(u) for u in uids[i:i + 200])

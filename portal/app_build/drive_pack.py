@@ -22,6 +22,7 @@
        для одного переходного пакета, который ставит на хостинг новый deploy.py (старый deploy.py понимает только v1) — см. INSTALL_py.md.
        Всё, что читает ключ и папки app_build, — в main(): модуль можно импортировать в тестах (sig_v2, pack) с тестовым ключом."""
 import hashlib, hmac, io, json, os, re, secrets, sys, time, zipfile
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 from datetime import datetime, timedelta, timezone
 
 A = '/home/claude/app_build'; OUT = f'{A}/enc_reg'; ST = f'{A}/host_state.json'; DST = os.environ.get('FABRIKA_DRIVE_OUT', '/mnt/user-data/outputs')
@@ -76,24 +77,31 @@ def main():
     if os.path.exists(f'{A}/host/live/gdrive_1c.json'): CODE['gdrive_1c.json'] = f'{A}/host/live/gdrive_1c.json'   # 28.10: адрес веб-приложения Диска 1c@ (появится после развёртывания скрипта)   # 28.10: личные сообщения брату в MAX (bot/dm.py)   # 28.10: память из чата → боту (make_bot_rules.py)
     for f in os.listdir(f'{A}/host/max'):
       HOST['max/' + f] = f'{A}/host/max/{f}'
-    st = json.load(open(ST))
-    KEY = bytes.fromhex(json.load(open(f'{A}/deploy_secret.json'))['k_deploy'])
+    st = json.loads(pathlib.Path(ST).read_text())
+    KEY = bytes.fromhex(json.loads(pathlib.Path(f'{A}/deploy_secret.json').read_text())['k_deploy'])
     if '--done' in sys.argv:
         name = sys.argv[sys.argv.index('--done') + 1]
-        z = zipfile.ZipFile(io.BytesIO(unpack(open(os.path.join(DST, os.path.basename(name)), 'rb').read())))
+        z = zipfile.ZipFile(io.BytesIO(unpack(pathlib.Path(os.path.join(DST, os.path.basename(name))).read_bytes())))
         site = {n: sha(z.read(n)) for n in z.namelist() if not n.endswith('/') and not n.startswith(('code/', 'host/', 'out/'))}
         srv = {n: sha(z.read(n)) for n in z.namelist() if n.startswith(('code/', 'host/', 'out/'))}
         st['files'].update(site); st.setdefault('srv', {}).update(srv)
         st['uploaded'] = time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime()) + ' (Google Диск, пакет %s)' % os.path.basename(name)
-        json.dump(st, open(ST, 'w'), indent=0)
+        pathlib.Path(ST).write_text(json.dumps(st, indent=0))
         print(json.dumps({'done': os.path.basename(name), 'site': len(site), 'srv': len(srv)}, ensure_ascii=False)); sys.exit()
+    # 14.11.2026, Т. В.: «чтобы этих сбоев дурацких не было» и «выкладки не будет, пока код Рексом не проверим» — пакет собирается
+    #   только после fabrika/tools/ci/predeploy_check.sh (синтаксис, линтеры, тесты робота с ключами, пульс на живых файлах).
+    #   --force — только по слову Т. В. (аварийный откат).
+    if '--force' not in sys.argv:
+        import subprocess
+        if subprocess.run(['bash', '/home/claude/fabrika/tools/ci/predeploy_check.sh'] + (['--quick'] if '--quick-check' in sys.argv else [])).returncode != 0:
+            sys.exit('drive_pack: проверка перед выкладкой не пройдена — пакет не собран (подробности выше)')
 
     cur = {}
     for d, _, fs in os.walk(OUT):
         for f in fs:
             p = os.path.join(d, f); cur[os.path.relpath(p, OUT)] = p
     items = []                                                              # (name in zip, source path)
-    ch = sorted(k for k, p in cur.items() if st['files'].get(k) != sha(open(p, 'rb').read()))
+    ch = sorted(k for k, p in cur.items() if st['files'].get(k) != sha(pathlib.Path(p).read_bytes()))
     if '--code-only' in sys.argv: ch = []                   # 04.11.2026: только код хостинга — незаконченные изменения сайта (другой задачи) не захватываются
     items += [(k, cur[k]) for k in ch if k not in LAST]
     if '--code' in sys.argv or '--code-only' in sys.argv:
@@ -150,9 +158,9 @@ def write_pkg(items):
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_STORED) as zf:
         for n, p in items: zf.write(p, n)
     zb = pack(buf.getvalue()); assert unpack(zb) == buf.getvalue()
-    open(zp, 'wb').write(zb)
+    pathlib.Path(zp).write_bytes(zb)
     # 30.10.2026 аудит P4: подпись v2 (имя + sha256); --sig1 — прежняя v1, только для переходного пакета с новым deploy.py (INSTALL_py.md)
-    open(zp[:-4] + '.sig', 'w').write(sig_v1(KEY, zb) if '--sig1' in sys.argv else sig_v2(KEY, name, zb))
+    pathlib.Path(zp[:-4] + '.sig').write_text(sig_v1(KEY, zb) if '--sig1' in sys.argv else sig_v2(KEY, name, zb))
     print(json.dumps({'pkg': zp, 'sig': zp[:-4] + '.sig', 'sigv': 'v1' if '--sig1' in sys.argv else 'v2', 'n': len(items), 'mb': round(len(zb) / 1e6, 2), 'sha': sha(zb)[:16],
                       'files': [n for n, _ in items]}, ensure_ascii=False))
 

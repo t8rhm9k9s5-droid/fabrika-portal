@@ -6,19 +6,20 @@
 Части: ko — коммерческий отдел (data/ko_staff.json), org и kos — страницы пакета «Структура» (fabrika/struktura/структура/out),
 sim — СИМ-карты МТС по разделам (fabrika/struktura/СИМ-карты_МТС_по_разделам_*.xlsx).  python3 gen_sec.py"""
 import glob, hashlib, hmac, json, os, subprocess, sys
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 sys.path.insert(0, '/home/claude/app_build/host/live')
 from kb_build import seal_obj, unseal
 OUT = '/home/claude/app_build/enc_reg/k'   # k/<24 hex>.bin — разрешённые файлы публичной сборки (deploy.py SITE_FILES); имя = sha256('fabrika-sec:'+часть)[:24]
 ST = '/home/claude/fabrika/struktura/структура/out/'
-bk = open('/home/claude/fabrika/src/Исходники/bot/bot_key.txt').read().strip()
+bk = pathlib.Path('/home/claude/fabrika/src/Исходники/bot/bot_key.txt').read_text().strip()
 bk = bytes.fromhex(bk) if len(bk) == 64 else bk.encode()
 KEY = hmac.new(bk, b'fabrika-owner-v1', hashlib.sha256).digest()
 os.makedirs(OUT, exist_ok=True)
 subprocess.run([sys.executable, '/home/claude/build/make_ko_staff.py'], check=True, capture_output=True)
-parts = {'ko': json.load(open('/home/claude/build/data/ko_staff.json', encoding='utf-8')),
+parts = {'ko': json.loads(pathlib.Path('/home/claude/build/data/ko_staff.json').read_text(encoding='utf-8')),
          # 12.11.2026, Т. В.: «всё должно быть как на сайте по оформлению» — данные пакета (JSON), страницу рисует портал (sales_frag: orgView, kosView)
-         'org': {'src': 'Пакет «Структура» (снимок 03.11 + 11.11.2026), принят Т. В. 11.11 — на проверке', 'org': json.load(open(ST + 'orgstruktura.json', encoding='utf-8'))},
-         'kos': {'src': 'Пакет «Структура»: коммерческий отдел — функционал, зоны, блок-схема — на проверке', 'ko': json.load(open(ST + 'kommercheskiy_otdel.json', encoding='utf-8'))}}
+         'org': {'src': 'Пакет «Структура» (снимок 03.11 + 11.11.2026), принят Т. В. 11.11 — на проверке', 'org': json.loads(pathlib.Path(ST + 'orgstruktura.json').read_text(encoding='utf-8'))},
+         'kos': {'src': 'Пакет «Структура»: коммерческий отдел — функционал, зоны, блок-схема — на проверке', 'ko': json.loads(pathlib.Path(ST + 'kommercheskiy_otdel.json').read_text(encoding='utf-8'))}}
 x = sorted(glob.glob('/home/claude/fabrika/struktura/СИМ-карты_МТС_по_разделам_*.xlsx'))
 if x:
     import openpyxl
@@ -33,5 +34,5 @@ if x:
 for k, v in parts.items():
     t = seal_obj(dict(v, t=__import__('datetime').datetime.now().strftime('%Y-%m-%dT%H:%M')), KEY)
     assert unseal(t, KEY) is not None
-    open(os.path.join(OUT, hashlib.sha256(('fabrika-sec:' + k).encode()).hexdigest()[:24] + '.bin'), 'w').write(t)
+    pathlib.Path(os.path.join(OUT, hashlib.sha256(('fabrika-sec:' + k).encode()).hexdigest()[:24] + '.bin')).write_text(t)
     print(k, len(t))

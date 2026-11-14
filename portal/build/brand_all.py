@@ -23,6 +23,7 @@ PDF-копии для просмотра (*.docx.pdf, *.xlsx.pdf … — docs2pd
 Запуск: python3 build/brand_all.py [--dry] [--only подстрока]. Встроен в build_site.py перед docs2pdf.py; ошибка одного файла
 не останавливает остальные и сборку."""
 import os, sys, json, re, hashlib, shutil, subprocess, time, datetime, zipfile, tempfile, traceback
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 
 LIB = '/home/claude/library'
 RAW = LIB + '/raw'
@@ -77,7 +78,7 @@ def titles():
         elif isinstance(o, list):
             for v in o: walk(v)
     for jf in (LIB + '/library.json', LIB + '/econ.json', LIB + '/dogovory.json', '/home/claude/build/docs_reissue.json'):
-        try: walk(json.load(open(jf, encoding='utf-8')))
+        try: walk(json.loads(pathlib.Path(jf).read_text(encoding='utf-8')))
         except Exception: pass
     return T
 
@@ -113,7 +114,7 @@ def media():
                 im.convert('RGB').save(MEDIA + 'bg_a4.jpg', quality=85)   # фон листа (детали мебели в левом нижнем углу)
 
 
-# REDACTED_B64_1 PDF
+# REDACTED_B64_9 PDF
 def brand_pdf(src, dst, title, ent, external):
     import pymupdf
     S = pymupdf.open(src)
@@ -177,7 +178,7 @@ def brand_pdf(src, dst, title, ent, external):
     return n
 
 
-# REDACTED_B64_1 Word
+# REDACTED_B64_9 Word
 def brand_docx(src, dst, title, ent):
     from docx import Document
     from docx.shared import Mm, Pt, RGBColor
@@ -282,7 +283,7 @@ def brand_docx(src, dst, title, ent):
     d.save(dst)
 
 
-# REDACTED_B64_1 Excel (LibreOffice UNO)
+# REDACTED_B64_9 Excel (LibreOffice UNO)
 class LO:
     def __init__(self):
         self.prof = tempfile.mkdtemp(prefix='lo_brand_')
@@ -413,11 +414,11 @@ def has_mark(p):
         if zipfile.is_zipfile(p):
             z = zipfile.ZipFile(p)
             return any(MARK.encode() in z.read(n) for n in ('docProps/core.xml', 'meta.xml') if n in z.namelist())
-        return MARK.encode('utf-16-le') in open(p, 'rb').read() or MARK.encode() in open(p, 'rb').read()
+        return MARK.encode('utf-16-le') in pathlib.Path(p).read_bytes() or MARK.encode() in pathlib.Path(p).read_bytes()
     except Exception: return False
 
 
-# REDACTED_B64_1 main
+# REDACTED_B64_9 main
 def plan():
     T = titles()
     todo = []
@@ -441,7 +442,7 @@ def plan():
 
 
 def main():
-    try: L = json.load(open(LOG, encoding='utf-8'))
+    try: L = json.loads(pathlib.Path(LOG).read_text(encoding='utf-8'))
     except Exception: L = {}
     media()
     todo = [x for x in plan() if L.get(x['rel'], {}).get('sha') != sha(x['path'])]
@@ -477,7 +478,7 @@ def main():
             log('  ✗', rel, e); traceback.print_exc(limit=2)
             try: os.path.exists(p + '.brand' + x['ext']) and os.remove(p + '.brand' + x['ext'])
             except Exception: pass
-        json.dump(L, open(LOG, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        pathlib.Path(LOG).write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding='utf-8')
     if lo: lo.close()
 
 

@@ -64,7 +64,7 @@ RN = J(B + '/online/runet.json') or {}
 if RN.get('offers'):
     D.setdefault('online', {})
     D['online'].update({'t': RN.get('t'), 'total': RN['offers'], 'sites': RN.get('sites_n'), 'checked': RN.get('models_found'), 'checked_of': RN.get('models_n'),
-                        'noship': sum(1 for x in RN.get('sites') or [] if x[1] == 'магазин'),
+                        'noship': (J(B + '/online/client_check.json') or {}).get('shops') or sum(1 for x in RN.get('sites') or [] if x[1] == 'магазин'),   # 14.11: без соцсетей, площадок и поддоменов клиентов
                         'by_site': [[x[0], x[3]] for x in (RN.get('sites') or [])[:8]],
                         'by_model': [[m[0], m[1]] for m in sorted(RN.get('models') or [], key=lambda m: -m[1])[:8]]})
 s = 'window.T14_PULSE_STATIC = ' + json.dumps(D, ensure_ascii=False, separators=(',', ':')) + ';\n'

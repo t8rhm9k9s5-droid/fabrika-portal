@@ -12,6 +12,7 @@
    Ключ k_deploy — только app_build/deploy_secret.json (0600); никуда не печатается.
    Сетевой сбой части — до 3 повторов; повтор уже принятой части безвреден."""
 import argparse, hashlib, hmac, json, os, re, ssl, sys, time, urllib.request, urllib.error, urllib.parse
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 
 A = '/home/claude/app_build'
 URL = 'https://techfabrikant.ru/st/up.php'
@@ -29,7 +30,7 @@ def sign(ku, t, name, i, k, chunk):
 
 def send_file(path, ku, url, chunk_mb=4.0, ctx=None, log=print):
     name = os.path.basename(path); assert NAME.match(name), name
-    data = open(path, 'rb').read(); cs = max(1, int(chunk_mb * 1024 * 1024))
+    data = pathlib.Path(path).read_bytes(); cs = max(1, int(chunk_mb * 1024 * 1024))
     k = max(1, (len(data) + cs - 1) // cs); last = None
     for i in range(k):
         part = data[i * cs:(i + 1) * cs]
@@ -56,7 +57,7 @@ def main():
     a = ap.parse_args()
     pkg = a.pkg; sig = pkg[:-4] + '.sig'
     if not (pkg.endswith('.pkg') and os.path.exists(pkg) and os.path.exists(sig)): raise SystemExit('нужны .pkg и .sig рядом: ' + pkg)
-    kd = json.load(open(os.path.join(A, 'deploy_secret.json'), encoding='utf-8'))['k_deploy']
+    kd = json.loads(pathlib.Path(os.path.join(A, 'deploy_secret.json')).read_text(encoding='utf-8'))['k_deploy']
     ku = ku_of(kd)
     ctx = ssl.create_default_context(cafile=CA) if os.path.exists(CA) and a.url.startswith('https') else None
     r1 = send_file(pkg, ku, a.url, a.chunk, ctx, log=lambda s: print(s, file=sys.stderr))

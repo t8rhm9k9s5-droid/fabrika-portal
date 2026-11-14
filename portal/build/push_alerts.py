@@ -10,6 +10,7 @@
   python3 push_alerts.py --dry      — показать, кому ушло бы, ничего не отправляя
   python3 push_alerts.py --test     — проверочный пуш только владельцу (id в build/push_owner.txt)"""
 import hashlib, hmac, json, os, re, ssl, sys, time, datetime, urllib.request
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 
 B = '/home/claude/build'
 SITE = '/home/claude/site'
@@ -20,11 +21,11 @@ CA = '/root/.ccr/ca-bundle.crt'
 
 
 def post(items):
-    k = hmac.new(bytes.fromhex(open(KEYF).read().strip()), b'fabrika-cmd-v1', hashlib.sha256).hexdigest()
+    k = hmac.new(bytes.fromhex(pathlib.Path(KEYF).read_text().strip()), b'fabrika-cmd-v1', hashlib.sha256).hexdigest()
     body = json.dumps({'items': items}, ensure_ascii=False, separators=(',', ':'))
     t = int(time.time())
     sig = hmac.new(k.encode('utf-8'), ('claude:%d:%s' % (t, body)).encode('utf-8'), hashlib.sha256).hexdigest()
-    url = json.load(open(PUSHJ))['url']
+    url = json.loads(pathlib.Path(PUSHJ).read_text())['url']
     data = json.dumps({'op': 'claude', 't': t, 'body': body, 'sig': sig}, ensure_ascii=False).encode('utf-8')
     req = urllib.request.Request(url, data=data, headers={'Content-Type': 'text/plain;charset=utf-8'})
     ctx = ssl.create_default_context(cafile=CA) if os.path.exists(CA) else None
@@ -33,7 +34,7 @@ def post(items):
 
 def alerts():
     try:
-        s = open(SITE + '/assets/alerts_data.js', encoding='utf-8').read()
+        s = pathlib.Path(SITE + '/assets/alerts_data.js').read_text(encoding='utf-8')
         return json.loads(re.search(r'=\s*(\{.*\})\s*;?\s*$', s, re.S).group(1)).get('items') or []
     except Exception:
         return []
@@ -42,14 +43,14 @@ def alerts():
 def main():
     a = sys.argv[1:]
     if '--test' in a:
-        who = open(B + '/push_owner.txt').read().strip() if os.path.exists(B + '/push_owner.txt') else ''
+        who = pathlib.Path(B + '/push_owner.txt').read_text().strip() if os.path.exists(B + '/push_owner.txt') else ''
         if not who: sys.exit('нет build/push_owner.txt — сначала --dry, чтобы увидеть id подписки владельца')
         print(post([{'do': 'push', 'who': [who], 'text': 'Проверка: так будут приходить критичные тревоги портала', 'f': 'Фабрика'}]))
         return
     if '--dry' in a:
         print(post([{'do': 'push', 'dry': 1, 'text': '-'}]))
         return
-    try: st = json.load(open(STATE, encoding='utf-8'))
+    try: st = json.loads(pathlib.Path(STATE).read_text(encoding='utf-8'))
     except Exception: st = {}
     msk = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)
     crit = [x for x in alerts() if x.get('lvl') == 'crit' and x.get('id') and x['id'] not in st]
@@ -64,7 +65,7 @@ def main():
             r, ok = str(e)[:200], False
         print('пуш тревоги', x['id'], '→', r[:160])
         if ok: st[x['id']] = msk.strftime('%Y-%m-%d %H:%M')
-    json.dump(st, open(STATE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    pathlib.Path(STATE).write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding='utf-8')
 
 
 if __name__ == '__main__':

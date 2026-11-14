@@ -12,6 +12,7 @@
    The iv of a file is derived from its path and content, so unchanged files keep the same blob name between versions.
    The password and salt live in enc_secret.json (never published)."""
 import os, re, sys, json, hmac, hashlib, secrets, shutil, time, mimetypes
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 B = '/home/claude/app_build'
 SRC = f'{B}/pwa/terekhina14'
@@ -23,7 +24,7 @@ BASE = args[args.index('--base') + 1] if '--base' in args else '/t14/'
 OUT = args[args.index('--out') + 1] if '--out' in args else f'{B}/enc_out'
 
 sys.path.insert(0, B); import acct as ACCT
-if os.path.exists(SECRET): S = json.load(open(SECRET))
+if os.path.exists(SECRET): S = json.loads(pathlib.Path(SECRET).read_text())
 else:
     abc = 'abcdefghjkmnpqrstuvwxyz23456789'
     S = {'password': 't14-' + '-'.join(''.join(secrets.choice(abc) for _ in range(4)) for _ in range(3)), 'salt': secrets.token_hex(16), 'iter': ITER}
@@ -48,7 +49,7 @@ MIME = {'.html': 'text/html; charset=utf-8', '.js': 'application/javascript; cha
         '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.kml': 'application/vnd.google-earth.kml+xml', '.geojson': 'application/geo+json'}
 def mime(p): return MIME.get(os.path.splitext(p)[1].lower()) or mimetypes.guess_type(p)[0] or 'application/octet-stream'
 
-sw0 = open(f'{SRC}/sw.js', encoding='utf-8').read()
+sw0 = pathlib.Path(f'{SRC}/sw.js').read_text(encoding='utf-8')
 PRE = json.loads(re.search(r'const PRECACHE = (\[.*?\]);', sw0, re.S).group(1))
 DOCS = list(json.loads(re.search(r'const DOC_H = (\{.*?\});', sw0, re.S).group(1)))   # pwa_sw.js: document path -> content hash
 PUBLIC_DIRS = ('icons/',)
@@ -66,11 +67,11 @@ for root, _, names in os.walk(SRC):
     for n in names:
         rel = os.path.relpath(os.path.join(root, n), SRC).replace(os.sep, '/')
         if rel in SKIP or rel.startswith(PUBLIC_DIRS): continue
-        data = open(os.path.join(root, n), 'rb').read()
+        data = pathlib.Path(os.path.join(root, n)).read_bytes()
         iv = hmac.new(ivkey, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
         blob = iv + aes.encrypt(iv, data, None)
         name = hashlib.sha256(blob).hexdigest()[:24] + '.bin'
-        open(f'{OUT}/b/{name}', 'wb').write(blob)
+        pathlib.Path(f'{OUT}/b/{name}').write_bytes(blob)
         files[rel] = [name, mime(rel), len(data)]
 pre = [p for p in PRE if p in files]
 # 13.11.2026, Т. В.: «раз в сутки проверка целостности портала и всех документов по реестру» — карта путь → блок для реестра (docs_registry.py; наружу не уходит)
@@ -80,53 +81,53 @@ _H8 = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:8]
 # 28.10.2026: уведомления всем — только «крупный выпуск» (решает build_pwa.py → release_state.json → last.public). Скрипт уведомлений шлёт пуш всем,
 #   когда меняется хвост VERSION (после «-»), поэтому для обычной сборки хвост остаётся прежним (enc_pub), а метка времени меняется — sw.js обновляется тихо.
 try:
-    _RS = json.load(open('/home/claude/app_build/release_state.json', encoding='utf-8'))
+    _RS = json.loads(pathlib.Path('/home/claude/app_build/release_state.json').read_text(encoding='utf-8'))
 except Exception: _RS = {}
 # 28.10.2026 20:05: хвост меняется ОДИН раз на крупный выпуск (метка enc_for = last.t). Раньше каждая следующая сборка build_host после крупного
 #   выпуска давала новый хвост → пуш всем повторялся (28.10: 18:30 и 19:50, с устаревшим текстом news.txt от 26.10).
 _last = _RS.get('last') or {}
 if not _RS.get('enc_pub') or (_last.get('public') and _RS.get('enc_for') != _last.get('t')):
     _RS['enc_pub'] = _H8; _RS['enc_for'] = _last.get('t')
-    json.dump(_RS, open('/home/claude/app_build/release_state.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    pathlib.Path('/home/claude/app_build/release_state.json').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8')
 VERSION = time.strftime('%Y%m%d%H%M%S') + '-' + _RS['enc_pub']
 NEWS = f'{B}/news.txt'                    # «что нового» for the push notification text (private: lives only inside m.bin)
-news = open(NEWS, encoding='utf-8').read().strip()[:300] if os.path.exists(NEWS) else ''
+news = pathlib.Path(NEWS).read_text(encoding='utf-8').strip()[:300] if os.path.exists(NEWS) else ''
 # 28.10.2026: news.txt больше не обновлялся (auto_news.py жил в старой публикации GitHub) — в пуше висел текст от 26.10. Теперь текст пуша —
 #   то, что вошло в портал за сегодня (журнал версий assets/version.js), а склад и выпуск обновляются с хостинга без пушей.
 try:
-    _vj = open('/home/claude/site/assets/version.js', encoding='utf-8').read(); _vj = json.loads(_vj[_vj.index('{'):_vj.rindex('}') + 1])
+    _vj = pathlib.Path('/home/claude/site/assets/version.js').read_text(encoding='utf-8'); _vj = json.loads(_vj[_vj.index('{'):_vj.rindex('}') + 1])
     _today = time.strftime('%d.%m.%Y', time.gmtime(time.time() + 3 * 3600))
     _its = [i for e in _vj.get('log', []) if e.get('date') == _today for i in e.get('items', [])]
     if _its:
         news = ('Что нового на портале\n' + '; '.join(re.sub(r'\s*\(\d+\)$', '', i) for i in _its[:4]))[:300]
-        open(NEWS, 'w', encoding='utf-8').write(news + '\n')
+        pathlib.Path(NEWS).write_text(news + '\n', encoding='utf-8')
 except Exception as _e: print('news:', _e)
 m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news}, ensure_ascii=False).encode()
 iv = secrets.token_bytes(12)
-open(f'{OUT}/m.bin', 'wb').write(iv + aes.encrypt(iv, m, None))
+pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, m, None))
 
 # public part
-login = open(f'{ENC}/login.html', encoding='utf-8').read().replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
+login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
 # personal logins: switched on once the script has the accounts part (touch /home/claude/push/acct_live)
 ACFG = None
 if ACCT_ON:
-    ACFG = {'url': os.environ.get('T14_ACCT_URL') or json.load(open('/home/claude/push/push_config.json'))['url'], 'pub': ACCT.keys()['pub'], 'salt': S['salt'], 'iter': S['iter'], 'shared': not S.get('master_hex')}
-login = login.replace('__ACCT_CFG__', json.dumps(ACFG)).replace('/*__ACCT_CORE__*/', open('/home/claude/build/acct/acct_core.js', encoding='utf-8').read())
-_core = open('/home/claude/build/acct/acct_core.js', encoding='utf-8').read()   # 12.11 CodeQL: проверка не внутри assert (python -O её выкидывает)
+    ACFG = {'url': os.environ.get('T14_ACCT_URL') or json.loads(pathlib.Path('/home/claude/push/push_config.json').read_text())['url'], 'pub': ACCT.keys()['pub'], 'salt': S['salt'], 'iter': S['iter'], 'shared': not S.get('master_hex')}
+login = login.replace('__ACCT_CFG__', json.dumps(ACFG)).replace('/*__ACCT_CORE__*/', pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8'))
+_core = pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8')   # 12.11 CodeQL: проверка не внутри assert (python -O её выкидывает)
 if '__ACCT' in login or '</script' in _core.lower(): raise SystemExit('build_enc: в странице входа остался __ACCT или </script в acct_core.js')
 nk = ACCT.write_keyring(OUT, master, KR) if ACFG else 0
 print('personal keys k/*.bin:', nk)
 login = login.replace('<head>\n', f'<head>\n<base href="{BASE}">\n', 1)
-for n in ('index.html', 'login.html', '404.html'): open(f'{OUT}/{n}', 'w', encoding='utf-8').write(login)
-open(f'{OUT}/sw.js', 'w', encoding='utf-8').write(open(f'{ENC}/enc_sw.js', encoding='utf-8').read().replace('__VERSION__', VERSION))
+for n in ('index.html', 'login.html', '404.html'): pathlib.Path(f'{OUT}/{n}').write_text(login, encoding='utf-8')
+pathlib.Path(f'{OUT}/sw.js').write_text(pathlib.Path(f'{ENC}/enc_sw.js').read_text(encoding='utf-8').replace('__VERSION__', VERSION), encoding='utf-8')
 shutil.copy(f'{SRC}/manifest.webmanifest', f'{OUT}/manifest.webmanifest')
 shutil.copytree(f'{SRC}/icons', f'{OUT}/icons')
-open(f'{OUT}/.nojekyll', 'w').write('')
+pathlib.Path(f'{OUT}/.nojekyll').write_text('')
 shutil.copy(f'{ENC}/applink.js', f'{OUT}/applink.js')   # 24–25.10.2026: «Приложение для Android» в меню + окно «как приложение» (sw.js вставляет его в страницы)
 APK = f'{B}/apk/fabrika.apk'             # 4.0 (24.10.2026): открывает https://techfabrikant.ru/?app=apk; собран вне этого контейнера, хранится как есть
 if not os.path.exists(APK): APK = f'{B}/out/Terekhina14.apk'          # the online shell (build_app.py online): no site data inside, safe to publish
 if os.path.exists(APK) and os.path.getsize(APK) < 8e6: shutil.copy(APK, f'{OUT}/fabrika.apk')   # the link on the sign-in page saves it as «Фабрика.apk»
-open(f'{OUT}/robots.txt', 'w').write('User-agent: *\nDisallow: /\n')
-open(f'{OUT}/README.md', 'w', encoding='utf-8').write('# Фабрика\n\nЗашифрованная сборка веб-приложения (AES-256-GCM). Открывается по паролю: ' + (f'https://owner.github.io{BASE}' if BASE != '/' else 'https://techfabrikant.ru/') + '\n')
+pathlib.Path(f'{OUT}/robots.txt').write_text('User-agent: *\nDisallow: /\n')
+pathlib.Path(f'{OUT}/README.md').write_text('# Фабрика\n\nЗашифрованная сборка веб-приложения (AES-256-GCM). Открывается по паролю: ' + (f'https://owner.github.io{BASE}' if BASE != '/' else 'https://techfabrikant.ru/') + '\n', encoding='utf-8')
 tot = sum(v[2] for v in files.values())
 print('files', len(files), 'pre', len(pre), 'docs', len(docs), f'{tot / 1e6:.1f} MB', 'version', VERSION, 'base', BASE, '->', OUT)

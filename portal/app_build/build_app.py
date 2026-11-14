@@ -9,6 +9,7 @@
            every other link opens in the browser. Asked for by the user on 22.10.2026 (APK that pulls the data from GitHub, with saving files).
    lite: everything but the archive documents (PDF scans); full: with phone copies of the archive (arch_small/)."""
 from _cg1_file_io import read_file as _cg1_read_file
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import os, re, sys, json, shutil, subprocess, glob
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
@@ -146,7 +147,7 @@ raw = f'{B}/out/t14_{VARIANT}_unsigned.apk'
 r = subprocess.run(['java', '-jar', APKTOOL, 'b', WORK, '-o', raw, '-f'], capture_output=True, text=True)
 print(r.stdout[-1500:], r.stderr[-3000:])
 if r.returncode: sys.exit('apktool failed')
-KSP = open(f'{B}/tools/ks_pass.txt').read().strip()      # the keystore password: app_build/tools (not in the backups)
+KSP = pathlib.Path(f'{B}/tools/ks_pass.txt').read_text().strip()      # the keystore password: app_build/tools (not in the backups)
 if not os.path.exists(KS):
     subprocess.run(['keytool', '-genkeypair', '-keystore', KS, '-alias', 't14', '-keyalg', 'RSA', '-keysize', '3072', '-validity', '10000',
                     '-storepass', KSP, '-keypass', KSP, '-dname', 'CN=Terekhina 14, O=Fabrikant, L=Ryazan, C=RU'], check=True, capture_output=True)

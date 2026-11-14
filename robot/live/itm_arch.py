@@ -14,9 +14,9 @@
  • Известные отчёты (выпуск, ведомость, гальваника, склад, ПКС — те же правила, что у помощника) → ingest() из live.py: история на сайте.
 Новые письма в этих папках архив тоже подбирает (по UID после последнего)."""
 import datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
-import itm as IT
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
+import itm as IT
 
 SINCE = datetime.date(2026, 8, 1)
 FOLDERS = re.compile(r'^(экономика|производство|омтс)$', re.I)

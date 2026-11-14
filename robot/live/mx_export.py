@@ -10,10 +10,10 @@
 и зашифрованная копия для Claude — st/exp_<id>.bin (publish): сообщения без вложений, тексты до 4000 знаков. Токен и ключи наружу не выходят.
 Запуск — из live.py (cron раз в 10 минут), не чаще одного задания за прогон, до 120 вызовов API (12 000 сообщений)."""
 import datetime, json, os, re, time
-
-import mx_ctl as MC
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
+
+import mx_ctl as MC
 
 
 def _groups(M, token):

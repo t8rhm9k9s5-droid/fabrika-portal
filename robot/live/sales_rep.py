@@ -13,9 +13,9 @@
  3) по каждому офису продаж: ежедневные отчёты (вечернее сообщение менеджера со списком клиентов, правило группы с 07.10),
     сдача по рабочим дням, письма → st/sales.bin (зашифровано, как st/ls.bin)."""
 import datetime, email, email.policy, email.utils, imaplib, json, os, re, ssl, time
-import mx_ctl as MC, itm as IT
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
+import mx_ctl as MC, itm as IT
 
 SINCE = datetime.date(2026, 10, 1)
 RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежедневные» 06.10, правило М. Сотрудник6 — с 07.10

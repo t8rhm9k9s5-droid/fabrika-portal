@@ -152,11 +152,6 @@
   // владелец (личный вход «owner»: id = первые 24 знака SHA-256('fabrika-login:owner')); это лишь меню — данные проверяет и отдаёт скрипт бота (op gl)
   var OWNER_ID = 'REDACTED_HEX_1';
   function isOwner() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'); return !!(p && p.id === OWNER_ID && p.st !== 'pending'); } catch (e) { return false; } }
-  // 29.10.2026, v44 («дай еще доступ брату»): и у того, кому владелец открыл доступ, — флаг t14.gl ставит страница «Транспорт» после ответа скрипта «доступ есть»
-  function glFlag() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.gl') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }
-  // 12.11.2026, Т. В.: «сделай в это меню «Структура» и там эти разделы» — оргструктура, коммерческий отдел, СИМ-карты (закрыто: он и А. В.);
-  // флаг t14.sec ставит страница после ответа бота «доступ есть» (у брата); сами данные отдаёт только бот (op sec)
-  function secFlag() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }
   var SUBS = [['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'plan.html'], ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'plan.html'], ['stores.html', 'Остатки ОП', 's_store', 'var(--ic-stock)', 'stock.html'],
     ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
   var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };

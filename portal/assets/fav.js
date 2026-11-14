@@ -11,7 +11,6 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var page = (location.pathname.split('/').pop() || 'index.html');
   function key(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return h.replace(/^\.\//, ''); }
-  function has(h) { var k = key(h); return load().some(function (x) { return x.h === k; }); }
   function kind(h) { return /^(?:library\/.*|.*\.(?:pdf|docx?|xlsx?|pptx?))$/i.test(h) || /^https?:\/\//i.test(h) ? 'doc' : 'rep'; }
   // 14.11.2026 (CodeQL js/xss-through-dom): адрес из сохранённого — только свои страницы и http(s), никаких javascript:/data:
   function safeHref(h) { h = String(h || '').trim(); return /^(?:https?:\/\/|[\w.\/-]+(?:#.*)?$|#)/i.test(h) && !/^\s*(?:javascript|data|vbscript):/i.test(h) ? h : '#'; }

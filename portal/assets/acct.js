@@ -363,46 +363,11 @@
       if (before && before.parentNode === s.body) s.body.insertBefore(box, before); else s.body.prepend(box);
     });
   }
-  // включить Face ID и/или код (pw — пароль, только что проверенный входом)
-  function qlSetup(box, login, name, pw, after) {
-    Promise.all([A.ql.bioOk(), A.ql.get()]).then(function (x) {
-      var bio = x[0], q = x[1] && x[1].l === login ? x[1] : null, g = el('div', 'iform');
-      if (bio) {
-        var bb = btn(q && q.bio ? A.ql.bioName() + ' включён · включить заново' : 'Включить ' + A.ql.bioName(), 'pri');
-        bb.addEventListener('click', function () {
-          msg(g, ''); busy(bb, true, 'Подтвердите ' + A.ql.bioName() + '…');
-          A.ql.setBio(login, name, pw).then(function () { busy(bb, false); bb.textContent = A.ql.bioName() + ' включён ✓'; bb.disabled = true; if (after) after('bio'); }, function (e) { busy(bb, false); msg(g, e.message, true); });
-        });
-        g.appendChild(bb);
-      }
-      var pg = el('div', 'igroup iflds'), c1 = pinField('Код: 4–6 цифр', 'лучше 6 цифр'), c2 = pinField('Код ещё раз', '');
-      pg.append(c1, c2);
-      var pb = btn(q && q.pin ? 'Сменить код' : 'Задать код', bio ? '' : 'pri');
-      pb.addEventListener('click', function () {
-        var a = c1.lastChild.value, b = c2.lastChild.value;
-        if (!/^\d{4,6}$/.test(a)) return msg(g, 'Код — от 4 до 6 цифр.', true);
-        if (a !== b) return msg(g, 'Коды не совпадают.', true);
-        if (/^(\d)\1+$/.test(a) || '01234567890'.indexOf(a) >= 0 || '9876543210'.indexOf(a) >= 0) return msg(g, 'Слишком простой код (одинаковые цифры или подряд) — выберите другой.', true);
-        msg(g, ''); busy(pb, true, 'Сохраняю…');
-        A.ql.setPin(login, pw, a).then(function () { busy(pb, false); c1.lastChild.value = c2.lastChild.value = ''; pb.textContent = 'Сменить код'; msg(g, 'Код сохранён — входите по нему на этом устройстве.'); if (after) after('pin'); }, function (e) { busy(pb, false); msg(g, e.message, true); });
-      });
-      g.append(el('p', 'ihdr', bio ? 'Или короткий код' : 'Короткий код'), pg, pb);
-      box.appendChild(g);
-    });
-  }
   // сразу после входа паролем — предложить быстрый вход (если на этом устройстве его ещё нет)
   function qlOffer(s, login, pw) {
     Promise.all([A.ql.get(), A.ql.bioOk()]).then(function (x) {
       if (x[0] && x[0].l === login) { unlock(); return qlDone(s); }
       s.close(); lockScreen({ pw: pw }); return;   // 14.11.2026: Face ID / код — обязательно, не предложение
-      var me = A.me() || {};
-      s.body.innerHTML = '';
-      var hi = el('p', 'idone'); hi.textContent = 'Вы вошли: ' + (me.name || login) + '.'; s.body.appendChild(hi);
-      s.body.appendChild(el('p', 'ifoot', 'Чтобы в следующий раз не вводить пароль, включите быстрый вход на этом устройстве' + (x[1] ? ': ' + A.ql.bioName() + ' или короткий код.' : ' — короткий код.') +
-        ' Пароль останется только здесь, в зашифрованном виде; на сервер ничего не уходит.'));
-      var box = el('div'); s.body.appendChild(box);
-      qlSetup(box, login, me.name, pw);
-      var ok = btn('Готово'); ok.style.marginTop = '12px'; ok.addEventListener('click', function () { qlDone(s); }); s.body.appendChild(ok);
     });
   }
   function account() {

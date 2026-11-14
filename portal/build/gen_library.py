@@ -9,11 +9,12 @@
 New documents come by e-mail with the subject «Фабрика: документ» or through «Управление»; Claude adds them to library.json.
 Writes build/library_frag.html; the files are copied to site/library/ by build_site.py."""
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник20 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник21 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
         ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
@@ -32,7 +33,7 @@ INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rule
 ECON = _cg1_read_json('/home/claude/library/econ.json', encoding='utf-8') if os.path.exists('/home/claude/library/econ.json') else None   # docs_econ.py
 # 14.11.2026, Т. В.: «присваиваем документу сквозной номер и потом кладём на портал» — номер из реестра build/doc_numbers.json (docnum.py)
 import re as _re_num
-try: _NUM = {k: v['n'] for k, v in json.load(open('/home/claude/build/doc_numbers.json', encoding='utf-8'))['docs'].items()}
+try: _NUM = {k: v['n'] for k, v in json.loads(pathlib.Path('/home/claude/build/doc_numbers.json').read_text(encoding='utf-8'))['docs'].items()}
 except Exception: _NUM = {}
 for _i in L.get('items', []):
     _k = _re_num.sub(r'\.(pdf|docx?|xlsx?|ods)$', '', _i.get('file', ''))
@@ -307,7 +308,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
     {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник20 К. В.: записки на возврат   // 11.11.2026, Сотрудник20 К. В.
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник21 К. В.: записки на возврат   // 11.11.2026, Сотрудник21 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -425,7 +426,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник20, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник21, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;

@@ -7,14 +7,15 @@
    python3 host_pack.py            — собрать архив, напечатать JSON {n, mb, zip, files}
    python3 host_pack.py --done     — отметить, что архив загружен и распакован (host_state.json = текущая сборка)"""
 import os, sys, json, hashlib, zipfile, time
+import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 A = '/home/claude/app_build'; OUT = f'{A}/enc_reg'; ST = f'{A}/host_state.json'
 cur = {}
 for d, _, fs in os.walk(OUT):
     for f in fs:
-        p = os.path.join(d, f); cur[os.path.relpath(p, OUT)] = hashlib.sha256(open(p, 'rb').read()).hexdigest()
-st = json.load(open(ST))
+        p = os.path.join(d, f); cur[os.path.relpath(p, OUT)] = hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+st = json.loads(pathlib.Path(ST).read_text())
 if '--done' in sys.argv:
-    st['files'].update(cur); st['uploaded'] = time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime()); json.dump(st, open(ST, 'w'), indent=0)
+    st['files'].update(cur); st['uploaded'] = time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime()); pathlib.Path(ST).write_text(json.dumps(st, indent=0))
     print(json.dumps({'done': len(cur)})); sys.exit()
 ch = sorted(k for k, v in cur.items() if st['files'].get(k) != v)
 # the order inside the zip: blobs and keys first, the map and the service worker last (a half-extracted archive never points at missing blobs)

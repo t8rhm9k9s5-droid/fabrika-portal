@@ -76,7 +76,7 @@
       var gd = gl && gl.d ? gl.d.filter(function (x) { return x[1] > 0; }) : [], gavg = gd.length ? gd.reduce(function (a, x) { return a + x[1]; }, 0) / gd.length : null, norm = gl && gl.norm || 165;
       var k = [K('Выпуск месяца', C.o, sp ? Math.round(sf / sp * 100) : '—', '%', sp ? n(sf) + ' из ' + n(sp) + ' шт плана' : 'отчёты ПДО ещё не пришли', sp ? sf / sp * 100 : null, 'staff.html#s-pf'),
         K('План в сутки', C.b, pd ? n(pd) : '—', 'шт', 'по ' + G.length + ' группам продукции', null, 'staff.html#s-pf'),
-        K('Ниже 90 % плана', C.r, gv.length ? low.length : '—', gv.length ? 'из ' + gv.length : '', low.length ? low.slice(0, 2).map(function (g) { return g.s || g.n; }).join(', ') : 'все группы в графике', null, 'staff.html#s-pf'),
+        K('Ниже 90 % плана', C.r, gv.length ? low.length : '—', gv.length ? 'из ' + gv.length : '', low.length ? low.slice(0, 2).map(function (g) { return g.s || g.n; }).join(', ') : gv.length ? 'все группы в графике' : 'нет данных', null, 'staff.html#s-pf'),
         K('Лучшая группа', C.g, best ? Math.round(best.v) : '—', best ? '%' : '', best ? best.n : 'нет данных', best ? Math.min(100, best.v) : null, 'staff.html#s-pf'),
         K('Отстающая группа', C.y, worst ? Math.round(worst.v) : '—', worst ? '%' : '', worst ? worst.n : 'нет данных', worst ? Math.min(100, worst.v) : null, 'staff.html#s-pf'),
         K('Гальваника', C.t, gavg != null ? Math.round(gavg / norm * 100) : '—', '%', gavg != null ? 'в среднем ' + Math.round(gavg) + ' траверс в сутки при норме ' + norm : 'отчёт линии ещё не пришёл', gavg != null ? gavg / norm * 100 : null, 'staff.html#s-galv')];

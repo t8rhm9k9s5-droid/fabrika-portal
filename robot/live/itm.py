@@ -24,11 +24,11 @@
 встают в очередь (отправит скрипт бота через Gmail); черновики в «Черновики», копии в «Отправленные» и разбор писем — «отключено».
 """
 import datetime, email, email.header, email.policy, email.utils, fcntl, hashlib, html, imaplib, json, os, re, ssl, time
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 try: import itm_tidy as TD        # 11.11.2026: «Прочитано + по папкам» (Т. В., опрос)
 except Exception: TD = None
 from email.message import EmailMessage
-def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
-    with open(p, mode, **kw) as _f: return _f.read()
 
 HOST = 'imap.mail.ru'
 MSK = datetime.timezone(datetime.timedelta(hours=3))
