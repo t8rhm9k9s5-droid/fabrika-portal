@@ -239,6 +239,27 @@
 
   // ---------- оформление: тема и производительность (выбор хранится в браузере; без хранилища — «Авто» и «Авто») ----------
   function getPref(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
+  // 14.11.2026, Т. В. («V22 — пока только мне»; «на компьютере ничего не включено»): вид по умолчанию — V22 для входа владельца на любом
+  //   устройстве (как в build_site.py _THEME); выбор «Классика / V22» на устройстве — сильнее. После входа/выхода — сразу, без перезагрузки.
+  var OWNER_ID = 'REDACTED_HEX_1';
+  // 14.11.2026, Т. В.: «когда я в разделе захожу в документ, он не должен отправлять меня в общий архив — я должен в разделе его посмотреть;
+  //   в «Документы» я сам схожу». T14Doc.open(href, title, meta) — PDF (или PDF-копия Word/Excel: <файл>.pdf) открывается поверх текущей
+  //   страницы в просмотрщике портала (assets/pdfview.js, «‹ Назад» возвращает в раздел); ссылки a[data-pdf] на любой странице — так же.
+  window.T14Doc = {
+    open: function (href, title, meta) {
+      var src = /\.pdf$/i.test(href) ? href : href + '.pdf';
+      function go() { if (window.T14PDF) T14PDF.open({ src: src, title: title || 'Документ', meta: meta || '', back: 'Назад', orig: src === href ? null : href, name: href.split('/').pop() }); else location.href = href; }
+      if (window.T14PDF) return go();
+      var sc = document.createElement('script'); sc.src = 'assets/pdfview.js'; sc.onload = go; sc.onerror = function () { location.href = href; }; document.head.appendChild(sc);
+    }
+  };
+  if (!/library\.html$/.test(location.pathname)) document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[data-pdf]'); if (!a) return;
+    e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
+  });
+  function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
+  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
+  window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
   // «Авто / Сотрудник13 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
@@ -654,7 +675,7 @@
       }
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
       // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
-      seg('Вид', function () { return getPref('t14.skin', 'classic') === 'v22' ? 'v22' : 'classic'; }, [['classic', 'Классика'], ['v22', 'V22 (проба)']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
+      seg('Вид', function () { return skinNow(); }, [['v22', 'Новый'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
       var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник13'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
       var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник13» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
@@ -727,6 +748,33 @@
       [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''; });
     }
     paintBadges(); BADGE_PAINT = paintBadges;
+    // 14.11.2026, Т. В. (компьютер, узкая левая панель V22): «вожу мышкой — иконки: машинка, складик, менюшка — что это значит? Подпись от нижнего
+    //   правого угла мышки: как называется раздел и что в нём». Подсказка у курсора: название и одна строка — что внутри (PORTAL[4]).
+    (function () {
+      if (!window.matchMedia || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      var DESC = {}; PORTAL.forEach(function (p) { DESC[p[0]] = p[4] || ''; });
+      DESC['admin.html'] = 'Пользователи, права, журналы'; DESC['razdel.html#saved'] = 'Отмеченные звёздочкой документы и отчёты'; DESC['home.html'] = DESC['home.html'] || 'Пульс компании';
+      var tip = el('div', 'ptip', '<b></b><span></span>'); tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+      var curEl = null, tmr = 0;
+      function info(a) {
+        var t = (a.querySelector('.pt') || {}).textContent || a.getAttribute('aria-label') || '', h = a.dataset.p || a.getAttribute('href') || '';
+        var d = DESC[h] || (a.classList.contains('pbot') ? (/t\.me/.test(h) ? 'Уведомления и вопросы — в Telegram' : /max\.ru/.test(h) ? 'Уведомления и поручения — в MAX' : 'Скачать на телефон') : '');
+        if (a.classList.contains('plogo')) { t = 'Главная'; d = DESC['home.html']; }
+        if (a.classList.contains('pask') || a.classList.contains('pfab')) d = 'Ответ по данным портала на ваш вопрос';
+        if (/Профиль/.test(t)) d = 'Личный вход, вид, тема, уведомления';
+        return [t.trim(), d];
+      }
+      function place(e) { var x = e.clientX + 14, y = e.clientY + 18, w = tip.offsetWidth, h = tip.offsetHeight; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = e.clientY - h - 10; tip.style.left = Math.round(x) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      side.addEventListener('mousemove', function (e) {
+        var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab');
+        if (!a || !side.contains(a)) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); return; }
+        if (getComputedStyle(a.querySelector('.pt') || a).display !== 'none' && !document.documentElement.hasAttribute('data-skin')) { tip.classList.remove('on'); return; }   // подписи и так видны
+        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); tmr = setTimeout(function () { tip.classList.add('on'); }, 250); }
+        place(e);
+      });
+      side.addEventListener('mouseleave', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      side.addEventListener('click', function () { tip.classList.remove('on'); });
+    })();
 
     // --- шапка раздела ---
     var top = el('header', 'ptop');

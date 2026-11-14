@@ -150,3 +150,16 @@ html[data-skin="v22"][data-skin][data-skin] a,html[data-skin="v22"][data-skin][d
 .v22-ptr::before{content:"";width:16px;height:16px;border-radius:50%;border:2.4px solid currentColor;border-top-color:transparent}
 .v22-ptr.go::before{animation:v22spin .8s linear infinite}
 @keyframes v22spin{to{transform:rotate(360deg)}}
+
+/* 14.11.2026, Т. В.: подсказка у курсора над значками левой панели (компьютер) — название раздела и что в нём */
+.ptip{position:fixed;left:0;top:0;z-index:2000;max-width:280px;padding:8px 11px;border-radius:12px;background:rgba(28,28,30,.92);color:#fff;
+  font:500 13px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none;opacity:0;
+  transition:opacity .12s ease;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+.ptip.on{opacity:1}
+.ptip b{display:block;font-weight:600;font-size:13.5px}
+.ptip span{display:block;margin-top:2px;color:rgba(255,255,255,.72);font-size:12.5px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .ptip{background:rgba(242,242,247,.94);color:#1c1c1e}:root:not([data-theme=light]) .ptip span{color:rgba(60,60,67,.75)}}
+:root[data-theme=dark] .ptip{background:rgba(242,242,247,.94);color:#1c1c1e}:root[data-theme=dark] .ptip span{color:rgba(60,60,67,.75)}
+
+/* 14.11.2026, Т. В. (iPhone): «в окне ввода пароля масштаб улетает» — Safari увеличивает страницу при фокусе на поле со шрифтом мельче 16 px */
+@media (hover:none) and (pointer:coarse){input,select,textarea{font-size:16px!important}}

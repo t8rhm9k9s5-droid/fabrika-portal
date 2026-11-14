@@ -38,7 +38,7 @@ QUESTION = re.compile(r'\?|\b(прошу|просьба|просим|подск�
                       r'нужно ли|можно ли|когда|как быть|дайте|подтвердите|рассмотрите|ознакомьтесь|ваше решение|ваше мнение)\b', re.I)
 QUOTE_CUT = re.compile(r'^\s*(>|От кого:|From:|-{3,}\s*(Original|Исходное|Пересылаемое|Forwarded)|\S.{0,80}(написал|wrote)\s*:?\s*$|'
                        r'(Пн|Вт|Ср|Чт|Пт|Сб|Вс|Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-zа-я]*,\s+\d{1,2}\s)', re.I | re.M)
-MAX_NOTES, MAX_DREQ, FIRST_DAYS = 60, 12, 5
+MAX_NOTES, MAX_DREQ, FIRST_DAYS = 60, 60, 5     # 14.11.2026: было 12 — за 2 суток запрос на ответ вытесняли 12 более новых писем, и одобренный ответ пропадал молча
 # 11.11.2026, Т. В.: «проверь доступ на отправку и приём почты itm@ — как подтвердишь, отмени пересылку на 1c@».
 # Проверка связи: письмо с user1@example.org на itm@ с темой «Проверка связи itm@ <КОД>» → хостинг принял его по IMAP и ставит
 # ответ с itm@ (SMTP Mail.ru, очередь mail_q) на user1@example.org «Re: Проверка связи itm@ <КОД>». Один ответ на код.
@@ -223,26 +223,26 @@ def authentic(msg, frm):
 def report_hdr(frm, subj):
     """по одному заголовку: может ли это быть отчёт (тогда письмо скачивается целиком)"""
     s = clean(subj).lower().replace('ё', 'е')
-    return ((frm == 'user28@example.org' and 'отчет' in s) or (frm in ('user14@example.org', 'user13@example.org')) or
-            (frm == 'user3@example.org') or (frm in ('user5@example.org', 'user4@example.org') and ('остатки' in s)) or frm == 'user30@example.org')
+    return ((frm == 'user29@example.org' and 'отчет' in s) or (frm in ('user15@example.org', 'user14@example.org')) or
+            (frm == 'user3@example.org') or (frm in ('user5@example.org', 'user4@example.org') and ('остатки' in s)) or frm == 'user31@example.org')
 
 
 def report_like(frm, subj, names):
     """те же отчёты, что live.py искал в Gmail (QUERY)"""
     s, low = subj.lower(), [n.lower() for n in names]
-    if not names: return frm in ('user14@example.org', 'user13@example.org') and 'гальваник' in s   # 03.11.2026: ПЭО «выпуска в 1С нет» — без вложения
-    if frm == 'user28@example.org' and 'отчет' in s.replace('ё', 'е'): return True
-    if frm in ('user14@example.org', 'user13@example.org') and ('гальваник' in s or any('гальваник' in n for n in low)): return True
+    if not names: return frm in ('user15@example.org', 'user14@example.org') and 'гальваник' in s   # 03.11.2026: ПЭО «выпуска в 1С нет» — без вложения
+    if frm == 'user29@example.org' and 'отчет' in s.replace('ё', 'е'): return True
+    if frm in ('user15@example.org', 'user14@example.org') and ('гальваник' in s or any('гальваник' in n for n in low)): return True
     if frm == 'user3@example.org' and any(k in s for k in ('складские остатки', 'жилпромсервис отчеты', 'пкс свободные остатки', 'продажи в разрезе')): return True   # 30.10: + продажи за день
     if frm in ('user5@example.org', 'user4@example.org') and any(k in s for k in ('пкс свободные остатки', 'складские остатки')): return True
     if frm == 'user3@example.org' and any(k in s for k in ('реестр рекламаций', 'тз в работе')): return True       # 03.11.2026: рассылки 1С для rep_1c.py (02.11) — без этого письма не доходили до разбора
-    if frm in ('user33@example.org', 'user22@example.org', 'user5@example.org', 'user4@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user22@example.org (А. Сотрудник1 пишет оттуда)
-    if frm == 'user34@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник6 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
-    if frm in ('user34@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник6 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
-    if frm in ('user3@example.org', 'user34@example.org', 'user30@example.org', 'user35@example.org', 'user5@example.org', 'user4@example.org') and \
+    if frm in ('user34@example.org', 'user23@example.org', 'user5@example.org', 'user4@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user23@example.org (А. Сотрудник1 пишет оттуда)
+    if frm == 'user35@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник8 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
+    if frm in ('user35@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник8 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
+    if frm in ('user3@example.org', 'user35@example.org', 'user31@example.org', 'user36@example.org', 'user5@example.org', 'user4@example.org') and \
             any(n.endswith('.xlsx') for n in low) and (any(k in s for k in ('запасы гп', 'товары на складах')) or any('товары на складах' in n or ('запас' in n and 'гп' in n) for n in low)):
-        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник6 на 1c@) → stock_mv.py
-    return frm == 'user30@example.org' and any(n.endswith('.zip') for n in low)
+        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник8 на 1c@) → stock_mv.py
+    return frm == 'user31@example.org' and any(n.endswith('.zip') for n in low)
 
 
 def att_names(msg):
@@ -281,6 +281,37 @@ def card(msg, folder, me):
         req = {'id': nid, 't': note['t'], 'f': frm, 'n': fname[:80], 's': subj[:200], 'd': direct, 'q': q,
                'x': mask(txt)[:2500], 'ox': txt[:2500], 'mid': mid[:300], 'refs': refs[:1500], 'to_name': fname[:80]}   # ox — только на хостинге, для цитаты
     return note, req
+
+
+def refind(M, fl, st, nid, me, log):
+    """14.11.2026: ответ, одобренный по письму, запрос на которое уже вытеснен из dreq (ответ Сотрудник6 «повышение цен Крым» не ушёл:
+    запрос вытеснили 12 более новых писем). Находит письмо заново по заметке (папка, отправитель, дата) и строит запрос, как card()."""
+    note = next((n for n in st.get('notes') or [] if n.get('id') == nid), None)
+    if not note or not note.get('f'): return None
+    try: since = (datetime.datetime.strptime(note['t'][:10], '%Y-%m-%d') - datetime.timedelta(days=1)).strftime('%d-%b-%Y')
+    except Exception: return None
+    fo = (note.get('fo') or '').strip()
+    cand = [x for x in fl if x[1].strip() == fo] + [x for x in fl if x[1].strip().upper() == 'INBOX' and x[1].strip() != fo]
+    for raw, name, flags in cand[:3]:
+        typ, _ = M.select('"%s"' % raw, readonly=True)
+        if typ != 'OK': continue
+        typ, data = M.uid('SEARCH', None, 'FROM', '"%s"' % note['f'], 'SINCE', since)
+        for u in ((data[0] or b'').split()[-30:] if typ == 'OK' else []):
+            typ, d = M.uid('FETCH', u.decode(), '(BODY.PEEK[])')
+            full = next((x[1] for x in d or [] if isinstance(x, tuple)), None)
+            if not full: continue
+            _, req = card(email.message_from_bytes(full, policy=email.policy.default), name, me)
+            if req and req['id'] == nid:
+                log('itm: запрос на ответ восстановлен по письму —', (req.get('s') or '')[:60]); return req
+    return None
+
+
+def lost(L, p, fn, d, st, res, log):
+    """14.11.2026: одобренный ответ без запроса — не выбрасывать молча: в drafts/lost, в статус (lost) и в журнал."""
+    ld = os.path.join(L, 'drafts', 'lost'); os.makedirs(ld, exist_ok=True); os.replace(p, os.path.join(ld, fn))
+    st['lost'] = (st.get('lost') or [])[-50:] + [{'t': _now().strftime('%Y-%m-%dT%H:%M'), 'id': d.get('id')}]
+    res['lost'] = res.get('lost', 0) + 1
+    log('  ! itm ответ не отправлен: нет письма для ответа (id %s) — drafts/lost' % d.get('id'))
 
 
 def drafts_folder(fl):
@@ -426,6 +457,8 @@ def run_gas(L, CFG, st, res, me, log, jsave):
             with open(p, encoding='utf-8') as _cg1_file_4:
                 d = json.load(_cg1_file_4)
             req = st.setdefault('dreq', {}).get(d.get('id'))
+            if not req and d.get('send') and (d.get('text') or '').strip() and d.get('id') not in (st.get('ddone') or []):
+                lost(L, p, fn, d, st, res, log); continue                  # 14.11.2026: без IMAP письмо заново не найти — не выбрасывать молча
             if req and d.get('send') and (d.get('text') or '').strip():
                 r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                 if not str(r).startswith('ok'): raise RuntimeError(str(r))
@@ -493,6 +526,10 @@ def run(L, CFG, ingest, log, jload, jsave, publish, budget=150, limit=80):
                 with open(p, encoding='utf-8') as _cg1_file_5:
                     d = json.load(_cg1_file_5)
                 req = st['dreq'].get(d.get('id'))
+                if not req and (d.get('text') or '').strip() and d.get('id') not in (st.get('ddone') or []):   # 14.11.2026: запрос вытеснен — найти письмо заново
+                    try: req = refind(M, fl, st, d.get('id'), me, log)
+                    except Exception as e: log('  ! itm поиск письма для ответа:', e.__class__.__name__, e)
+                    if not req: lost(L, p, fn, d, st, res, log); continue
                 if req and d.get('send') and (d.get('text') or '').strip():          # 29.10.2026: ответ выбрал / написал владелец — отправить, не в «Черновики»
                     r = send_reply(me, CFG.get('itm_name') or 'Сотрудник2 Сотрудник1', d, req)
                     if not str(r).startswith('ok'): raise RuntimeError(str(r))

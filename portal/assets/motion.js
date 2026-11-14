@@ -150,6 +150,7 @@
   setTimeout(v22, 1200);
   // ---------- «плюсы iOS» в установленном приложении (14.11.2026, Т. В.: «нет всех плюсов iOS») ----------
   // В Safari эти жесты есть сами; в приложении с экрана «Домой» — нет: смахнуть от левого края → назад; потянуть вниз в самом верху → обновить.
+  // 14.11.2026, Т. В.: «раздел сам упал в перезагрузку» — обновление только при длинном (190 px) прямом рывке вниз от самого верха.
   (function () {
     var standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
     if (!standalone || !('ontouchstart' in window)) return;
@@ -170,13 +171,13 @@
         if (Math.abs(dy) > 60) { mode = ''; if (edge) edge.style.opacity = '0'; return; }
         edge = edge || mk('v22-edge'); var k = Math.max(0, Math.min(1, dx / 90)); edge.style.opacity = String(k); edge.style.transform = 'translateX(' + Math.min(60, dx / 2) + 'px)';
       } else if (mode === 'ptr') {
-        if (dy < 0 || Math.abs(dx) > 40) { mode = ''; if (ptr) ptr.style.opacity = '0'; return; }
-        ptr = ptr || mk('v22-ptr'); var q = Math.max(0, Math.min(1, dy / 110)); ptr.style.opacity = String(q); ptr.style.transform = 'translateY(' + Math.min(70, dy / 2) + 'px) rotate(' + Math.round(dy * 2) + 'deg)';
+        if (dy < 0 || Math.abs(dx) > 30 || (window.scrollY || document.documentElement.scrollTop) > 0) { mode = ''; if (ptr) ptr.style.opacity = '0'; return; }
+        ptr = ptr || mk('v22-ptr'); var q = Math.max(0, Math.min(1, (dy - 40) / 150)); ptr.style.opacity = String(q); ptr.style.transform = 'translateY(' + Math.min(70, dy / 2) + 'px) rotate(' + Math.round(dy * 2) + 'deg)';
       }
     }, { passive: true });
     document.addEventListener('touchend', function () {
       if (mode === 'edge') { if (edge) edge.style.opacity = '0'; if (dx > 90) { if (history.length > 1) history.back(); else location.href = 'home.html'; } }
-      else if (mode === 'ptr') { if (dy > 110 && ptr) { ptr.classList.add('go'); ptr.style.opacity = '1'; setTimeout(function () { location.reload(); }, 150); } else if (ptr) ptr.style.opacity = '0'; }
+      else if (mode === 'ptr') { if (dy > 190 && ptr) { ptr.classList.add('go'); ptr.style.opacity = '1'; setTimeout(function () { location.reload(); }, 150); } else if (ptr) ptr.style.opacity = '0'; }
       mode = '';
     }, { passive: true });
   })();

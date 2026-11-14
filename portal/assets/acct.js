@@ -71,7 +71,7 @@
   function me() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function tok() { try { return localStorage.getItem('t14.tok') || ''; } catch (e) { return ''; } }
   function saveMe(p, t) { try { localStorage.setItem('t14.me', JSON.stringify(p)); if (t) localStorage.setItem('t14.tok', t); } catch (e) { /* private mode */ } }
-  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
+  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
 
   // ---- the server (the «Фабрика» Google Apps Script)
   var CFG = G.T14_ACCT_CFG || null, cfgP = null;
@@ -384,7 +384,8 @@
   // сразу после входа паролем — предложить быстрый вход (если на этом устройстве его ещё нет)
   function qlOffer(s, login, pw) {
     Promise.all([A.ql.get(), A.ql.bioOk()]).then(function (x) {
-      if (x[0] && x[0].l === login) return qlDone(s);
+      if (x[0] && x[0].l === login) { unlock(); return qlDone(s); }
+      s.close(); lockScreen({ pw: pw }); return;   // 14.11.2026: Face ID / код — обязательно, не предложение
       var me = A.me() || {};
       s.body.innerHTML = '';
       var hi = el('p', 'idone'); hi.textContent = 'Вы вошли: ' + (me.name || login) + '.'; s.body.appendChild(hi);
@@ -439,34 +440,29 @@
     s.body.appendChild(f);
     // быстрый вход на этом устройстве (14.11.2026)
     var qf = el('div', 'iform'), qs = el('p', 'ifoot');
-    qf.append(el('p', 'ihdr', 'Быстрый вход на этом устройстве'), qs);
+    qf.append(el('p', 'ihdr', 'Вход на этом устройстве'), qs);
     s.body.insertBefore(qf, f);
     function qlStatus() {
       return A.ql.get().then(function (q) {
         q = q && q.l === p.login ? q : null;
-        qs.textContent = q ? 'Включён: ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'код из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' и ') + '. Пароль хранится только здесь, в зашифрованном виде.'
-          : 'Выключен. Включите ' + A.ql.bioName() + ' или короткий код — чтобы не вводить пароль, когда вход истечёт.';
+        qs.textContent = q ? 'Каждый вход на портал здесь — по ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'коду из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' или ') + '. Пароль хранится только на этом устройстве, в зашифрованном виде.'
+          : 'Не настроен — при следующем входе портал попросит пароль и ' + A.ql.bioName() + ' или код из 4 цифр.';
         return q;
       });
     }
+    // 14.11.2026, Т. В.: вход по Face ID / коду обязателен — выключить нельзя, можно сменить способ (пароль → Face ID или код)
     function qlPaint() {
       [].slice.call(qf.querySelectorAll('.qlx')).forEach(function (n) { n.remove(); });
-      qlStatus().then(function (q) {
-        var g = el('div', 'igroup iflds qlx'), pw = field('Ваш пароль', 'password', q ? 'для изменения' : 'для включения', 'current-password'), nx = btn(q ? 'Изменить' : 'Включить', 'qlx');
-        g.appendChild(pw); qf.append(g, nx);
-        nx.addEventListener('click', function () {
-          var v = pw.lastChild.value; if (!v) return msg(qf, 'Введите пароль.', true);
-          msg(qf, ''); busy(nx, true, 'Проверяю пароль…');
-          A.signIn(p.login, v).then(function () { g.remove(); nx.remove(); var box = el('div', 'qlx'); qf.appendChild(box); qlSetup(box, p.login, p.name, v, qlStatus); },
-            function (e) { busy(nx, false); msg(qf, e.message, true); });
-        });
-        if (q) { var off = btn('Выключить быстрый вход', 'qlx'); off.addEventListener('click', function () { A.ql.off().then(qlPaint); }); qf.appendChild(off); }
+      qlStatus().then(function () {
+        var ch = btn('Сменить способ входа', 'qlx');
+        ch.addEventListener('click', function () { A.ql.off().then(function () { s.close(); lockScreen(); }); });
+        qf.appendChild(ch);
       });
     }
     qlPaint();
     go.addEventListener('click', function () {
       if (np.lastChild.value.length < 8) return msg(f, 'Пароль — не короче 8 знаков.', true);
-      busy(go, true); A.changePw(np.lastChild.value).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(qlPaint); msg(f, 'Пароль сменён. На других устройствах теперь нужно войти заново; быстрый вход здесь включите снова — выше.'); }, function (e) { busy(go, false); msg(f, e.message, true); });
+      var npw = np.lastChild.value; busy(go, true); A.changePw(npw).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(function () { s.close(); toast('Пароль сменён — на других устройствах войдите заново'); lockScreen({ pw: npw }); }); }, function (e) { busy(go, false); msg(f, e.message, true); });
     });
     out.addEventListener('click', function () { if (out.dataset.arm) { A.ql.off().then(A.forget).then(function () { s.close(); toast('Личный вход на этом устройстве выключен'); G.dispatchEvent(new Event('t14acct')); }); } else { out.dataset.arm = 1; out.textContent = 'Точно выйти? Нажмите ещё раз'; } });
   }
@@ -544,7 +540,7 @@
     var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');
     s.body.appendChild(css);
     step(1, 'Значок на экране «Домой»', 'Откройте портал в Safari → кнопка «Поделиться» → «На экран „Домой“». Портал запускается как приложение: во весь экран, без адресной строки.');
-    step(2, 'Вход по Face ID', 'Войдите паролем один раз — портал предложит вход по Face ID или короткому коду. Включить позже: «Ещё» → «Личный вход» → «Быстрый вход на этом устройстве». Пароль на устройстве не хранится.');
+    step(2, 'Вход по Face ID', 'Первый раз — личный пароль, затем портал включит Face ID (на устройствах без Face ID и Touch ID — код из 4 цифр). Дальше каждый вход на портал — по Face ID или коду; переходы по страницам и перерыв до минуты — без него. Сменить способ: «Ещё» → «Личный вход».');
     step(3, 'Уведомления о тревогах', 'Только из значка на экране «Домой» (iOS 16.4 и новее): «Ещё» → «Уведомления» → «Разрешить». Приходит каждая новая «Критично» — один раз, только заголовок, без сумм и клиентов; ночью (22:00–07:00) — утром.');
     step(4, 'Siri', 'Приложение «Команды» → «+» → действие «Открыть URL» → вставьте адрес раздела (кнопка ниже) → назовите команду, например «Фабрика отгрузка». Дальше: «Привет, Siri, Фабрика отгрузка». Откроется в Safari — там тоже один раз войдите по Face ID.');
     var g = el('div', 'igroup'); s.body.appendChild(g);
@@ -562,8 +558,184 @@
   //   relogin() — забыть старый вход и открыть окно входа; reloginBtn() — готовая кнопка.
   function expired(e) { return /войдите заново/i.test(String(e && e.message || e || '')); }
   var EXPIRED_TXT = 'Срок личного входа истёк. Вход действует 30 дней с последнего ввода пароля — нажмите «Войти заново» и введите логин и пароль.';
+  // ---------------- замок портала (14.11.2026, Т. В.: «каждый вход на портал — через Face ID; с устройства без Face ID / Touch ID — код
+  //   из 4 цифр; сначала входишь личным паролем»). Вход = портал открыт после перерыва больше минуты (приложение свёрнуто или закрыто,
+  //   вкладка не видна). Переходы по страницам и короткие переключения — без замка. Обязателен для всех с личным входом: без Face ID /
+  //   кода дальше не пустит (один раз — пароль, затем Face ID, где он есть, иначе код). 5 неверных кодов — выход из личного входа.
+  //   14.11.2026, опрос Т. В. «Бездействие» — «да, через 10 минут»: нет движений мыши, клавиш, касаний 10 минут — замок и на открытом
+  //   экране (компьютер, от которого отошли). Активность в любой вкладке портала считается для всех; замок в одной — во всех.
+  var LOCK_MS = 60000, IDLE_MS = 600000, LKEY = 't14.lact', IKEY = 't14.linp', XKEY = 't14.locked', locked = false, lockEl = null;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, String(v)); } catch (e) { } }
+  function lact(t) { if (t) lsSet(LKEY, t); return +(lsGet(LKEY) || 0) || (t || 0); }
+  function linp(t) { if (t) lsSet(IKEY, t); return +(lsGet(IKEY) || 0) || (t || 0); }
+  function signedIn() { var p = A.me(); return !!(p && A.tok() && p.st !== 'pending'); }
+  function lockNeeded() { return signedIn() && (document.documentElement.hasAttribute('data-lock') || lsGet(XKEY) === '1' || Date.now() - lact() > LOCK_MS || Date.now() - linp() > IDLE_MS); }
+  function unlock() {
+    locked = false; if (lockEl) { lockEl.remove(); lockEl = null; }
+    document.documentElement.removeAttribute('data-lock'); var n = Date.now(); lact(n); linp(n); lsSet(XKEY, null);
+    try { G.dispatchEvent(new Event('t14unlock')); } catch (e) { }
+  }
+  function lockCss() {
+    if (document.getElementById('t14lock-css')) return;
+    var st = el('style'); st.id = 't14lock-css';
+    st.textContent = 'html[data-lock] body{visibility:hidden}html[data-lock] body .ilock{visibility:visible}' +
+      '.ilock{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:var(--sheet-bg,#f2f2f7);color:var(--ios-label,#1c1c1e);' +
+      'padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto;font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+      '@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .ilock{background:#000;color:#f2f2f7}}:root[data-theme=dark] .ilock{background:#000;color:#f2f2f7}' +
+      '.ilock-in{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}' +
+      '.ilock-in h2{margin:6px 0 0;font-weight:600;font-size:22px;line-height:1.25;font-family:inherit}.ilock-in .lsub{margin:0;color:var(--ios-2,#8e8e93);font-size:15px}' +
+      '.ilock-ic{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#ff8a3d,#e8590c);display:grid;place-items:center;color:#fff}' +
+      '.ilock-dots{display:flex;gap:16px;margin:10px 0 4px}.ilock-dots i{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;opacity:.75}.ilock-dots i.on{background:currentColor;opacity:1}' +
+      '.ilock-dots.bad{animation:ilshake .35s}@keyframes ilshake{0%,100%{transform:none}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}' +
+      '.ilock-pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px 22px;margin-top:6px}' +
+      '.ilock-pad button{width:76px;height:76px;border-radius:50%;border:0;background:rgba(120,120,128,.16);color:inherit;font-weight:400;font-size:30px;line-height:1;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
+      '.ilock-pad button:active{background:rgba(120,120,128,.34)}.ilock-pad button.t{background:none;font-size:16px}' +
+      '.ilock .lbtn{width:100%;border:0;border-radius:14px;padding:14px 16px;font-weight:600;font-size:17px;font-family:inherit;background:#0a84ff;color:#fff;cursor:pointer}' +
+      '.ilock .lbtn.sec{background:rgba(120,120,128,.16);color:inherit}.ilock .llink{border:0;background:none;color:#0a84ff;font-weight:400;font-size:16px;font-family:inherit;padding:8px;cursor:pointer}' +
+      '.ilock input{width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:13px 14px;font-size:17px;font-family:inherit;background:rgba(120,120,128,.16);color:inherit;text-align:center}' +
+      '.ilock .lmsg{min-height:20px;margin:0;font-size:14px;color:var(--ios-2,#8e8e93)}.ilock .lmsg.bad{color:#ff3b30}';
+    document.head.appendChild(st);
+  }
+  function lockScreen(o) {
+    o = o || {};
+    lockCss(); locked = true; document.documentElement.setAttribute('data-lock', '1'); lsSet(XKEY, '1');
+    if (lockEl) lockEl.remove();
+    lockEl = el('div', 'ilock'); lockEl.setAttribute('role', 'dialog'); lockEl.setAttribute('aria-modal', 'true');
+    var box = el('div', 'ilock-in'); lockEl.appendChild(box); document.body.appendChild(lockEl);
+    var me = A.me() || {}, first = String(me.name || me.login || '').split(' ')[0];
+    function head(t, sub) {
+      box.innerHTML = '<div class="ilock-ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div><h2></h2><p class="lsub"></p>';
+      box.querySelector('h2').textContent = t; box.querySelector('.lsub').textContent = sub || ''; if (!sub) box.querySelector('.lsub').remove();
+    }
+    function line(t, bad) { var p = box.querySelector('.lmsg') || box.appendChild(el('p', 'lmsg')); p.textContent = t || ''; p.classList.toggle('bad', !!bad); return p; }
+    function b(t, cls) { var x = el('button', cls || 'lbtn'); x.type = 'button'; x.textContent = t; return x; }
+    function out() { var x = b('Выйти из личного входа', 'llink'); x.addEventListener('click', function () { A.ql.off().then(A.forget).then(function () { location.reload(); }); }); return x; }
+    // 1) пароль (один раз на устройстве, и всегда — как запасной путь)
+    function pwStep(then) {
+      head('Вход: ' + (first || 'личный пароль'), 'Логин ' + (me.login || '') + ' · введите личный пароль');
+      var i = el('input'); i.type = 'password'; i.autocomplete = 'current-password'; i.placeholder = 'Пароль'; box.appendChild(i);
+      var go = b('Продолжить'); box.appendChild(go); line('');
+      function run() {
+        if (!i.value) return line('Введите пароль.', true);
+        go.disabled = true; go.textContent = 'Проверяю…';
+        var pw = i.value;
+        A.signIn(me.login, pw).then(function () { me = A.me() || me; then(pw); }, function (e) { go.disabled = false; go.textContent = 'Продолжить'; line(e.message, true); i.select(); });
+      }
+      go.addEventListener('click', run); i.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+      box.appendChild(out()); setTimeout(function () { try { i.focus(); } catch (e) { } }, 60);
+    }
+    // 2) настройка: Face ID / Touch ID, где есть; иначе код из 4 цифр
+    function setup(pw) {
+      A.ql.bioOk().then(function (bio) {
+        if (bio && !o.pinOnly) {
+          head('Вход по ' + A.ql.bioName(), 'Каждый вход на портал на этом устройстве — по ' + A.ql.bioName() + '. Пароль не понадобится.');
+          var go = b('Включить ' + A.ql.bioName()); box.appendChild(go); line('');
+          go.addEventListener('click', function () {
+            go.disabled = true; go.textContent = 'Подтвердите ' + A.ql.bioName() + '…';
+            A.ql.setBio(me.login, me.name, pw).then(function () { toast(A.ql.bioName() + ' включён'); unlock(); },
+              function (e) { go.disabled = false; go.textContent = 'Включить ' + A.ql.bioName(); line(e.message + ' Можно задать код из 4 цифр.', true); alt.hidden = false; });
+          });
+          var alt = b('Код из 4 цифр вместо ' + A.ql.bioName(), 'llink'); alt.hidden = true; alt.addEventListener('click', function () { o.pinOnly = true; setup(pw); }); box.appendChild(alt);
+          return;
+        }
+        var a = '';
+        head('Код для входа', (bio ? '' : 'На этом устройстве нет Face ID и Touch ID. ') + 'Придумайте код из 4 цифр — он нужен при каждом входе на портал.');
+        pad(function (v) {
+          if (!a) {
+            if (/^(\d)\1+$/.test(v) || '01234567890'.indexOf(v) >= 0 || '9876543210'.indexOf(v) >= 0) return { bad: 'Слишком простой код — выберите другой.' };
+            a = v; box.querySelector('h2').textContent = 'Повторите код'; return { clear: 1 };
+          }
+          if (v !== a) { a = ''; box.querySelector('h2').textContent = 'Код для входа'; return { bad: 'Коды не совпали — ещё раз.' }; }
+          return A.ql.setPin(me.login, pw, v).then(function () { toast('Код сохранён'); unlock(); }, function (e) { return { bad: e.message }; });
+        });
+      });
+    }
+    // 3) замок: Face ID и/или код
+    function lockStep(q) {
+      head(first ? first + ', вход на портал' : 'Вход на портал', 'Логин ' + q.l);
+      if (q.bio) {
+        var fb = b('Войти по ' + A.ql.bioName()); box.appendChild(fb); line('');
+        var tryBio = function (auto) {
+          fb.disabled = true;
+          A.ql.byBio().then(function () { unlock(); }, function (e) { fb.disabled = false; if (!auto) line(e.message, true); });
+        };
+        fb.addEventListener('click', function () { tryBio(false); });
+        setTimeout(function () { tryBio(true); }, 0);
+      }
+      if (q.pin) {
+        if (q.bio) box.appendChild(el('p', 'lsub', 'или код'));
+        pad(function (v) {
+          return A.ql.byPin(v).then(function () { unlock(); }, function (e) {
+            if (/Пять неверных/.test(e.message)) return A.forget().then(function () { toast('Пять неверных кодов — войдите паролем'); location.reload(); });
+            return { bad: e.message };
+          });
+        }, q.pin.n || 4);
+      }
+      var pwb = b('Войти паролем', 'llink'); pwb.addEventListener('click', function () { pwStep(function (pw) { A.ql.get().then(function (x) { if (x && x.l === me.login) unlock(); else setup(pw); }); }); });
+      box.appendChild(pwb);
+    }
+    function pad(onFull, n) {
+      n = n || 4; var v = '', dots = el('div', 'ilock-dots'), grid = el('div', 'ilock-pad'), busyNow = false;
+      for (var k = 0; k < n; k++) dots.appendChild(el('i'));
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].forEach(function (d) {
+        var x = el('button'); x.type = 'button'; x.textContent = d; if (!d) x.style.visibility = 'hidden'; if (d === '⌫') { x.className = 't'; x.setAttribute('aria-label', 'Стереть'); }
+        x.addEventListener('click', function () { press(d); }); grid.appendChild(x);
+      });
+      function paint() { [].forEach.call(dots.children, function (c, j) { c.classList.toggle('on', j < v.length); }); }
+      function press(d) {
+        if (busyNow || !d) return;
+        if (d === '⌫') { v = v.slice(0, -1); return paint(); }
+        if (v.length >= n) return;
+        v += d; paint(); if (v.length < n) return;
+        busyNow = true; var val = v;
+        Promise.resolve(onFull(val)).then(function (r) {
+          busyNow = false; v = ''; paint();
+          if (r && r.bad) { line(r.bad, true); dots.classList.remove('bad'); void dots.offsetWidth; dots.classList.add('bad'); }
+          else if (r && r.clear) line('');
+        });
+      }
+      document.addEventListener('keydown', function kd(e) { if (!lockEl) return document.removeEventListener('keydown', kd); if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('⌫'); });
+      box.append(dots, grid); line('');
+    }
+    if (o.pw) return setup(o.pw);
+    A.ql.get().then(function (q) { if (q && q.l === me.login) lockStep(q); else pwStep(setup); }, function () { pwStep(setup); });
+  }
+  function noZoom() {
+    // iPhone/iPad: поле ввода не увеличивает страницу (масштаб пальцами остаётся — iOS его не запрещает)
+    try {
+      var ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var m = document.querySelector('meta[name=viewport]');
+      if (ios && m && !/maximum-scale/.test(m.content)) m.content += ',maximum-scale=1';
+    } catch (e) { }
+  }
+  function lockInit() {
+    noZoom();
+    try {
+      if (lockNeeded()) lockScreen(); else { document.documentElement.removeAttribute('data-lock'); if (signedIn()) lact(Date.now()); }
+    } catch (e) { document.documentElement.removeAttribute('data-lock'); }
+    if (signedIn() && !locked) linp(Date.now());
+    var lastW = 0;
+    function act() { var n = Date.now(); if (!locked && n - lastW > 5000) { lastW = n; linp(n); } }
+    ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (ev) { G.addEventListener(ev, act, { passive: true, capture: true }); });
+    setInterval(function () {
+      if (locked || !signedIn()) return;
+      if (Date.now() - linp() > IDLE_MS) return lockScreen();
+      if (document.visibilityState === 'visible') lact(Date.now());
+    }, 15000);
+    G.addEventListener('storage', function (e) {
+      if (e.key !== XKEY || !signedIn()) return;
+      if (e.newValue === '1' && !locked) lockScreen(); else if (!e.newValue && locked) unlock();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') { if (!locked && signedIn()) lact(Date.now()); }
+      else if (!locked && lockNeeded()) lockScreen();
+    });
+    G.addEventListener('pageshow', function (e) { if (e.persisted && !locked && lockNeeded()) lockScreen(); });
+  }
+  if (document.body) lockInit(); else document.addEventListener('DOMContentLoaded', lockInit);
   function relogin() { return A.forget().then(function () { try { G.dispatchEvent(new Event('t14acct')); } catch (e) { } account(); }); }
   function reloginBtn(cls) { var b = btn('Войти заново', cls == null ? 'pri' : cls); b.addEventListener('click', function () { relogin(); }); return b; }
   G.T14UI = { sheet: sheet, iphone: iphone, account: account, assistant: assistant, check: check, versions: versions, report: report, field: field, btn: btn, msg: msg, busy: busy, copyRow: copyRow, el: el, esc: esc, toast: toast,
-    expired: expired, expiredText: EXPIRED_TXT, relogin: relogin, reloginBtn: reloginBtn };
+    expired: expired, expiredText: EXPIRED_TXT, relogin: relogin, reloginBtn: reloginBtn, lock: lockScreen };
 })(window);

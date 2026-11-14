@@ -20,6 +20,7 @@ CATS = [('cards', 'Карточки предприятий (реквизиты)'
         ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
         # 14.11.2026: график ППР и ТО (Сотрудник1 А. В., 13.11) — «Производство → Оборудование»
         ('equip', 'Оборудование: графики ППР и ТО', '#ff9500', 'chart'),
+        ('objects', 'Объекты ФТС и ВиТ: ТЗ и новые изделия', '#30b0c7', 'form'),   # 14.11.2026: запросы заказчиков (ООО «Система ПБО» и др.) — разбор, план, замечания
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -29,6 +30,13 @@ INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rule
        ('regs-review', 'Реестр и замечания', '#ff3b30', 'review', 'Убранные дубли, вопросы, фирменный стиль'),
        ('econ', 'Цены и мощность', '#af52de', 'chart', 'Цены материалов, оснастка ГКИ, план объектов ВиТ')]
 ECON = _cg1_read_json('/home/claude/library/econ.json', encoding='utf-8') if os.path.exists('/home/claude/library/econ.json') else None   # docs_econ.py
+# 14.11.2026, Т. В.: «присваиваем документу сквозной номер и потом кладём на портал» — номер из реестра build/doc_numbers.json (docnum.py)
+import re as _re_num
+try: _NUM = {k: v['n'] for k, v in json.load(open('/home/claude/build/doc_numbers.json', encoding='utf-8'))['docs'].items()}
+except Exception: _NUM = {}
+for _i in L.get('items', []):
+    _k = _re_num.sub(r'\.(pdf|docx?|xlsx?|ods)$', '', _i.get('file', ''))
+    if _NUM.get(_k) and not _i.get('number'): _i['number'] = _NUM[_k]
 items = [dict(i, file='library/' + i['file'].replace('raw/', '', 1)) for i in L.get('items', []) if not i.get('hidden')]   # 02.11.2026: hidden — убрано с портала по решению Т. В. (файл остаётся)
 links = L.get('links', [])
 # how many sheets and documents the site pages have (for the rows «Чертежи» and «Архив»)
@@ -550,7 +558,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64_2 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_10 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -614,7 +622,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64_2 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_10 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';

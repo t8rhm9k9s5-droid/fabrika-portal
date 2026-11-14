@@ -59,6 +59,14 @@ if W:
                    'low': sum(1 for q in ON.get('prices') or [] if q.get('p') and q.get('r') and q['p'] < q['r'] * (1 - thr)),
                    'below': len(W.get('below') or []), 'noship': len(W.get('no_ship') or []),
                    'by_site': (W.get('by_site') or [])[:8], 'by_model': [[m[0], m[1]] for m in (W.get('by_model') or [])[:8]]}
+# 14.11.2026: весь Рунет по номенклатуре 1С (build/online/runet.json) — итог пульса берётся из него, ежедневный мониторинг остаётся в «В интернете»
+RN = J(B + '/online/runet.json') or {}
+if RN.get('offers'):
+    D.setdefault('online', {})
+    D['online'].update({'t': RN.get('t'), 'total': RN['offers'], 'sites': RN.get('sites_n'), 'checked': RN.get('models_found'), 'checked_of': RN.get('models_n'),
+                        'noship': sum(1 for x in RN.get('sites') or [] if x[1] == 'магазин'),
+                        'by_site': [[x[0], x[3]] for x in (RN.get('sites') or [])[:8]],
+                        'by_model': [[m[0], m[1]] for m in sorted(RN.get('models') or [], key=lambda m: -m[1])[:8]]})
 s = 'window.T14_PULSE_STATIC = ' + json.dumps(D, ensure_ascii=False, separators=(',', ':')) + ';\n'
 with open(OUT, 'w', encoding='utf-8') as f: f.write(s)
 print('pulse data', len(s), 'bytes:', ', '.join(k for k in D if k != 'built'))

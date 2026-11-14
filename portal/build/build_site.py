@@ -30,10 +30,10 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   ('razdel.html', '/home/claude/build/razdel_frag.html'),
                   ('poruch.html', '/home/claude/build/poruch_frag.html'),
                   # 14.11.2026, Т. В.: «по онлайн-продажам — раздел инфографики: промтами основные принципы её оформления»
-                  ('infografika.html', '/home/claude/build/infografika_frag.html')):
+                  ('infografika.html', '/home/claude/build/infografika_frag.html'), ('ppr.html', '/home/claude/build/ppr_frag.html')):
     frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
            'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — счётчики и откачка'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
@@ -204,6 +204,28 @@ except Exception as _e: print('план по менеджерам:', _e); _PM = 
 try: _PC = _cg1_read_json('/home/claude/build/poruch/meet_tasks.json', encoding='utf-8')
 except Exception: _PC = None
 if 'poruch.html' in frags: frags['poruch.html'] = frags['poruch.html'].replace('__PORUCH__', _js.dumps(_PC, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+# 14.11.2026, Т. В.: «документ смотрю в разделе, в архив не отправлять» — список документов по категориям для разделов (razdel.html):
+#   название, сквозной номер (build/doc_numbers.json), файл и PDF для просмотра на месте (сам PDF или копия <файл>.pdf)
+try:
+    _LJ2 = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
+    try: _NUM2 = {k: v['n'] for k, v in _cg1_read_json('/home/claude/build/doc_numbers.json', encoding='utf-8')['docs'].items()}
+    except Exception: _NUM2 = {}
+    _DI = {}
+    import re as _re_di
+    for _it in _LJ2.get('items', []):
+        if _it.get('hidden'): continue
+        _f = _it.get('file', ''); _web = 'library/' + _f.replace('raw/', '', 1)
+        _stem = _re_di.sub(r'\.(pdf|docx?|xlsx?|ods)$', '', _f)
+        if not _f.lower().endswith('.pdf') and any(_x.get('file') == _stem + '.pdf' for _x in _LJ2['items']): continue   # Word/Excel с готовым PDF — показываем PDF
+        _pdf = _web if _f.lower().endswith('.pdf') else (_web + '.pdf' if os.path.exists('/home/claude/library/' + _f + '.pdf') else '')
+        _DI.setdefault(_it.get('cat', 'other'), []).append([_re_di.sub(r'\s*\((PDF|Word|Excel)[^)]*\)\s*$', '', _it.get('title', '')), _NUM2.get(_stem, ''), _web, _pdf, str(_it.get('date') or '')[:10]])
+    for _k in _DI: _DI[_k].sort(key=lambda r: r[4], reverse=True)
+except Exception as _e: _DI = {}; print('docidx', _e)
+if 'razdel.html' in frags: frags['razdel.html'] = frags['razdel.html'].replace('__DOCIDX__', _js.dumps(_DI, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+# 14.11.2026, Т. В.: «Календарь ППР» — график ППР и ТО (build/ppr/ppr_data.json из fabrika/work/ppr/ppr_parse.py)
+try: _PPR = open('/home/claude/build/ppr/ppr_data.json', encoding='utf-8').read().replace('<', '\\u003c')
+except Exception: _PPR = '{}'
+if 'ppr.html' in frags: frags['ppr.html'] = frags['ppr.html'].replace('__PPR__', _PPR, 1)
 # 14.11.2026: «Инфографика» — принципы и промты (build/infografika/infografika.json)
 try: _IG = _cg1_read_json('/home/claude/build/infografika/infografika.json', encoding='utf-8')
 except Exception: _IG = {}
@@ -226,6 +248,10 @@ except Exception as _e: print('онлайн-продажи:', _e); _ON = None
 try:
     if _ON is not None: _ON.update(_cg1_read_json('/home/claude/build/online/comp.json', encoding='utf-8'))
 except Exception as _e: print('конкуренты:', _e)
+# 14.11.2026, Т. В.: «файл со всеми артикулами… проверить весь Рунет и показать всех продавцов» — build/online/runet.json (work/online_watch/rn, поиск Google по номенклатуре 1С)
+try:
+    if _ON is not None: _ON['runet'] = _cg1_read_json('/home/claude/build/online/runet.json', encoding='utf-8')
+except Exception as _e: print('рунет:', _e)
 frags['sales.html'] = frags['sales.html'].replace('__ONLINE__', _js.dumps(_ON, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 13.11.2026: «Главная» — шестая карточка «Онлайн · наши модели» (сводка мониторинга сайтов)
 try:
@@ -317,6 +343,8 @@ try:
 except Exception as _e:
     print('автопарк для «Транспорта»:', _e); _FL = None
 assert frags['transport.html'].count('__FLEET__') == 1
+# 14.11.2026: ремонты, ТО и затраты на транспорт (build/transport/repairs.json ← письма security@/auto@ на 1c@)
+frags['transport.html'] = frags['transport.html'].replace('__REPAIRS__', _js.dumps(_cg1_read_json('/home/claude/build/transport/repairs.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['transport.html'] = frags['transport.html'].replace('__FLEET__', _js.dumps(_FL, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__SALES__', _sj).replace('<script src="assets/edits.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/edits.js"></script>', 1)
 # quality by the strength of the device (26.10.2026): assets/perf.js — in the model (gen_app.py) and on the plan
@@ -349,7 +377,16 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           "function g(k){try{return localStorage.getItem(k)}catch(e){return null}}"
           "var t=g('t14.theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);"
           # 14.11.2026: оформление «V22» на просмотр — ?skin=v22 включает (запоминается), ?skin=classic выключает
-          "var sp=/[?&]skin=(v22|classic)/.exec(location.search);if(sp){try{localStorage.setItem('t14.skin',sp[1])}catch(e){}}if((sp?sp[1]:g('t14.skin'))==='v22')d.setAttribute('data-skin','v22');"
+          # 14.11.2026, Т. В. (опрос «V22 — пока только мне»; «на компьютере ничего не включено»): выбор вида хранился на одном устройстве —
+          #   теперь владельцу (вход GL_OWNER_ID) V22 по умолчанию на всех устройствах; явный выбор «Классика» на устройстве — сильнее
+          "var sp=/[?&]skin=(v22|classic)/.exec(location.search);if(sp){try{localStorage.setItem('t14.skin',sp[1])}catch(e){}}"
+          # 14.11.2026 ~08:10, Т. В.: «обновлённый дизайн — включаю для всех»: V22 по умолчанию у всех; «Классика» на устройстве — по выбору
+          "var sk=sp?sp[1]:g('t14.skin');if(!sk)sk='v22';"
+          "if(sk==='v22')d.setAttribute('data-skin','v22');"
+          # 14.11.2026, Т. В.: «каждый вход на портал — через Face ID, где его нет — код из 4 цифр». Личный вход и перерыв больше минуты —
+          #   страница скрыта до отрисовки, замок (assets/acct.js, lockScreen) открывает её после Face ID / кода.
+          "try{var lm=JSON.parse(g('t14.me')||'null');if(lm&&g('t14.tok')&&lm.st!=='pending'&&(g('t14.locked')==='1'||Date.now()-(+g('t14.lact')||0)>6e4||Date.now()-(+g('t14.linp')||Date.now())>6e5)){d.setAttribute('data-lock','1');"
+          "var ls=document.createElement('style');ls.id='t14lock-early';ls.textContent='html[data-lock] body{visibility:hidden}html[data-lock] body .ilock{visibility:visible}';document.head.appendChild(ls)}}catch(e){}"
           "d.setAttribute('data-plat',/Android/i.test(u)?'android':(/iPhone|iPad|iPod/.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))?'ios':'desk');"
           "var c=g('t14.power');if(!c){var f=g('t14.fx');c=f==='lite'?'eco':f==='full'?'max':'auto'}"
           "if(c==='eco'||c==='max')L=c;else{try{var m=JSON.parse(g('t14.dev')||'null');if(m&&m.ua===u&&m.base&&Date.now()-(m.t||0)<2592e6)L=m.base}catch(e){}"

@@ -17,6 +17,34 @@
     return BIN[nm];
   }
   function again() { if (CUR) try { draw(CUR[0], CUR[1]); } catch (e) { } }
+  // 14.11.2026, Т. В.: «пульс раздела «Логистика» пустой — если я зашёл и доступ есть, прогрузи сразу; не хочу ходить в «Машины / ГЛОНАСС»,
+  //   чтобы увидеть пробег». ГЛОНАСС отдаёт только скрипт бота владельцу (или тому, кого он пустил) — тот же запрос, что на странице
+  //   «Транспорт» (T14Acct.api('gl')). Для пульса на устройстве хранится только сводка (машины, км по дням, число расхождений СКУД) — следующий
+  //   вход показывает её сразу, свежая приходит следом.
+  var GLQ = false, GLC;
+  function glOk() {
+    var A = window.T14Acct; if (!A || !A.tok || !A.tok()) return false;
+    var p = A.me && A.me(); if (!p || p.st === 'pending') return false;
+    if (p.id === 'REDACTED_HEX_1') return true;
+    try { var f = JSON.parse(localStorage.getItem('t14.gl') || 'null'); return !!(f && f.id === p.id); } catch (e) { return false; }
+  }
+  function glSum(G) {
+    var dk = G.day ? Object.keys(G.day).sort().slice(-12) : [], day = {};
+    dk.forEach(function (d) { day[d] = (G.day[d] || []).map(function (r) { return { id: r.id, km: r.km || 0 }; }); });
+    var sk = G.skud && G.skud.rows ? { month: G.skud.month || '', rows: G.skud.rows.map(function (r) { return { fails: r.fails ? 1 : 0, bad: r.bad ? 1 : 0 }; }) } : null;
+    return { t: G.t || '', cars: (G.cars || []).map(function (c) { return { id: c.id, name: c.name, vrn: c.vrn }; }), day: day, skud: sk };
+  }
+  function glData() {
+    if (!glOk()) return null;
+    if (GLC === undefined) { GLC = null; try { GLC = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); } catch (e) { } }
+    if (!GLQ) {
+      GLQ = true;
+      T14Acct.api('gl', { tok: T14Acct.tok(), fresh: 0 }).then(function (r) {
+        if (!r || !r.gl) return; GLC = glSum(r.gl); try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
+      }, function () { });
+    }
+    return GLC;
+  }
   var MSK = function () { return new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); };
   // карточка: [заголовок, цвет, значение, единица, подпись, % полосы | null, ссылка]
   function K(t, c, v, u, s, p, h) { return [t, c, v, u, s, p, h]; }
@@ -83,7 +111,7 @@
       return [k, [b1, b2]];
     },
     log: function () {                                     // 13.11.2026, Т. В.: «логистика — только автотранспорт, перемещение грузов, свой транспорт; отгрузки — продажи»
-      var G = bin('gl.bin');
+      var G = glData() || bin('gl.bin');
       var cars = G && G.cars || [], nm = {}; cars.forEach(function (c) { nm[c.id] = c.name + (c.vrn ? ' ' + c.vrn.split(' ').slice(0, 2).join(' ') : ''); });
       var dk = G && G.day ? Object.keys(G.day).sort() : [], yd = dk.length > 1 ? dk[dk.length - 2] : dk[0], rows = yd ? (G.day[yd] || []) : [];
       var km = rows.reduce(function (a, r) { return a + (r.km || 0); }, 0), moving = rows.filter(function (r) { return (r.km || 0) > 1; }).length;
@@ -105,10 +133,10 @@
       var rv = R.v != null ? d1(R.v) : '—';
       var k = [K('Предложений в Рунете', C.b, O.total != null ? n(O.total) : '—', '', O.t ? 'наши модели · на ' + dd(O.t) : 'мониторинг сайтов ещё не собран', null, 'sales.html#online'),
         K('Сайтов-продавцов', C.i, O.sites != null ? n(O.sites) : '—', '', 'маркетплейсы и интернет-магазины', null, 'sales.html#online'),
-        K('Проверено моделей', C.g, O.checked != null ? n(O.checked) : '—', '', 'поиск по названию, штрихкоду и фото', null, 'sales.html#online'),
+        K('Найдено моделей', C.g, O.checked != null ? n(O.checked) : '—', O.checked_of ? 'из ' + n(O.checked_of) : '', 'вся номенклатура 1С: название и штрихкод', null, 'sales.html#online'),
         K('Ниже РРЦ', C.r, O.below != null ? n(O.below) : '—', 'предлож.', O.low != null ? 'у партнёров ниже РРЦ больше чем на 10 % — ' + O.low : '', null, 'sales.html#online'),
         K('Отзывы Ozon', C.y, rv, R.v != null ? 'из 5' : '', R.date ? 'средняя оценка · на ' + dd(R.date) : (R.src || 'отзывы ещё не пришли'), R.v != null ? R.v / 5 * 100 : null, 'sales.html#rev'),
-        K('Без наших отгрузок', C.o, O.noship != null ? n(O.noship) : '—', '', 'товар продаётся, а отгрузок этому продавцу нет', null, 'sales.html#online')];
+        K('Магазины — не клиенты', C.o, O.noship != null ? n(O.noship) : '—', 'сайтов', 'продают наше, но покупают не у нас напрямую', null, 'sales.html#online')];
       var bs = O.by_site || [], ms = bs.length ? bs[0][1] : 1, bm = O.by_model || [], mm = bm.length ? bm[0][1] : 1;
       var b1 = ['Предложения по сайтам', 'сколько наших позиций продаёт сайт · на ' + dd(O.t), 'hbars', bs.map(function (x) { return [x[0], x[1] / ms * 100, C.b, n(x[1])]; }), null];
       var b2 = ['Предложения по моделям', 'на скольких сайтах продаётся модель', 'hbars', bm.map(function (x) { return [x[0], x[1] / mm * 100, C.i, n(x[1])]; }), null];
@@ -116,7 +144,11 @@
     },
     fin: function () {
       var S = M('sales') || {}, P = ST.planm || {}, T = P.tot || {}, R = M('stockRz') || {}, Q = M('recl') || {}, H = ST.ship || {};
-      var k = [K('Выручка месяца', C.o, S.v != null ? mln(S.v) : '—', 'млн ₽', S.when || S.card || '', null, 'sales.html#s-s1c'),
+      // 14.11.2026, Т. В.: «выручка 0,3 млн — это что такое?» — пока свежие продажи с хостинга не пришли, бралась сборка с одним днём месяца.
+      //   Теперь: без свежих данных — «обновляю», а не неполная цифра; подпись — за какой месяц и по какой день.
+      var MN = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+      var sOk = S.v != null && (S.live || !window.T14Live);
+      var k = [K('Продажи за ' + (S.m ? MN[S.m - 1] : 'месяц'), C.o, sOk ? mln(S.v) : '—', 'млн ₽', sOk ? (S.when || '') + ' · 1С' : 'обновляю данные 1С…', null, 'sales.html#s-s1c'),
         K('Прошлый месяц', C.b, S.prev ? mln(S.prev.v) : '—', 'млн ₽', 'итог по 1С', null, 'sales.html#s-s1c'),
         K('План менеджеров', C.g, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽' : '', T.pct, 'sales.html#planm'),
         K('Склад Рязань, ₽', C.v, R.rub ? mln(R.rub) : '—', 'млн ₽', R.date ? 'на ' + dd(R.date) : '', null, 'stock.html'),

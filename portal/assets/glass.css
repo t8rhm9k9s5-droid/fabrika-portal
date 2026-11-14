@@ -291,3 +291,13 @@ html.t14-intro .pz-hb .tr b,html.t14-intro .pz-k .bar b,html.t14-intro .fb-m .fb
 .fav-empty-i{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(255,159,10,.14);color:#ff9f0a;margin-bottom:6px}
 .fav-empty-i svg{width:28px;height:28px;fill:currentColor}
 @media (min-width:701px) and (max-width:1279px){.pside .plogo svg{filter:brightness(0) invert(1)}}
+/* 14.11.2026, Т. В.: «окно алерта 2 раза отрисовано красной тонкой линией, и так на многих окнах» — одна рамка (border), без второго кольца снаружи
+   и без светлой внутренней полоски; свечение тревоги — мягкое, без контура */
+.al-n.al-crit::before{box-shadow:0 0 24px 4px rgba(255,59,48,.30)!important;border-radius:inherit}
+.t14al .al-card.gl,.al-tile.gl{box-shadow:none!important}
+html body .rz-map a.al-on-crit,html body .fhome .fh-secs .fs.al-on-crit,html body .pz-k a.gl.al-on-crit{box-shadow:0 12px 30px rgba(255,59,48,.14)!important}
+html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html body .pz-k a.gl.al-on-warn{box-shadow:0 12px 30px rgba(255,149,0,.12)!important}
+/* 14.11.2026: «×» тревоги — по центру без transform (в режиме «облегчённых эффектов» skin_v22 снимает все transform, и крестик съезжал вниз за край) */
+.al-x,.al-x:focus-visible{top:0!important;bottom:0!important;margin:auto 0!important;transform:none!important}
+.al-tile .al-x{top:16px!important;bottom:auto!important;margin:0!important}
+@media (max-width:900px){.al-tile .al-x{top:0!important;bottom:0!important;margin:auto 0!important}}

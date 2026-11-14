@@ -1,0 +1,97 @@
+<title>Фабрика — календарь ППР</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* «Календарь ППР» (Производство → Оборудование) — 14.11.2026, Т. В.: «незнакомый документ — проанализировать… сделать календарь на портале
+   с ППР и уведомления ответственным». Данные — график ППР и ТО (build/ppr/ppr_data.json, вшиваются при сборке): месяц → участки →
+   оборудование → мероприятия, кто делает и сколько часов; электрооборудование (осмотр/ремонт и простой). Ежесменные и ежедневные
+   проверки операторов — отдельной вкладкой (это чек-лист у станка, не план ремонтной службы). */
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+.lead{color:var(--ios-2);margin:4px 0 0;font-size:15px;max-width:72ch}
+.pp-st{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:12px 14px;border-radius:14px;background:rgba(255,159,10,.12);color:var(--ios-label);font-size:14px}
+.pp-st b{color:#a35a00}
+.pp-mon{display:flex;gap:6px;overflow-x:auto;margin:16px 0 4px;padding:2px 0 6px;scrollbar-width:none}
+.pp-mon::-webkit-scrollbar{display:none}
+.pp-mon button{flex:none;border:0;border-radius:999px;padding:7px 13px;font:500 14px var(--f-body);background:var(--ios-fill);color:var(--ios-label);cursor:pointer}
+.pp-mon button[aria-pressed=true]{background:var(--ios-blue);color:#fff}
+.pp-seg{display:inline-flex;background:var(--ios-fill);border-radius:10px;padding:2px;margin:8px 0}
+.pp-seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font:500 13.5px var(--f-body);color:var(--ios-label);cursor:pointer}
+.pp-seg button[aria-pressed=true]{background:var(--ios-group);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pp-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin:10px 0 4px}
+.pp-k div{background:var(--ios-group);border-radius:14px;padding:11px 13px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.pp-k b{display:block;font:600 22px/1.15 var(--f-body);color:var(--ios-label)}
+.pp-k span{font-size:12.5px;color:var(--ios-2)}
+.pp-h{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:20px 2px 8px}
+.pp-sec{background:var(--ios-group);border-radius:16px;box-shadow:0 0 0 .5px var(--ios-sep);margin-bottom:10px;overflow:hidden}
+.pp-sec>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;gap:10px;align-items:center}
+.pp-sec>summary::-webkit-details-marker{display:none}
+.pp-sec>summary b{flex:1;min-width:0;font:600 15px var(--f-body);color:var(--ios-label)}
+.pp-sec>summary small{color:var(--ios-2);font-size:13px;white-space:nowrap}
+.pp-eq{padding:4px 16px 10px}
+.pp-eq h4{margin:10px 0 4px;font:600 14px var(--f-body);color:var(--ios-label)}
+.pp-a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:7px 0;border-top:.5px solid var(--ios-sep);font-size:14px}
+.pp-a:first-of-type{border-top:0}
+.pp-a span{color:var(--ios-label)}
+.pp-a small{color:var(--ios-2);font-size:12.5px;text-align:right;white-space:nowrap}
+.pp-a em{grid-column:1/-1;font-style:normal;color:var(--ios-2);font-size:12.5px}
+.pp-docs{display:grid;gap:8px;margin-top:6px}
+.pp-docs a{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--ios-group);border-radius:14px;padding:12px 14px;color:var(--ios-label);text-decoration:none;box-shadow:0 0 0 .5px var(--ios-sep)}
+.pp-docs a small{color:var(--ios-2)}
+.pfoot{color:var(--ios-2);font-size:12.5px;margin:16px 2px 0;max-width:80ch}
+</style>
+<main class="ios" id="ppr">
+  <a class="back" href="razdel.html#prod">Производство</a>
+  <h1>Календарь ППР</h1>
+  <p class="lead">Планово-предупредительный ремонт и ТО оборудования: что по плану в выбранном месяце — по участкам, оборудованию и исполнителям.</p>
+  <div id="ppView"></div>
+</main>
+<script id="ppr-data" type="application/json">__PPR__</script>
+<script>
+(function () {
+  'use strict';
+  var D = {}; try { D = JSON.parse(document.getElementById('ppr-data').textContent); } catch (e) { D = {}; }
+  var V = document.getElementById('ppView'), MN = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  var now = new Date(Date.now() + 3 * 3600e3), M = now.getUTCMonth(), MODE = 'plan';
+  try { var h = /m=(\d+)/.exec(location.hash); if (h) M = Math.max(0, Math.min(11, +h[1] - 1)); } catch (e) { }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n(x) { return String(Math.round(x * 10) / 10).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function rowsFor(m, mode) { return (D.rows || []).filter(function (r) { return mode === 'ops' ? /[SDW]/.test(r[7]) : r[4][m] > 0 && !/[SDW]/.test(r[7]); }); }
+  function draw() {
+    var R = rowsFor(M, MODE), h = '';
+    h += '<div class="pp-st"><span>⚠️</span><span><b>Статус графика:</b> ' + esc(D.status || '') + '. Календарь построен по нему, пока нет утверждённого.</span></div>';
+    h += '<div class="pp-mon" role="tablist">' + MN.map(function (x, i) { return '<button type="button" data-m="' + i + '" aria-pressed="' + (i === M) + '">' + x + '</button>'; }).join('') + '</div>';
+    h += '<div class="pp-seg"><button type="button" data-mode="plan" aria-pressed="' + (MODE === 'plan') + '">Работы ремслужбы</button><button type="button" data-mode="el" aria-pressed="' + (MODE === 'el') + '">Электрооборудование</button><button type="button" data-mode="ops" aria-pressed="' + (MODE === 'ops') + '">Операторы у станка</button></div>';
+    if (MODE === 'el') {
+      var E = (D.el || []).filter(function (e) { return e[4][M]; }), dn = E.reduce(function (a, e) { return a + (e[4][M][1] || 0); }, 0);
+      h += '<div class="pp-k"><div><b>' + E.length + '</b><span>единиц в работе</span></div><div><b>' + E.filter(function (e) { return e[4][M][0] === 'Т'; }).length + '</b><span>текущих ремонтов</span></div><div><b>' + n(dn) + ' ч</b><span>простой в ремонте</span></div></div>';
+      h += '<div class="pp-sec" style="padding:4px 16px 10px">' + (E.length ? E.map(function (e) { var p = e[4][M]; return '<div class="pp-a"><span>' + esc(e[0]) + '</span><small>' + (p[0] === 'Т' ? 'текущий ремонт' : p[0] === 'К' ? 'капитальный' : 'осмотр') + ' · ' + n(p[1]) + ' ч</small>' + (e[3] ? '<em>последний ремонт ' + esc(e[3]) + ' · ресурс ' + n(e[1]) + ' ч</em>' : '') + '</div>'; }).join('') : '<p class="lead">В этом месяце по электрооборудованию ничего не запланировано.</p>') + '</div>';
+    } else {
+      var hrs = R.reduce(function (a, r) { return a + (MODE === 'ops' ? 0 : r[4][M] * (r[5] || 0)); }, 0), eqs = {}, who = {};
+      R.forEach(function (r) { eqs[r[1]] = 1; if (MODE !== 'ops') who[r[6] || '—'] = (who[r[6] || '—'] || 0) + r[4][M] * (r[5] || 0); });
+      h += '<div class="pp-k"><div><b>' + R.length + '</b><span>' + (MODE === 'ops' ? 'проверок операторов' : 'мероприятий в ' + MN[M].toLowerCase().replace(/ь$/, 'е').replace(/й$/, 'е')) + '</span></div><div><b>' + Object.keys(eqs).length + '</b><span>единиц оборудования</span></div>' +
+        (MODE === 'ops' ? '' : '<div><b>' + n(hrs) + ' ч</b><span>трудоёмкость, где указана</span></div>') + '</div>';
+      if (MODE !== 'ops') h += '<p class="pp-h">Кто делает · часов в месяце</p><div class="pp-sec" style="padding:4px 16px 10px">' + Object.keys(who).sort(function (a, b) { return who[b] - who[a]; }).map(function (w) { return '<div class="pp-a"><span>' + esc(w) + '</span><small>' + n(who[w]) + ' ч</small></div>'; }).join('') + '</div>';
+      var S = {}; R.forEach(function (r) { (S[r[0]] = S[r[0]] || []).push(r); });
+      h += '<p class="pp-h">По участкам</p>' + Object.keys(S).map(function (s) {
+        var L = S[s], E = {}; L.forEach(function (r) { (E[r[1]] = E[r[1]] || []).push(r); });
+        return '<details class="pp-sec"><summary><b>' + esc(s || 'Без участка') + '</b><small>' + L.length + ' мероприятий</small></summary><div class="pp-eq">' + Object.keys(E).map(function (e) {
+          return '<h4>' + esc(e) + '</h4>' + E[e].map(function (r) { return '<div class="pp-a"><span>' + esc(r[2]) + '</span><small>' + (MODE === 'ops' ? esc(r[3]) : (r[4][M] > 1 ? r[4][M] + ' раза · ' : '') + (r[5] ? n(r[5]) + ' ч' : 'часы не указаны')) + '</small><em>' + esc(r[6] || 'исполнитель не указан') + (MODE === 'ops' ? '' : ' · периодичность: ' + esc(r[3] || 'не указана')) + '</em></div>'; }).join('');
+        }).join('') + '</div></details>';
+      }).join('');
+    }
+    h += '<p class="pp-h">Документы</p><div class="pp-docs">' + [D.doc, D.src].filter(Boolean).map(function (d) { return '<a href="' + esc(d.href) + '" data-pdf="1" data-t="' + esc(d.t) + '"><span>' + esc(d.t) + '</span><small>' + esc(d.n || '') + '</small></a>'; }).join('') + '</div>';
+    h += '<p class="pfoot">Отметки «сделано» и напоминания исполнителям — через бота MAX: в начале месяца список работ, в середине — что не отмечено.</p>';
+    V.innerHTML = h;
+    var sel = V.querySelector('.pp-mon button[aria-pressed=true]'); if (sel) { var mr = V.querySelector('.pp-mon'); mr.scrollLeft = sel.offsetLeft - (mr.clientWidth - sel.offsetWidth) / 2; }
+  }
+  V.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-m]'); if (b) { M = +b.getAttribute('data-m'); try { history.replaceState(history.state, '', '#m=' + (M + 1)); } catch (x) { } draw(); return; }
+    var s = e.target.closest('button[data-mode]'); if (s) { MODE = s.getAttribute('data-mode'); draw(); }
+  });
+  draw();
+})();
+</script>

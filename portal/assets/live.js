@@ -80,9 +80,23 @@
   var FRESH = 120000, STALE = 600000;
   function cget(name) { try { var v = sessionStorage.getItem('t14b.' + name); if (!v) return null; var i = v.indexOf('|'); return { at: +v.slice(0, i), t: v.slice(i + 1) }; } catch (e) { return null; } }
   function cput(name, txt) { try { sessionStorage.setItem('t14b.' + name, Date.now() + '|' + txt); } catch (e) { try { sessionStorage.removeItem('t14b.' + name); } catch (x) { } } }
+  // 14.11.2026, Т. В.: «если я зашёл на портал, он должен быть уже прогружен по максимуму — не хочу ждать загрузки; раздел пустой, потом
+  //   прогрузился». Зашифрованный текст файлов (тот же, что на хостинге; расшифровать можно только внутри сайта) держим ещё и в хранилище
+  //   браузера (Cache Storage) — между запусками приложения: страница сразу рисует последнее, что было, и тут же скачивает свежее
+  //   (другой файл → «t14bin» / «t14live», страница перерисовывается). При входе на портал все файлы разделов подкачиваются заранее (prefetch).
+  var PC = 't14bin-v1';
+  function pget(name) {
+    try { if (!window.caches) return Promise.resolve(null);
+      return caches.open(PC).then(function (c) { return c.match('/__t14bin/' + name); })
+        .then(function (r) { return r ? r.text().then(function (t) { return { at: +(r.headers.get('x-at') || 0), t: t }; }) : null; }).catch(function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+  function pput(name, txt) {
+    try { if (window.caches) caches.open(PC).then(function (c) { return c.put('/__t14bin/' + name, new Response(txt, { headers: { 'x-at': String(Date.now()), 'content-type': 'text/plain' } })); }).catch(function () { }); } catch (e) { }
+  }
   function net(name) {
     return fetch('st/' + name + '?m=' + Math.floor(Date.now() / FRESH), { cache: 'no-store', credentials: 'same-origin' })
-      .then(function (r) { return r.ok ? r.text() : null; }).then(function (t) { if (t && t.indexOf('T14B1.') === 0) cput(name, t); return t; });
+      .then(function (r) { return r.ok ? r.text() : null; }).then(function (t) { if (t && t.indexOf('T14B1.') === 0) { cput(name, t); pput(name, t); } return t; });
   }
   function get(name, onNew) {                    // → Promise<данные | null>; onNew(данные) — если после быстрого показа пришёл другой файл
     var c = cget(name), age = c ? Date.now() - c.at : 1e12;
@@ -92,8 +106,33 @@
       net(name).then(function (t) { if (t && t !== c.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
       return shown;
     }
-    return net(name).then(open);
+    return pget(name).then(function (pc) {        // во вкладке нет — из хранилища браузера: показать сразу, свежий — следом
+      if (!pc || !pc.t || pc.t.indexOf('T14B1.') !== 0) return net(name).then(open);
+      try { sessionStorage.setItem('t14b.' + name, pc.at + '|' + pc.t); } catch (e) { }
+      var shown = Promise.resolve(open(pc.t)).catch(function () { return null; });
+      if (Date.now() - pc.at >= FRESH) net(name).then(function (t) { if (t && t !== pc.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
+      return shown.then(function (d) { return d || net(name).then(open); });
+    });
   }
+  // все файлы разделов — заранее, в фоне, после отрисовки страницы (не чаще раза в 5 минут; по одному, чтобы не мешать странице)
+  var ALL = ['ls.bin', 'sales.bin', 'pf.bin', 'omts.bin', 'recl.bin', 'oz.bin', 'ozrev.bin', 'ozh.bin', 'ozd.bin', 'promises.bin', 'smv.bin', 'smvs.bin',
+    'leads.bin', 'docs.bin', 'tz1c.bin', 'svc.bin', 'staff.bin', 'pub.bin', 'poruch.bin', 'mps.bin'];
+  function prefetch() {
+    if (window.__T14_FILE || location.protocol === 'file:') return;
+    var last = 0; try { last = +(localStorage.getItem('t14.pref') || 0); localStorage.setItem('t14.pref', String(Date.now())); } catch (e) { }
+    if (Date.now() - last < 300000) return;
+    var i = 0;
+    (function next() {
+      if (i >= ALL.length) return;
+      var nm = ALL[i++], c = cget(nm);
+      if (c && Date.now() - c.at < FRESH) return next();
+      net(nm).catch(function () { }).then(function () { setTimeout(next, 150); });
+    })();
+  }
+  try {
+    var kick = function () { (window.requestIdleCallback || function (f) { return setTimeout(f, 1200); })(prefetch, { timeout: 4000 }); };
+    if (document.readyState === 'complete') kick(); else window.addEventListener('load', kick);
+  } catch (e) { }
   // 01.11.2026 (внешняя проверка кода, замечание 08): страница, открытая весь день, показывала утренние цифры — файл запоминался навсегда,
   //   неудачная загрузка (null) тоже. Теперь: неудача не запоминается (следующий вызов пробует снова); каждые 10 минут и при возврате
   //   на вкладку запрошенные страницей файлы перекачиваются, другой файл → события «t14live» / «t14bin» (хабы и главная перерисовываются).
@@ -120,6 +159,7 @@
   } catch (e) { }
   window.T14Live = {
     refresh: refresh,
+    prefetch: prefetch,
     load: function () {
       if (P) return P;
       if (window.__T14_FILE || location.protocol === 'file:') return (P = Promise.resolve(null));     // the offline copy has no hosting
