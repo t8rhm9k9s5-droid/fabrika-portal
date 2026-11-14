@@ -177,7 +177,16 @@
   }
   function qlGet() { return kvGet('ql').then(function (q) { return q && q.v === 1 && (q.pin || q.bio) ? q : null; }, function () { return null; }); }
   function qlOff() { try { localStorage.removeItem('t14.qlx'); } catch (e) { /* */ } return kvSet('ql', null).catch(function () { }); }
-  function bioName() { var u = navigator.userAgent || ''; return /iPhone|iPad|iPod/.test(u) ? 'Face ID' : /Macintosh/.test(u) ? 'Touch ID' : /Android/.test(u) ? 'отпечаток пальца' : /Windows/.test(u) ? 'Windows Hello' : 'Face ID / отпечаток'; }
+  // 14.11.2026, Т. В.: «не у всех есть Face ID… у каждого устройства называется по-своему, на компьютере — Windows Hello» — имя по устройству
+  function bioName() {
+    var u = navigator.userAgent || '', mx = Math.max(screen.width || 0, screen.height || 0), touchMac = /Macintosh/.test(u) && navigator.maxTouchPoints > 1;
+    if (/iPhone|iPod/.test(u)) return mx >= 812 ? 'Face ID' : 'Touch ID';
+    if (/iPad/.test(u) || touchMac) return 'Face ID или Touch ID';
+    if (/Macintosh/.test(u)) return 'Touch ID';
+    if (/Windows/.test(u)) return 'Windows Hello';
+    if (/Android/.test(u)) return 'отпечаток или разблокировку экрана';
+    return 'биометрию устройства';
+  }
   function bioOk() {
     var P = G.PublicKeyCredential;
     return P && P.isUserVerifyingPlatformAuthenticatorAvailable && navigator.credentials ? P.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; }) : Promise.resolve(false);
@@ -445,18 +454,31 @@
     function qlStatus() {
       return A.ql.get().then(function (q) {
         q = q && q.l === p.login ? q : null;
-        qs.textContent = q ? 'Каждый вход на портал здесь — по ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'коду из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' или ') + '. Пароль хранится только на этом устройстве, в зашифрованном виде.'
-          : 'Не настроен — при следующем входе портал попросит пароль и ' + A.ql.bioName() + ' или код из 4 цифр.';
+        qs.textContent = q ? 'Каждый вход на портал здесь — по ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'PIN-коду из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' или ') + '. Пароль хранится только на этом устройстве, в зашифрованном виде.'
+          : 'Не настроен — при следующем входе портал попросит личный пароль, затем вход по биометрии устройства или PIN-коду.';
         return q;
       });
     }
-    // 14.11.2026, Т. В.: вход по Face ID / коду обязателен — выключить нельзя, можно сменить способ (пароль → Face ID или код)
+    // 14.11.2026, Т. В.: «галочка «Использовать PIN-код»; иначе Touch ID / Face ID / Windows Hello, если есть на устройстве; если нет ни
+    //   того, ни другого — PIN-код. Блокировка через 1 минуту». Вход по биометрии или PIN обязателен; смена способа — один раз личный пароль.
     function qlPaint() {
       [].slice.call(qf.querySelectorAll('.qlx')).forEach(function (n) { n.remove(); });
-      qlStatus().then(function () {
-        var ch = btn('Сменить способ входа', 'qlx');
-        ch.addEventListener('click', function () { A.ql.off().then(function () { s.close(); lockScreen(); }); });
-        qf.appendChild(ch);
+      Promise.all([qlStatus(), A.ql.bioOk()]).then(function (x) {
+        var q = x[0], bio = x[1], pinPref = lsGet('t14.qlpin') === '1' || !bio;
+        var row = el('label', 'igroup qlx'); row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;margin:8px 0 0;cursor:pointer';
+        var t = el('span'); t.style.flex = '1'; t.innerHTML = '<b style="font-weight:500">Использовать PIN-код</b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px"></small>';
+        t.querySelector('small').textContent = bio ? (pinPref ? 'Вход по PIN-коду вместо ' + A.ql.bioName() : 'Выключено — вход по ' + A.ql.bioName()) : 'На этом устройстве нет входа по биометрии — только PIN-код';
+        var cb = el('input'); cb.type = 'checkbox'; cb.checked = pinPref; cb.disabled = !bio; cb.setAttribute('role', 'switch');
+        cb.style.cssText = 'appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;position:relative;cursor:pointer;flex:none;transition:background .2s;background:' + (pinPref ? '#34c759' : 'rgba(120,120,128,.32)') + (bio ? '' : ';opacity:.5');
+        var knob = function () { cb.style.boxShadow = 'inset ' + (cb.checked ? '20px' : '0') + ' 0 0 0 transparent'; };
+        cb.style.backgroundImage = 'radial-gradient(circle 13.5px at ' + (pinPref ? '35.5px' : '15.5px') + ' 50%, #fff 96%, transparent 100%)'; knob();
+        cb.addEventListener('change', function () {
+          lsSet('t14.qlpin', cb.checked ? '1' : null);
+          A.ql.off().then(function () { s.close(); lockScreen({ pinOnly: cb.checked }); });
+        });
+        row.append(t, cb); qf.appendChild(row);
+        var lk = el('p', 'ifoot qlx'); lk.textContent = 'Блокировка через 1 минуту, если портал свёрнут или закрыт, и через 10 минут без действий на открытом экране.'; qf.appendChild(lk);
+        return q;
       });
     }
     qlPaint();
@@ -628,7 +650,7 @@
     // 2) настройка: Face ID / Touch ID, где есть; иначе код из 4 цифр
     function setup(pw) {
       A.ql.bioOk().then(function (bio) {
-        if (bio && !o.pinOnly) {
+        if (bio && !o.pinOnly && lsGet('t14.qlpin') !== '1') {
           head('Вход по ' + A.ql.bioName(), 'Каждый вход на портал на этом устройстве — по ' + A.ql.bioName() + '. Пароль не понадобится.');
           var go = b('Включить ' + A.ql.bioName()); box.appendChild(go); line('');
           go.addEventListener('click', function () {
@@ -636,11 +658,11 @@
             A.ql.setBio(me.login, me.name, pw).then(function () { toast(A.ql.bioName() + ' включён'); unlock(); },
               function (e) { go.disabled = false; go.textContent = 'Включить ' + A.ql.bioName(); line(e.message + ' Можно задать код из 4 цифр.', true); alt.hidden = false; });
           });
-          var alt = b('Код из 4 цифр вместо ' + A.ql.bioName(), 'llink'); alt.hidden = true; alt.addEventListener('click', function () { o.pinOnly = true; setup(pw); }); box.appendChild(alt);
+          var alt = b('PIN-код из 4 цифр вместо ' + A.ql.bioName(), 'llink'); alt.hidden = true; alt.addEventListener('click', function () { o.pinOnly = true; setup(pw); }); box.appendChild(alt);
           return;
         }
         var a = '';
-        head('Код для входа', (bio ? '' : 'На этом устройстве нет Face ID и Touch ID. ') + 'Придумайте код из 4 цифр — он нужен при каждом входе на портал.');
+        head('PIN-код для входа', (bio ? '' : 'На этом устройстве нет входа по биометрии. ') + 'Придумайте PIN-код из 4 цифр — он нужен при каждом входе на портал.');
         pad(function (v) {
           if (!a) {
             if (/^(\d)\1+$/.test(v) || '01234567890'.indexOf(v) >= 0 || '9876543210'.indexOf(v) >= 0) return { bad: 'Слишком простой код — выберите другой.' };

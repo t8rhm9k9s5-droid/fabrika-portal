@@ -26,6 +26,8 @@ import itm as IT
 MSK = IT.MSK
 EVERY = 55 * 60
 from mx_ctl import HOLIDAYS                                # 30.10.2026 аудит P21: один общий список праздников (был свой, без 03.01 и 04.01.2027)
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 OWNER_NAMES = re.compile(r'(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\s+Отчество1(а|у|ем|е)?)?|Т\.\s?В\.)(?![А-Яа-яЁё])|(?<![А-Яа-яЁёA-Za-z])ТВ(?![А-Яа-яЁёA-Za-z])')
 ASK = re.compile(r'\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|согласуете|направьте|предоставьте|пришлите|'
                  r'ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|'
@@ -192,7 +194,7 @@ def max_group(L, days):
     """группа «Коммерческий отдел»: обращения к Сотрудник81 Отчество42 с вопросом, на которые он не ответил в группе"""
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     try:
-        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+        cfg = json.loads(_rd(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'err': 'нет настроек бота MAX'}, []
     owner = int(((cfg.get('owner') or {}).get('user_id')) or 0)
     try:
@@ -292,7 +294,7 @@ def run(L, CFG, log, jload, jsave, publish, iso, force=False):
     for q in xq:
         v = None
         fam = [w for w in re.split(r'\s+', q['n']) if w]
-        for w in fam:                                        # «Сотрудник40 Имя5» / «Имя5 Сотрудник40» → по фамилии из оргструктуры
+        for w in fam:                                        # «Сотрудник15 Имя5» / «Имя5 Сотрудник15» → по фамилии из оргструктуры
             if w.lower() in names: v = names[w.lower()]; break
         items.append({'src': 'max', 'day': q['day'], 't': q['t'], 'fio': v[0] if v else q['n'], 'role': (v[1] if v and len(v) > 1 else ''),
                       'dep': (v[2] if v and len(v) > 2 else ''), 'new': not v, 'g': q['g'], 'why': q['why'], 'x': q['x']})

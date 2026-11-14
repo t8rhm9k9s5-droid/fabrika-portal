@@ -15,6 +15,8 @@
 Новые письма в этих папках архив тоже подбирает (по UID после последнего)."""
 import datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
 import itm as IT
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 SINCE = datetime.date(2026, 8, 1)
 FOLDERS = re.compile(r'^(экономика|производство|омтс)$', re.I)
@@ -29,7 +31,7 @@ MAX_MSG = 30 * 1024 * 1024
 #   (REREAD_V=1) прошёл мимо него, за 02.11 «выпуска в 1С нет» не легло. Теперь — по отправителю; лишние письма ПЭО отсекает itm.report_like
 #   (нужно «гальваник» в теме/имени файла — подстрокой, «11_Гальваника» подходит). Новая версия — повтор ещё раз.
 REREAD_V = 2
-REREAD = ['from:(user14@example.org OR user13@example.org) after:2026/11/01']
+REREAD = ['from:(user15@example.org OR user14@example.org) after:2026/11/01']
 
 
 def _ext(n):
@@ -43,7 +45,7 @@ def _ext(n):
 # «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
-SVC_FROM = {'user10@example.org': 'Сторожевая служба (Сотрудник34 С. В.)'}   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
+SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник40 С. В.)'}   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
 PRUNE_DRY = False   # 13.11.2026 ~13:45, Т. В. (опрос): «Да, включай» — удаление вложений старше 3 дней включено
 _MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
@@ -106,7 +108,7 @@ def pw_1c(L):
     try: os.chmod(p, 0o600)
     except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     try:
-        return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
+        return re.sub(r'\s+', '', _rd(p, encoding='utf-8'))
     except Exception: return ''
 
 

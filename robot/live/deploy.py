@@ -17,6 +17,8 @@ Claude кладёт в папку «Fabrikant» на компьютере пол
 30.10.2026 аудит P4–P6: подпись .sig v2 (имя + sha256 пакета), только пакеты новее установленного, копии и откат, битый пакет не держит
 очередь — см. блок «подписи v2» ниже и INSTALL_py.md (порядок перехода с v1 на v2)."""
 import hashlib, hmac, io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request, zipfile, zlib
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 # тихие часы (пользователь 27.10.2026, уточнение): ночью всё делается и ставится — молчат только уведомления (их держит Google-скрипт бота до 08:00)
 
 SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|manifest\.webmanifest|'
@@ -63,7 +65,7 @@ def unpack(zb, key):
     return (int.from_bytes(ct, 'big') ^ int.from_bytes(ks[:len(ct)], 'big')).to_bytes(len(ct), 'big')
 
 
-# REDACTED_B64_37 30.10.2026 аудит P4–P6 (DESIGN 8): подписи v2, защита от отката, копии и откат
+# REDACTED_B64_9 30.10.2026 аудит P4–P6 (DESIGN 8): подписи v2, защита от отката, копии и откат
 # .sig v2 = 'v2:' + hex HMAC-SHA256(k_deploy, "T14PKG2\n" + <имя пакета> + "\n" + sha256hex(байты пакета)) — подпись покрывает имя (а в нём метка
 # времени ГГГГММДД-ЧЧММ): старый подписанный пакет под новым именем не пройдёт. Метка должна быть строго новее последней установленной.
 # Старая подпись v1 (hex по байтам) — только пока не установлен ни один пакет v2 (переход), и тоже с проверкой метки. Тот же код — для
@@ -138,7 +140,7 @@ def rollback(d, log):
     01.11.2026 (внешняя проверка кода, замечание 04): раньше при сбое восстановления отдельного файла опись всё равно получала «откат»,
     и recover() больше к ней не возвращался — сайт мог остаться наполовину новым. Теперь: не всё восстановлено → «откат не завершён»
     со списком файлов; recover() повторяет такие откаты, а новые пакеты не ставятся, пока откат не доведён (RollbackIncomplete)."""
-    man = json.load(open(os.path.join(d, 'manifest.json'), encoding='utf-8'))
+    man = json.loads(_rd(os.path.join(d, 'manifest.json'), encoding='utf-8'))
     n, bad = 0, []
     for x in man.get('files') or []:
         dst = x['dest']
@@ -283,7 +285,7 @@ def recover(L, st, log):
     if not os.path.isdir(root): return out
     for x in sorted(os.listdir(root)):
         mp = os.path.join(root, x, 'manifest.json')
-        try: man = json.load(open(mp, encoding='utf-8'))
+        try: man = json.loads(_rd(mp, encoding='utf-8'))
         except Exception: continue
         if man.get('state') not in ('ставится', 'откат не завершён'): continue      # 01.11.2026, замечание 04: недоведённый откат — повторить
         try: rollback(os.path.join(root, x), log)
@@ -335,7 +337,7 @@ def g1c_download(L, fid):
 
 
 def old_off():
-    try: return bool(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gdrive_1c.json'), encoding='utf-8')).get('old_off'))
+    try: return bool(json.loads(_rd(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gdrive_1c.json'), encoding='utf-8')).get('old_off'))
     except Exception: return False
 
 
@@ -393,7 +395,7 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
     st.pop('err', None)
     st['src'] = sorted(set(v[0] for v in files.values()))
     kb = bytes.fromhex(key)
-    get = lambda ref: g1c_download(L, ref[1]) if ref[0] == '1c' else open(ref[1], 'rb').read() if ref[0] == 'mail' else download(ref[1])
+    get = lambda ref: g1c_download(L, ref[1]) if ref[0] == '1c' else _rd(ref[1], 'rb') if ref[0] == 'mail' else download(ref[1])
     # 30.10.2026 аудит P4: по метке времени из имени (fabrika-… и fabrikant-… — в одном порядке), старше установленного — отказ
     for name in sorted((n for n in files if PACK.match(n)), key=lambda n: (pkg_ts(n), n)):
         if name in st['done']: continue
@@ -436,7 +438,7 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
 def old_listing(CFG, L):
     folder = (CFG.get('drive_folder') or '').strip()
     if not folder:                                         # or the file ~/.fabrika_live/drive_folder: the folder's link or id (no keys in it)
-        try: folder = open(os.path.join(L, 'drive_folder'), encoding='utf-8').read().strip()
+        try: folder = _rd(os.path.join(L, 'drive_folder'), encoding='utf-8').strip()
         except Exception: folder = ''
     m = re.search(r'/folders/([\w-]{10,})', folder) or re.search(r'[?&]id=([\w-]{10,})', folder)
     if m: folder = m.group(1)

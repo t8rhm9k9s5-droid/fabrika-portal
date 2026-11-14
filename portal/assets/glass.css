@@ -301,3 +301,11 @@ html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html bod
 .al-x,.al-x:focus-visible{top:0!important;bottom:0!important;margin:auto 0!important;transform:none!important}
 .al-tile .al-x{top:16px!important;bottom:auto!important;margin:0!important}
 @media (max-width:900px){.al-tile .al-x{top:0!important;bottom:0!important;margin:auto 0!important}}
+/* 14.11.2026, Т. В. (телефон): «несколько не симметричных иконок» — последняя плитка при нечётном числе в 2 колонки одна в ряду;
+   теперь она растягивается на всю ширину (2 колонки), в 3 колонки — добирает ряд (1 → на 3, 2 → вторая на 2) */
+@media (max-width:699px){
+  .fhome .pk-grid>li:last-child:nth-child(odd),.fhome #pulse>li:last-child:nth-child(odd),.fhome .fh-secs>li:last-child:nth-child(odd),
+  .pz-k>:last-child:nth-child(odd),.rz-map>:last-child:nth-child(odd){grid-column:1/-1}}
+@media (min-width:700px) and (max-width:1099px){
+  .fhome .pk-grid>li:last-child:nth-child(3n+1),.fhome .fh-secs>li:last-child:nth-child(3n+1),.pz-k>:last-child:nth-child(3n+1),.rz-map>:last-child:nth-child(3n+1){grid-column:1/-1}
+  .fhome .pk-grid>li:last-child:nth-child(3n+2),.fhome .fh-secs>li:last-child:nth-child(3n+2),.pz-k>:last-child:nth-child(3n+2),.rz-map>:last-child:nth-child(3n+2){grid-column:span 2}}

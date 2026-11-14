@@ -21,6 +21,8 @@
 ответы бота для MAX идут через max/relay.php — он же записывает их для письма (~/.fabrika_max/mailout.jsonl), пока ждём ответ.
 Ящик — только чтение (BODY.PEEK): ничего не удаляет, не помечает. Состояние — state/mail_cmd.json."""
 import datetime, email, email.header, email.policy, email.utils, html, imaplib, json, os, re, ssl, time, urllib.request
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MSK = datetime.timezone(datetime.timedelta(hours=3))
@@ -133,7 +135,7 @@ def _maxdir(L): return os.path.join(os.path.dirname(L), '.fabrika_max')
 
 
 def _mx_key(L):
-    try: return json.load(open(os.path.join(_maxdir(L), 'config.json'), encoding='utf-8')).get('key') or ''
+    try: return json.loads(_rd(os.path.join(_maxdir(L), 'config.json'), encoding='utf-8')).get('key') or ''
     except Exception: return ''
 
 

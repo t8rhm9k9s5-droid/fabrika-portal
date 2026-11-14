@@ -9,6 +9,8 @@ code/gdrive_1c.json {"url": ...}. Ключ подписи хостинг соз�
 Читать можно весь Диск 1c@, писать — только в папку «Фабрика — портал». Ничего не удаляется.
    call(L, 'info'|'ls'|'get'|'put'|'mkdir', {...}) — для других модулей; run(...) — из live.py: привязка и раз в час проверка + список корня."""
 import base64, hashlib, hmac, json, os, secrets, time, urllib.request
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,7 +29,7 @@ def _key(L):
         with os.fdopen(fd, 'w') as f: f.write(secrets.token_hex(32))
     try: os.chmod(p, 0o600)
     except Exception: pass  # необязательный шаг: сбой не мешает работе робота
-    return open(p).read().strip()
+    return _rd(p).strip()
 
 
 def call(L, op, args=None, timeout=90):

@@ -46,7 +46,7 @@ KEY = bytes.fromhex(CFG['k_live'])
 # (code/k_owner.txt, 0600, приходит зашифрованным пакетом); пока файла нет — старый ключ (ничего не ломается, но и защиты нет).
 def _key_file(name, default):
     try:
-        h = open(os.path.join(L, 'code', name), encoding='utf-8').read().strip()
+        h = _rd(os.path.join(L, 'code', name), encoding='utf-8').strip()
         return bytes.fromhex(h) if re.fullmatch(r'[0-9a-f]{64}', h) else default
     except Exception: return default
 # 30.10.2026 аудит P13 (DESIGN 5): без корректного k_owner.txt файлы владельца НЕ публикуются (раньше — ключом сайта k_live, который есть у всех
@@ -72,13 +72,13 @@ REPORTS = [
 CHECK_AT = CFG.get('check_at') or '10:35'
 # 04.11.2026: Gmail считает «11_Гальваника» одним словом — «Гальваника» в запросе такое письмо не находит; перечисляем «01_…12_Гальваника».
 GALV_Q = '(Гальваника OR ' + ' OR '.join('%02d_Гальваника' % m for m in range(1, 13)) + ')'
-QUERY = ('(((from:user28@example.org subject:Отчет) OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')'
+QUERY = ('(((from:user29@example.org subject:Отчет) OR ((from:user15@example.org OR from:user14@example.org) ' + GALV_Q + ')'
          ' OR (from:user3@example.org (subject:"Складские остатки" OR subject:"Жилпромсервис отчеты" OR subject:"ПКС свободные остатки"))'
          ' OR ((from:user5@example.org OR from:user4@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
-         ' OR (from:user30@example.org filename:zip)'
-         ' OR ((from:user22@example.org OR from:user33@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
-         ' OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
-GALV_FROM = ('user14@example.org', 'user13@example.org')
+         ' OR (from:user31@example.org filename:zip)'
+         ' OR ((from:user23@example.org OR from:user34@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
+         ' OR ((from:user15@example.org OR from:user14@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
+GALV_FROM = ('user15@example.org', 'user14@example.org')
 GALV_DATE = re.compile(r'за\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}|\d{2}))?(?!\d)', re.I)
 GALV_NO = re.compile(r'отсутству\w*|\bнет\b|не\s+внес[её]н\w*|не\s+провед[её]н\w*|не\s+заведен\w*|не\s+заведён\w*', re.I)
 GALV_WHAT = re.compile(r'выпуск\w*|данн\w*|1\s*[СC]\b', re.I)
@@ -214,7 +214,7 @@ def jsave(n, v):
         except Exception as e: log('  ! .bak', n, e.__class__.__name__, e)
 
 
-# REDACTED_B64_23 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
+# REDACTED_B64_9 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
 # alert(key, text, critical=False): не чаще раза в 6 ч на ключ (state/alerts_sent.json, атомарно, под замком — участки параллельны);
 # некритичные с 20:00 до 08:00 МСК копятся и уходят в 08:00 одним сообщением (alert_flush — в конце каждого участка); критичные — сразу.
 # Каналы — прежние: max_send (владельцу в MAX) и mail_send (cfg.json → alert_to, как проверка 10:35). Новых адресатов нет.
@@ -300,7 +300,7 @@ def prev_workday(d):
     return d
 
 
-# REDACTED_B64_23 1) mail
+# REDACTED_B64_9 1) mail
 # 04.11.2026, Т. В. Сотрудник1: «user4@example.org — лично мой ящик… Почту ты пока читаешь, пока не перестанет туда служебная почта приходить.
 # Во всём остальном owner@ не используешь вообще». Поэтому: ЧТЕНИЕ отчётов из Gmail владельца (cfg.json → mail) — пока остаётся (OWNER_GMAIL_READ),
 # выключить — когда служебная почта перестанет туда приходить (False + пакет кода); ОТПРАВКА с Gmail владельца (запасной SMTP) — выключена совсем,
@@ -314,7 +314,7 @@ def app_password():
     p = os.path.join(L, 'gmail_app_password')
     try: os.chmod(p, 0o600)                                 # 27.10.2026: the file is made in ISPmanager with 644
     except Exception: pass  # необязательный шаг: сбой не мешает работе робота
-    try: return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
+    try: return re.sub(r'\s+', '', _rd(p, encoding='utf-8'))
     except Exception: return ''
 
 
@@ -572,7 +572,7 @@ def gas_inbox(recv, limit=30, budget=150):
     return res
 
 
-# REDACTED_B64_23 2) counting
+# REDACTED_B64_9 2) counting
 def stock_days(D, sraw, ds):
     """01.11.2026, пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц». parse_1c хранит историю
     остатков только за текущий месяц (wh_hist, free_hist) — копим её в state/stock_days.json: дата → {'w': склад → группа → шт, 'f': ПКС «Доступно»
@@ -636,7 +636,7 @@ def build_all():
     return parts
 
 
-# REDACTED_B64_23 3) status and publishing
+# REDACTED_B64_9 3) status and publishing
 def last_by_kind(recv):
     last = {}
     for r in recv:
@@ -779,11 +779,11 @@ def publish(name, obj):
     return True
 
 
-# REDACTED_B64_23 4) the 10:35 check
+# REDACTED_B64_9 4) the 10:35 check
 def max_send(text):
     """to the owner in MAX, if the MAX bot is set up (token and /owner in ~/.fabrika_max/config.json)"""
     try:
-        c = json.load(open(os.path.join(os.path.dirname(L), '.fabrika_max', 'config.json'), encoding='utf-8'))
+        c = json.loads(_rd(os.path.join(os.path.dirname(L), '.fabrika_max', 'config.json'), encoding='utf-8'))
     except Exception: return 'бот MAX не подключён'
     tok, uid = c.get('token'), (c.get('owner') or {}).get('user_id')
     if not tok or not uid: return 'бот MAX не подключён'
@@ -924,7 +924,7 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
     if sm:
         try:
             import subprocess
-            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user40@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
+            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user41@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
             if r.returncode == 0: return 'ok (sendmail)'
             errs.append('sendmail: %s %s' % (r.returncode, r.stderr[:100].decode('utf-8', 'replace')))
         except Exception as e: errs.append('sendmail: ' + str(e)[:100])
@@ -1039,7 +1039,7 @@ def watch_d(t, hb, alerts, status):
     return out
 
 
-# REDACTED_B64_23 run
+# REDACTED_B64_9 run
 # 29.10.2026, пользователь: «Работа хостинга не должна никак зависеть от почтовых рассылок… Хостинг — это портал в первую очередь…
 # нужны 2-3-10 процессов параллельных». cron раз в 10 минут запускает live.py → main() только РАЗДАЁТ работу: каждый участок —
 # отдельный процесс (python3 live.py --lane <имя>) со своим замком и пределом времени; завис один — остальные работают,
@@ -1055,6 +1055,8 @@ def watch_d(t, hb, alerts, status):
 #             29.10.2026, send="bot" (code/mail_cfg.json) — без SMTP: очередь → st/mo.bin, письма отправляет скрипт бота через Gmail.
 # Состояние участков — state/lane_<имя>.json и st/hs.bin; в st/ls.bin → status.lanes. Python 3.6.
 import signal, subprocess
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 
 class LaneTimeout(BaseException):
@@ -1207,7 +1209,7 @@ def sales_day_backfill():
 
 
 REP_BF_V = 1
-REP_BF_FROM = ('user3@example.org', 'user34@example.org', 'user30@example.org')
+REP_BF_FROM = ('user3@example.org', 'user35@example.org', 'user31@example.org')
 
 
 def rep_1c_backfill(budget=40):
@@ -1550,7 +1552,7 @@ def lane_bots():
     except Exception as e:
         status['unans'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
         log('  ! без ответа:', e.__class__.__name__, e)
-    try:                                                   # 30.10.2026, пользователь: «user41@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
+    try:                                                   # 30.10.2026, пользователь: «user42@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
         import sales_ctl as SCT
         status['sales_ctl'] = SCT.run(L, CFG, log, jload, jsave, iso, mail_send)
     except Exception as e:

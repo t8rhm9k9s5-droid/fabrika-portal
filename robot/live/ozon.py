@@ -15,6 +15,8 @@
 → state/ozon.json (сводка) и st/oz.bin (T14B1, k_live) — для сайта и бота. Ничего на Ozon не меняет: только запросы на чтение.
 Python 3.6, без сторонних пакетов."""
 import datetime, json, os, re, time, urllib.error, urllib.request
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 API = 'https://api-seller.ozon.ru'
 EVERY = 55 * 60
@@ -29,7 +31,7 @@ def creds(L):
     try: os.chmod(p, 0o600)
     except Exception: pass  # необязательный шаг: сбой не мешает работе робота
     cid = key = ''
-    for line in open(p, encoding='utf-8', errors='replace').read().splitlines():
+    for line in _rd(p, encoding='utf-8', errors='replace').splitlines():
         m = re.match(r'\s*(client[_ -]?id|api[_ -]?key)\s*[=:]\s*(\S+)\s*$', line, re.I)
         if not m:
             if re.match(r'\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\s*$', line, re.I): key = key or line.strip()   # the key pasted on a line of its own

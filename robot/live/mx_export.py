@@ -12,6 +12,8 @@
 import datetime, json, os, re, time
 
 import mx_ctl as MC
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 
 def _groups(M, token):
@@ -46,7 +48,7 @@ def run(L, log, jload, jsave, publish, iso):
     job = next((j for j in jobs if j['id'] not in done), None)
     if not job: return {'state': 'ok', 'done': len(done)}
     try:
-        cfg = json.load(open(os.path.join(M, 'config.json'), encoding='utf-8'))
+        cfg = json.loads(_rd(os.path.join(M, 'config.json'), encoding='utf-8'))
     except Exception: return {'state': 'нет настроек бота MAX'}
     token = cfg.get('token') or ''
     if not token: return {'state': 'нет токена MAX'}

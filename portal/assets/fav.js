@@ -12,7 +12,9 @@
   var page = (location.pathname.split('/').pop() || 'index.html');
   function key(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return h.replace(/^\.\//, ''); }
   function has(h) { var k = key(h); return load().some(function (x) { return x.h === k; }); }
-  function kind(h) { return /^library\/|\.(pdf|docx?|xlsx?|pptx?)$/i.test(h) || /^https?:/.test(h) ? 'doc' : 'rep'; }
+  function kind(h) { return /^(?:library\/.*|.*\.(?:pdf|docx?|xlsx?|pptx?))$/i.test(h) || /^https?:\/\//i.test(h) ? 'doc' : 'rep'; }
+  // 14.11.2026 (CodeQL js/xss-through-dom): адрес из сохранённого — только свои страницы и http(s), никаких javascript:/data:
+  function safeHref(h) { h = String(h || '').trim(); return /^(?:https?:\/\/|[\w.\/-]+(?:#.*)?$|#)/i.test(h) && !/^\s*(?:javascript|data|vbscript):/i.test(h) ? h : '#'; }
   function toggle(h, t, from) {
     var k = key(h), a = load(), i = -1;
     a.forEach(function (x, j) { if (x.h === k) i = j; });
@@ -76,7 +78,7 @@
     var rows = V.map(function (x) {
       var ext = x.k === 'doc' ? ' target="_blank" rel="noopener"' : '';
       var ic = x.k === 'doc' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>';
-      return '<a class="irow fav-host" href="' + esc(x.h) + '"' + ext + '><span class="itile fav-ic ' + x.k + '">' + ic + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x.t) +
+      return '<a class="irow fav-host" href="' + esc(safeHref(x.h)) + '"' + ext + '><span class="itile fav-ic ' + x.k + '">' + ic + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x.t) +
         '</span><span class="isub">' + esc((x.f ? x.f + ' · ' : '') + 'сохранено ' + x.d.split('-').reverse().join('.')) + '</span></span>' +
         '<button type="button" class="fav-b on" data-h="' + esc(x.h) + '" data-t="' + esc(x.t) + '" data-f="' + esc(x.f) + '" aria-label="Убрать из сохранённого">' + STAR + '</button><span class="ichev"></span></span></a>';
     }).join('');

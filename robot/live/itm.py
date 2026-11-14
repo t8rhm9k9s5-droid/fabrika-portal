@@ -27,6 +27,8 @@ import datetime, email, email.header, email.policy, email.utils, fcntl, hashlib,
 try: import itm_tidy as TD        # 11.11.2026: «Прочитано + по папкам» (Т. В., опрос)
 except Exception: TD = None
 from email.message import EmailMessage
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 HOST = 'imap.mail.ru'
 MSK = datetime.timezone(datetime.timedelta(hours=3))
@@ -107,7 +109,7 @@ def password(L):
     p = os.path.join(L, 'itm_app_password')
     try: os.chmod(p, 0o600)                                 # файл делается в ISPmanager с правами 644
     except Exception: pass  # необязательный шаг: сбой не мешает работе робота
-    try: return re.sub(r'\s+', '', open(p, encoding='utf-8').read())
+    try: return re.sub(r'\s+', '', _rd(p, encoding='utf-8'))
     except Exception: return ''
 
 
@@ -241,7 +243,7 @@ def report_like(frm, subj, names):
     if frm in ('user35@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник8 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
     if frm in ('user3@example.org', 'user35@example.org', 'user31@example.org', 'user36@example.org', 'user5@example.org', 'user4@example.org') and \
             any(n.endswith('.xlsx') for n in low) and (any(k in s for k in ('запасы гп', 'товары на складах')) or any('товары на складах' in n or ('запас' in n and 'гп' in n) for n in low)):
-        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник10 02.11; ежедневно — В. В. Сотрудник8 на 1c@) → stock_mv.py
+        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник11 02.11; ежедневно — В. В. Сотрудник8 на 1c@) → stock_mv.py
     return frm == 'user31@example.org' and any(n.endswith('.zip') for n in low)
 
 

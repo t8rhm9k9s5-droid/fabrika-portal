@@ -13,12 +13,12 @@
   // 04.11.2026, «Назад» по уровням (см. mountNav). Правило сверки после шага назад по истории — одно для страницы и для <head> новой страницы
   //   (build_site.py _NAV кладёт его в window.T14NavDecide): N — где были (t14.nav: u — место, up — уровень выше, sheet — «Разделы»), k — где
   //   оказались, sY — состояние записи истории (t14p — откуда в неё пришли). → null | {here, sheet} | {back} | {u, sheet}
+  // 14.11.2026, Т. В.: «Я откуда пришёл, туда вернулся. И кнопка назад только так на всем портале» — системный «назад» больше не
+  //   подменяется «уровнем выше»: браузер и так ведёт туда, откуда пришли. Сверка только возвращает лист «Разделы», если уходили с него.
   function navDecide(N, k, sY) {
     if (!N || !N.u || N.u === k) return null;
-    var t = N.up == null ? 'home.html' : N.up;             // с «Главной» выше некуда — остаёмся на «Главной»
-    if (t === k) return N.sheet ? { here: 1, sheet: N.sheet } : null;
-    if (sY && sY.t14p === t) return { back: 1, sheet: N.sheet || '' };
-    return { u: t, sheet: N.sheet || '' };
+    if (N.up === k && N.sheet) return { here: 1, sheet: N.sheet };
+    return null;
   }
   // страницы без проверки в <head> (модель 3D): та же сверка здесь
   if (!window.T14NavDecide) {
@@ -39,7 +39,7 @@
   try {
     history.replaceState = function (st, t, u) {
       var o = history.state;
-      if ((st == null || (typeof st === 'object' && st.t14u == null && !st.t14pdf)) && o && o.t14u != null) { var c = {}; for (var x in (st || {})) c[x] = st[x]; c.t14p = o.t14p || null; c.t14k = 1; st = c; }
+      if ((st == null || (typeof st === 'object' && st.t14u == null && !st.t14pdf)) && o && o.t14u != null) { var c = {}; for (var x in (st || {})) c[x] = st[x]; c.t14p = o.t14p || null; c.t14s = o.t14s || ''; c.t14k = 1; st = c; }
       return RS(st, t, u);
     };
   } catch (e) { }
@@ -147,7 +147,7 @@
     ['razdel.html#items', 'Продукция', 's_items', 'var(--ic-items)', 'Каталог, модели, материалы, прайсы'],
     ['razdel.html#people', 'Люди', 's_org', 'var(--ic-calls)', 'Структура, контакты, кадры'],
     ['razdel.html#docs', 'Документы', 's_docs', 'var(--ic-docs)', 'Договоры, регламенты, чертежи, архив'],
-    ['razdel.html#site', 'Площадка', 's_map', 'var(--ic-map)', 'План, 3D-модель, счётчики', 'plan.html']];
+    ['razdel.html#site', 'Площадка', 's_map', 'var(--ic-map)', 'Инженерная служба: ППР и ТО, энергоресурсы; план и 3D-модель', 'plan.html']];
   // 29.10.2026, «Транспорт (ГЛОНАСС)»: пользователь — «надо подключить», кто видит — «Только я». Пункт — только на устройстве, где вошёл
   // владелец (личный вход «owner»: id = первые 24 знака SHA-256('fabrika-login:owner')); это лишь меню — данные проверяет и отдаёт скрипт бота (op gl)
   var OWNER_ID = 'REDACTED_HEX_1';
@@ -158,8 +158,8 @@
   // флаг t14.sec ставит страница после ответа бота «доступ есть» (у брата); сами данные отдаёт только бот (op sec)
   function secFlag() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null'); return !!(p && f && f.id === p.id && p.st !== 'pending'); } catch (e) { return false; } }
   var SUBS = [['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'plan.html'], ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'plan.html'], ['stores.html', 'Остатки ОП', 's_store', 'var(--ic-stock)', 'stock.html'],
-    ['utils.html', 'Счётчики и откачка', 's_meter', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
-  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'plan.html', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
+    ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
+  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
   // чат-боты (один список для листа «Разделы», профиля и боковой панели) и приложение для Android (28.10.2026: «меню «Скачать APK» пропало»).
   // APK лежит в корне сайта (build_enc.py → fabrika.apk); на iPhone/iPad строка не показывается — там приложение ставится с экрана «Домой»
   var BOTS = [['https://t.me/example1', 'plane', 'var(--ic-items)', 'Бот в Telegram'], ['https://max.ru/example1', 'chat', 'var(--ic-chat)', 'Бот в MAX']];
@@ -262,7 +262,7 @@
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
-  // «Авто / Сотрудник13 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
+  // «Авто / Сотрудник14 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
   function theme() { var t = getPref('t14.theme', 'auto'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function applyLook() {
     var de = document.documentElement, t = theme();
@@ -281,7 +281,7 @@
   // Уровни на <html data-perf>: max — стекло с размытием, тени, движение; mid — размытие слабее, движение короче; eco — без размытия
   // (непрозрачный фон), без теней и анимаций (data-fx="lite"). Выученный уровень устройства — localStorage «t14.dev» (на 30 дней, свой для браузера).
   var FX = (function () {
-    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник13', eco: 'Экономно', mid: 'Среднее' };
+    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник14', eco: 'Экономно', mid: 'Среднее' };
     function rdJ(k) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
     var mem = rdJ('t14.dev'); if (!mem || mem.ua !== ua) mem = { ua: ua };
     function save() { mem.ua = ua; mem.t = Date.now(); try { localStorage.setItem('t14.dev', JSON.stringify(mem)); } catch (e) { } }
@@ -300,7 +300,7 @@
       if (rm) return ['mid', 'в системе включено «Уменьшение движения»'];
       if ((screen.width || 0) * (screen.height || 0) * dpr * dpr > 8.3e6 && dm && dm <= 4) return ['mid', 'большой экран при небольшой памяти'];
       // 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра — iOS всегда
-      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник13» — вручную
+      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник14» — вручную
       if (de.getAttribute('data-plat') === 'ios' && !dm) return ['mid', 'iPhone/iPad: размытие стекла только на малых поверхностях'];
       return ['max', ''];
     }
@@ -355,7 +355,7 @@
       subs.forEach(function (f) { try { f(); } catch (e) { } });
       return L;
     }
-    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник13» → высокое, «Авто» — по замеру
+    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник14» → высокое, «Авто» — по замеру
     function set(c) {
       if (c !== 'auto' && c !== 'max' && c !== 'eco') return;
       setPref('t14.power', c);
@@ -589,8 +589,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник24 (пользователь: «Берем Gemini и Сотрудник24 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник24 из поиска и ИИ-интеграций портала» (Сотрудник24 Имя3 и Сотрудник24 Сотрудник25 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник9 (пользователь: «Берем Gemini и Сотрудник9 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник9 из поиска и ИИ-интеграций портала» (Сотрудник9 Имя3 и Сотрудник9 Сотрудник25 не трогаем)
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT'], ['gemini', 'Gemini']], prov = '';
         // 28.10.2026: показываем только подключённых помощников (сервер отдаёт их в «me» → ais; запоминаем на сутки)
         var conn = null; try { var cj = JSON.parse(localStorage.getItem('t14.ais') || 'null'); if (cj && Date.now() - cj.t < 864e5) conn = cj.v; } catch (e) { conn = null; }
@@ -627,7 +627,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник24' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник9' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '';
           ask(prov).then(null, function (e) {
@@ -665,7 +665,7 @@
       var acSync = function () { var p = null; try { p = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { } ac.querySelector('.ival').textContent = p ? (p.st === 'pending' ? 'ждёт' : String(p.name).split(' ')[0]) : 'войти'; };
       acSync(); window.addEventListener('t14acct', acSync);
       s.appendChild(h4('Оформление'));
-      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник13 / Экономно»; по умолчанию — «Авто» и «Авто»
+      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник14 / Экономно»; по умолчанию — «Авто» и «Авто»
       function seg(label, get, opts, put) {
         s.appendChild(el('p', 'psub', label));
         var w = el('div', 'pseg'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', label); s.appendChild(w);
@@ -676,9 +676,9 @@
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
       // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
       seg('Вид', function () { return skinNow(); }, [['v22', 'Новый'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
-      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник13'], ['eco', 'Экономно']], function (v) { FX.set(v); });
+      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник14'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
-      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник13» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
+      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник14» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
       pfs(); FX.on(pfs);
       s.appendChild(h4('Сервис'));
       var g3 = el('div', 'igroup'); s.appendChild(g3);
@@ -792,13 +792,23 @@
     function upOf() {                                       // уровень выше текущего места: {u: адрес, sheet?: 'sections'} | {el: кнопка вида} | null (Главная)
       // 13.11.2026 вечер, Т. В.: «кнопка назад плохо срабатывает» — из «Разделы → Продажи» (razdel.html#sales) открыл «Лиды», «Назад» вёл на
       //   отдельную страницу sales.html, а не туда, откуда пришёл. Пришли со страницы раздела — туда и возвращаемся (шаг назад по истории).
-      try { var pv0 = (history.state || {}).t14p; if (own && cur !== 'razdel.html' && pv0 && /^razdel\.html#\w+$/.test(pv0) && pv0 !== cur + location.hash) return { u: pv0, t: 'Назад' }; } catch (e0) { }   // 13.11.2026, Т. В.: «Назад — на уровень вверх, не по кругу»: со страницы раздела — всегда на Главную
+      // 14.11.2026, Т. В.: «Я откуда пришёл, туда вернулся. И кнопка назад только так на всем портале будет работать» — сначала место,
+      //   откуда пришли в эту запись истории (t14p; t14s — с листа «Разделы»): navTo уйдёт туда шагом назад по истории. Уровень выше —
+      //   только если пришли не с портала (ссылка из письма, закладка, новая вкладка).
+      try { var st0 = history.state || {}, pv0 = st0.t14p; if (pv0 && pv0 !== hereKey()) return { u: pv0, t: placeName(pv0, st0.t14s), sheet: st0.t14s ? 'sections' : '' }; } catch (e0) { }
       var ib = inBack();
       if (ib) { var h = ib.getAttribute('href'); if (h == null) return { el: ib, t: (ib.textContent || '').trim() }; return { u: h.charAt(0) === '#' ? cur + location.search + (h.length > 1 ? h : '') : h.replace(/^\.\//, ''), t: (ib.textContent || '').trim() }; }
       if (location.hash.length > 1) return { u: cur + location.search, t: (cur === sec ? secName : subName) || 'Назад' };
       if (PARENT[cur]) return { u: PARENT[cur], t: (PORTAL.filter(function (p) { return p[0] === PARENT[cur]; })[0] || [0, 'Назад'])[1] };
       if (cur === 'home.html') return null;
       return phoneNav() ? { u: 'home.html', sheet: 'sections', t: 'Разделы' } : { u: 'home.html', t: 'Главная' };
+    }
+    function placeName(k, s) {                              // подпись «Назад»: куда вернёмся
+      if (s) return 'Разделы';
+      k = String(k || ''); var i = k.indexOf('#'), pg = (i > -1 ? k.slice(0, i) : k).split('?')[0], hs = i > -1 ? k.slice(i) : '';
+      var r = PORTAL.filter(function (p) { return p[0] === k || (!hs && (p[0] === pg || p[5] === pg)); })[0]; if (r) return r[1];
+      var u = SUBS.filter(function (p) { return p[0] === pg; })[0]; if (u && !hs) return u[1];
+      return 'Назад';
     }
     function relKey(href) { var a = new URL(href, location.href); return (a.pathname.split('/').pop() || 'index.html') + a.search + (a.hash.length > 1 ? a.hash : ''); }
     function hereKey() { return cur + location.search + (location.hash.length > 1 ? location.hash : ''); }
@@ -816,7 +826,9 @@
         var ref = ''; try { var ru = new URL(document.referrer); if (document.referrer && ru.origin === location.origin) ref = (ru.pathname.split('/').pop() || 'index.html') + ru.search + (ru.hash.length > 1 ? ru.hash : ''); } catch (e) { ref = ''; }
         var nuPage = nu ? nu.split(/[?#]/)[0] : '', trustNu = nu && nu !== k && (nuPage === cur || !ref || ref.split(/[?#]/)[0] === nuPage);
         var pv = R && R.to === k ? R.p : st && st.t14k ? (st.t14p || null) : (trustNu ? nu : (ref && ref !== k ? ref : (st && st.t14p) || null));
-        try { RS({ t14u: k, t14p: pv }, '', location.href); } catch (e) { }
+        var fs0 = ''; try { fs0 = sessionStorage.getItem('t14.fromsheet') || ''; sessionStorage.removeItem('t14.fromsheet'); } catch (e) { }
+        var ps = R && R.to === k ? (R.s || '') : st && st.t14k ? (st.t14s || '') : (pv && ((pv === nu && N && /\|sections$/.test(String(N.u))) || pv === fs0) ? 'sections' : '');
+        try { RS({ t14u: k, t14p: pv, t14s: ps }, '', location.href); } catch (e) { }
       }
       var U = upOf();
       try { sessionStorage.setItem('t14.nav', JSON.stringify({ u: k + (!panel.hidden && open === 'sections' ? '|sections' : ''), up: !panel.hidden && open === 'sections' ? (cur === 'home.html' ? 'home.html' : k) : U && U.u ? relKey(U.u) : null, sheet: !panel.hidden ? '' : U && U.sheet ? U.sheet : '', t: Date.now() })); } catch (e) { }
@@ -828,17 +840,17 @@
       if (!panel.hidden) close();
       if (st.t14p && st.t14p === tk) { history.back(); return; }          // на шаг назад в истории — как раз уровень выше
       if (a.pathname === location.pathname && a.search === location.search) {
-        RS({ t14u: tk, t14p: st.t14p || null }, '', a.href);
+        RS({ t14u: tk, t14p: st.t14p || null, t14s: st.t14s || '' }, '', a.href);
         window.dispatchEvent(new HashChangeEvent('hashchange'));
         if (U.sheet) openSheet();
         track(); return;
       }
-      try { sessionStorage.setItem('t14.navrep', JSON.stringify({ to: tk, p: st.t14p || null })); } catch (e) { }
+      try { sessionStorage.setItem('t14.navrep', JSON.stringify({ to: tk, p: st.t14p || null, s: st.t14s || '' })); } catch (e) { }
       location.replace(a.href);
     }
     function openSheet() { var f = null; try { f = sessionStorage.getItem('t14.sheet'); sessionStorage.removeItem('t14.sheet'); } catch (e) { } if (f && secs[f] && open !== f) show(f); }
     function backAvail() { return cur !== 'home.html' || location.hash.length > 1 || !!inBack(); }
-    function backSync() { var U = upOf(); bk.hidden = !backAvail(); bk.lastChild.textContent = U && U.t ? U.t : 'Назад'; track(); }
+    function backSync() { track(); var U = upOf(); bk.hidden = !backAvail(); bk.lastChild.textContent = U && U.t ? U.t : 'Назад'; }
     function goBack() {
       if (!panel.hidden) { close(); return; }                // открытый лист (поиск, профиль, «Разделы») — сначала закрыть
       var U = upOf(); if (U) navTo(U);
@@ -941,6 +953,8 @@
     if (cur === 'home.html') document.body.classList.add('pg-home');
     document.body.insertBefore(top, document.body.firstChild);
     document.body.appendChild(side); document.body.appendChild(bar); if (srch) document.body.appendChild(srch); document.body.appendChild(panel);
+    // 14.11.2026: ушли по ссылке из листа «Разделы» — «Назад» вернёт на эту страницу с открытым листом
+    panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a && open === 'sections') try { sessionStorage.setItem('t14.fromsheet', hereKey()); } catch (x) { } }, true);
     panel.querySelector('.grab').addEventListener('click', close);
     panel.querySelector('.phead .x').addEventListener('click', close);
     panel.querySelector('.phead .pbk').addEventListener('click', close);

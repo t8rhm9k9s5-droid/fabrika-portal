@@ -2,7 +2,7 @@
      Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
      Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
      Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. -->
-<title>Фабрика — счётчики и откачка</title>
+<title>Фабрика — энергоресурсы и счётчики</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="assets/site.css">
 <style>
@@ -48,11 +48,34 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pchip{color:#E8A33D}}
 :root[data-theme="dark"] .pchip{color:#E8A33D}
 .pfoot{margin:10px 2px 0;color:var(--ios-2);font-size:13px}
+/* 14.11.2026, Т. В.: «первичное — электроэнергия и газоснабжение, скачки по ним: две верхние карточки — свет и газ; также водоснабжение
+   и водоотведение; откачка септиков — самое последнее; счётчиков с прочерками быть не должно» */
+.egrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.egrid .igroup{margin:0;padding:14px 14px 12px;min-width:0}
+.ecard .et{font-size:13px;color:var(--ios-2);font-weight:600;letter-spacing:.01em}
+.ecard .ev{font:700 26px/1.1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px}
+.ecard .ev small{font:600 13px var(--f-body);color:var(--ios-2);letter-spacing:0;margin-left:4px}
+.ecard .es{font-size:12.5px;color:var(--ios-2);margin-top:3px;line-height:1.35}
+.ecard .ed{display:inline-block;font:600 12.5px var(--f-body);padding:2px 8px;border-radius:9px;margin-top:8px;font-variant-numeric:tabular-nums}
+.ed.up{background:rgba(255,59,48,.14);color:#C0271D}.ed.dn{background:rgba(52,199,89,.15);color:#1E7B34}.ed.fl{background:rgba(142,142,147,.16);color:var(--ios-2)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ed.up{color:#FF6B61}:root:not([data-theme="light"]) .ed.dn{color:#4CD964}}
+:root[data-theme="dark"] .ed.up{color:#FF6B61}:root[data-theme="dark"] .ed.dn{color:#4CD964}
+.spark{display:flex;align-items:flex-end;gap:2px;height:30px;margin-top:10px}
+.spark i{flex:1 1 0;min-width:2px;border-radius:2px 2px 0 0;background:var(--c,#8e8e93);opacity:.45}
+.spark i.on{opacity:1}.spark i.hot{background:#ff3b30;opacity:1}
+.jlist{padding:4px 0}
+.jrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;padding:10px 16px;border-top:.5px solid var(--ios-sep);font-size:14px}
+.jrow:first-child{border-top:0}
+.jrow b{font-weight:600}.jrow small{display:block;color:var(--ios-2);font-size:12.5px}
+.jrow .jv{font:600 14px var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.jdot{width:8px;height:8px;border-radius:50%;background:#ff9500;align-self:center}
+.jdot.r{background:#ff3b30}
+@media (max-width:340px){.egrid{grid-template-columns:1fr}}
 </style>
 <main class="ios" id="utils">
-  <a class="back" href="plan.html">Карта производства</a>
-  <h1>Счётчики и откачка</h1>
-  <p class="lead">Показания приборов учёта (электроэнергия, газ, вода) и откачка сточных вод: когда, сколько, кто.</p>
+  <a class="back" href="razdel.html#site">Площадка</a>
+  <h1>Энергоресурсы и счётчики</h1>
+  <p class="lead">Главное — электроэнергия и газ: расход по месяцам и скачки. Ниже — вода и стоки, приборы учёта; в самом конце — откачка выгребных ям.</p>
   <div id="view"><p class="lead">Загружаю…</p></div>
 </main>
 <script id="ut-data" type="application/json">__UTILS__</script>
@@ -78,49 +101,80 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     month: sum(function (x) { var d = day(x.d); return d.getMonth() === cm && d.getFullYear() === cy; }),
     prev: sum(function (x) { var d = day(x.d); return d.getMonth() === pm && d.getFullYear() === py; })
   };
-  function cell(t, s) { return '<div><span>' + esc(t) + '</span><b>' + (s.n ? n(s.v) + '<small>м³</small>' : '—') + '</b></div>'; }
-  var last = P[0];
-  var h = '<div class="igroup hero"><div class="hnum">' + (last ? n(last.v) + '<small>м³</small>' : '—') + '</div>' +
-    '<div class="hsub">' + (last ? 'Последняя откачка — ' + esc(dt(last.d)) + ' · ' : 'Откачек нет · ') + esc(S.prev.n + ' ' + pl(S.prev.n, 'откачка', 'откачки', 'откачек') + ' за ' + MONN[pm] + ', ' + n(S.prev.v) + ' м³') + '</div>' +
-    '<div class="hst">' + cell('Вчера', S.yday) + cell('Неделя', S.week) + cell(MONN[cm][0].toUpperCase() + MONN[cm].slice(1), S.month) + cell(MONN[pm][0].toUpperCase() + MONN[pm].slice(1), S.prev) + '</div></div>';
-  h += '<p class="ihdr">Откачка сточных вод · ' + P.length + '</p><div class="igroup">';
-  h += P.map(function (x) {
-    return '<div class="prow"><span class="pd">' + esc(dt(x.d)) + '</span><span class="pb"><b>' + esc(x.kind || 'Откачка') + '</b>' + (x.t ? ' · ' + esc(x.t) : '') +
-      '<small>Исполнитель: ' + esc(x.who) + (x.who_note ? ' (' + esc(x.who_note) + ')' : '') + '</small>' +
-      '<small>Заказчик: ' + esc(x.cust) + (x.cust_sign ? ', подписал ' + esc(x.cust_sign) : '') + (x.mark ? ' · отметка ' + esc(x.mark) : '') + '</small>' +
-      (x.place ? '<small>Место: ' + esc(x.place) + '</small>' : '<span class="pchip">место уточняется</span>') +
-      '</span><span class="pv">' + n(x.v) + ' м³</span></div>';
-  }).join('') + '</div>';
-  h += '<p class="pfoot">' + esc(D.place_note || '') + (D.acts_pdf ? ' <a href="' + esc(encodeURI(D.acts_pdf)) + '" target="_blank" rel="noopener" data-pdf="1" data-t="Акты откачки ЖБО" data-m="07.10 и 23.10.2026 · 2 стр." data-back="Счётчики и откачка" style="color:var(--ios-blue);text-decoration:none;font-weight:600">Акты (фото), PDF</a>' : '') + '</p>';
-  if ((D.septics || []).length) {
-    h += '<p class="ihdr">Выгребные ямы и септики</p><div class="igroup gtab"><table><thead><tr><th>Где</th><th>Объём</th><th>Откачка</th><th>Следующая</th></tr></thead><tbody>' +
-      D.septics.map(function (s) {
-        var nx = last && s.every ? new Date(+day(last.d) + s.every * 864e5) : null;
-        return '<tr><td>' + esc(s.n) + '</td><td>≈ ' + n(s.vol) + ' м³</td><td>раз в ' + esc(s.every) + ' дн.</td><td>' + (nx ? '≈ ' + nx.getDate() + ' ' + MON[nx.getMonth()] + '<small>если откачка отсюда</small>' : '—') + '</td></tr>';
-      }).join('') + '</tbody></table></div>';
+  function cell(t, s) { return '<div><span>' + esc(t) + '</span><b>' + (s.n ? n(s.v) + '<small>м³</small>' : '0<small>м³</small>') + '</b></div>'; }
+  var last = P[0], h = '';
+  var R = D.res, MS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+  var th = function (x) { return x == null ? '' : esc(String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')); };
+  var tk = function (x) { return x >= 10000 ? n((x / 1000).toFixed(x >= 100000 ? 0 : 1)) + '<small>тыс. ' : th(x) + '<small>'; };
+  function pct(a, b) { return a != null && b ? (a - b) / b * 100 : null; }
+  // скачок: изменение к прошлому месяцу больше порога ресурса (свет 15 %, газ 30 % — сезон, вода 20 %)
+  function card(t, A, unit, col, lim, sub, season) {
+    var k = A.length - 1; while (k >= 0 && A[k] == null) k--;
+    if (k < 0) return '';
+    var d = pct(A[k], A[k - 1]), mx = Math.max.apply(null, A.filter(function (x) { return x != null; }));
+    var hot = d != null && Math.abs(d) >= lim;
+    return '<div class="igroup ecard"><div class="et">' + esc(t) + '</div><div class="ev">' + tk(A[k]) + esc(unit) + '</small></div>' +
+      '<div class="es">' + MS[+R.months[k].slice(5) - 1] + (sub ? ' · ' + sub : '') + '</div>' +
+      (d == null ? '' : '<span class="ed ' + (hot ? 'up' : Math.abs(d) < 3 ? 'fl' : d > 0 ? 'fl' : 'dn') + '">' + (d > 0 ? '+' : '−') + n(Math.abs(d).toFixed(0)) + ' % к ' + MS[+R.months[k - 1].slice(5) - 1].replace(/ь$/, 'ю').replace(/й$/, 'ю').replace(/т$/, 'ту') + (hot ? (season ? ' · сезон' : ' · скачок') : '') + '</span>') +
+      '<div class="spark" style="--c:' + col + '" aria-hidden="true">' + A.map(function (x, i) {
+        var dd = pct(x, A[i - 1]), hh = dd != null && Math.abs(dd) >= lim && !season;
+        return '<i class="' + (i === k ? 'on' : '') + (hh ? ' hot' : '') + '" style="height:' + (x == null ? 0 : Math.max(6, Math.round(100 * x / mx))) + '%"></i>';
+      }).join('') + '</div></div>';
   }
-  // 13.11.2026, Т. В.: «счётчики — разбери все файлы и положи на портале» — ведомости электроэнергии, газ, вода за январь–октябрь 2026
-  var R = D.res;
   if (R && R.months) {
-    var MS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-    var th = function (x) { return x == null ? '—' : esc(String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')); };
+    var galvShare = R.elec.galv[R.elec.galv.length - 1] && R.elec.own[R.elec.own.length - 1] ? Math.round(100 * R.elec.galv[R.elec.galv.length - 1] / R.elec.own[R.elec.own.length - 1]) : null;
+    var wl = R.water[R.water.length - 1];
+    h += '<div class="egrid">' +
+      card('Электроэнергия', R.elec.own, 'кВт·ч', '#ff9500', 15, galvShare != null ? 'гальваника ' + galvShare + ' %' : '') +
+      card('Газ', R.gas, 'м³', '#007aff', 30, 'отопление и печи', 1) +
+      card('Водоснабжение', R.water, 'м³', '#30b0c7', 20, 'ввод водопровода') +
+      (R.sewer ? card('Водоотведение', R.sewer, 'м³', '#5e5ce6', 20, 'стоки') :
+        '<div class="igroup ecard"><div class="et">Водоотведение</div><div class="ev">≈ ' + th(wl) + '<small>м³</small></div><div class="es">' + MS[+R.months[R.months.length - 1].slice(5) - 1] + ' · по водопотреблению</div><span class="ed fl">отдельного учёта стоков в ведомостях нет</span></div>') +
+      '</div>';
+    // скачки по месяцам: свет и газ — первым делом
+    var J = [];
+    function jumps(name, A, lim, unit, season) {
+      for (var i = 1; i < A.length; i++) { var d = pct(A[i], A[i - 1]); if (d != null && Math.abs(d) >= lim) J.push({ i: i, n: name, d: d, v: A[i], p: A[i - 1], u: unit, s: season }); }
+    }
+    jumps('Электроэнергия', R.elec.own, 15, 'кВт·ч'); jumps('Газ', R.gas, 30, 'м³', 1); jumps('Вода', R.water, 20, 'м³');
+    J.sort(function (a, b) { return b.i - a.i || (a.n === 'Вода') - (b.n === 'Вода'); });
+    var fi = R.elec.feed.length - 1, fsum = R.elec.own[fi] + R.elec.sub[fi], fgap = R.elec.feed[fi] != null ? R.elec.feed[fi] - fsum : null;
+    h += '<p class="ihdr">Скачки и отклонения</p><div class="igroup jlist">' +
+      (fgap != null && fgap > 0.1 * fsum ? '<div class="jrow"><span class="jdot r"></span><span><b>Фидер № 8 ПС «Поляны» · ' + MS[+R.months[fi].slice(5) - 1] + '</b><small>по общему вводу ' + th(R.elec.feed[fi]) + ' кВт·ч, наши счётчики и субабоненты — ' + th(fsum) + '. Разница ' + Math.round(100 * fgap / R.elec.feed[fi]) + ' % — другие потребители фидера или потери; вопрос главному инженеру</small></span><span class="jv">+' + th(fgap) + '</span></div>' : '') +
+      J.slice(0, 8).map(function (x) {
+        return '<div class="jrow"><span class="jdot' + (x.s ? '' : ' r') + '"></span><span><b>' + esc(x.n) + ' · ' + MS[+R.months[x.i].slice(5) - 1] + '</b><small>' + th(x.p) + ' → ' + th(x.v) + ' ' + esc(x.u) + (x.s ? ' · отопительный сезон' : '') + '</small></span><span class="jv">' + (x.d > 0 ? '+' : '−') + n(Math.abs(x.d).toFixed(0)) + ' %</span></div>';
+      }).join('') + '</div>';
     var mx = Math.max.apply(null, R.elec.own), mg = Math.max.apply(null, R.gas);
     var bar = function (v, m, c) { return '<span style="display:inline-block;height:8px;border-radius:4px;background:' + c + ';width:' + Math.max(2, Math.round(70 * v / m)) + 'px;vertical-align:middle;margin-left:6px"></span>'; };
-    h += '<p class="ihdr">Энергоресурсы по месяцам · 2026</p><div class="igroup gtab"><table><thead><tr><th>Месяц</th><th class="l">Электроэнергия, свои, кВт·ч</th><th class="l">в т. ч. гальваника</th><th class="l">субабоненты</th><th class="l">фидер № 8</th><th class="l">Газ, м³</th><th class="l">Вода, м³</th></tr></thead><tbody>' +
-      R.months.map(function (m, i) { return '<tr><td>' + MS[+m.slice(5) - 1] + '</td><td class="l">' + th(R.elec.own[i]) + bar(R.elec.own[i], mx, '#ff9500') + '</td><td class="l">' + th(R.elec.galv[i]) + '</td><td class="l">' + th(R.elec.sub[i]) + '</td><td class="l">' + th(R.elec.feed[i]) + '</td><td class="l">' + th(R.gas[i]) + bar(R.gas[i], mg, '#007aff') + '</td><td class="l">' + th(R.water[i]) + '</td></tr>'; }).join('') +
+    h += '<p class="ihdr">По месяцам · 2026</p><div class="igroup gtab"><table><thead><tr><th>Месяц</th><th class="l">Электроэнергия, свои, кВт·ч</th><th class="l">Газ, м³</th><th class="l">Вода, м³</th><th class="l">в т. ч. гальваника</th><th class="l">субабоненты</th></tr></thead><tbody>' +
+      R.months.map(function (m, i) { return '<tr><td>' + MS[+m.slice(5) - 1] + '</td><td class="l">' + th(R.elec.own[i]) + bar(R.elec.own[i], mx, '#ff9500') + '</td><td class="l">' + th(R.gas[i]) + bar(R.gas[i], mg, '#007aff') + '</td><td class="l">' + th(R.water[i]) + '</td><td class="l">' + th(R.elec.galv[i]) + '</td><td class="l">' + th(R.elec.sub[i]) + '</td></tr>'; }).join('') +
       '</tbody></table></div>';
-    h += '<div class="igroup"><p class="gnote"><b>Что видно:</b><br>' + (R.an || []).map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';
+    h += '<div class="igroup"><p class="gnote"><b>Что видно:</b><br>' + (R.an || []).filter(function (x) { return !/без показаний/.test(x); }).map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';
+    var LR = R.last.filter(function (x) { return x.v != null; }), LN = R.last.filter(function (x) { return x.v == null; });
     h += '<p class="ihdr">Электросчётчики · ' + MS[+R.last_m.slice(5) - 1] + '</p><div class="igroup gtab"><table><thead><tr><th>Присоединение</th><th class="l">коэф.</th><th class="l">начало</th><th class="l">конец</th><th class="l">расход, кВт·ч</th></tr></thead><tbody>' +
-      R.last.map(function (x) { return '<tr><td>' + esc(x.n) + '<small>№ ' + esc(x.sn) + (x.g === 'sub' ? ' · субабонент' : x.g === 'feed' ? ' · общий ввод' : '') + '</small></td><td class="l">' + th(x.k) + '</td><td class="l">' + (x.p0 == null ? '—' : n(x.p0)) + '</td><td class="l">' + (x.p1 == null ? '—' : n(x.p1)) + '</td>' + (x.v == null ? '<td class="l no">нет показаний</td>' : '<td class="l">' + th(x.v) + '</td>') + '</tr>'; }).join('') +
-      '</tbody></table></div><p class="pfoot">' + esc(R.src || '') + '</p>';
+      LR.map(function (x) { return '<tr><td>' + esc(x.n) + '<small>№ ' + esc(x.sn) + (x.g === 'sub' ? ' · субабонент' : x.g === 'feed' ? ' · общий ввод' : '') + '</small></td><td class="l">' + th(x.k) + '</td><td class="l">' + n(x.p0) + '</td><td class="l">' + n(x.p1) + '</td><td class="l">' + th(x.v) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    if (LN.length) h += '<p class="pfoot">Не показаны ' + LN.length + ' ' + pl(LN.length, 'прибор', 'прибора', 'приборов') + ' без показаний во всех ведомостях: ' + esc(LN.map(function (x) { return x.n; }).join(', ')) + '. ' + esc(D.ask_note || 'Действуют ли они и кто снимает показания — вопрос главному инженеру.') + '</p>';
+    h += '<p class="pfoot">' + esc(R.src || '') + '</p>';
   }
-  h += '<p class="ihdr">Счётчики · ' + (D.meters || []).length + '</p><div class="igroup gtab"><table><thead><tr><th>Прибор</th><th class="l">Последнее</th><th class="l">За ' + MONN[pm] + '</th></tr></thead><tbody>' +
-    (D.meters || []).map(function (m) {
-      return '<tr><td>' + esc(m.n) + '<small>' + esc(m.u) + '</small></td>' + (m.last ? '<td class="l">' + esc(m.last) + '</td>' : '<td class="l no">нет показаний</td>') + (m.month ? '<td class="l">' + esc(m.month) + '</td>' : '<td class="l no">—</td>') + '</tr>';
-    }).join('') + '</tbody></table></div>';
-  h += '<div class="igroup"><p class="gnote">' + esc(D.meters_note || '') + '</p></div>';
   h += '<p class="pfoot">' + esc(D.how || '') + '</p>';
-  if (D.asof) h += '<p class="pfoot">' + esc(D.note || '') + '</p>';
+  // откачка выгребных ям — последним блоком (Т. В. 14.11)
+  var S2 = S;
+  h += '<p class="ihdr">Откачка выгребных ям · ' + P.length + '</p><div class="igroup">' +
+    '<div class="jrow"><span></span><span><b>' + (last ? 'Последняя — ' + esc(dt(last.d)) + ', ' + n(last.v) + ' м³' : 'Откачек нет') + '</b><small>' + esc(S2.prev.n + ' ' + pl(S2.prev.n, 'откачка', 'откачки', 'откачек') + ' за ' + MONN[pm] + ', ' + n(S2.prev.v) + ' м³; за ' + MONN[cm] + ' — ' + (S2.month.n ? n(S2.month.v) + ' м³' : 'не было')) + '</small></span><span></span></div>' +
+    P.map(function (x) {
+      return '<div class="prow"><span class="pd">' + esc(dt(x.d)) + '</span><span class="pb"><b>' + esc(x.kind || 'Откачка') + '</b>' + (x.t ? ' · ' + esc(x.t) : '') +
+        '<small>Исполнитель: ' + esc(x.who) + (x.who_note ? ' (' + esc(x.who_note) + ')' : '') + '</small>' +
+        (x.place ? '<small>Место: ' + esc(x.place) + '</small>' : '') + '</span><span class="pv">' + n(x.v) + ' м³</span></div>';
+    }).join('') + '</div>';
+  if ((D.septics || []).length) {
+    h += '<div class="igroup gtab" style="margin-top:10px"><table><thead><tr><th>Яма</th><th>Объём</th><th>Откачка</th><th>Следующая</th></tr></thead><tbody>' +
+      D.septics.map(function (s) {
+        var nx = last && s.every ? new Date(+day(last.d) + s.every * 864e5) : null;
+        return '<tr><td>' + esc(s.n) + '</td><td>≈ ' + n(s.vol) + ' м³</td><td>раз в ' + esc(s.every) + ' дн.</td><td>' + (nx ? '≈ ' + nx.getDate() + ' ' + MON[nx.getMonth()] : 'по заявке') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+  h += '<p class="pfoot">' + esc(D.place_note || '') + (D.acts_pdf ? ' <a href="' + esc(encodeURI(D.acts_pdf)) + '" target="_blank" rel="noopener" data-pdf="1" data-t="Акты откачки ЖБО" data-m="07.10 и 23.10.2026 · 2 стр." data-back="Энергоресурсы и счётчики" style="color:var(--ios-blue);text-decoration:none;font-weight:600">Акты (фото), PDF</a>' : '') + '</p>';
   V.innerHTML = h;
 })();
 </script>

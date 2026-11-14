@@ -20,6 +20,8 @@ Google-диска»; шаг 0 — «Да, скопировать». План —
 Связь с Диском — gdrive_1c.put_file (подписанный запрос к веб-приложению 1c@; пишет только в «Фабрика — портал/<папка>»).
 За прогон — не дольше BUDGET секунд; что не успело — в следующий прогон (участок bots, раз в 10 минут). Python 3.6."""
 import hashlib, hmac, base64, json, os, re, secrets, time
+def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
+    with open(p, mode, **kw) as _f: return _f.read()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAXF = 20 * 1024 * 1024
@@ -62,7 +64,7 @@ def scrub(o):
 
 
 def kcmd(code_dir):
-    try: k = open(os.path.join(code_dir, 'k_cmd.txt')).read().strip().lower()
+    try: k = _rd(os.path.join(code_dir, 'k_cmd.txt')).strip().lower()
     except Exception: return None
     return bytes.fromhex(k) if re.fullmatch(r'[0-9a-f]{64}', k) else None
 
