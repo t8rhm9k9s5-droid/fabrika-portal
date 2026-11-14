@@ -600,11 +600,14 @@
     function out() { var x = b('Выйти из личного входа', 'llink'); x.addEventListener('click', function () { A.ql.off().then(A.forget).then(function () { location.reload(); }); }); return x; }
     // 1) пароль (один раз на устройстве, и всегда — как запасной путь)
     function pwStep(then) {
-      head('Вход: ' + (first || 'личный пароль'), 'Логин ' + (me.login || '') + ' · введите личный пароль');
+      // 14.11.2026, Т. В. (новый браузер, ввёл 4 цифры — «неверный логин или пароль»): код быстрого входа живёт только на своём устройстве —
+      //   здесь подсказка, а не «неверный пароль»; личный пароль портала — не короче 8 знаков
+      head('Вход: ' + (first || 'личный пароль'), 'Логин ' + (me.login || '') + ' · личный пароль портала (не код из 4 цифр)');
       var i = el('input'); i.type = 'password'; i.autocomplete = 'current-password'; i.placeholder = 'Пароль'; box.appendChild(i);
       var go = b('Продолжить'); box.appendChild(go); line('');
       function run() {
         if (!i.value) return line('Введите пароль.', true);
+        if (/^\d{4,6}$/.test(i.value)) return line('Это код быстрого входа — он действует только на том устройстве, где его задали. Здесь нужен личный пароль портала (не короче 8 знаков); потом можно задать код и для этого устройства.', true);
         go.disabled = true; go.textContent = 'Проверяю…';
         var pw = i.value;
         A.signIn(me.login, pw).then(function () { me = A.me() || me; then(pw); }, function (e) { go.disabled = false; go.textContent = 'Продолжить'; line(e.message, true); i.select(); });

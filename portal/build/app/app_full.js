@@ -1798,7 +1798,7 @@ const texCache={};
 function planTex(src){if(!texCache[src]){texCache[src]=new THREE.TextureLoader().load(window.PLAN_DATA&&PLAN_DATA[src]||src)}return texCache[src]}
 function buildPlans(){
   gPlans.clear();
-  for(const k in planOn){ if(!planOn[k]||!PLANS[k]) continue;
+  for(const k of planOn){ if(!PLANS[k]) continue;   // 14.11.2026 (реестр Рекса F4-04): planOn — Set (CodeQL), не объект
     const b=S.buildings.find(o=>o.k===k); if(!b||b.hidden) continue;
     const P=PLANS[k], o=S0.b[k].poly, A=P.A;
     // the floor plan as a texture on the floor: UVs from the original outline, positions from the edited one

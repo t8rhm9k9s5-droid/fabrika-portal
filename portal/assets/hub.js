@@ -612,7 +612,8 @@
       } else K.push({ id: 'recl', v: '—', s: 'отчёт 1С по рекламациям не загружен', tone: 'none' });
       var BF = x.DOC && x.DOC.buffer;
       // 13.11.2026, Т. В.: «онлайн-продажи — приоритетная карточка, в продажах чуть ли не первой»: мониторинг наших моделей в интернете (build/online/online.json)
-      var ON = null; try { ON = JSON.parse((document.getElementById('online-data') || {}).textContent || 'null'); } catch (eO) { ON = null; }
+      // 14.11.2026 (реестр Рекса F4-01): данные онлайн-продаж — объект window.T14_ONLINE (sales_frag), не JSON-текст элемента
+      var ON = window.T14_ONLINE && typeof window.T14_ONLINE === 'object' && !Array.isArray(window.T14_ONLINE) ? window.T14_ONLINE : null;
       // 14.11.2026: весь Рунет (Google + Сотрудник10) по номенклатуре 1С — главнее старой выборки по 11 моделям
       var RNk = ON && ON.runet;
       if (RNk && RNk.offers) { var olow2 = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
