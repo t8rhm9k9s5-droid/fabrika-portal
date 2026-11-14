@@ -815,7 +815,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   }
   // 11.11.2026, Т. В.: «отдельный раздел онлайн-продажи: артикулы, объём продаж, другие продавцы наших артикулов, сравнение цен». Данные — build/online/online.json
   // 14.11.2026 (CodeQL js/xss-through-dom): данные — объект window.T14_ONLINE из сборки (build_site.py), не текст DOM; строки — без < >
-  var ONLINE = (function () { function cl(v) { if (typeof v === 'string') return v.replace(/[<>]/g, ''); if (Array.isArray(v)) return v.map(cl); if (v && typeof v === 'object') { var o = {}; Object.keys(v).forEach(function (k) { if (k !== '__proto__') o[k] = cl(v[k]); }); return o; } return v; } return window.T14_ONLINE ? cl(window.T14_ONLINE) : null; })();
+  var ONLINE = (function () { function cl(v) { if (typeof v === 'string') return v.replace(/[<>]/g, '').replace(/"/g, '\u201D').replace(/'/g, '\u2019'); if (Array.isArray(v)) return v.map(cl); if (v && typeof v === 'object') { var o = {}; Object.keys(v).forEach(function (k) { if (k !== '__proto__') o[k] = cl(v[k]); }); return o; } return v; } return window.T14_ONLINE ? cl(window.T14_ONLINE) : null; })();
   function online() {
     var O = ONLINE, h = '<a class="back" href="razdel.html#online">Онлайн-продажи</a><h1>Онлайн-продажи</h1>';
     if (!O) { V.innerHTML = h + '<p class="lead">Данных пока нет.</p>'; return; }

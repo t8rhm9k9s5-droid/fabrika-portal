@@ -26,7 +26,8 @@ if (!window.THREE || !THREE.OrbitControls) { fail('Не загрузилась 3
   if (!ok){ fail('Этот браузер или телефон не дал странице доступ к 3D-графике (WebGL). В настройках Safari проверьте, что WebGL не выключен, или откройте сайт в другом браузере.'); return; } }
 // 14.11.2026 CodeQL js/xss-through-dom: данные модели вставляются в карточки как HTML — угловые скобки из строк убираем при чтении
 //   (в данных их нет; правки людей с телефонов и из формы тоже чистятся — clean())
-const clean = v => String(v == null ? '' : v).replace(/[<>]/g, '');
+// 14.11.2026 (CodeQL js/incomplete-html-attribute-sanitization): кавычки — типографские, чтобы строка данных не закрыла атрибут
+const clean = v => String(v == null ? '' : v).replace(/[<>]/g, '').replace(/"/g, '\u201D').replace(/'/g, '\u2019');
 // 14.11.2026 (CodeQL js/xss-through-dom): данные модели — объект window.T14_SITE из сборки (gen_app.py), не текст DOM; строки — без < >
 const cleanAll = v => typeof v === 'string' ? clean(v) : Array.isArray(v) ? v.map(cleanAll) : (v && typeof v === 'object') ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, cleanAll(x)])) : v;
 const SITE = cleanAll(window.T14_SITE || {});
