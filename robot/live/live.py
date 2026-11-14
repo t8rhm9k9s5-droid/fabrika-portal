@@ -246,9 +246,19 @@ def _alerts_io(fn):
 def _quiet(t): return not ('08:00' <= t.strftime('%H:%M') < '20:00')
 
 
-def _alert_send(subject, text):
+def _alert_outcome(r1, r2):
+    """14.11.2026 (ревью Рекса, CG-10 п. 5): 'ok' — хотя бы один канал принял; 'unknown' — исход неизвестен (таймаут после отправки:
+    не повторять вслепую); 'fail' — оба канала явно отказали (можно повторить)"""
+    rs = [str(r1), str(r2)]
+    if any(r.startswith('ok') for r in rs): return 'ok'
+    if any('неизвестно' in r for r in rs): return 'unknown'
+    return 'fail'
+
+
+def _alert_send(subject, text, outcome=None):
     r1 = mail_send(subject, text); r2 = max_send(text)
     log('оповещение:', subject[:90], '; письмо', r1, '; MAX', r2)
+    if outcome is not None: outcome.append(_alert_outcome(r1, r2))
     return 'письмо: %s; MAX: %s' % (r1, r2)
 
 
@@ -269,20 +279,36 @@ def alert(key, text, critical=False):
     if r: log('оповещение', key + ':', r); return r
     first = str(text).split('\n')[0]
     subj = first if first.startswith('Фабрика') else 'Фабрика: ' + first
-    return _alert_send(subj if len(subj) <= 150 else subj[:147].rstrip() + '…', str(text))
+    oc = []
+    res = _alert_send(subj if len(subj) <= 150 else subj[:147].rstrip() + '…', str(text), oc)
+    if oc and oc[0] == 'fail':                             # оба канала явно отказали — не глушить повтор на 6 ч
+        def undo(S):
+            if S['k'].get(key) == ts: S['k'].pop(key, None)
+        try: _alerts_io(undo)
+        except Exception as e: log('  ! оповещение', key, 'откат отметки:', e.__class__.__name__, e)
+    return res
 
 
 def alert_flush():
     """накопленные за ночь некритичные оповещения — одним сообщением после 08:00"""
     if _quiet(now()): return None
-    def step(S):
-        q = S['q']; S['q'] = []
-        return q
-    try: q = _alerts_io(step)
+    # 14.11.2026 (ревью Рекса, CG-10 п. 5): очередь не очищается до отправки. Убираем ровно отправленные записи, если канал принял
+    #   или исход неизвестен (без слепого повтора); при явном отказе обоих каналов записи остаются до следующего прохода.
+    try: q = _alerts_io(lambda S: list(S['q']))
     except Exception as e: log('  ! оповещения за ночь:', e.__class__.__name__, e); return None
     if not q: return None
     text = 'Фабрика: оповещения робота с 20:00 до 08:00 (%d):\n\n' % len(q) + '\n\n'.join('• %s — %s' % (x.get('t', '')[11:16], x.get('text')) for x in q)
-    return _alert_send('Фабрика: оповещения за ночь (%d)' % len(q), text[:12000])
+    oc = []
+    res = _alert_send('Фабрика: оповещения за ночь (%d)' % len(q), text[:12000], oc)
+    if oc and oc[0] != 'fail':
+        sent = [(x.get('t'), x.get('key'), x.get('text')) for x in q]
+        def drop(S):
+            S['q'] = [x for x in S['q'] if (x.get('t'), x.get('key'), x.get('text')) not in sent]
+        try: _alerts_io(drop)
+        except Exception as e: log('  ! оповещения за ночь: очистка очереди:', e.__class__.__name__, e)
+        if oc[0] == 'unknown': log('  ! оповещения за ночь: исход отправки неизвестен — повторно не шлём')
+    else: log('  ! оповещения за ночь: оба канала отказали — очередь сохранена до следующего прохода')
+    return res
 
 
 def is_workday(d):

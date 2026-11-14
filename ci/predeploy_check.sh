@@ -20,46 +20,75 @@ for f in build/*.py app_build/*.py app_build/host/live/*.py; do
 done
 
 step '2. Python: ошибки, которые линтер видит без запуска (неопределённые имена, повторы, синтаксис)'
+# 14.11 ревью Рекса CG-10 п. 3: линтер обязателен и закреплён по версии; решает код завершения, а не фильтр вывода
+RUFF_VER='0.16.9'
 RUFF=$(command -v ruff || echo /root/.local/bin/ruff)
-if [ -x "$RUFF" ]; then
-  # sklad3d/mount_cams/data3d исполняются через exec внутри extra3d.py — их имена приходят из него
-  OUT=$("$RUFF" check --select F821,F811,F823,F632,F701,F702,F704,F706,E9,PLE --output-format concise \
-        $(ls build/*.py app_build/*.py app_build/host/live/*.py | grep -v -e before -e '\.orig' -e sklad3d.py -e mount_cams.py -e data3d.py) 2>&1 | grep -v '^Found\|^All checks')
-  [ -n "$OUT" ] && { echo "$OUT" | head -30; bad 'ruff: ошибки выше'; } || echo 'ruff: ок'
-else echo '· ruff не установлен (pip install --break-system-packages ruff)'; fi
+if [ ! -x "$RUFF" ]; then bad "ruff не установлен (pip install --break-system-packages ruff==$RUFF_VER)"
+elif [ "$("$RUFF" --version 2>/dev/null)" != "ruff $RUFF_VER" ]; then bad "ruff: нужна версия $RUFF_VER, стоит $("$RUFF" --version 2>&1)"
+else
+  # sklad3d/mount_cams/data3d исполняются через exec внутри extra3d.py — их имена приходят из него (исключены по имени файла)
+  PYF=$(ls build/*.py app_build/*.py app_build/host/live/*.py | grep -v -e before -e '\.orig' -e sklad3d.py -e mount_cams.py -e data3d.py)
+  OUT=$("$RUFF" check --no-cache --select F821,F811,F823,F632,F701,F702,F704,F706,E9,PLE --output-format concise $PYF 2>&1); RC=$?
+  if [ $RC = 0 ]; then echo 'ruff: ок'; else echo "$OUT" | head -30; bad "ruff: код $RC"; fi
+fi
 
 step '3. JS: синтаксис файлов и встроенных скриптов страниц'
-for f in site/assets/*.js build/acct/*.js build/app/*.js; do
+for f in site/assets/*.js build/acct/*.js build/app/*.js build/*.js; do
   case "$f" in *before*) continue;; esac
   node --check "$f" 2>/dev/null || bad "node --check $f"
 done
 node fabrika/tools/ci/test_inline_js.js site || bad 'встроенные скрипты страниц'
 
 step '4. JS: недостижимый код, дубли ключей, NaN и пр. (ESLint, только ошибки)'
-EL="$H/fabrika/tools/eslint"
-if [ -x "$EL/node_modules/.bin/eslint" ]; then
+EL="$H/fabrika/tools/eslint"; ESL_VER='v8.57.0'
+if [ ! -x "$EL/node_modules/.bin/eslint" ]; then bad "eslint не найден (npm i eslint@8.57.0 eslint-plugin-html@7.1.0 в fabrika/tools/eslint)"
+elif [ "$("$EL/node_modules/.bin/eslint" --version 2>/dev/null)" != "$ESL_VER" ]; then bad "eslint: нужна версия $ESL_VER"
+else
   OUT=$("$EL/node_modules/.bin/eslint" --no-eslintrc -c "$EL/.eslintrc.html.json" --quiet -f unix \
-        $(ls site/assets/*.js build/*_frag.html | grep -v -e before -e '\.min\.') 2>&1 | grep -v '^$\|problem')
-  [ -n "$OUT" ] && { echo "$OUT" | head -30; bad 'eslint: ошибки выше'; } || echo 'eslint: ок'
-else echo '· eslint не найден (npm i eslint@8.57.0 eslint-plugin-html@7.1.0 в fabrika/tools/eslint)'; fi
+        $(ls site/assets/*.js build/*_frag.html build/*.js | grep -v -e before -e '\.min\.') 2>&1); RC=$?
+  if [ $RC = 0 ]; then echo 'eslint: ок'; else echo "$OUT" | head -30; bad "eslint: код $RC"; fi
+fi
 
 step '5. Робот: тесты на макете ~/.fabrika_live (сеть отключена), текущий код'
-T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
-cp -r "$H/fix/work/py" "$T/py"
-for f in app_build/host/live/*.py; do case "$f" in *before*) continue;; esac; cp "$f" "$T/py/live/"; done
-cp app_build/drive_pack.py "$T/py/drive_pack.py"
-# 14.11: шесть тестов устарели до сегодняшних правок (ждут прежних умолчаний) — для них сверяется число пройденных проверок
-#   с базой (то же число было на коде до 14.11); меньше базы — регрессия. Обновить тесты — в списке задач.
-BASE=' test_audit_deploy:10 test_audit_mail:8 test_glonass_stages:13 test_mail_gas:21 test_mail_q:2 test_poll_remind:0 '
-( cd "$T/py/live" && for t in test/test_*.py; do
-    n=$(basename "$t" .py); o=$(timeout 120 unshare -n python3 -W ignore "$t" 2>&1); r=$(echo "$o" | tail -1); k=$(echo "$o" | grep -c '✓')
-    case "$r" in 'ALL OK'*) echo "✓ $n";;
-      *) b=$(echo "$BASE" | grep -o " $n:[0-9]*" | cut -d: -f2)
-         if [ -n "$b" ] && [ "$k" -ge "$b" ]; then echo "· $n (устаревший, проверок $k из базы $b)";
-         else echo "✗ $n (проверок $k${b:+, база $b}): ${r:0:120}"; echo FAIL >> "$T/fail"; fi;;
-    esac
-  done )
-[ -f "$T/fail" ] && bad 'тесты робота'
+# 14.11 ревью Рекса CG-10 п. 1–2: каждый шаг подготовки проверяется; код завершения теста — раньше разбора вывода;
+#   допускаются только перечисленные устаревшие тесты и только с тем же падением, что на коде до 14.11.
+T=$(mktemp -d) || { bad 'mktemp'; T=; }
+if [ -n "$T" ]; then
+  trap 'rm -rf "$T"' EXIT
+  cp -r "$H/fix/work/py" "$T/py" || bad 'копирование макета тестов'
+  for f in app_build/host/live/*.py; do case "$f" in *before*) continue;; esac; cp "$f" "$T/py/live/" || bad "копирование $f"; done
+  cp app_build/drive_pack.py "$T/py/drive_pack.py" || bad 'копирование drive_pack.py'
+  NT=$(ls "$T/py/live/test/"test_*.py 2>/dev/null | wc -l)
+  [ "$NT" -ge 20 ] || bad "тестов робота найдено $NT (ожидается не меньше 20)"
+  # устаревшие (ждут прежних умолчаний: SMTP, 9 участков, даты, справочники) — «имя|мин. ✓|начало сообщения AssertionError»
+  STALE="$T/stale.txt"
+  cat > "$STALE" <<'EOS'
+test_audit_deploy|10|пакет со сломанным live.py — откат из копии
+test_audit_mail|8|явный отказ сервера (554)
+test_glonass_stages|13|в 08:35 — одно письмо: 2 трекера
+test_mail_gas|21|st/in.php: верная подпись
+test_mail_q|2|дубль не ставится
+EOS
+  if cd "$T/py/live"; then
+    for t in test/test_*.py; do
+      n=$(basename "$t" .py); o=$(timeout 120 unshare -n python3 -W ignore "$t" 2>&1); rc=$?; k=$(echo "$o" | grep -c '✓')
+      if [ $rc = 0 ] && echo "$o" | tail -1 | grep -q '^ALL OK'; then echo "✓ $n"; continue; fi
+      line=$(grep "^$n|" "$STALE")
+      if [ $rc = 1 ] && [ -n "$line" ]; then
+        mk=$(echo "$line" | cut -d'|' -f2); msg=$(echo "$line" | cut -d'|' -f3)
+        last=$(echo "$o" | grep '^AssertionError: ' | tail -1)
+        if [ "$k" -ge "$mk" ] && case "$last" in "AssertionError: $msg"*) true;; *) false;; esac; then
+          echo "· $n (устаревший: то же падение, проверок $k из $mk)"; continue; fi
+      fi
+      if [ $rc = 1 ] && [ "$n" = test_poll_remind ]; then                 # формат FAIL-строк; база 14.11 — 29 устаревших FAIL
+        nf=$(echo "$o" | grep -c '^  FAIL'); if [ "$nf" -le 29 ] && ! echo "$o" | grep -q 'Traceback'; then echo "· $n (устаревший: FAIL $nf из 29)"; continue; fi
+      fi
+      echo "✗ $n (код $rc, проверок $k): $(echo "$o" | tail -2 | tr '\n' ' ' | cut -c1-160)"; echo FAIL >> "$T/fail"
+    done
+    cd "$H" || exit 2
+  else bad 'переход в каталог тестов'; fi
+  [ -f "$T/fail" ] && bad 'тесты робота'
+fi
 
 if [ "${1:-}" != '--quick' ]; then
   step '6. Пульс разделов на живых файлах хостинга (данные есть → на экране не «—»)'

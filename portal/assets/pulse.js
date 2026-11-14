@@ -74,13 +74,15 @@
       var sf = gv.reduce(function (a, g) { return a + g.f; }, 0), sp = gv.reduce(function (a, g) { return a + g.p; }, 0), pd = G.reduce(function (a, g) { return a + (g.pd || 0); }, 0);
       var low = gv.filter(function (g) { return g.v < 90; }), best = gv.slice().sort(function (a, b) { return b.v - a.v; })[0], worst = gv.slice().sort(function (a, b) { return a.v - b.v; })[0];
       var gd = gl && gl.d ? gl.d.filter(function (x) { return x[1] > 0; }) : [], gavg = gd.length ? gd.reduce(function (a, x) { return a + x[1]; }, 0) / gd.length : null, norm = gl && gl.norm || 165;
-      var k = [K('Выпуск месяца', C.o, sp ? Math.round(sf / sp * 100) : '—', '%', sp ? n(sf) + ' из ' + n(sp) + ' шт плана' : 'отчёты ПДО ещё не пришли', sp ? sf / sp * 100 : null, 'staff.html#s-pf'),
+      // 14.11.2026 (ревью Рекса CG-10 п. 8): при отчётах по дням план — на прошедшие рабочие дни, это «план на дату», не процент месяца
+      var onDate = !!(R.daily && R.part), mo = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'][+String(R.m || '').slice(5, 7) - 1] || '';
+      var k = [K(onDate ? 'Выпуск: план на дату' : 'Выпуск месяца', C.o, sp ? Math.round(sf / sp * 100) : '—', '%', sp ? n(sf) + ' из ' + n(sp) + ' шт ' + (onDate ? 'плана на ' + (R.dn ? R.dn + ' раб. дн. ' : '') + mo : 'плана ' + mo) : 'отчёты ПДО ещё не пришли', sp ? sf / sp * 100 : null, 'staff.html#s-pf'),
         K('План в сутки', C.b, pd ? n(pd) : '—', 'шт', 'по ' + G.length + ' группам продукции', null, 'staff.html#s-pf'),
         K('Ниже 90 % плана', C.r, gv.length ? low.length : '—', gv.length ? 'из ' + gv.length : '', low.length ? low.slice(0, 2).map(function (g) { return g.s || g.n; }).join(', ') : gv.length ? 'все группы в графике' : 'нет данных', null, 'staff.html#s-pf'),
         K('Лучшая группа', C.g, best ? Math.round(best.v) : '—', best ? '%' : '', best ? best.n : 'нет данных', best ? Math.min(100, best.v) : null, 'staff.html#s-pf'),
         K('Отстающая группа', C.y, worst ? Math.round(worst.v) : '—', worst ? '%' : '', worst ? worst.n : 'нет данных', worst ? Math.min(100, worst.v) : null, 'staff.html#s-pf'),
         K('Гальваника', C.t, gavg != null ? Math.round(gavg / norm * 100) : '—', '%', gavg != null ? 'в среднем ' + Math.round(gavg) + ' траверс в сутки при норме ' + norm : 'отчёт линии ещё не пришёл', gavg != null ? gavg / norm * 100 : null, 'staff.html#s-galv')];
-      var b1 = ['Выпуск по группам продукции', '% плана месяца · черта — 100 %', 'hbars', G.map(function (g) { var v = g.v; return [g.s || g.n, v == null ? 0 : Math.min(130, v), v == null ? '#c7c7cc' : v >= 90 ? C.g : v >= 70 ? C.y : C.r, v == null ? '—' : Math.round(v)]; }), 100];
+      var b1 = ['Выпуск по группам продукции', (onDate ? '% плана на дату' : '% плана месяца') + ' · черта — 100 %', 'hbars', G.map(function (g) { var v = g.v; return [g.s || g.n, v == null ? 0 : Math.min(130, v), v == null ? '#c7c7cc' : v >= 90 ? C.g : v >= 70 ? C.y : C.r, v == null ? '—' : Math.round(v)]; }), 100];
       var b2 = ['Гальваническая линия по дням', 'траверс в сутки · норма ' + norm, 'bars', gd.slice(-12).map(function (x) { return [String(x[0]).length > 2 ? dd(x[0]) : x[0], x[1], n(x[1])]; })];
       return [k, [b1, b2]];
     },
@@ -105,7 +107,8 @@
         K('Брак на складах', C.r, b.length ? n(b[b.length - 1]) : '—', 'шт', b.length ? 'на начало месяца ' + n(b[0]) : '', null, 'stock.html#s-whs'),
         K('Минусовые остатки', C.y, R.neg ? R.neg.length : '—', 'позиций', R.neg && R.neg[0] ? R.neg[0][0] + ' ' + R.neg[0][2] : '', null, 'stock.html#s-mis'),
         K('Заявки ОМТС', C.v, O.v != null ? n(O.v) : '—', O.v != null ? 'в просрочке' : '', O.fail ? 'данные снабжения ещё не пришли' : (O.card || ''), null, 'omts.html#s-hist')];
-      var g = (A.g || []).map(function (x) { return [String(x.n).replace(/^ОП\s+/, ''), (x.v || [])[3] || 0]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 9), mx = g.length ? g[0][1] : 1;
+      // 14.11.2026 (ревью Рекса CG-10 п. 7): строка склада — массив [имя, начало, приход, расход, конец] (smvs.bin) или объект {n, v} (smv.bin)
+      var g = (A.g || []).map(function (x) { var a = Array.isArray(x); return [String(a ? x[0] : x.n).replace(/^ОП\s+/, ''), +(a ? x[4] : (x.v || [])[3]) || 0]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 9), mx = g.length && g[0][1] > 0 ? g[0][1] : 1;
       var b1 = ['Остатки по складам', 'шт · на ' + dd(A.date), 'hbars', g.map(function (x) { return [x[0], x[1] / mx * 100, C.b, n(x[1])]; }), null];
       var b2 = ['Движение за месяц — все склады', 'шт · начало, приход, расход, конец', 'bars', t.length === 4 ? [['начало', t[0], n(t[0])], ['приход', t[1], n(t[1])], ['расход', t[2], n(t[2])], ['конец', t[3], n(t[3])]] : []];
       return [k, [b1, b2]];
@@ -113,12 +116,14 @@
     log: function () {                                     // 13.11.2026, Т. В.: «логистика — только автотранспорт, перемещение грузов, свой транспорт; отгрузки — продажи»
       var G = glData() || bin('gl.bin');
       var cars = G && G.cars || [], nm = {}; cars.forEach(function (c) { nm[c.id] = c.name + (c.vrn ? ' ' + c.vrn.split(' ').slice(0, 2).join(' ') : ''); });
-      var dk = G && G.day ? Object.keys(G.day).sort() : [], yd = dk.length > 1 ? dk[dk.length - 2] : dk[0], rows = yd ? (G.day[yd] || []) : [];
+      // 14.11.2026 (ревью Рекса CG-10 п. 9): «вчера» — вчерашняя дата по Москве, а не предпоследний день в файле
+      var ydw = new Date(Date.now() + 3 * 3600e3 - 864e5).toISOString().slice(0, 10);
+      var dk = G && G.day ? Object.keys(G.day).sort() : [], yd = G && G.day && G.day[ydw] ? ydw : null, rows = yd ? (G.day[yd] || []) : [];
       var km = rows.reduce(function (a, r) { return a + (r.km || 0); }, 0), moving = rows.filter(function (r) { return (r.km || 0) > 1; }).length;
       var sk = G && G.skud, skn = sk && sk.rows ? sk.rows.filter(function (r) { return r.fails || r.bad; }).length : null;
       var k = [K('Машин в учёте', C.b, cars.length || '—', '', G ? 'ГЛОНАСС · обновлено ' + (G.t || '').slice(11, 16) : 'нужен доступ к ГЛОНАСС', null, 'transport.html'),
-        K('Пробег вчера', C.o, G ? n(km) : '—', 'км', G ? dd(yd) : '', null, 'transport.html'),
-        K('В движении вчера', C.g, G ? moving : '—', G ? 'из ' + rows.length : '', G ? 'машин с пробегом больше 1 км' : '', G && rows.length ? Math.round(moving / rows.length * 100) : null, 'transport.html'),
+        K('Пробег вчера', C.o, yd ? n(km) : '—', 'км', yd ? dd(yd) : G ? 'нет данных за вчера' : '', null, 'transport.html'),
+        K('В движении вчера', C.g, yd ? moving : '—', yd ? 'из ' + rows.length : '', yd ? 'машин с пробегом больше 1 км' : G ? 'нет данных за вчера' : '', yd && rows.length ? Math.round(moving / rows.length * 100) : null, 'transport.html'),
         K('СКУД и треки', C.r, skn != null ? skn : '—', skn != null ? 'с расхождениями' : '', sk ? 'водители территориального транспорта · ' + (sk.month || '') : 'водители территориального транспорта — уточняем', null, 'transport.html#skud'),
         K('Расход ГСМ', C.y, '—', '', 'нормы и путевые листы — ждём от Камаевой М. В.', null, ''),
         K('Перемещение грузов', C.t, '—', '', 'своим транспортом между складами и офисами — готовится', null, '')];

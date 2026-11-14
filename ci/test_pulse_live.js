@@ -51,7 +51,7 @@ if (!P) { console.error('T14Pulse не загрузился'); process.exit(2); 
 const SECS = ['sales', 'prod', 'quality', 'supply', 'log', 'online', 'fin', 'items', 'people', 'docs', 'site'];
 // Карточки, у которых в файлах хостинга данные есть всегда: «—» тут — ошибка кода, а не отсутствие отчёта.
 const EXPECT = {
-  prod: ['Выпуск месяца', 'План в сутки', 'Ниже 90 % плана', 'Лучшая группа', 'Отстающая группа'],
+  prod: ['Выпуск месяца|Выпуск: план на дату', 'План в сутки', 'Ниже 90 % плана', 'Лучшая группа', 'Отстающая группа'],
   sales: ['План месяца', 'Продажи за день', 'Отчёты офисов'],
 };
 function cards(html) {
@@ -66,12 +66,12 @@ function render(sec) { const host = { innerHTML: '' }; try { P.render(sec, host)
   await new Promise(r => setTimeout(r, 300));
   const res = {}, bad = [];
   for (const s of SECS) {
-    if (!P.has(s)) { res[s] = { missing: true }; continue; }
+    if (!P.has(s)) { res[s] = { missing: true }; if (EXPECT[s]) bad.push(s + ': раздела нет в pulse.js'); continue; }   // 14.11 ревью Рекса CG-10 п. 4
     const r = render(s);
     if (r.err) { res[s] = { err: r.err }; bad.push(s + ': ошибка ' + r.err.split('\n')[0]); continue; }
     const C = cards(r.html);
     res[s] = { cards: C, dash: C.filter(c => c.v.trim() === '—').map(c => c.t) };
-    (EXPECT[s] || []).forEach(t => { const c = C.find(x => x.t === t); if (!c) bad.push(s + ': нет карточки «' + t + '»'); else if (c.v.trim() === '—') bad.push(s + ': «' + t + '» = — (' + c.s + ')'); });
+    (EXPECT[s] || []).forEach(t => { const alt = t.split('|'), c = C.find(x => alt.includes(x.t)); if (!c) bad.push(s + ': нет карточки «' + t + '»'); else if (c.v.trim() === '—') bad.push(s + ': «' + c.t + '» = — (' + c.s + ')'); });
   }
   if (asJson) { console.log(JSON.stringify({ res, bad, asked: Object.keys(asked) }, null, 1)); }
   else {
