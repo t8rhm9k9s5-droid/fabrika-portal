@@ -1286,7 +1286,7 @@ function netDetail(){
     const isSh=g.name.startsWith('ШГРП'),gz=nG(g.x,g.y);
     if(isSh) nShgrp(g,gz); else if(g.box) nGasBox(g,gz); else if(g.stand) rvStand(g); else nInlet(g);
   }
-  nWells(); nPower(); nCables(); nCamCables(); nEquip(); nRadio(); nParts(); nTrees(); if (typeof buildProjCanopy === 'function') buildProjCanopy(); rvBuild();
+  nWells(); nPower(); nCables(); nCamCables(); nEquip(); nRadio(); nParts(); nTsh(); nTrees(); if (typeof buildProjCanopy === 'function') buildProjCanopy(); rvBuild();
 }
 // trees: deciduous crowns of several lumps, conifers as stacked cones (survey symbols); birches — white trunks with dark marks,
 // a tall narrow crown; shrubs — low lumps. Foliage follows the season in Polyany (24.10.2026, the user: «исправь деревья и остальные
@@ -1374,6 +1374,17 @@ function nParts(){   // 09.11.2026: оборудование из частей (
       if(q.t==='box'){nBox(A,nP(x0+q.o[0],y0+q.o[1],g+q.o[2]),new THREE.Vector3(q.s[0]/2,0,0),new THREE.Vector3(0,q.s[2]/2,0),new THREE.Vector3(0,0,q.s[1]/2))}
       else{nCyl(A,nP(x0+q.a[0],y0+q.a[1],g+q.a[2]),nP(x0+q.b[0],y0+q.b[1],g+q.b[2]),q.r,12)}
       const m=nMesh(A,nMat(q.c||0x5b6f60,.08));m.userData={kind:'eq',e};gPow.add(m);pickables.push(m)}}
+}
+function nTsh(){   // 14.11.2026: головная секция ТШ-15НМ над бункером «Гефест» (build/review/corr_tsh_1114.py; GLB: X — к приводу, Y — вверх)
+  const T=S.tsh15; if(!T) return;
+  const ub=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer};
+  const [bx,by]=T.at,g=nG(bx,by),o=nP(bx,by,g+T.dz);
+  const ex=nP(bx+T.dir[0],by+T.dir[1],g+T.dz).sub(o).normalize(),ey=nP(bx,by,g+T.dz+1).sub(o).normalize(),ez=new THREE.Vector3().crossVectors(ex,ey).normalize();
+  const grp=new THREE.Group();grp.matrixAutoUpdate=false;grp.matrix.makeBasis(ex,ey,ez).setPosition(o);
+  for(const q of T.m){const P=new Int16Array(ub(q.p)),f=new Float32Array(P.length);for(let i=0;i<P.length;i++)f[i]=P[i]/1000;
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(f,3));geo.setIndex(new THREE.BufferAttribute(new Uint16Array(ub(q.i)),1));geo.computeVertexNormals();
+    const m=new THREE.Mesh(geo,nMat(q.c,.08,true));m.userData={kind:'eq',e:T.e};grp.add(m);pickables.push(m)}
+  gPow.add(grp);grp.updateMatrixWorld(true);
 }
 function nRadio(){   // 09.11.2026: радиомост по схеме А. В. Сотрудник1
   for(const R of (S.radio||[])){const e={name:R.name,note:R.note,src:R.src},A=nAcc(),pa=nP(R.a[0],R.a[1],R.za),pb=nP(R.b[0],R.b[1],R.zb);
@@ -2995,6 +3006,8 @@ function infoBuilding(b){
   const bp = (S.bphotos || {})[b.k];
   if (bp && bp.length) d = `<div class="bphotos-w"><div class="bphotos">${bp.map((p, i)=>`<button type="button" class="photo" data-bphoto="${esc(b.k)}:${i}" title="Открыть фото"><img src="${esc(p.src)}" alt="${esc(p.cap)}" loading="lazy"></button>`).join('')}</div><p class="bpcap">Фото: ${esc(bp.map(p=>p.by).filter((x, i, a)=>x && a.indexOf(x) === i).join(', '))}${bp[0].date ? ', ' + bp[0].date.split('-').reverse().join('.') : ''}</p></div>` + d;
   d += `<details class="info"><summary>Данные из документов</summary><dl class="kv">${rows}</dl>${b.k==='ws'?'<p><b>Электроснабжение цеха (75/23-ИОС5.1)</b></p>'+wsPower():''}${mapLinks(b.lat,b.lon)}</details>`;
+  // 14.11.2026: чертежи и документы портала, привязанные к зданию (b.docs — build/review/corr_tsh_1114.py: ТШ-15НМ у котельной «Гефест»)
+  if (b.docs && b.docs.length) d += `<details class="info" open><summary>Чертежи и документы: ${b.docs.length}</summary><ul class="bdocs">${b.docs.map(x=>`<li><a href="${esc(String(x.href).replace(/^(?!library\/|https:\/\/)/, '#'))}" target="_blank" rel="noopener">${esc(x.t)}</a>${x.s ? ` <small>${esc(x.s)}</small>` : ''}</li>`).join('')}</ul></details>`;
   if (cams.length) d += `<details class="info" open><summary>Камеры: ${cams.length}</summary><div class="camlist">${cams.map(c=>`<button type="button" data-cam="${esc(c.key)}">${c.num?`<b>${esc(c.num)}</b>`:''}${esc(c.isNew||!c.num?c.name:c.name)}</button>`).join('')}</div></details>`;
   return d;
 }
@@ -5524,7 +5537,8 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     const stockEl = kids.find(e => e.classList.contains('cardgrp')), areaEl = kids.find(e => e.classList.contains('areabox')), heatEl = kids.find(e => e.classList.contains('heatsec'));
     const camsEl = det(/^Камеры/), floorsEl = det(/^Этажи/), drvEl = det(/^Водители/), regEl = det(/^По перечню/), ndvEl = det(/^Инвентаризация/), szzEl = det(/^Проект СЗЗ/);
     const photoEl = kids.find(e => e.classList.contains('bphotos-w'));   // 01.11.2026: фото здания (журнал бота №12) — сверху «Главного»
-    const known = new Set([docEl, stockEl, areaEl, heatEl, camsEl, floorsEl, drvEl, regEl, ndvEl, szzEl, photoEl].filter(Boolean));
+    const bdocEl = det(/^Чертежи и документы/);   // 14.11.2026: ТШ-15НМ у котельной «Гефест» (b.docs) — во вкладке «Документы»
+    const known = new Set([docEl, stockEl, areaEl, heatEl, camsEl, floorsEl, drvEl, regEl, ndvEl, szzEl, photoEl, bdocEl].filter(Boolean));
     const warnEls = kids.filter(e => !known.has(e) && e.tagName === 'P' && e.classList.contains('warn'));
     const paras = kids.filter(e => !known.has(e) && !warnEls.includes(e) && e.tagName === 'P');
     const rest = kids.filter(e => !known.has(e) && !warnEls.includes(e) && !paras.includes(e));
@@ -5599,7 +5613,8 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     const tabs = [{t: 'Главное', nodes: main}];
     if (peopleT) tabs.push({t: peopleT, nodes: people});
     tabs.push({t: 'Системы', nodes: [heatSec, ndvSec, szzSec, ...restSecs]});
-    tabs.push({t: 'Документы', nodes: [regSec, docSec, descSec], edit: true});
+    const bdocSec = bdocEl && fromDetails(bdocEl, 'doc', '#5856d6', 'Чертежи и документы', (sumText(bdocEl).split(':')[1] || '').trim());
+    tabs.push({t: 'Документы', nodes: [bdocSec, regSec, docSec, descSec], edit: true});
     if (!peopleT) main.push(...people);   // no people tab: nothing is lost
     const pos = cardEdit.querySelector('details.pos'), nm = pos && pos.querySelector('input[data-t="name"]'); if (pos && !(nm && nm.value)) pos.open = false;
     goTo = render({key: 'b:' + b.k, sum, tabs});

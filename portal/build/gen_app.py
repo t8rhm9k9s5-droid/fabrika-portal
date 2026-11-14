@@ -256,6 +256,7 @@ import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — час�
 import corr_cams_1028 as _CC; _CC.apply(d, _RV._zat(d))   # 28.10.2026: камеры — места, направление, наклон, угол обзора по кадрам 26.10 и скриншотам А. Сотрудник1
 import corr_cams_1028b as _CB; _CB.apply(d, _RV._zat(d))   # 28.10.2026, второй заход: ответ А. Сотрудник1 — 053 выше, 042 на забор, 019 и 024 внутрь, 063 с вагончиком, новая 028, склад ТПА вплотную, 10 бытовок
 import corr_alex_1106 as _AX; _AX.apply(d, _RV._zat(d))   # 09.11.2026: правки А. В. Сотрудник1 (письмо 06.11, «да» 09.11) — work/alex_0611/plan.md
+import corr_tsh_1114 as _TS; _TS.apply(d)   # 14.11.2026: головная секция ТШ-15НМ над бункером «Гефест», описание котла (fabrika/work/tsh15nm/pkg)
 if _oso.environ.get('FABRIKA_DUMP'):
     _cg1_dump_func = json.dump
     _cg1_dump_value = d
@@ -271,6 +272,7 @@ edits_js = _cg1_read_file('/home/claude/site/assets/edits.js', encoding='utf-8')
 import perf_hooks as _PH; app = _PH.app(app)   # 26.10.2026: качество отрисовки по силе устройства (app/perf.js)
 app = _CC.app(app)   # 28.10.2026: угол обзора камеры из данных и строка «сверено по кадру» в карточке камеры
 app = _AX.app(app)   # 09.11.2026: опоры газа (skip/brk), распашные ворота, радиомост, котлы по списку А. В. в карточке отопления
+app = _TS.app(app)   # 14.11.2026: nTsh() — деталь ТШ-15НМ в слое оборудования
 out = (shell + '\n'
        '<script id="perf-js" src="assets/perf.js"></script>\n'
        '<script id="lib-loader">' + LOADER + '</script>\n'

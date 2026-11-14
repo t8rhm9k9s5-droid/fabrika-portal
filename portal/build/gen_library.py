@@ -14,14 +14,15 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник21 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник22 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
-        ('marketing', 'Имя3: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('marketing', 'Имя4: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
         ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
         # 14.11.2026: график ППР и ТО (Сотрудник1 А. В., 13.11) — «Производство → Оборудование»
         ('equip', 'Оборудование: графики ППР и ТО', '#ff9500', 'chart'),
-        ('objects', 'Объекты ФТС и ВиТ: ТЗ и новые изделия', '#30b0c7', 'form'),   # 14.11.2026: запросы заказчиков (ООО «Система ПБО» и др.) — разбор, план, замечания
+        ('objects', 'Объекты ФТС и ВиТ: ТЗ и новые изделия', '#30b0c7', 'form'),
+        ('drawings', 'Чертежи и технические эскизы', '#5856d6', 'form'),   # 14.11.2026: ТШ-15НМ к котельной «Гефест» (obj — здание модели, obj_t — подпись)   # 14.11.2026: запросы заказчиков (ООО «Система ПБО» и др.) — разбор, план, замечания
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
 INT = [('regs', 'Регламенты и инструкции', '#5856d6', 'rules', 'По процессам: от звонка клиенту до рекламации'),
@@ -76,10 +77,10 @@ PUB = _cg1_read_json('/home/claude/library/fabrikant_su.json', encoding='utf-8')
 #   не было адресата. Решение пользователя (опрос): адресат и срок на портале; договоры, ЭДО, акты рекламации и политика ПДн — юристу,
 #   каталог, гарантии и сертификаты (замена файлов на сайте) — маркетологу (письмо 26.10, срок 30.10, ответа нет). Служебные пометки
 #   проверки («WebFetch…») из текста убраны — сотрудникам они не нужны.
-PUB_TO = {'agreements': 'юрист Сотрудник33 Н. Я.', 'edo': 'юрист Сотрудник33 Н. Я.', 'claims': 'юрист Сотрудник33 Н. Я.', 'policy': 'юрист Сотрудник33 Н. Я.',
-          'catalogs': 'маркетолог Сотрудник39 Д. Р.', 'warranty': 'маркетолог Сотрудник39 Д. Р.', 'certs': 'маркетолог Сотрудник39 Д. Р.'}
-PUB_ST = {'маркетолог Сотрудник39 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
-          'юрист Сотрудник33 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник39 придержано (ищем её письмо с прайсом)
+PUB_TO = {'agreements': 'юрист Сотрудник36 Н. Я.', 'edo': 'юрист Сотрудник36 Н. Я.', 'claims': 'юрист Сотрудник36 Н. Я.', 'policy': 'юрист Сотрудник36 Н. Я.',
+          'catalogs': 'маркетолог Сотрудник41 Д. Р.', 'warranty': 'маркетолог Сотрудник41 Д. Р.', 'certs': 'маркетолог Сотрудник41 Д. Р.'}
+PUB_ST = {'маркетолог Сотрудник41 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
+          'юрист Сотрудник36 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник41 придержано (ищем её письмо с прайсом)
 def _pub_clean(x):
     x = re.sub(r'\s*\((?:WebFetch|бинарные данные)[^)]*\)', '', x)
     x = re.sub(r'^Файл (\.\w+) не прочитан\s*—\s*', r'Файл \1 в старом формате — ', x)
@@ -259,7 +260,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     return '<span class="badge ok">до ' + dmy(it.valid_to) + '</span>';
   }
   function docRow(it, cat){
-    var sub = [it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', kb(it.bytes)].filter(Boolean).join(' · ');
+    var sub = [it.obj_t ? esc(it.obj_t) : '', it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', kb(it.bytes)].filter(Boolean).join(' · ');
     var pdf = /\\.pdf$/i.test(it.file) ? ' data-pdf="1" data-t="' + esc(it.title) + '" data-m="' + esc(sub.replace(/<[^>]+>/g, '')) + '" data-b="' + (it.bytes || 0) + '" data-back="' + esc(cat.t.split(' ')[0]) + '"' : '';
     return '<a class="irow" href="' + esc(it.file) + '" target="_blank" rel="noopener"' + pdf + '>' + tile(cat.c, cat.i) + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(it.title) + '</span>' +
       (sub || it.valid_to ? '<span class="isub">' + sub + (it.valid_to ? ' ' + validity(it) : '') + '</span>' : '') + '</span><span class="ichev"></span></span></a>' + pubAlso(it.pub);
@@ -308,7 +309,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
     {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник21 К. В.: записки на возврат   // 11.11.2026, Сотрудник21 К. В.
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник22 К. В.: записки на возврат   // 11.11.2026, Сотрудник22 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -426,7 +427,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник21, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник22, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -485,7 +486,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     var tb = (x.f || []).filter(function(f){ return f.hdr && f.rows && f.rows.length; })[0], c = x.cmp;
     var fw = '';   // 02.11.2026: «Пересылалось N раз: даты и адреса» не показываем — документ и так один раз
     var nf = function(v){ return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ' '); };
-    var cm = c ? '<div class="rnote" style="margin:0 16px 10px"><b>Сравнение с действующим прайсом от ' + dmy(c.main) + '.</b> ' + (c.n - c.in ? 'Новых позиций, которых в прайсе нет: ' + (c.n - c.in) + '. ' : '') +
+    var cm = c ? '<div class="rnote" style="margin:0 16px 10px"><b>Сравнение с действующим прайсом от ' + dmy(c.main) + '.</b> ' + (c.n - c.in ? 'Сотрудник5 позиций, которых в прайсе нет: ' + (c.n - c.in) + '. ' : '') +
       (c.in ? 'Есть в прайсе: ' + c.in + (c.same < c.in ? ', цена другая — ' + (c.in - c.same) : ', цены совпадают') + '. ' : '') + (c.n - c.same ? 'Документ не дублирует прайс — изменения нужно внести в 1С и в прайс.' : 'Всё уже есть в прайсе.') + '</div>' +
       ((c.items || []).length ? '<div class="mtbl"><table><thead><tr><th>Позиция</th><th>Цена в документе</th><th>Прайс ' + dmy(c.main).slice(0, 5) + ': кат. I … V</th><th>К кат. I</th></tr></thead><tbody>' + c.items.map(function(z){
         var d = z.cats && z.cats.length ? Math.round((z.p / z.cats[0] - 1) * 1000) / 10 : null;
@@ -559,7 +560,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += how();
     V.innerHTML = h;
   }
-  // REDACTED_B64_10 «Регламенты и инструкции» (24.10.2026)
+  // REDACTED_B64_9 «Регламенты и инструкции» (24.10.2026)
   // inside the claude.ai artifact Word and Excel files can't be served — the originals are in the phone app and on the encrypted site (24.10.2026)
   var HAS_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
   var NO_ORIG = 'исходник Word/Excel — в приложении «Фабрика» на телефоне';
@@ -623,7 +624,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'econ') return D.econ ? D.econ.sources.length : '';
     return R.issues.length;
   }
-  // REDACTED_B64_10 «Цены и мощность» (24.10.2026, docs_econ.py)
+  // REDACTED_B64_9 «Цены и мощность» (24.10.2026, docs_econ.py)
   function nfr(x, d){ return x == null ? '—' : Number(x).toLocaleString('ru-RU', {maximumFractionDigits: d == null ? 1 : d}); }
   function econ(c){
     var E = D.econ, h = '<a class="back" href="#">Документы</a><h1>' + esc(c.t) + '</h1>';
@@ -739,7 +740,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       '<div class="igroup" style="margin-top:14px"><div class="rtip">' + esc(R.style.wait) + '</div></div>' +
       (D.pub ? '<div class="igroup"><a class="irow" href="#pub">' + tile('#e0262f', 'book') + '<span class="ic"><span class="ibody"><span class="ititle">Сверка документов fabrikant.su</span><span class="isub">Что не так в каталоге, договорах, сертификатах — ' + dmy(D.pub.checked) + '</span></span><span class="ival">' + D.pub.docs.length + '</span><span class="ichev"></span></span></a></div>' : '') +
       '<p class="ihdr">Итог</p><div class="igroup">' +
-      [['Документов на фирменном бланке', R.docs.filter(function(r){ return r.brand; }).length], ['Без вопросов', n('ok')], ['Есть вопросы к руководителю', n('fix')], ['Новые регламенты — проекты', n('draft')],
+      [['Документов на фирменном бланке', R.docs.filter(function(r){ return r.brand; }).length], ['Без вопросов', n('ok')], ['Есть вопросы к руководителю', n('fix')], ['Сотрудник5 регламенты — проекты', n('draft')],
        ['Убрано дублей', (R.removed || []).length]].map(function(x){
         return '<div class="irow static"><span class="ic"><span class="ibody"><span class="ititle">' + x[0] + '</span></span><span class="ival">' + x[1] + '</span></span></div>'; }).join('') + '</div>' +
       ((R.removed || []).length ? '<p class="ihdr">Убраны как дубли</p><div class="igroup">' + R.removed.map(function(x){ var r = x.to && rById(x.to), l = r ? r.title : x.lbl || '';   // 30.10: копии с fabrikant.su — ссылка на раздел, где документ показан (x.href)

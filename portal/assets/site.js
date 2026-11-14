@@ -937,9 +937,9 @@
       bar.appendChild(link('home.html', 's_home', 'Главная'));
       var bs = trigger('sections', cur === 'home.html' || cur === 'chat.html' ? '' : 'on', 's_grid', 'Разделы'); bar.appendChild(bs);
       // 13.11.2026, Т. В.: «чат пока убери»
+      // 14.11.2026, Т. В.: «кнопку поиска интегрируем в общее меню — на одной плашке, как в 3D-карте» (круглой отдельной кнопки больше нет)
+      bar.appendChild(trigger('search', '', 's_search', 'Поиск'));
       bar.appendChild(trigger('profile', '', 's_person', 'Профиль'));
-      srch = trigger('search', 'psrch', 's_search', 'Поиск', true);
-      document.body.classList.add('has-srch');
     }
     bar.style.setProperty('--n', String(bar.children.length));
     // цвет раздела — для точки у заголовка страницы

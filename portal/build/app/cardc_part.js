@@ -185,7 +185,8 @@
     const stockEl = kids.find(e => e.classList.contains('cardgrp')), areaEl = kids.find(e => e.classList.contains('areabox')), heatEl = kids.find(e => e.classList.contains('heatsec'));
     const camsEl = det(/^Камеры/), floorsEl = det(/^Этажи/), drvEl = det(/^Водители/), regEl = det(/^По перечню/), ndvEl = det(/^Инвентаризация/), szzEl = det(/^Проект СЗЗ/);
     const photoEl = kids.find(e => e.classList.contains('bphotos-w'));   // 01.11.2026: фото здания (журнал бота №12) — сверху «Главного»
-    const known = new Set([docEl, stockEl, areaEl, heatEl, camsEl, floorsEl, drvEl, regEl, ndvEl, szzEl, photoEl].filter(Boolean));
+    const bdocEl = det(/^Чертежи и документы/);   // 14.11.2026: ТШ-15НМ у котельной «Гефест» (b.docs) — во вкладке «Документы»
+    const known = new Set([docEl, stockEl, areaEl, heatEl, camsEl, floorsEl, drvEl, regEl, ndvEl, szzEl, photoEl, bdocEl].filter(Boolean));
     const warnEls = kids.filter(e => !known.has(e) && e.tagName === 'P' && e.classList.contains('warn'));
     const paras = kids.filter(e => !known.has(e) && !warnEls.includes(e) && e.tagName === 'P');
     const rest = kids.filter(e => !known.has(e) && !warnEls.includes(e) && !paras.includes(e));
@@ -260,7 +261,8 @@
     const tabs = [{t: 'Главное', nodes: main}];
     if (peopleT) tabs.push({t: peopleT, nodes: people});
     tabs.push({t: 'Системы', nodes: [heatSec, ndvSec, szzSec, ...restSecs]});
-    tabs.push({t: 'Документы', nodes: [regSec, docSec, descSec], edit: true});
+    const bdocSec = bdocEl && fromDetails(bdocEl, 'doc', '#5856d6', 'Чертежи и документы', (sumText(bdocEl).split(':')[1] || '').trim());
+    tabs.push({t: 'Документы', nodes: [bdocSec, regSec, docSec, descSec], edit: true});
     if (!peopleT) main.push(...people);   // no people tab: nothing is lost
     const pos = cardEdit.querySelector('details.pos'), nm = pos && pos.querySelector('input[data-t="name"]'); if (pos && !(nm && nm.value)) pos.open = false;
     goTo = render({key: 'b:' + b.k, sum, tabs});

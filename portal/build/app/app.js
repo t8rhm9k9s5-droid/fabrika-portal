@@ -1154,6 +1154,8 @@ function infoBuilding(b){
   const bp = (S.bphotos || {})[b.k];
   if (bp && bp.length) d = `<div class="bphotos-w"><div class="bphotos">${bp.map((p, i)=>`<button type="button" class="photo" data-bphoto="${esc(b.k)}:${i}" title="Открыть фото"><img src="${esc(p.src)}" alt="${esc(p.cap)}" loading="lazy"></button>`).join('')}</div><p class="bpcap">Фото: ${esc(bp.map(p=>p.by).filter((x, i, a)=>x && a.indexOf(x) === i).join(', '))}${bp[0].date ? ', ' + bp[0].date.split('-').reverse().join('.') : ''}</p></div>` + d;
   d += `<details class="info"><summary>Данные из документов</summary><dl class="kv">${rows}</dl>${b.k==='ws'?'<p><b>Электроснабжение цеха (75/23-ИОС5.1)</b></p>'+wsPower():''}${mapLinks(b.lat,b.lon)}</details>`;
+  // 14.11.2026: чертежи и документы портала, привязанные к зданию (b.docs — build/review/corr_tsh_1114.py: ТШ-15НМ у котельной «Гефест»)
+  if (b.docs && b.docs.length) d += `<details class="info" open><summary>Чертежи и документы: ${b.docs.length}</summary><ul class="bdocs">${b.docs.map(x=>`<li><a href="${esc(String(x.href).replace(/^(?!library\/|https:\/\/)/, '#'))}" target="_blank" rel="noopener">${esc(x.t)}</a>${x.s ? ` <small>${esc(x.s)}</small>` : ''}</li>`).join('')}</ul></details>`;
   if (cams.length) d += `<details class="info" open><summary>Камеры: ${cams.length}</summary><div class="camlist">${cams.map(c=>`<button type="button" data-cam="${esc(c.key)}">${c.num?`<b>${esc(c.num)}</b>`:''}${esc(c.isNew||!c.num?c.name:c.name)}</button>`).join('')}</div></details>`;
   return d;
 }
