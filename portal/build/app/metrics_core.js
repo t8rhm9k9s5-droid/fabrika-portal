@@ -188,11 +188,20 @@
     G.forEach(function (g) { var pm = 0; RAW.forEach(function (x) { if (g.src.indexOf(x.n) >= 0) pm += (x.pm != null ? x.pm : daily ? 0 : (x.p || 0)); }); g.pd = pm && wdm ? Math.round(pm / wdm) : null; });
     return { m: m, lines: L, groups: G, part: part, dn: dn, daily: daily, wd: (D.months[m] || {}).wd, last: (D.months[m] || {}).last || null };
   }
+  // Compare coverage before publication time: an old live file must not roll back a newer build snapshot.
+  function prodPreferLive(A, B, liveData, snapData) {
+    if (!A) return false; if (!B) return true;
+    var period = S(A.m).localeCompare(S(B.m)); if (period) return period > 0;
+    if (!!A.noRep !== !!B.noRep) return !A.noRep;
+    var coverage = S(A.last).localeCompare(S(B.last)); if (coverage) return coverage > 0;
+    return S(liveData && liveData.t) >= S(snapData && snapData.t);
+  }
   function prod() {
-    var Z = LIVE['pf.bin'], live = !!(Z && (Z.months || Z.calc)), R = (live ? prodCalc(Z) : null) || prodCalc(SNAP.pf);
+    var Z = LIVE['pf.bin'], A = prodCalc(Z), B = prodCalc(SNAP.pf);
+    var live = prodPreferLive(A, B, Z, SNAP.pf), R = live ? A : B;
     if (!R) return null;
     var gv = R.groups.filter(function (g) { return g.v != null; }), ok = gv.filter(function (g) { return g.v >= 90; }).length;
-    R.k = 'prod'; R.live = live && !!prodCalc(Z); R.date = R.last || R.m; R.ok = ok; R.ng = gv.length;
+    R.k = 'prod'; R.live = live; R.date = R.last || R.m; R.ok = ok; R.ng = gv.length;
     R.worst = gv.length ? Math.min.apply(null, gv.map(function (g) { return g.v; })) : null;
     R.src = R.live ? 'отчёты ПДО (робот хостинга)' : 'отчёты ПДО (снимок сборки)';
     R.card = R.noRep ? 'план ' + MNR[+R.m.slice(5) - 1] + ' утверждён, отчётов ещё нет' : ok + ' из ' + gv.length + ' групп ≥ 90% · ' + MN[+R.m.slice(5) - 1] + (R.last ? ' по ' + dd(R.last) : '');

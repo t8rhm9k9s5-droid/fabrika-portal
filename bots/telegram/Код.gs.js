@@ -4379,7 +4379,31 @@ function glPick_(G) {
       return { id: glS_(c.id, 40), name: glS_(c.name, 80), vrn: glS_(c.vrn, 20), lat: glN_(c.lat), lng: glN_(c.lng), dt: glS_(c.dt, 25), speed: glN_(c.speed), state: glS_(c.state, 40), addr: glS_(c.addr, 200),
         pos_bad: c.pos_bad === true, pos_why: glS_(c.pos_why, 200), pos_chk: glS_(c.pos_chk, 200) }; }),   // 30.10.2026 треки: «сбой сигнала» у точки «где сейчас»
     zones_hit: (Array.isArray(G.zones_hit) ? G.zones_hit : []).slice(0, GL_MAX_HITS).map(function (z) {
-      return { id: glS_(z.id, 40), zone: glS_(z.zone, 120), sd: glS_(z.sd, 25), ed: glS_(z.ed, 25), min: glN_(z.min) }; }) };
+      return { id: glS_(z.id, 40), zone: glS_(z.zone, 120), sd: glS_(z.sd, 25), ed: glS_(z.ed, 25), min: glN_(z.min) }; }),
+    skud: glSkud_(G && G.skud), km: glKm_(G && G.km) };   // 14.11.2026: СКУД и история пробега — см. ниже
+}
+/** 14.11.2026, Т. В.: «СКУД и треки — данные есть, а в пульсе «—»» — СКУД водителей (glonass.py, pub['skud'] с 13.11) в ответ не проходил:
+ *  его не было в списке полей. Только известные поля, строки обрезаны; пустые строки — '' (страница «Транспорт» режет их .slice/.split). */
+function glSkud_(K) {
+  if (!K || typeof K !== 'object' || !Array.isArray(K.rows)) return null;
+  var s = function (x, n) { return glS_(x, n) || ''; };
+  return { month: s(K.month, 10), t: s(K.t, 25), src: s(K.src, 300), rule: s(K.rule, 400),
+    rows: K.rows.slice(0, GL_MAX_CARS).map(function (r) { r = r || {};
+      return { plate: s(r.plate, 20), car: s(r.car, 80), who: s(r.who, 120), skud_days: glN_(r.skud_days), skud_h: glN_(r.skud_h),
+        gps_days: glN_(r.gps_days), gps_km: glN_(r.gps_km), dep: glN_(r.dep), ret: glN_(r.ret),
+        flags: (Array.isArray(r.flags) ? r.flags : []).slice(0, 60).map(function (f) { f = f || {}; return { d: s(f.d, 10), t: s(f.t, 8), k: s(f.k, 200) }; }) }; }),
+    ops: (Array.isArray(K.ops) ? K.ops : []).slice(0, 20).map(function (o) { o = o || {}; return { who: s(o.who, 120), days: glN_(o.days), h: glN_(o.h) }; }) };
+}
+/** 14.11.2026, Т. В.: «Пробег по дням» в пульсе «Логистики» — два столбика: в gl.bin только вчера и сегодня. Робот копит компактную
+ *  историю км по машинам за 31 день (glonass.py, pub['km'] = {дата: {id машины: км}}); сюда — только даты, id и числа. */
+function glKm_(K) {
+  if (!K || typeof K !== 'object') return null;
+  var out = {};
+  Object.keys(K).filter(function (k) { return /^\d{4}-\d{2}-\d{2}$/.test(k) && K[k] && typeof K[k] === 'object'; }).sort().reverse().slice(0, 31).forEach(function (k) {
+    var row = {}; Object.keys(K[k]).slice(0, GL_MAX_CARS).forEach(function (id) { var v = glN_(K[k][id]); if (v != null) row[glS_(id, 40)] = v; });
+    out[k] = row;
+  });
+  return out;
 }
 /** 04.11.2026 трекеры: список по машинам — только известные поля, строки обрезаны. Текст отчёта (trackers_report: адреса почты, кому) на страницу не идёт. */
 var GL_TRK_ST = { silent: 1, err: 1, repair: 1, stand: 1, ok: 1, skip: 1 }, GL_TRK_K = { nogps: 1, coords: 1, km: 1, time: 1 };

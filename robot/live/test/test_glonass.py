@@ -60,6 +60,9 @@ check(c1['speed'] == 54.5 and c1['vrn'] == 'А123ВС62' and c1['addr'].startswi
 D = {x['id']: x for x in G['day'][today]}
 check(D['D1']['km'] == 182.4 and abs(D['D1']['move_h'] - 4.2) < 0.01 and D['D1']['trips'] == 3, 'пробег и время в движении из Total')
 check(D['D2']['km'] == 410.2 and D['D2']['move_h'] == 7.5, 'русские имена полей Total, «410,2» и «7:30»')
+KH = G.get('km') or {}                                # 14.11.2026: история км для «Пробег по дням» (дата → {id: км}), копится в state
+check((KH.get(today) or {}).get('D1') == 182.4 and (KH.get(today) or {}).get('D2') == 410.2 and store['glonass.json'].get('km_hist') == KH,
+      'gl.bin km: история пробега по машинам, как в day; та же — в state для следующих дней')
 st1 = D['D1']['stops']
 check(len(st1) == 1 and st1[0]['min'] == 65 and st1[0]['zone'] == 'Клиент «Ромашка»', 'стоянка между рейсами 65 мин в геозоне клиента (меньшая из вложенных), 3 мин — не стоянка')
 check(any(h['zone'] == 'Клиент «Ромашка»' and h['min'] == 65 for h in G['zones_hit']), 'заезд в геозону — в «доставках»')

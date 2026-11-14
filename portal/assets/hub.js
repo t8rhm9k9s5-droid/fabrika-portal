@@ -245,6 +245,7 @@
         var t = tileOf(d); if (t && d.id) location.hash = '#' + d.id; else if (t) location.hash = '#s-' + t.id;
       }, true);
       Promise.resolve(cfg.data ? cfg.data() : {}).then(function (ctx) { ST.ctx = ctx || {}; paint(ST.ctx); });
+      if (window.T14M && T14M.on) T14M.on(function () { if (ST.ctx) paint(ST.ctx); });
       if (cfg.live) cfg.live(function (ctx) { ST.ctx = ctx; paint(ctx); });
       // 01.11.2026: live.js показывает данные вкладки сразу, а свежий файл с хостинга докачивает следом — пришёл другой → перерисовать
       var rp = null;
@@ -289,6 +290,20 @@
     return { m: m, M: M, dn: dn, lines: R, groups: G, nofact: nofact, live: !!D.t };
   }
   // 03.11.2026, Т. В.: «в карточках… по убыванию цифр» — группы по % выполнения, самый большой первым; без процента — в конце
+  // Shared production KPI follows the canonical source; detailed day-report diagnostics stay separate.
+  function prodSummary(D) {
+    var Q = window.T14M && T14M.get ? T14M.get('prod') : prodMonth(D);
+    if (!Q) return { cap: { id: 'cap', v: '—', s: 'отчёты выпуска ещё не разобраны', tone: 'none' }, tile: null };
+    var groups = Q.groups || [], gv = groups.filter(function (g) { return g.v != null; });
+    var ok = gv.filter(function (g) { return g.v >= 90; }).length;
+    var worst = gv.length ? Math.min.apply(null, gv.map(function (g) { return g.v; })) : null;
+    var monthly = Q.daily === false || (Q.M && Q.M.pdo), noRep = Q.noRep;
+    var period = monthly ? 'месячного плана' : 'плана на дату';
+    var date = Q.date || Q.last || (Q.M && Q.M.last) || Q.m || '';
+    var desc = noRep ? 'план утверждён, отчётов ещё нет' : grpTxt(groups) + ' · % ' + period;
+    if (date) desc += ' · ' + (date.length > 7 ? 'по ' + dd(date) : date);
+    return { cap: { id: 'cap', v: gv.length ? ok + '<small>из ' + gv.length + ' групп ≥ 90%</small>' : '—', s: desc, tone: gv.length ? tone(worst) : 'none' }, tile: desc };
+  }
   function grpTxt(G) { return G.slice().sort(function (a, b) { return (b.v == null ? -1e9 : b.v) - (a.v == null ? -1e9 : a.v); }).map(function (g) { return g.s + ' ' + (g.v != null ? g.v + '%' : g.p ? 'нет факта' : g.f != null ? 'нет плана' : '—'); }).join(' · '); }
   function galvCur(G) {
     if (!G || !G.m || !G.m.length) return null;
@@ -386,14 +401,13 @@
     },
     fill: function (x) {
       var R = prodMonth(x.pf), G = galvCur(x.pf && x.pf.galv), K = [], att = [], tl = [];
-      var ppl = 0;
+      var summary = prodSummary(x.pf); K.push(summary.cap); if (summary.tile) tl.push({ id: 'pf', s: summary.tile });
+      var ppl = 0, ar = (x.A && x.A.areas) || [];   // 14.11.2026 (ревью Рекса CG-11): участки — ниже «N участков»; при чистке 14.11 строку убрали вместе с пустым циклом → ReferenceError
       var hc = [].slice.call(document.querySelectorAll('details[id^="u"] .ival')).map(function (e) { var m = /(\d+)/.exec(e.textContent); return m ? +m[1] : 0; });
       ppl = hc.reduce(function (s, v) { return s + v; }, 0);
       if (R) {
         var mn = MN[+R.m.slice(5) - 1], M = R.M, miss = M.miss || [], low = R.lines.filter(function (l) { return l.v < 70; });
-        var gv = R.groups.filter(function (g) { return g.v != null; }), g90 = gv.filter(function (g) { return g.v >= 90; }).length, gw = gv.length ? Math.min.apply(null, gv.map(function (g) { return g.v; })) : null;
         // 02.11.2026, Т. В.: «раскрой смысл мощности» — мощность = план ПДО линии на месяц, шт; выпуск — дневные отчёты ПДО; % — выпуск ÷ мощность за дни с отчётами
-        K.push({ id: 'cap', v: gv.length ? g90 + '<small>из ' + gv.length + ' групп ≥ 90%</small>' : '—', s: grpTxt(R.groups) + ' · шт: выпуск ÷ мощность (план ПДО) за ' + R.dn + (M.wd ? ' из ' + M.wd : '') + ' раб. дн. ' + mn, tone: gv.length ? tone(gw) : 'none' });
         K.push({ id: 'rep', v: (M.days || 0) + '<small>из ' + (M.wd_done || M.wd || '—') + '</small>', s: miss.length && R.live ? 'нет отчёта за ' + miss.map(function (d) { return (d < 10 ? '0' : '') + d + '.' + R.m.slice(5); }).join(', ') : 'рабочих дней с отчётом ПДО' + (M.last ? ' · по ' + dd(M.last) : ''), tone: miss.length && R.live ? 'warn' : 'ok' });
         // 02.11.2026, Т. В.: «Отстают линии» — крупнейшие отставания (план − выпуск, шт) с участком
         var gap = R.lines.filter(function (l) { return l.p - l.f > 0 && l.v < 90; }).sort(function (a, b) { return (b.p - b.f) - (a.p - a.f); });
@@ -410,8 +424,7 @@
         if (weakL.length) att.push({ href: '#s-pf', ic: 'trend', t: 'Ниже 70% плана: ' + weakL.length + ' ' + pl(weakL.length, 'линия', 'линии', 'линий'), s: weakL.slice(0, 5).map(function (l) { return l.n + ' ' + l.v + '%'; }).join(', ') + ' · ' + mn + ', ' + R.dn + ' дн.', v: String(weakL.length), tone: 'bad' });
         if (R.nofact.length) att.push({ href: '#s-pf', ic: 's_prod', t: 'План есть, выпуска нет: ' + R.nofact.map(function (l) { return l.n; }).join(', '), s: 'в дневных отчётах ПДО за ' + mn + ' этих строк нет', v: String(R.nofact.length), tone: 'warn' });
         if (miss.length && R.live) att.push({ href: '#s-pf', ic: 's_docs', t: 'Нет отчёта ПДО за ' + miss.length + ' ' + pl(miss.length, 'рабочий день', 'рабочих дня', 'рабочих дней'), s: miss.map(function (d) { return (d < 10 ? '0' : '') + d + '.' + R.m.slice(5); }).join(', ') + ' — «Отчёт выпуска производства» не приходил', v: String(miss.length), tone: 'warn' });
-        tl.push({ id: 'pf', s: mn + ' по группам: ' + grpTxt(R.groups) });
-      } else K.push({ id: 'cap', v: '—', s: 'отчёты выпуска ещё не разобраны', tone: 'none' });
+      }
       if (G) {
         var DLx = (x.pf && x.pf.dl) || {}, dlk = Object.keys(DLx).sort(), dl1 = dlk.length ? DLx[dlk[dlk.length - 1]] : null;
         var pnt = dl1 && (dl1['Линия покраски'] != null || dl1['Порошковая покраска'] != null) ? ' · покраска за ' + dd(dlk[dlk.length - 1]) + ': линия ' + n(dl1['Линия покраски']) + ', порошковая ' + n(dl1['Порошковая покраска']) + ' шт' : '';

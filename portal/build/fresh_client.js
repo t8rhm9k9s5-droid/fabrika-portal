@@ -12,13 +12,23 @@
   var F = window.FRESH; if (!F || !F.items || !F.items.length) return;
   function msk() { return new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); }
   if (F.day !== msk()) return;
-  var KEY = 'fx_seen2_' + F.day, seen = {};
+  var KEY = 'fx_seen2_' + F.day, PREFIX = KEY + ':', seen = {};
   try { seen = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { seen = {}; }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(seen)); } catch (e) { } }
+  function save() {
+    try {
+      Object.keys(seen).forEach(function (k) {
+        if (seen[k] && localStorage.getItem(PREFIX + k) !== '1') localStorage.setItem(PREFIX + k, '1');
+      });
+    } catch (e) { }
+  }
   var page = (location.pathname.split('/').pop() || 'index.html');
   function norm(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return decodeURIComponent(h.replace(/^\.\//, '')); }
   function id(x) { return x.file ? 'f:' + x.file : (x.href ? 'h:' + norm(x.href) : 'k:' + x.k); }
   var ITEMS = F.items.filter(function (x) { return x.k.indexOf('lc-') !== 0; });     // lc- — служебные «новое в разделе», свет не держат
+  // 14.11.2026 (ревью Рекса CG-11): отметка на каждую ссылку своим ключом — две вкладки больше не затирают отметки друг друга.
+  try { ITEMS.forEach(function (x) { var k = id(x); if (localStorage.getItem(PREFIX + k) === '1') seen[k] = 1; }); } catch (e) { }
+  // Claude к патчу Рекса: ключи на ссылку копятся по дням — прошлые дни убираем (подсветка всё равно живёт до полуночи МСК)
+  try { for (var i = localStorage.length - 1; i >= 0; i--) { var lk = localStorage.key(i); if (lk && lk.indexOf('fx_seen2_') === 0 && lk.indexOf(KEY) !== 0) localStorage.removeItem(lk); } } catch (e) { }
   function live() { return ITEMS.filter(function (x) { return !seen[id(x)]; }); }
   var pend = {};
   // 14.11.2026 (ревью Рекса CG-10 п. 10): дата проверялась только при загрузке — вкладка, открытая через полночь, держала подсветку.
@@ -78,6 +88,12 @@
   var t = null;
   function soon() { if (t) return; t = setTimeout(function () { t = null; mark(); }, 120); }
   window.addEventListener('hashchange', function () { visit(); soon(); });
+  window.addEventListener('storage', function (e) {
+    if (e.key && e.key.indexOf(PREFIX) === 0 && e.newValue === '1' && !expired()) {
+      seen[e.key.slice(PREFIX.length)] = 1;
+      soon();
+    }
+  });
   try { new MutationObserver(soon).observe(document.body, { childList: true, subtree: true }); } catch (e) { }
   soon();
   window.T14Fresh = { live: function () { return live().length; }, commit: commit };

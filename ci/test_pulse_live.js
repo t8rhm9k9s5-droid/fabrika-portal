@@ -49,11 +49,14 @@ const P = ctx.T14Pulse;
 if (!P) { console.error('T14Pulse не загрузился'); process.exit(2); }
 
 const SECS = ['sales', 'prod', 'quality', 'supply', 'log', 'online', 'fin', 'items', 'people', 'docs', 'site'];
-// Карточки, у которых в файлах хостинга данные есть всегда: «—» тут — ошибка кода, а не отсутствие отчёта.
-const EXPECT = {
-  prod: ['Выпуск месяца|Выпуск: план на дату', 'План в сутки', 'Ниже 90 % плана', 'Лучшая группа', 'Отстающая группа'],
-  sales: ['План месяца', 'Продажи за день', 'Отчёты офисов'],
-};
+// Карточки и диаграммы, у которых данные есть всегда — общий список с проверкой в браузере (pulse_expect.json, 14.11.2026)
+const EXP = JSON.parse(fs.readFileSync(path.join(__dirname, 'pulse_expect.json'), 'utf8')), EXPECT = EXP.cards, EXPECT_CH = EXP.charts || {};
+function titleIs(want, t) { return want.split('|').some(w => w.endsWith('*') ? t.indexOf(w.slice(0, -1)) === 0 : t === w); }
+function charts(html) {
+  const out = [], re = /<h3>([^<]*)<\/h3>[\s\S]*?(?=<div class="gl"|<\/div><p class="pz-h">|$)/g;
+  let m; while ((m = re.exec(html))) out.push({ h: m[1].replace(/&amp;/g, '&'), empty: m[0].indexOf('pz-none') >= 0 });
+  return out;
+}
 function cards(html) {
   const out = [], re = /<span class="t"><i><\/i>([^<]*)<\/span><span class="v">([^<]*)(?:<small>([^<]*)<\/small>)?<\/span>(?:<span class="s">([^<]*)<\/span>)?/g;
   let m; while ((m = re.exec(html))) out.push({ t: m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'), v: m[2], u: m[3] || '', s: (m[4] || '').replace(/&amp;/g, '&') });
@@ -71,7 +74,9 @@ function render(sec) { const host = { innerHTML: '' }; try { P.render(sec, host)
     if (r.err) { res[s] = { err: r.err }; bad.push(s + ': ошибка ' + r.err.split('\n')[0]); continue; }
     const C = cards(r.html);
     res[s] = { cards: C, dash: C.filter(c => c.v.trim() === '—').map(c => c.t) };
-    (EXPECT[s] || []).forEach(t => { const alt = t.split('|'), c = C.find(x => alt.includes(x.t)); if (!c) bad.push(s + ': нет карточки «' + t + '»'); else if (c.v.trim() === '—') bad.push(s + ': «' + c.t + '» = — (' + c.s + ')'); });
+    (EXPECT[s] || []).forEach(t => { const c = C.find(x => titleIs(t, x.t)); if (!c) bad.push(s + ': нет карточки «' + t + '»'); else if (c.v.trim() === '—') bad.push(s + ': «' + c.t + '» = — (' + c.s + ')'); });
+    const H = charts(r.html); res[s].charts = H;
+    (EXPECT_CH[s] || []).forEach(t => { const c = H.find(x => titleIs(t, x.h)); if (!c) bad.push(s + ': нет диаграммы «' + t + '»'); else if (c.empty) bad.push(s + ': диаграмма «' + c.h + '» пустая'); });
   }
   if (asJson) { console.log(JSON.stringify({ res, bad, asked: Object.keys(asked) }, null, 1)); }
   else {

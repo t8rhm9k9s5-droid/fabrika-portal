@@ -290,20 +290,45 @@ def alert(key, text, critical=False):
 
 
 def alert_flush():
-    """накопленные за ночь некритичные оповещения — одним сообщением после 08:00"""
+    """Ночные оповещения после 08:00: один целый пакет на проход, без параллельных отправок."""
     if _quiet(now()): return None
+    # Отдельный межпроцессный замок: обычные alert() могут дополнять очередь во время отправки.
+    try:
+        with open(os.path.join(STATE, 'alerts_flush.lock'), 'a+') as lk:
+            try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError: return None
+            return _alert_flush_locked()
+    except Exception as e:
+        log('  ! оповещения за ночь:', e.__class__.__name__, e)
+        return None
+
+
+def _alert_flush_locked():
     # 14.11.2026 (ревью Рекса, CG-10 п. 5): очередь не очищается до отправки. Убираем ровно отправленные записи, если канал принял
     #   или исход неизвестен (без слепого повтора); при явном отказе обоих каналов записи остаются до следующего прохода.
     try: q = _alerts_io(lambda S: list(S['q']))
     except Exception as e: log('  ! оповещения за ночь:', e.__class__.__name__, e); return None
     if not q: return None
-    text = 'Фабрика: оповещения робота с 20:00 до 08:00 (%d):\n\n' % len(q) + '\n\n'.join('• %s — %s' % (x.get('t', '')[11:16], x.get('text')) for x in q)
+    # MAX обрезает текст до 3990 символов. Даже если принял только MAX, весь пакет должен поместиться.
+    # Берём целые записи; остаток остаётся в очереди, а не теряется после text[:12000].
+    batch, parts = [], []
+    for x in q:
+        part = '• %s — %s' % (x.get('t', '')[11:16], x.get('text'))
+        candidate = 'Фабрика: оповещения робота с 20:00 до 08:00 (%d):\n\n' % (len(batch) + 1) + '\n\n'.join(parts + [part])
+        if len(candidate) > 3990: break
+        batch.append(x); parts.append(part)
+    if not batch:
+        log('  ! оповещения за ночь: первая запись превышает лимит; очередь сохранена')
+        return None
+    text = 'Фабрика: оповещения робота с 20:00 до 08:00 (%d):\n\n' % len(batch) + '\n\n'.join(parts)
     oc = []
-    res = _alert_send('Фабрика: оповещения за ночь (%d)' % len(q), text[:12000], oc)
+    res = _alert_send('Фабрика: оповещения за ночь (%d)' % len(batch), text, oc)
     if oc and oc[0] != 'fail':
-        sent = [(x.get('t'), x.get('key'), x.get('text')) for x in q]
         def drop(S):
-            S['q'] = [x for x in S['q'] if (x.get('t'), x.get('key'), x.get('text')) not in sent]
+            # Удаляем только взятые в пакет экземпляры, сохраняя добавленные во время отправки.
+            for x in batch:
+                try: S['q'].remove(x)
+                except ValueError: pass
         try: _alerts_io(drop)
         except Exception as e: log('  ! оповещения за ночь: очистка очереди:', e.__class__.__name__, e)
         if oc[0] == 'unknown': log('  ! оповещения за ночь: исход отправки неизвестен — повторно не шлём')

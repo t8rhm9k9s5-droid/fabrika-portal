@@ -4,7 +4,8 @@
    • «Критично» — карточка-уведомление вверху КАЖДОЙ страницы (стекло с красным оттенком, значок «!», мягкое красное свечение),
      красная точка на значке раздела в меню, на главной («Разделы») и в карте разделов, красная рамка у карточки пульса этой темы;
    • «Внимание» — то же оранжевым, но карточка — только на главной и в своём разделе.
-   «×» прячет карточку до завтра (только в этом браузере); точки и рамки остаются, пока условие держится. Строка тревоги стоит первой
+   «×» прячет карточку до завтра (только в этом браузере); рамка у карточки пульса — пока условие держится; точка у значка раздела гаснет,
+   когда раздел открыт (до завтра или до новой цифры тревоги — 14.11.2026, см. paint). Строка тревоги стоит первой
    в «Требует внимания» на главной (home_frag.html). Экономный режим и «уменьшить движение» — без анимации. */
 (function () {
   var D = window.T14_ALERTS || {}, L = (D.items || []).filter(function (a) { return a && a.t; });
@@ -89,13 +90,34 @@
     });
   }
   // ---------- значки разделов (меню, «Разделы» на главной, карта разделов) и карточки пульса ----------
+  // 14.11.2026, Т. В.: «красная точка у продаж не пропадает после просмотра раздела» — точка у значка раздела = «есть непросмотренная
+  //   тревога», как значок на iPhone: открыл раздел (razdel.html#… или его страницу) — точка гаснет до конца дня; загорается снова, если
+  //   тревога новая или изменилась её цифра (35 % → 40 %), и на следующий день, если условие держится. Карточка тревоги («×» — до завтра)
+  //   и красная рамка у карточки пульса в самом разделе остаются, пока условие держится. Отметка — только в этом браузере (t14.alseen).
+  function sk(a) { return a.id + '|' + (a.v == null ? '' : a.v); }
+  function seenMap() { try { return JSON.parse(localStorage.getItem('t14.alseen') || '{}') || {}; } catch (e) { return {}; } }
+  function markSeen() {
+    var s = secOf(); if (!s || document.visibilityState === 'hidden') return;
+    var S = seenMap(), d = day(), ch = false;
+    L.forEach(function (a) { if ((a.secs || []).indexOf(s) >= 0 && S[sk(a)] !== d) { S[sk(a)] = d; ch = true; } });
+    if (!ch) return;
+    Object.keys(S).forEach(function (k) { if (S[k] !== d) delete S[k]; });   // вчерашние отметки не копим
+    try { localStorage.setItem('t14.alseen', JSON.stringify(S)); } catch (e) { }
+  }
   function paint() {
-    var by = {};
-    L.forEach(function (a) { (a.secs || []).forEach(function (s) { var x = by[s] || (by[s] = { n: 0, lvl: 'warn', a: a }); x.n++; if (a.lvl === 'crit') { x.lvl = 'crit'; x.a = a; } }); });
-    Object.keys(by).forEach(function (s) {
+    var by = {}, all = {}, S = seenMap(), d = day();
+    L.forEach(function (a) {
+      (a.secs || []).forEach(function (s) { all[s] = 1; });
+      if (S[sk(a)] === d) return;                                             // просмотрена сегодня — точки нет
+      (a.secs || []).forEach(function (s) { var x = by[s] || (by[s] = { n: 0, lvl: 'warn', a: a }); x.n++; if (a.lvl === 'crit') { x.lvl = 'crit'; x.a = a; } });
+    });
+    Object.keys(all).forEach(function (s) {
       var x = by[s];
       [].forEach.call(document.querySelectorAll('a[href="razdel.html#' + s + '"], a[data-p="razdel.html#' + s + '"]'), function (el) {
-        if (el.classList.contains('al-on-crit') || el.classList.contains('al-on-warn')) return;
+        var on = el.classList.contains('al-on-crit') ? 'crit' : el.classList.contains('al-on-warn') ? 'warn' : '';
+        if (x && on === x.lvl) return;
+        if (on) { el.classList.remove('al-on-crit', 'al-on-warn'); [].forEach.call(el.querySelectorAll('.al-dot'), function (o) { o.remove(); }); }
+        if (!x) return;
         el.classList.add('al-on-' + x.lvl);
         // 13.11.2026, Т. В.: «огромные счётчики-значки не нужны» — без кружков с цифрами; меню: тонкая цветная точка у названия, плитки — рамка, карта разделов — строка
         // 13.11.2026, Т. В.: «значок — не справа от текста, а у иконки, в углу» — маленькая точка в левом верхнем углу иконки раздела (меню и «Разделы»)
@@ -117,9 +139,10 @@
     });
   }
   var busy = false;
-  function run() { if (busy) return; busy = true; try { mount(); paint(); } catch (e) { } busy = false; }
+  function run() { if (busy) return; busy = true; try { markSeen(); mount(); paint(); } catch (e) { } busy = false; }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
   window.addEventListener('hashchange', function () { setTimeout(run, 30); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') run(); });
   // страницы дорисовывают меню, «Разделы» и пульс позже (данные с хостинга) — досматриваем первые полминуты и при перерисовках
   var k = 0, iv = setInterval(function () { run(); if (++k > 30) clearInterval(iv); }, 1000);
   try { new MutationObserver(function () { clearTimeout(run.t); run.t = setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true }); } catch (e) { }

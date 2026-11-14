@@ -1873,6 +1873,15 @@ def run(L, log, jload, jsave, publish, iso, notify=None):
                 with open(_sp, encoding='utf-8') as _f1, open(_kp, encoding='utf-8') as _f2: _sk = _KB.unseal(_f1.read(), bytes.fromhex(_f2.read().strip()))
                 if _sk: pub['skud'] = _sk
         except Exception as e: log('  ! глонасс СКУД (gl.bin):', e.__class__.__name__, str(e)[:160])
+        try:                                              # 14.11.2026, Т. В.: «Пробег по дням» в пульсе «Логистики» — было два столбика (полные строки —
+            kh = st.get('km_hist') if isinstance(st.get('km_hist'), dict) else {}   #   только вчера и сегодня). Копим дату → {id машины: км} за 31 день,
+            for _k, _rows in (pub.get('day') or {}).items():                         #   км — как в pub['day'] после треков; пустой ответ дня прежнее не стирает
+                if isinstance(_rows, list) and _rows:
+                    kh[_k] = {str(r.get('id')): round(float(r.get('km') or 0), 1) for r in _rows if isinstance(r, dict) and r.get('id') is not None}
+            _lo = (t_msk.date() - datetime.timedelta(days=30)).isoformat()
+            st['km_hist'] = {k: v for k, v in kh.items() if re.match(r'^\d{4}-\d\d-\d\d$', str(k)) and k >= _lo}
+            pub['km'] = st['km_hist']
+        except Exception as e: log('  ! глонасс история км (gl.bin):', e.__class__.__name__, str(e)[:160])
         publish('gl.bin', pub)
     jsave('glonass.json', st)
     yd = ((st.get('day') or {}).get((t_msk.date() - datetime.timedelta(days=1)).isoformat()) or [])

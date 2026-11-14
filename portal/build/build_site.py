@@ -504,7 +504,7 @@ for _n in frags:
     if _n != 'index.html' and 'assets/fresh.js' not in frags[_n]: frags[_n] += '\n<script src="assets/fresh.js"></script>\n'
 # 13.11.2026, Т. В.: «35 % мощности недели ушло в следующую — emergency call для всего портала, должно загораться (в стиле iPhone / macOS)»:
 #   тревоги — build/gen_alerts.py → assets/alerts_data.js (пороги там же), показ — assets/alerts.js на каждой странице
-subprocess.run(['python3', '/home/claude/build/gen_alerts.py'])
+subprocess.run(['python3', '/home/claude/build/gen_alerts.py'], check=True)
 # 14.11.2026, Т. В. (опрос: «Пуши о тревогах»): новая «Критично» → уведомление администраторам с включёнными уведомлениями (бот TG v41+),
 #   одна тревога — один пуш, тихие часы 22–07 МСК; состояние build/alerts_pushed.json
 subprocess.run(['python3', '/home/claude/build/push_alerts.py'], timeout=180)
@@ -513,7 +513,7 @@ for _n in frags:
     _gl1 = '<link rel="stylesheet" href="assets/glass.css">'          # данные — в начале страницы (главная строит «Требует внимания» сразу)
     frags[_n] = frags[_n].replace(_gl1, _gl1 + '\n<script src="assets/alerts_data.js"></script>', 1) if _gl1 in frags[_n] else '<script src="assets/alerts_data.js"></script>\n' + frags[_n]
     frags[_n] += '<script src="assets/alerts.js"></script>\n'
-subprocess.run(['python3', '/home/claude/build/gen_days.py'])
+subprocess.run(['python3', '/home/claude/build/gen_days.py'], check=True)
 # 13.11.2026, Т. В.: «все баги фиксируем, даже движение мышкой; тепловые карты; где человек запутался» — assets/ux.js на каждой странице
 for _n in frags:
     if '<script src="assets/ux.js">' not in frags[_n]: frags[_n] += '<script src="assets/ux.js"></script>\n'
@@ -686,7 +686,7 @@ except Exception as _e8:
     import traceback as _tb; _tb.print_exc()
     raise SystemExit('assets/metrics.js (один источник цифр) не собран: %r' % (_e8,))
 # 13.11.2026 (Т. В., единый вид разделов): «Пульс раздела» на razdel.html — живые цифры T14M (metrics.js + live.js), сборочные — pulse_data.js (gen_pulse.py)
-subprocess.run(['python3', '/home/claude/build/gen_pulse.py'])
+subprocess.run(['python3', '/home/claude/build/gen_pulse.py'], check=True)
 if '<script src="assets/pulse.js"></script>' not in frags['razdel.html']:
     frags['razdel.html'] = frags['razdel.html'].replace('<script src="assets/edits.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/edits.js"></script>\n<script src="assets/pulse_data.js"></script>\n<script src="assets/pulse.js"></script>', 1)
 for _n in ('home.html', 'sales.html', 'stock.html', 'staff.html', 'omts.html', 'razdel.html'):

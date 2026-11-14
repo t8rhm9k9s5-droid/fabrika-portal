@@ -47,6 +47,11 @@ else
   OUT=$("$EL/node_modules/.bin/eslint" --no-eslintrc -c "$EL/.eslintrc.html.json" --quiet -f unix \
         $(ls site/assets/*.js build/*_frag.html build/*.js | grep -v -e before -e '\.min\.') 2>&1); RC=$?
   if [ $RC = 0 ]; then echo 'eslint: ок'; else echo "$OUT" | head -30; bad "eslint: код $RC"; fi
+  # 14.11.2026 (ревью Рекса CG-11: «ReferenceError: ar is not defined» в «Производстве» — чистка убрала объявление): скрипты сайта —
+  #   ещё и с no-undef. Общие объекты страниц (T14M, T14Live…) перечислены в .eslintrc.assets.json; новый общий объект — дописать туда.
+  OUT=$("$EL/node_modules/.bin/eslint" --no-eslintrc -c "$EL/.eslintrc.assets.json" --quiet -f unix \
+        $(ls site/assets/*.js | grep -v -e before -e '\.min\.') 2>&1); RC=$?
+  if [ $RC = 0 ]; then echo 'eslint, необъявленные имена: ок'; else echo "$OUT" | head -30; bad "eslint no-undef: код $RC"; fi
 fi
 
 step '5. Робот: тесты на макете ~/.fabrika_live (сеть отключена), текущий код'
@@ -58,6 +63,8 @@ if [ -n "$T" ]; then
   cp -r "$H/fix/work/py" "$T/py" || bad 'копирование макета тестов'
   for f in app_build/host/live/*.py; do case "$f" in *before*) continue;; esac; cp "$f" "$T/py/live/" || bad "копирование $f"; done
   cp app_build/drive_pack.py "$T/py/drive_pack.py" || bad 'копирование drive_pack.py'
+  # 14.11.2026 (ревью Рекса CG-11, test_poll_remind): справочник людей робота — тот, что уходит пакетом; без него в макете поиск людей пустой (25 из 29 FAIL)
+  cp app_build/host/live/unans_org.json "$T/py/live/" || bad 'копирование unans_org.json'
   NT=$(ls "$T/py/live/test/"test_*.py 2>/dev/null | wc -l)
   [ "$NT" -ge 20 ] || bad "тестов робота найдено $NT (ожидается не меньше 20)"
   # устаревшие (ждут прежних умолчаний: SMTP, 9 участков, даты, справочники) — «имя|мин. ✓|начало сообщения AssertionError»
@@ -80,9 +87,8 @@ EOS
         if [ "$k" -ge "$mk" ] && case "$last" in "AssertionError: $msg"*) true;; *) false;; esac; then
           echo "· $n (устаревший: то же падение, проверок $k из $mk)"; continue; fi
       fi
-      if [ $rc = 1 ] && [ "$n" = test_poll_remind ]; then                 # формат FAIL-строк; база 14.11 — 29 устаревших FAIL
-        nf=$(echo "$o" | grep -c '^  FAIL'); if [ "$nf" -le 29 ] && ! echo "$o" | grep -q 'Traceback'; then echo "· $n (устаревший: FAIL $nf из 29)"; continue; fi
-      fi
+      # test_poll_remind: число FAIL не определяет, какие проверки сломаны.
+      # До обновления устаревшего теста любой его ненулевой код блокирует выкладку.
       echo "✗ $n (код $rc, проверок $k): $(echo "$o" | tail -2 | tr '\n' ' ' | cut -c1-160)"; echo FAIL >> "$T/fail"
     done
     cd "$H" || exit 2
