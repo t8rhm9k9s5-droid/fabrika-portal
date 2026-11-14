@@ -682,8 +682,8 @@
       // 27.10.2026, пользователь: боты — рядом, просто переход (бот MAX настраивается в «Управлении»)
       BOTS.forEach(function (x) {
         var a = irow('a', ICON[x[1]], x[2], x[3], ''); a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; a.addEventListener('click', function () { close(); }); g3.appendChild(a); });
-      // 14.11.2026, Т. В. (опрос: приложение для iPhone без затрат): как поставить значок, Face ID, пуши о тревогах, Siri, кнопку в Telegram
-      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'На iPhone и iPad', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
+      // 14.11.2026, Т. В. (опрос: приложение для iPhone без затрат; 14.11 17:27 — раздел называется «Пароль приложения»): как поставить значок, Face ID, пуши о тревогах, Siri, кнопку в Telegram
+      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'Пароль приложения', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
       if (APK) { var apk = irow('a', ICON.s_apk, 'var(--ic-calls)', 'Скачать приложение (APK)', 'Android'); apk.href = APK; apk.setAttribute('download', 'Фабрика.apk'); apk.addEventListener('click', function () { close(); }); g3.appendChild(apk); }
       var pb = document.getElementById('pushBtn');
       if (pb) {
