@@ -17,11 +17,14 @@ const SKIP = new Set(['_mock_sales.html', 'index.html', 'chat.html', 'admin.html
   await ctx.route('**/*', r => {
     const u = new URL(r.request().url());
     if (u.host !== 't14.local') return r.abort();
-    if (u.pathname.startsWith('/__live/')) { const f = path.join(DATA, path.basename(u.pathname)); const ok = fs.existsSync(f) && fs.readFileSync(f, 'utf8').trim() !== 'null'; return ok ? r.fulfill({ body: fs.readFileSync(f), contentType: 'application/json' }) : r.fulfill({ status: 404, body: '' }); }
+    // 14.11.2026 (CodeQL js/file-system-race): файл читается один раз, без проверки existsSync перед чтением
+    const read = f => { try { return fs.readFileSync(f); } catch (e) { return null; } };
+    if (u.pathname.startsWith('/__live/')) { const b = read(path.join(DATA, path.basename(u.pathname))); return b && b.toString('utf8').trim() !== 'null' ? r.fulfill({ body: b, contentType: 'application/json' }) : r.fulfill({ status: 404, body: '' }); }
     if (u.pathname.startsWith('/st/')) return r.fulfill({ status: 404, body: '' });
     const f = path.join(SITE, decodeURIComponent(u.pathname));
-    if (!f.startsWith(SITE) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
-    r.fulfill({ body: fs.readFileSync(f), contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
+    const b = f.startsWith(SITE) ? read(f) : null;   // каталог или нет файла → null
+    if (!b) return r.fulfill({ status: 404, body: '' });
+    r.fulfill({ body: b, contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
   });
   await ctx.addInitScript(() => {
     let real;

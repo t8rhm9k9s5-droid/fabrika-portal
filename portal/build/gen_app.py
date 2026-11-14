@@ -176,7 +176,7 @@ if _bn:
     _P = _np.array(_bn['poly'], float); _i = max(range(len(_P)), key=lambda i: ((_P[i] + _P[(i + 1) % len(_P)]) / 2) @ _np.array([.46, .89]))
     _A, _B = _P[_i], _P[(_i + 1) % len(_P)]; _t = (_B - _A) / _np.linalg.norm(_B - _A); _n = _np.array([_t[1], -_t[0]])
     if _n @ (((_A + _B) / 2) - _P.mean(axis=0)) < 0: _n = -_n
-    _src = 'фото 21.10.2026 (О. Сотрудник8, ОМТС), «дорога у нового склада»'
+    _src = 'фото 21.10.2026 (О. Сотрудник11, ОМТС), «дорога у нового склада»'
     d['front']['surfaces'] += [
         {'kind': 'concrete', 'h': .15, 'name': 'Бетонная отмостка вдоль стены материального склада', 'src': _src, 'poly': _strip(_A, _B, _n, 0, 1.0),
          'note': 'Бетонная полоса ≈ 1 м вдоль северо-восточной стены двухэтажной части цеха мягкой мебели, с бортом ≈ 15 см. Ширина — по фото, приблизительно.'},
@@ -250,9 +250,9 @@ import sys as _sys; _sys.path.insert(0, B + 'detail'); import specs as _DS   # d
 _det = _DS.specs(d['buildings'])
 for _b in d['buildings']:
     if _b['k'] in _det: _b['det'] = _det[_b['k']]
-import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник26
-import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник26 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
-import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник8 (кирпич, арочная кровля, главка с крестом)
+import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник37
+import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник37 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
+import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник11 (кирпич, арочная кровля, главка с крестом)
 import corr_cams_1028 as _CC; _CC.apply(d, _RV._zat(d))   # 28.10.2026: камеры — места, направление, наклон, угол обзора по кадрам 26.10 и скриншотам А. Сотрудник1
 import corr_cams_1028b as _CB; _CB.apply(d, _RV._zat(d))   # 28.10.2026, второй заход: ответ А. Сотрудник1 — 053 выше, 042 на забор, 019 и 024 внутрь, 063 с вагончиком, новая 028, склад ТПА вплотную, 10 бытовок
 import corr_alex_1106 as _AX; _AX.apply(d, _RV._zat(d))   # 09.11.2026: правки А. В. Сотрудник1 (письмо 06.11, «да» 09.11) — work/alex_0611/plan.md
@@ -274,7 +274,8 @@ app = _AX.app(app)   # 09.11.2026: опоры газа (skip/brk), распаш�
 out = (shell + '\n'
        '<script id="perf-js" src="assets/perf.js"></script>\n'
        '<script id="lib-loader">' + LOADER + '</script>\n'
-       '<script id="site-json" type="application/json">' + site_json + '</script>\n'
+       # 14.11.2026 (CodeQL js/xss-through-dom): данные сборки — объектом скрипта, а не текстом DOM (JSON.parse(textContent))
+       '<script id="site-json">window.T14_SITE=' + site_json + ';</script>\n'
        '<script id="edits-js">' + edits_js + '</script>\n'
        '<script id="app-js">' + app + '</script>\n')
 with open('/home/claude/site/index.html', 'w', encoding='utf-8') as _cg1_output_file:

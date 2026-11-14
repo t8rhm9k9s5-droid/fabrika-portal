@@ -26,7 +26,9 @@ if (!window.THREE || !THREE.OrbitControls) { fail('Не загрузилась 3
 // 14.11.2026 CodeQL js/xss-through-dom: данные модели вставляются в карточки как HTML — угловые скобки из строк убираем при чтении
 //   (в данных их нет; правки людей с телефонов и из формы тоже чистятся — clean())
 const clean = v => String(v == null ? '' : v).replace(/[<>]/g, '');
-const SITE = JSON.parse(document.getElementById('site-json').textContent, (k, v) => typeof v === 'string' ? clean(v) : v);
+// 14.11.2026 (CodeQL js/xss-through-dom): данные модели — объект window.T14_SITE из сборки (gen_app.py), не текст DOM; строки — без < >
+const cleanAll = v => typeof v === 'string' ? clean(v) : Array.isArray(v) ? v.map(cleanAll) : (v && typeof v === 'object') ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, cleanAll(x)])) : v;
+const SITE = cleanAll(window.T14_SITE || {});
 const S = SITE, E = window.T14Edits;
 await E.ready();
 const SITE_SRC = E.source();                     // 'file' when this is the downloaded single file
@@ -1982,7 +1984,7 @@ const FILE = (()=>{
     const css = document.getElementById('app-css').textContent, glass = document.getElementById('glass-css');   // glass-css: the look, the tab bar, the font (review/ui.py)
     const [three, orbit, ejs, ajs] = await Promise.all([txt('lib-three','lib/three.min.js'), txt('lib-orbit','lib/OrbitControls.js'), txt('edits-js','assets/edits.js'), txt('app-js','app.js')]);
     const S_ = 'script', END = '</' + S_ + '>', safe = s => s.replace(/<\/script/gi, '<\\/script');
-    const json = document.getElementById('site-json').textContent.replace(/</g,'\\u003c');
+    const json = JSON.stringify(window.T14_SITE || {}).replace(/</g,'\\u003c');
     const edits = JSON.stringify(E.snapshot()).replace(/</g,'\\u003c');
     const plans = JSON.stringify(await planData());
     const photos = JSON.stringify(await photoData());
@@ -1990,7 +1992,7 @@ const FILE = (()=>{
       + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=PT+Mono&family=Unbounded:wght@500&display=swap" media="print" onload="this.media=\'all\'">\n'
       + '<style id="app-css">' + css + '</style>\n' + (glass ? '<style id="glass-css">' + glass.textContent + '</style>\n' : '') + SHELL + '\n'
       + '<' + S_ + ' id="lib-three">' + safe(three) + END + '\n<' + S_ + ' id="lib-orbit">' + safe(orbit) + END + '\n'
-      + '<' + S_ + ' id="site-json" type="application/json">' + json + END + '\n'
+      + '<' + S_ + ' id="site-json">window.T14_SITE=' + json + ';' + END + '\n'
       + '<' + S_ + ' id="site-edits" type="application/json">' + edits + END + '\n'
       + '<' + S_ + ' id="plan-data">window.PLAN_DATA=' + plans + ';' + END + '\n'
       + '<' + S_ + ' id="photo-data">window.PHOTO_DATA=' + photos + ';' + END + '\n'

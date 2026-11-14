@@ -42,6 +42,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     <div class="fh-al" id="fhAl"></div>
   </section>
 
+  <!-- 14.11.2026, Т. В.: «звёздочку отмечаю в мобильной версии — с главного экрана его не видно» — «Сохранённое» на главной (assets/fav.js) -->
+  <section class="fh-fav" id="fhFav" aria-labelledby="favH" hidden><div class="fh-cap"><h2 id="favH">Сохранённое</h2><a class="fh-all" id="favAll" href="razdel.html#saved">Все</a></div><div class="igroup fav-mini" id="favHome"></div></section>
+
   <div class="fh-cap"><h2 id="pulseH">Контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество и отзывы → онлайн</p></div>
   <ul class="pk-grid" id="pulse" aria-labelledby="pulseH">
     <li><a class="pk" id="pkSales" href="sales.html#s1c" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Продажи</span><b class="pk-v">…</b><span class="pk-s">сумма продаж</span></a></li>
@@ -103,7 +106,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var el = document.getElementById('fhSub'), wxs = '';
     function day() { var d = new Date(), w = WD[d.getDay()]; return w.charAt(0).toUpperCase() + w.slice(1) + ', ' + d.getDate() + ' ' + MG[d.getMonth()]; }
     function put() { el.textContent = day() + (wxs ? ' · ' + wxs : ''); }
-    // погода — Сотрудник24 Сотрудник25 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник24 убираем только из поиска и ИИ)
+    // погода — Сотрудник10 Сотрудник26 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник10 убираем только из поиска и ИИ)
     window.addEventListener('t14sky', function (e) { var w = e.detail && e.detail.wx; if (!w || w.temp == null) return;
       var t = Math.round(w.temp); wxs = (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '°' + (w.text ? ', ' + String(w.text).toLowerCase() : ''); put(); });
     put(); setInterval(put, 60e3);
@@ -239,7 +242,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     if (!ONS || !ONS.total) { card('pkOnl', '—', 'мониторинг сайтов ещё не собран', 'none'); return; }
     card('pkOnl', n(ONS.total) + '<small>предложений</small>', 'на ' + n(ONS.sites) + ' сайтах · проверено моделей ' + n(ONS.checked) + (ONS.low ? ' · ниже РРЦ — ' + n(ONS.low) : '') + (ONS.t ? ' · на ' + dd(ONS.t) : ''), ONS.low ? 'warn' : 'ok');
   }
-  // ---------- «Пульс фабрики» (13.11.2026): три главные цифры первой строкой — зелёный / оранжевый / красный ----------
+  // ---------- «Пульс фабрики» (13.11.2026): три Имя2 цифры первой строкой — зелёный / оранжевый / красный ----------
   function fbSet(id, v, s, tn) { var a = document.getElementById(id); if (!a) return; a.setAttribute('data-tone', tn); a.querySelector('.fb-v').innerHTML = v; a.querySelector('.fb-s').textContent = s; }
   function fbTop(O, R) {
     if (R && !R.noRep && R.groups) {

@@ -8,7 +8,7 @@ const dir = path.resolve(process.argv[2] || path.join(__dirname, '..', '..', '..
 let bad = 0, n = 0;
 for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.html'))) {
   const h = fs.readFileSync(path.join(dir, f), 'utf8');
-  const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script\s*>/gi; let m;   // 14.11 CodeQL: и «</script >»
+  const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script[^>]*>/gi; let m;   // 14.11 CodeQL js/bad-tag-filter: и «</script >», «</SCRIPT foo>»
   while ((m = re.exec(h))) {
     const attrs = m[1] || '';
     if (/\ssrc\s*=/.test(attrs)) continue;

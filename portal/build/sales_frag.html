@@ -190,7 +190,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 <script id="planm-data" type="application/json">__PLANM__</script>
 <script id="mgrop-data" type="application/json">__MGROP__</script>
 <script id="fts-data" type="application/json">__FTSYEAR__</script>
-<script id="online-data" type="application/json">__ONLINE__</script>
+<script id="online-data">window.T14_ONLINE = null/*__ONLINE__*/;</script>
 <script id="oz-data" type="application/json">__OZON__</script>
 <script id="ozrev-data" type="application/json">__OZREV__</script>
 <script id="virev-data" type="application/json">__VIREV__</script>
@@ -814,7 +814,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 11.11.2026, Т. В.: «отдельный раздел онлайн-продажи: артикулы, объём продаж, другие продавцы наших артикулов, сравнение цен». Данные — build/online/online.json
-  var ONLINE = (function () { try { return JSON.parse(document.getElementById('online-data').textContent || 'null', function (k, v) { return typeof v === 'string' ? v.replace(/[<>]/g, '') : v; }); } catch (e) { return null; } })();   // 14.11.2026 CodeQL: без угловых скобок в строках
+  // 14.11.2026 (CodeQL js/xss-through-dom): данные — объект window.T14_ONLINE из сборки (build_site.py), не текст DOM; строки — без < >
+  var ONLINE = (function () { function cl(v) { if (typeof v === 'string') return v.replace(/[<>]/g, ''); if (Array.isArray(v)) return v.map(cl); if (v && typeof v === 'object') { var o = {}; Object.keys(v).forEach(function (k) { if (k !== '__proto__') o[k] = cl(v[k]); }); return o; } return v; } return window.T14_ONLINE ? cl(window.T14_ONLINE) : null; })();
   function online() {
     var O = ONLINE, h = '<a class="back" href="razdel.html#online">Онлайн-продажи</a><h1>Онлайн-продажи</h1>';
     if (!O) { V.innerHTML = h + '<p class="lead">Данных пока нет.</p>'; return; }

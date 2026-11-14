@@ -163,3 +163,8 @@ html[data-skin="v22"][data-skin][data-skin] a,html[data-skin="v22"][data-skin][d
 
 /* 14.11.2026, Т. В. (iPhone): «в окне ввода пароля масштаб улетает» — Safari увеличивает страницу при фокусе на поле со шрифтом мельче 16 px */
 @media (hover:none) and (pointer:coarse){input,select,textarea{font-size:16px!important}}
+/* 14.11.2026, Т. В.: «Сохранённое» на главной (home.html #fhFav, assets/fav.js) — компактный список строк, на телефоне — 4 */
+.fhome .fh-fav .fh-cap .fh-all{font:500 13px/1.3 var(--f-body);color:var(--p-fg2);text-decoration:none;padding:4px 10px;border-radius:99px;background:var(--p-soft)}
+.fhome .fh-fav .fh-cap .fh-all:hover{color:var(--p-fg)}
+@media (max-width:699px){.fhome .fh-fav .fav-mini>.irow:nth-child(n+5){display:none!important}}
+@media (min-width:700px){.fhome .fh-fav .fav-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:0}}
