@@ -315,3 +315,12 @@ html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html bod
 .al-x,.al-x:focus-visible{top:calc(50% - 14px)!important;bottom:auto!important;margin:0!important;transform:none!important}
 .al-tile .al-x{top:12px!important;bottom:auto!important;margin:0!important}
 @media (max-width:900px){.al-tile .al-x,.fhome .fh-top .al-tile .al-x{top:calc(50% - 14px)!important;bottom:auto!important;margin:0!important}}
+/* 15.11.2026, Т. В. (iPhone, третий раз): «срезанный крестик гранями алерта так и никуда не делся». На телефоне плитка тревоги на главной —
+   сетка (grid), а «×» стоял абсолютно (top: 50 % / calc). Safari (WebKit) у абсолютного элемента внутри сетки считает проценты от нулевой
+   высоты — крестик уезжал на верхнюю грань и срезался скруглением; в Chrome было верно, поэтому проверки этого не видели.
+   Теперь «×» — обычная четвёртая колонка той же сетки, по центру строки: без абсолютного положения и процентов — одинаково во всех браузерах. */
+@media (max-width:900px){
+  .fhome .fh-top .al-tile{grid-template-columns:24px minmax(0,1fr) auto 28px!important;padding:6px 8px!important}
+  .fhome .fh-top .al-tile .al-x,.fhome .fh-top .al-tile .al-x:focus-visible{position:static!important;grid-column:4;grid-row:1;align-self:center;justify-self:end;
+    top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;margin:0!important;transform:none!important}
+}
