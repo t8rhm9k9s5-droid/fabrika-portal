@@ -189,7 +189,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
 details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}details.pubis summary{cursor:pointer;color:#c76a00;font-weight:500}details.pubis ul{margin:4px 0 0;padding-left:18px}details.pubis li{margin:3px 0}
 /* 30.10.2026: документ, который есть и на fabrikant.su, — одной строкой; ссылка на копию сайта — под ней */
 .pubalso{padding:0 16px 9px 60px;font-size:13px;line-height:1.5;color:var(--ios-2)}.pubalso a{color:var(--ios-blue);text-decoration:none}.pubalso .badge{margin-right:4px}
-.ifoot a[data-go]{color:var(--ios-blue);text-decoration:none}
+.ifoot a[href^="#regs/"],.ifoot a[href^="#forms/"]{color:var(--ios-blue);text-decoration:none}
 .badge.old{background:var(--ios-fill);color:var(--ios-2)}
 .rg .idetail .drow{flex-direction:column;gap:2px;align-items:stretch}
 .rg .idetail .drow > span:first-child{min-width:0;font-size:13px}
@@ -258,8 +258,11 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (days <= 90) return '<span class="badge soon">до ' + dmy(it.valid_to) + '</span>';
     return '<span class="badge ok">до ' + dmy(it.valid_to) + '</span>';
   }
+  function fileLabel(file, bytes){
+    return bytes ? esc(file.split('.').pop().toUpperCase()) + ' · ' + kb(bytes) : '';
+  }
   function docRow(it, cat){
-    var sub = [it.obj_t ? esc(it.obj_t) : '', it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', kb(it.bytes)].filter(Boolean).join(' · ');
+    var sub = [it.obj_t ? esc(it.obj_t) : '', it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', fileLabel(it.file, it.bytes), it.previewBytes ? 'Просмотр PDF · ' + kb(it.previewBytes) : ''].filter(Boolean).join(' · ');
     var pdf = /\\.pdf$/i.test(it.file) ? ' data-pdf="1" data-t="' + esc(it.title) + '" data-m="' + esc(sub.replace(/<[^>]+>/g, '')) + '" data-b="' + (it.bytes || 0) + '" data-back="' + esc(cat.t.split(' ')[0]) + '"' : '';
     return '<a class="irow" href="' + esc(it.file) + '" target="_blank" rel="noopener"' + pdf + '>' + tile(cat.c, cat.i) + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(it.title) + '</span>' +
       (sub || it.valid_to ? '<span class="isub">' + sub + (it.valid_to ? ' ' + validity(it) : '') + '</span>' : '') + '</span><span class="ichev"></span></span></a>' + pubAlso(it.pub);
@@ -273,8 +276,12 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   }
   function pubAlso(P){ return P && P.length ? '<div class="pubalso"><span class="badge new">есть на fabrikant.su</span> ' + pubLinks(P) + '</div>' : ''; }
   function linkRow(l){
-    return '<a class="irow" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + tile('#34a853', 'drive') + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(l.title) + '</span>' +
-      '<span class="isub">Открывается в Google Диске, если у вас есть доступ к папке</span></span>' + EXT + '</span></a>';
+    var host = new URL(l.url, document.baseURI).hostname.toLowerCase();
+    var provider = host === 'cloud.mail.ru' ? 'Облако Mail' :
+      (host === 'drive.google.com' || host === 'docs.google.com' ? 'Google Диск' : host);
+
+    return '<a class="irow" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + tile('#34a853', host === 'drive.google.com' ? 'drive' : 'folder') + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(l.title) + '</span>' +
+      '<span class="isub">Открыть во внешнем сервисе · ' + esc(provider) + '</span></span>' + EXT + '</span></a>';
   }
   function count(k){ return D.items.filter(function(i){ return i.cat === k; }).length; }
   function howRows(){ return how().replace(/^<p class="ihdr">[^<]*<\\/p><div class="igroup howto">/, '').replace(/<\\/div>$/, ''); }
@@ -553,9 +560,9 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       h += '<div class="igroup" style="margin-top:14px">' + its.map(function(i){ return docRow(i, c); }).join('') + '</div>';
     }
     h += pubBlock(k, c.c, c.i);
-    if (ls.length) h += '<p class="ihdr">Папка компании</p><div class="igroup">' + ls.map(linkRow).join('') + '</div>';
+    if (ls.length) h += '<p class="ihdr">Внешние ссылки</p><div class="igroup">' + ls.map(linkRow).join('') + '</div>';
     if (k === 'protocols' && !its.length) h += '<p class="empty">ОМТС собирает протоколы переговоров с поставщиками (цены, условия поставки, разногласия). Присылают файлом на user1@example.org с темой «Протокол переговоров — поставщик»; каждый появится здесь в течение дня.</p>';
-    else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Файлов здесь пока нет — ' + (ls.length > 1 ? 'они в папках' : 'они в папке') + ' выше.' : 'Пока нет документов.') + '</p>';
+    else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Файлов здесь пока нет — ' + 'см. внешние ссылки выше.' : 'Пока нет документов.') + '</p>';
     h += how();
     V.innerHTML = h;
   }
@@ -584,7 +591,8 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     });
   }, true);
   var ST = {ok: ['', ''], 'new': ['новая редакция', 'new'], old: ['заменён', 'old'], dup: ['дубль', 'soon'], fix: ['есть вопросы', 'soon'], draft: ['проект', 'new'], review: ['пересмотреть', 'bad']};
-  function rById(id){ return D.regs.docs.filter(function(r){ return r.id === id; })[0]; }
+  function rById(id){ return (D.regs ? D.regs.docs : []).filter(function(r){ return r.id === id; })[0]; }
+  function cardHref(r){ return '#' + (CUR(r) && isForm(r) ? 'forms' : 'regs') + '/' + encodeURIComponent(r.id); }
   function rBadge(r){ var b = ST[r.status] || ['', '']; return b[0] ? ' <span class="badge ' + b[1] + '">' + b[0] + '</span>' : ''; }
   function rDate(r){ return r.datenote || (r.date ? dmy(r.date) : ''); }
   function rKind(r){ return r.code ? r.kind + ' ' + r.code + ' · ред. ' + (r.ed || 1) : r.kind; }
@@ -603,7 +611,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (r.repl && r.repl.length) rows.push(['Должности и отделы', ul(r.repl.map(function(x){ return Array.isArray(x) ? x[0] + ' → ' + x[1] : x; }))]);
     if (r.merged && r.merged.length) rows.push(['Объединено', ul(r.merged)]);
     if (r.questions && r.questions.length) rows.push(['Вопросы', ul(r.questions)]);
-    if (other) rows.push([r.status === 'old' ? 'Заменён на' : 'Повторяет', '<a href="#regs" data-go="' + esc(other.id) + '">' + esc(other.title) + '</a>']);
+    if (other) rows.push([r.status === 'old' ? 'Заменён на' : 'Повторяет', '<a href="' + esc(cardHref(other)) + '">' + esc(other.title) + '</a>']);
     if (r.note && !r.brand) rows.push(['Замечание', esc(r.note)]);
     if (r.pub && r.pub.length) rows.push(['На fabrikant.su', pubLinks(r.pub)]);   // 30.10.2026: копия с сайта компании — здесь, а не второй строкой
     rows.push(['Откуда', esc(r.source) + (r.src_name ? ' · файл «' + esc(r.src_name) + '»' : '')]);
@@ -666,7 +674,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   }
   function regs(c){
     // by process: everything that is in force for a step of the work — the regulation, its 1С instruction and its forms — in one place
-    var R = D.regs, h = regsHead(c, 'Действующие документы по шагам работы: регламент или инструкция и как сделать это в 1С; бланк шага — ссылкой на «Бланки, формы и шаблоны» (каждый документ — в одном месте). Все — на фирменном бланке, должности и отделы — по оргструктуре от 23.10.2026; дубли убраны.');
+    var R = D.regs, h = regsHead(c, 'Документы по шагам работы: регламент или инструкция и как сделать это в 1С; бланк шага — ссылкой на «Бланки, формы и шаблоны» (каждый документ — в одном месте). Все — на фирменном бланке, должности и отделы — по оргструктуре от 23.10.2026; дубли убраны.');
     R.procs.forEach(function(p){
       // 30.10.2026, владелец: «На сайте есть дубли документов, зачем!?» — бланки (isForm) показываются один раз, в «Бланках, формах и шаблонах»; здесь — ссылкой под шагом
       var all = R.docs.filter(function(r){ return r.topic === p.t && CUR(r); }), ds = all.filter(function(r){ return !isForm(r); }), fx = all.filter(isForm);
@@ -682,9 +690,9 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     V.innerHTML = h;
   }
   function isForm(r){ return r.g === 'forms' || r.kind === 'Форма' || r.kind === 'Бланк'; }   // a fillable file, wherever it came from
-  // ссылки на документы реестра в другом разделе (30.10.2026): бланк — в «Бланках», остальное — в «Регламентах»; карточка раскрывается (data-go)
+  // Постоянный адрес документа содержит раздел и идентификатор карточки.
   function goList(rs){
-    return rs.map(function(r){ return '<a href="#' + (isForm(r) ? 'forms' : 'regs') + '" data-go="' + esc(r.id) + '">' + esc((r.code ? r.code + ' ' : '') + '«' + r.title + '»') +
+    return rs.map(function(r){ return '<a href="' + esc(cardHref(r)) + '">' + esc((r.code ? r.code + ' ' : '') + '«' + r.title + '»') +
       (r.tpl && !isForm(r) ? ' (' + r.tpl.map(function(t){ return t.fmt; }).join(', ') + ')' : '') + '</a>'; }).join(', ');
   }
   function rTile(r){ var c = (D.int || []).filter(function(x){ return x.k === (isForm(r) ? 'forms' : r.g === '1c' ? 'onec' : 'regs'); })[0]; return c || {c: '#5856d6', i: 'rules'}; }
@@ -743,10 +751,10 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
        ['Убрано дублей', (R.removed || []).length]].map(function(x){
         return '<div class="irow static"><span class="ic"><span class="ibody"><span class="ititle">' + x[0] + '</span></span><span class="ival">' + x[1] + '</span></span></div>'; }).join('') + '</div>' +
       ((R.removed || []).length ? '<p class="ihdr">Убраны как дубли</p><div class="igroup">' + R.removed.map(function(x){ var r = x.to && rById(x.to), l = r ? r.title : x.lbl || '';   // 30.10: копии с fabrikant.su — ссылка на раздел, где документ показан (x.href)
-        return '<div class="rnote"><b>' + esc(x.t) + '</b>' + esc(x.why) + (r ? '<span class="rl"><a href="#regs" data-go="' + esc(r.id) + '">' + esc(l.length > 46 ? l.slice(0, 44) + '…' : l) + '</a></span>' : x.href ? '<span class="rl"><a href="' + esc(x.href) + '">' + esc(l.length > 46 ? l.slice(0, 44) + '…' : l) + '</a></span>' : '') + '</div>'; }).join('') + '</div>' : '') +
+        return '<div class="rnote"><b>' + esc(x.t) + '</b>' + esc(x.why) + (r ? '<span class="rl"><a href="' + esc(cardHref(r)) + '">' + esc(l.length > 46 ? l.slice(0, 44) + '…' : l) + '</a></span>' : x.href ? '<span class="rl"><a href="' + esc(x.href) + '">' + esc(l.length > 46 ? l.slice(0, 44) + '…' : l) + '</a></span>' : '') + '</div>'; }).join('') + '</div>' : '') +
       '<p class="ihdr">Пересечения и противоречия</p><div class="igroup">' +
       R.issues.map(function(it){
-        return '<div class="rnote"><b>' + esc(it.t) + '</b>' + esc(it.x) + '<span class="rl">' + it.ids.map(function(id){ var r = rById(id); return r ? '<a href="#regs" data-go="' + esc(id) + '">' + esc(r.title.length > 46 ? r.title.slice(0, 44) + '…' : r.title) + '</a>' : ''; }).join('') + '</span></div>';
+        return '<div class="rnote"><b>' + esc(it.t) + '</b>' + esc(it.x) + '<span class="rl">' + it.ids.map(function(id){ var r = rById(id); return r ? '<a href="' + esc(cardHref(r)) + '">' + esc(r.title.length > 46 ? r.title.slice(0, 44) + '…' : r.title) + '</a>' : ''; }).join('') + '</span></div>';
       }).join('') + '</div>' +
       '<p class="ihdr">Оформление</p><div class="igroup"><ul class="rlist">' + R.style.now.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
       (R.style.brand ? '<p class="ihdr">Фирменный стиль</p><div class="igroup"><ul class="rlist">' + R.style.brand.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
@@ -755,13 +763,6 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       '<p class="ifoot">Реестр от ' + dmy(R.updated) + '.</p>';
     V.innerHTML = h;
   }
-  // a link to another document of the register: open the list and unfold that card
-  document.addEventListener('click', function(e){
-    var a = e.target.closest && e.target.closest('a[data-go]'); if (!a) return;
-    e.preventDefault(); var id = a.getAttribute('data-go'), r = rById(id), to = '#' + (r && isForm(r) ? 'forms' : 'regs');   // 30.10: бланк живёт в «Бланках»
-    if (location.hash !== to) { history.pushState(null, '', to); route(); }
-    var d = document.getElementById('r-' + id); if (d) { d.open = true; d.scrollIntoView({block: 'start', behavior: 'smooth'}); }
-  });
   // PDF opens inside the site (assets/pdfview.js) with «‹ Назад» always on top — the system viewer had no way back in the iPhone app (23.10.2026)
   document.addEventListener('click', function(e){
     var a = e.target.closest && e.target.closest('a[data-pdf]'); if (!a || !window.T14PDF) return;
@@ -796,7 +797,28 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (pdf && window.T14PDF) T14PDF.open({src: pdf, title: it ? it.title : 'Документ', meta: /\\.xlsx?$/i.test(f) ? 'Excel' : 'Word', orig: f, name: f.split('/').pop(), back: 'Назад'});
     else if (f) location.href = f;
   }
-  function route(){ var h = location.hash.slice(1), mo = /^open=(.+)$/.exec(h); if (mo) { var k = decodeURIComponent(mo[1]); openDoc((D.latest || {})[k] || k); window.scrollTo(0, 0); return; } if (h) cat(h); else main(); window.scrollTo(0, 0); if (PUBF) [].forEach.call(document.querySelectorAll('a[href^="https://fabrikant.su/"]'), markPub); }
+  function route(){
+    var h = location.hash.slice(1), card = /^(regs|forms)\\/(.+)$/.exec(h), mo = /^open=(.+)$/.exec(h);
+    if (mo) {
+      var key;
+      try { key = decodeURIComponent(mo[1]); } catch (err) { main(); return; }
+      openDoc((D.latest || {})[key] || key);
+      window.scrollTo(0, 0);
+      return;
+    }
+    var doc = null;
+    if (card) {
+      try { doc = rById(decodeURIComponent(card[2])); } catch (err) { doc = null; }
+      cat(doc ? (CUR(doc) && isForm(doc) ? 'forms' : 'regs') : card[1]);
+    } else if (h) cat(h); else main();
+    window.scrollTo(0, 0);
+    var details = doc && document.getElementById('r-' + doc.id);
+    if (details) {
+      details.open = true;
+      details.scrollIntoView({block: 'start'});
+    }
+    if (PUBF) [].forEach.call(document.querySelectorAll('a[href^="https://fabrikant.su/"]'), markPub);
+  }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live && T14Live.bin) T14Live.bin('docs.bin').then(function(Z){ if (Z && Z.kinds) { MAIL = Z; var h = location.hash.slice(1); if (!h) main(); else if (/^mail-|^prices$|^kp$|^recl$|^reports$/.test(h)) cat(h); } });
   window.T14Library = D;

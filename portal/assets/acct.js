@@ -521,7 +521,7 @@
   }
   // ---------------- «На iPhone» (14.11.2026, Т. В., опрос «приложение для iPhone без затрат»: значок, Face ID, пуши о тревогах, Siri, Telegram)
   function iphone() {
-    var s = sheet('Пароль приложения', 'Портал как приложение — без App Store и без затрат');   // 14.11.2026 17:27, Т. В.: раздел называется «Пароль приложения»;
+    var s = sheet('Установка на iPhone и iPad', 'Портал как приложение — без App Store и без затрат');
     var B = 'https://techfabrikant.ru/';
     function step(n, t, x) { var d = el('div', 'iph-st', '<b></b><p></p>'); d.firstChild.textContent = n + '. ' + t; d.lastChild.textContent = x; s.body.appendChild(d); }
     var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');

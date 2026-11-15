@@ -9,7 +9,7 @@ window.FRESH={"day": "2026-11-13", "items": [{"k": "l-docs-library/memo/sluzhebn
   var KEY = 'fx_seen_' + F.day, seen = {};
   try { seen = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { seen = {}; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(seen)); } catch (e) { } }
-  var page = (location.pathname.split('/').pop() || 'index.html');
+  var page = (location.pathname.split('/').pop() || 'home.html');
   function norm(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return decodeURIComponent(h.replace(/^\.\//, '')); }
   function live() { return F.items.filter(function (x) { return !seen[x.k]; }); }
   function visit() {

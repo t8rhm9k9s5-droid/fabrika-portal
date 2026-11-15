@@ -129,7 +129,7 @@
       var sd = S && S.sday && S.sday.days && S.sday.days[iso];
       if (sd && sd.types && sd.types.tot && sd.types.tot[1] > 0) rows.push(['Продажи 1С', mln(sd.types.tot[1]), num(sd.types.tot[0]) + ' шт за день', 'sales.html#s-s1c']);
       var ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null;
-      if (ops && ops.length && iso <= td) rows.push(['Вечерние отчёты офисов', ops.filter(function (o) { return o.rep && o.rep[iso]; }).length + ' из ' + ops.length, 'сдали отчёт за день', 'sales.html#s-prom']);
+      if (ops && ops.length && iso <= td) rows.push(['Вечерние отчёты офисов', ops.filter(function (o) { return o.rep && o.rep[iso]; }).length + ' из ' + ops.length, 'сдали отчёт за день', 'sales.html#s-days-' + iso]);
       var gl = P && P.galv, gd = gl && gl.d ? gl.d.filter(function (x) { return String(x[0]) === iso || String(x[0]) === String(+iso.slice(8)); })[0] : null;
       if (gd && gd[1] > 0) rows.push(['Гальваника', num(gd[1]) + ' траверс', 'норма ' + (gl.norm || 165) + ' в сутки', 'staff.html#s-galv']);
       if (X.ship) rows.push(['Отгрузка по графику', mln(X.ship[1]), num(X.ship[0]) + ' шт · клиентов: ' + X.ship[2], 'sales.html#ship']);
@@ -154,7 +154,7 @@
   (function () {
     var standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
     if (!standalone || !('ontouchstart' in window)) return;
-    var page = (location.pathname.split('/').pop() || 'index.html');
+    var page = (location.pathname.split('/').pop() || 'home.html');
     if (/^(index|plan)\.html$/.test(page)) return;                                   // модель и карта — свои жесты
     function on() { return root.getAttribute('data-skin') === 'v22'; }
     function blocked(t) { return t && t.closest && t.closest('.tabpanel:not([hidden]),.isheet,.viewer,.vw,.lightbox,.leaflet-container,canvas,input,textarea,select,[contenteditable],.v22-week'); }

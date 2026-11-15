@@ -67,6 +67,34 @@ function alertsFor(sec) {
     if (dot2) bad.push('тревога «Продажи»: точка в меню вернулась после просмотра раздела');
     console.log('  точка тревоги у «Продаж»: до просмотра — ' + (dot0 ? 'есть' : 'нет') + ', после — ' + (dot2 ? 'есть' : 'нет'));
   }
+  // Sample the product menu from its first visible frame through the arrival of the KPI cards.
+  await pg.setViewportSize({ width: 1584, height: 893 });
+  await pg.addInitScript(() => {
+    if (location.hash !== '#items') return;
+    const first = {}, state = window.productLayout = { measured: 0, maxShift: 0 };
+    function sample() {
+      for (const heading of document.querySelectorAll('.rz-card h2')) {
+        const label = heading.textContent.trim();
+        if (label !== 'Каталог' && label !== 'Цены и материалы') continue;
+        const box = heading.closest('section').getBoundingClientRect();
+        if (!box.height) continue;
+        if (!(label in first)) first[label] = box.top;
+        state.maxShift = Math.max(state.maxShift, Math.abs(box.top - first[label]));
+      }
+      state.measured = Object.keys(first).length;
+      requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await pg.reload();
+    else await pg.goto(BASE + 'razdel.html#items');
+    await pg.waitForSelector('#pzHost .pz-k > .gl');
+    await pg.waitForTimeout(2500);
+    const state = await pg.evaluate(() => ({ ...window.productLayout, scroll: window.scrollY }));
+    if (state.measured !== 2 || state.maxShift > 2 || state.scroll !== 0)
+      bad.push('Положение разделов каталога при загрузке: ' + JSON.stringify(state));
+  }
   errs.forEach(e => bad.push('ошибка JavaScript: ' + e));
   await br.close();
   console.log(bad.length ? '\nОШИБКИ в браузере:\n  ' + bad.join('\n  ') : 'браузер: ошибок нет — где данные есть, числа и диаграммы показаны');

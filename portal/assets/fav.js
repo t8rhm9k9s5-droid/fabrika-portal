@@ -9,7 +9,7 @@
   function load() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
   function save(a) { try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 300))); } catch (e) { } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  var page = (location.pathname.split('/').pop() || 'index.html');
+  var page = (location.pathname.split('/').pop() || 'home.html');
   function key(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return h.replace(/^\.\//, ''); }
   function kind(h) { return /^(?:library\/.*|.*\.(?:pdf|docx?|xlsx?|pptx?))$/i.test(h) || /^https?:\/\//i.test(h) ? 'doc' : 'rep'; }
   // 14.11.2026 (CodeQL js/xss-through-dom): адрес из сохранённого — только свои страницы и http(s), никаких javascript:/data:

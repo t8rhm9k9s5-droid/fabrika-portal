@@ -423,6 +423,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
 .ops .who{border-top:.5px solid var(--ios-sep)}
 .who.op .wn b{font-weight:650}
+.who.op .wr>a{display:block}
 .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .acts a{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;background:color-mix(in srgb,var(--ios-blue) 13%,transparent);color:var(--ios-blue);font:600 14px var(--f-body);text-decoration:none;font-variant-numeric:tabular-nums}
 .itile svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}

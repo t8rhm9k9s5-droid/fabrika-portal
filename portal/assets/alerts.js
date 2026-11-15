@@ -11,7 +11,7 @@
   var D = window.T14_ALERTS || {}, L = (D.items || []).filter(function (a) { return a && a.t; });
   window.T14Alerts = { items: L, secOf: secOf };
   if (!L.length) return;
-  var page = (location.pathname.split('/').pop() || 'index.html');
+  var page = (location.pathname.split('/').pop() || 'home.html');
   var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
     'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
   function secOf() { return page === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[page] || ''; }
