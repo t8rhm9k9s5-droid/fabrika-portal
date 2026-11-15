@@ -562,7 +562,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     h += pubBlock(k, c.c, c.i);
     if (ls.length) h += '<p class="ihdr">Внешние ссылки</p><div class="igroup">' + ls.map(linkRow).join('') + '</div>';
     if (k === 'protocols' && !its.length) h += '<p class="empty">ОМТС собирает протоколы переговоров с поставщиками (цены, условия поставки, разногласия). Присылают файлом на user1@example.org с темой «Протокол переговоров — поставщик»; каждый появится здесь в течение дня.</p>';
-    else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Файлов здесь пока нет — ' + 'см. внешние ссылки выше.' : 'Пока нет документов.') + '</p>';
+    else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Документы доступны по ссылкам выше.' : 'Пока нет документов.') + '</p>';
     h += how();
     V.innerHTML = h;
   }

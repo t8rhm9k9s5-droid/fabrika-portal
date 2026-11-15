@@ -5,6 +5,7 @@
 """Assemble the website in two forms:
    /home/claude/site      — for publishing as a Claude artifact (the main page stays a fragment; the tool adds the skeleton)
    /home/claude/site_zip  — standalone static site for any web server or a local folder (full documents, local three.js fallback)"""
+from library_files import update_library_sizes
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 from site_widgets import build_minimap, repair_note
 import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
@@ -34,8 +35,9 @@ def full(frag):
 subprocess.run(['python3', '/home/claude/build/gen_stores.py'], check=True)
 subprocess.run(['python3', '/home/claude/build/gen_calls.py'], check=True)   # «Кому звонить» (27.10.2026)   # «Остатки ОП» с fabrikant.su/stock (26.10.2026)
 # Generate the register after branding and conversion, so new previews are included on the first build.
-for _script in ('brand_all.py', 'docs2pdf.py', 'gen_library.py'):
-    subprocess.run(['python3', os.path.join('/home/claude/build', _script)], check=True)
+for _script in ('brand_all.py', 'docs2pdf.py'):
+    subprocess.run(['python3', os.path.join('/home/claude/build', _script)])
+subprocess.run(['python3', '/home/claude/build/gen_library.py'], check=True)
 frags = {'index.html': _cg1_read_file(os.path.join(SITE, 'index.html'), encoding='utf-8')}
 for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products.html', '/home/claude/build/products_frag.html'), ('plan.html', '/home/claude/build/plan_frag.html'), ('docs.html', '/home/claude/build/docs_v2.html'), ('staff.html', '/home/claude/build/staff_frag.html'), ('archive.html', '/home/claude/build/archive_frag.html'), ('stock.html', '/home/claude/build/stock_frag.html'), ('library.html', '/home/claude/build/library_frag.html'), ('chat.html', '/home/claude/build/chat_frag.html'), ('admin.html', '/home/claude/build/admin_frag.html'), ('stores.html', '/home/claude/build/stores_frag.html'), ('sales.html', '/home/claude/build/sales_frag.html'), ('calls.html', '/home/claude/build/calls_frag.html'), ('omts.html', '/home/claude/build/omts_frag.html'),
                   # 29.10.2026: «Транспорт (ГЛОНАСС)» — только владельцу (пользователь: «Только я»); данных в странице нет — их отдаёт скрипт бота по личному входу владельца (op gl)
@@ -784,39 +786,7 @@ _lib = '/home/claude/library/raw'
 if os.path.exists(os.path.join(SITE, 'library')): shutil.rmtree(os.path.join(SITE, 'library'))
 if os.path.isdir(_lib) and any(f for _, _, fs in os.walk(_lib) for f in fs): shutil.copytree(_lib, os.path.join(SITE, 'library'))
 shutil.copy2(_staged_price, pathlib.Path(SITE) / 'library' / 'prices' / _staged_price.name)
-# The catalog lists the files actually delivered in the assembled site.
-# Keep sizes of the downloaded document and its PDF preview separate.
-def _update_library_sizes(fragment, site):
-    match = re.search(r'(<script id="lib-data"[^>]*>)(.*?)(</script>)', fragment, re.S)
-    data = _js.loads(match.group(2))
-    root = (pathlib.Path(site) / 'library').resolve()
-
-    def delivered_size(name):
-        if not name or not name.startswith('library/'):
-            return None
-        path = (root / name[len('library/'):]).resolve()
-        if root not in path.parents or not path.is_file():
-            return None
-        return path.stat().st_size
-
-    def refresh(node):
-        if isinstance(node, list):
-            for item in node:
-                refresh(item)
-        elif isinstance(node, dict):
-            if isinstance(node.get('file'), str) and node['file'].startswith('library/'):
-                node['bytes'] = delivered_size(node['file'])
-                preview = data.get('view', {}).get(node['file'])
-                if preview:
-                    node['previewBytes'] = delivered_size(preview)
-            for value in node.values():
-                refresh(value)
-
-    refresh(data)
-    encoded = _js.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
-    return fragment[:match.start(2)] + encoded + fragment[match.end(2):]
-
-frags['library.html'] = _update_library_sizes(frags['library.html'], SITE)
+frags['library.html'] = update_library_sizes(frags['library.html'], SITE)
 # 28.10.2026, пользователь: «у тебя или день потерялся» — на «Производстве» и «ОМТС» не было live.js, страницы показывали запасные данные.
 # Любая страница, которая читает данные хостинга (T14Live), получает live.js ровно один раз.
 _LJ = '<script src="assets/live.js"></script>'
