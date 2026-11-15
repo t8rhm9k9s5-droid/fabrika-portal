@@ -5,6 +5,17 @@ API MAX подменён заглушкой (GET /messages по группам �
 прогон дважды: on=false (ничего не уходит, всё в dry) и on=true (через заглушку)."""
 import datetime, json, os, re, shutil, sys, tempfile
 
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 import mx_ctl as MC, mx_poll as MP, remind as RM
@@ -28,7 +39,7 @@ def ok(cond, what):
     if not cond: fails.append(what); print('  FAIL:', what)
 
 
-# REDACTED_B64_9 заглушка API MAX
+# REDACTED_B64_8 заглушка API MAX
 class Api:
     def __init__(self):
         self.msgs = {'100': [], '200': []}; self.members = {'100': [], '200': []}; self.posts = []; self.n = 0; self.dm_fail = set()
@@ -66,36 +77,35 @@ def setup(on):
     home = tempfile.mkdtemp(prefix='fabrika_test_')
     L = os.path.join(home, '.fabrika_live'); M = os.path.join(home, '.fabrika_max')
     os.makedirs(L); os.makedirs(M)
-    json.dump({'token': 'x', 'bot': {'user_id': BOT, 'name': 'Фабрикант'}}, open(os.path.join(M, 'config.json'), 'w'))      # owner не привязан — по имени «Сотрудник2 М»
-    json.dump({'100': {'on': True, 'title': 'Коммерческий отдел'}, '200': {'on': True, 'title': 'Торговое оборудование'},
-               '300': {'on': False, 'title': 'Старая группа'}, '400': {'on': True, 'title': 'Канал Фабрикант', 'channel': True}}, open(os.path.join(M, 'groups.json'), 'w'))
-    names = {'1': 'Сотрудник2 М', '11': 'Имя5', '12': 'Сотрудник46 Сотрудник17', '13': 'Сотрудник14 Сотрудник6', '14': 'Сотрудник3 Сотрудник16', '15': 'Поп Имя27', '16': 'Сотрудник43 Сотрудник24', '17': 'Сотрудник29 Сотрудник21'}
+    _wr(json.dumps({'token': 'x', 'bot': {'user_id': BOT, 'name': 'Фабрикант'}}), os.path.join(M, 'config.json'), 'w')      # owner не привязан — по имени «Сотрудник2 М»
+    _wr(json.dumps({'100': {'on': True, 'title': 'Коммерческий отдел'}, '200': {'on': True, 'title': 'Торговое оборудование'},
+               '300': {'on': False, 'title': 'Старая группа'}, '400': {'on': True, 'title': 'Канал Фабрикант', 'channel': True}}), os.path.join(M, 'groups.json'), 'w')
+    names = {'1': 'Сотрудник2 М', '11': 'Имя6', '12': 'Сотрудник48 Сотрудник18', '13': 'Сотрудник15 Сотрудник7', '14': 'Сотрудник3 Сотрудник17', '15': 'Поп Имя28', '16': 'Сотрудник45 Сотрудник25', '17': 'Сотрудник32 Сотрудник22'}
     items = {}
     def item(iid, uid, who, due, what):
         items[iid] = {'id': iid, 'src': 'group', 'what': what, 'due': due, 'who': who, 'who_uid': uid, 'st': 'open', 'asks': 1, 'author': who, 'at': '2026-10-%sT12:00' % due[8:10], 'mid': 'src' + iid, 'kind': 'self'}
-    item('A1', 12, 'Сотрудник46 Сотрудник17', '2026-10-26', 'Топ-Сервис — контрольный звонок 26.10')             # 3 раб. дня
-    item('A2', 12, 'Сотрудник46 Сотрудник17', '2026-10-23', 'Казаков А. — отгрузка 23.10')                        # 4 раб. дня (с A1 — одним сообщением)
-    item('B1', 14, 'Сотрудник3 Сотрудник16', '2026-10-21', 'ТДР — доп. заказ до 21.10')                   # 6 раб. дней
-    item('C1', 13, 'Сотрудник14 Сотрудник6', '2026-10-14', 'Статио проект — предоплата до 14.10')                 # 11 раб. дней
-    item('D1', 15, 'Поп Имя27', '2026-10-26', 'Клиент Х — счёт до 26.10')                              # запрещён
-    item('F1', 11, 'Имя5', '2026-10-28', 'АверсПлюс — оплата 28.10')                                # 1 день — mx_ctl сам
-    item('G1', 16, 'Сотрудник43 Сотрудник24', '2026-10-26', 'Договоры — ответ до 26.10')                           # 3 дня, диалога с ботом нет
+    item('A1', 12, 'Сотрудник48 Сотрудник18', '2026-10-26', 'Топ-Сервис — контрольный звонок 26.10')             # 3 раб. дня
+    item('A2', 12, 'Сотрудник48 Сотрудник18', '2026-10-23', 'Казаков А. — отгрузка 23.10')                        # 4 раб. дня (с A1 — одним сообщением)
+    item('B1', 14, 'Сотрудник3 Сотрудник17', '2026-10-21', 'ТДР — доп. заказ до 21.10')                   # 6 раб. дней
+    item('C1', 13, 'Сотрудник15 Сотрудник7', '2026-10-14', 'Статио проект — предоплата до 14.10')                 # 11 раб. дней
+    item('D1', 15, 'Поп Имя28', '2026-10-26', 'Клиент Х — счёт до 26.10')                              # запрещён
+    item('F1', 11, 'Имя6', '2026-10-28', 'АверсПлюс — оплата 28.10')                                # 1 день — mx_ctl сам
+    item('G1', 16, 'Сотрудник45 Сотрудник25', '2026-10-26', 'Договоры — ответ до 26.10')                           # 3 дня, диалога с ботом нет
     items['E1'] = {'id': 'E1', 'src': 'manual', 'what': 'План ноября', 'due': '2026-10-26', 'who': 'Коллеги', 'who_uid': None, 'st': 'open', 'asks': 1}
-    items['H1'] = {'id': 'H1', 'src': 'group', 'what': 'закрыто', 'due': '2026-10-20', 'who': 'Сотрудник46 Сотрудник17', 'who_uid': 12, 'st': 'done', 'asks': 1}
-    json.dump({'names': names, 'items': items, 'asks': {}, 'seen': []}, open(os.path.join(M, 'ctl.json'), 'w'), ensure_ascii=False)
-    json.dump({'msgs': {'old1': {'ts': ms(10, 0, -3), 'mid': 'old1', 'uid': 11, 'name': 'Имя5', 'bot': False, 'text': 'Старый отчёт', 'rmid': '', 'mentions': []}}},
-              open(os.path.join(M, 'history_all.json'), 'w'), ensure_ascii=False)
-    cfg = json.load(open(os.path.join(os.path.dirname(HERE), 'mx_poll_cfg.json'), encoding='utf-8'))
+    items['H1'] = {'id': 'H1', 'src': 'group', 'what': 'закрыто', 'due': '2026-10-20', 'who': 'Сотрудник48 Сотрудник18', 'who_uid': 12, 'st': 'done', 'asks': 1}
+    _wr(json.dumps({'names': names, 'items': items, 'asks': {}, 'seen': []}, ensure_ascii=False), os.path.join(M, 'ctl.json'), 'w')
+    _wr(json.dumps({'msgs': {'old1': {'ts': ms(10, 0, -3), 'mid': 'old1', 'uid': 11, 'name': 'Имя6', 'bot': False, 'text': 'Старый отчёт', 'rmid': '', 'mentions': []}}}, ensure_ascii=False), os.path.join(M, 'history_all.json'), 'w')
+    cfg = json.loads(_rd(os.path.join(os.path.dirname(HERE), 'mx_poll_cfg.json'), encoding='utf-8'))
     cfg['on'] = on
-    cp = os.path.join(home, 'mx_poll_cfg.json'); json.dump(cfg, open(cp, 'w'), ensure_ascii=False)
+    cp = os.path.join(home, 'mx_poll_cfg.json'); _wr(json.dumps(cfg, ensure_ascii=False), cp, 'w')
     MP.CFG_FILE = cp
     api = Api(); MC.api = api
-    api.members['100'] = [(1, 'Сотрудник2 М'), (11, 'Имя5'), (12, 'Сотрудник46 Сотрудник17'), (13, 'Сотрудник14 Сотрудник6'), (14, 'Сотрудник3 Сотрудник16'), (15, 'Поп Имя27'),
-                          (16, 'Сотрудник43 Сотрудник24'), (17, 'Сотрудник29 Сотрудник21'), (18, 'Сотрудник47 Сотрудник18 Фабрикант Самара'), (19, 'Сотрудник38 Сотрудник19')]
-    api.members['200'] = [(1, 'Сотрудник2 М'), (21, 'Имя18 Сотрудник52'), (22, 'Сотрудник49 Сотрудник34'), (23, 'Имя24 Сотрудник70'), (24, 'Имя9 Сотрудник66'), (25, 'Анна Сотрудник71')]
+    api.members['100'] = [(1, 'Сотрудник2 М'), (11, 'Имя6'), (12, 'Сотрудник48 Сотрудник18'), (13, 'Сотрудник15 Сотрудник7'), (14, 'Сотрудник3 Сотрудник17'), (15, 'Поп Имя28'),
+                          (16, 'Сотрудник45 Сотрудник25'), (17, 'Сотрудник32 Сотрудник22'), (18, 'Сотрудник49 Сотрудник19 Фабрикант Самара'), (19, 'Сотрудник40 Сотрудник20')]
+    api.members['200'] = [(1, 'Сотрудник2 М'), (21, 'Имя19 Сотрудник54'), (22, 'Сотрудник51 Сотрудник37'), (23, 'Имя25 Сотрудник72'), (24, 'Имя10 Сотрудник68'), (25, 'Анна Сотрудник73')]
     api.dm_fail.add(16)
     # группа 200 — до начала дня
-    api.raw('200', 21, 'Имя18 Сотрудник52', 'Коллеги, график на ноябрь во вложении', 8, 30, mid='mak1')
+    api.raw('200', 21, 'Имя19 Сотрудник54', 'Коллеги, график на ноябрь во вложении', 8, 30, mid='mak1')
     return home, L, M, api
 
 
@@ -115,25 +125,24 @@ def scenario(on):
            'jsave': lambda n, v: store.__setitem__(n, json.loads(json.dumps(v))), 'publish': lambda n, o: pub.__setitem__(n, json.loads(json.dumps(o))),
            'iso': lambda t: t.strftime('%Y-%m-%dT%H:%M'),
            'mail_send': lambda subject, text, to=None, cc=None, att=None, html=None, reply_to=None: mails.append({'t': NOW[0].strftime('%d.%m %H:%M'), 's': subject, 'x': text, 'to': list(to or []), 'cc': list(cc or [])}) or 'ok (test)'}
-    poll = lambda: json.load(open(os.path.join(M, 'poll.json'), encoding='utf-8'))
-    rem = lambda: json.load(open(os.path.join(M, 'remind.json'), encoding='utf-8'))
+    poll = lambda: json.loads(_rd(os.path.join(M, 'poll.json'), encoding='utf-8'))
+    rem = lambda: json.loads(_rd(os.path.join(M, 'remind.json'), encoding='utf-8'))
     posts_to = lambda cid: [p for p in api.posts if str(p['q'].get('chat_id')) == str(cid)]
     dms = lambda: [p for p in api.posts if 'user_id' in p['q']]
 
     # 08:57 — утренний опрос; эскалация: день 3 (личное), день 5 / 10 (письма руководителю)
-    NOW[0] = at(8, 57); r1, r2 = run_all(L, env)
+    NOW[0] = at(8, 57); run_all(L, env)
     P = poll(); day0 = D0.isoformat()
     rec = P['days'][day0].get('morning') or {}
     ok(bool(rec.get('t')) and not rec.get('skip'), 'утренний опрос записан')
     ok(rec.get('dry') == (not on), 'утренний опрос dry=%s' % (not on))
     txt = rec.get('text') or ''
     ok('Утренний опрос, 29.10 (чт)' in txt, 'заголовок утреннего опроса')
-    ok('<a href="max://user/1">Имя5</a>' in txt and '<a href="max://user/2">Сотрудник3 Сотрудник16</a>' in txt, 'упоминания исполнителей в опросе')
+    ok('<a href="max://user/1">Имя6</a>' in txt and '<a href="max://user/2">Сотрудник3 Сотрудник17</a>' in txt, 'упоминания исполнителей в опросе')
     ok('Сотрудник1 А. А.' in txt and 'max://user/' not in txt.split('Сотрудник1 А. А.')[0][-30:], 'исполнитель без id — просто имя текстом')
-    ok('Поп Имя27' not in txt and 'Сотрудник2' not in txt, 'в опросе нет запрещённых и владельца')
+    ok('Поп Имя28' not in txt and 'Сотрудник2' not in txt, 'в опросе нет запрещённых и владельца')
     ok('просроченных пунктов: 1' in txt, 'число просроченных пунктов у исполнителя')
     ok(len(rec.get('exec') or {}) >= 9, 'исполнителей в опросе: %d' % len(rec.get('exec') or {}))
-    stat_poll_posts = len(posts_to('100'))
     if on:
         ok(len([p for p in posts_to('100') if p['body'].get('format') == 'html']) == 1 and api.posts[0]['body'].get('format') == 'html', 'опрос отправлен в группу одним html-сообщением')
         ok(rec.get('mid') == 'bot001' or rec.get('mid', '').startswith('bot'), 'mid опроса сохранён')
@@ -143,126 +152,126 @@ def scenario(on):
         ok('poll:morning' in kinds, 'dry: утренний опрос')
     R = rem()
     E = R['esc']
-    ok('A1' in E and bool(E['A1'].get('d3')), 'день 3: личное сообщение Сотрудник17 (A1)')
-    ok('G1' in E and bool(E['G1'].get('d3')) and (not on or E['G1']['d3'].get('via') == 'group'), 'день 3: Сотрудник24 нет диалога с ботом → ответом в группе (G1)')
-    ok('B1' in E and bool(E['B1'].get('d5')), 'день 5+: письмо руководителю по B1 (Сотрудник16)')
-    ok('C1' in E and bool(E['C1'].get('d5')) and bool(E['C1'].get('d10')), 'день 10+: C1 (Сотрудник6) — письмо и отметка d10')
+    ok('A1' in E and bool(E['A1'].get('d3')), 'день 3: личное сообщение Сотрудник18 (A1)')
+    ok('G1' in E and bool(E['G1'].get('d3')) and (not on or E['G1']['d3'].get('via') == 'group'), 'день 3: Сотрудник25 нет диалога с ботом → ответом в группе (G1)')
+    ok('B1' in E and bool(E['B1'].get('d5')), 'день 5+: письмо руководителю по B1 (Сотрудник17)')
+    ok('C1' in E and bool(E['C1'].get('d5')) and bool(E['C1'].get('d10')), 'день 10+: C1 (Сотрудник7) — письмо и отметка d10')
     ok('D1' not in E and 'F1' not in E and 'E1' not in E and 'H1' not in E, 'запрещённый, 1 день, «Коллеги», закрытый — без эскалации')
     if on:
         dm = dms()
-        ok(len(dm) == 2 and sorted(int(p['q']['user_id']) for p in dm) == [12, 16], 'личные сообщения: Сотрудник17 и попытка Сотрудник24 (404)')
+        ok(len(dm) == 2 and sorted(int(p['q']['user_id']) for p in dm) == [12, 16], 'личные сообщения: Сотрудник18 и попытка Сотрудник25 (404)')
         dmb = [p for p in dm if int(p['q']['user_id']) == 12]
-        ok(len(dmb) == 1 and dmb[0]['body']['text'].startswith('⚠️ Сотрудник46, по пунктам контроля срок прошёл, ответа в группе нет:\n1) «Казаков А. — отгрузка 23.10» — срок 23.10, просрочка 4 дня')
-           and '\n2) «Топ-Сервис — контрольный звонок 26.10» — срок 26.10, просрочка 3 дня' in dmb[0]['body']['text'], 'одно личное сообщение Сотрудник17 со списком двух пунктов')
-        ok(any(p['body']['text'].startswith('⚠️ Сотрудник43, по пункту «Договоры — ответ до 26.10» срок 26.10 прошёл 3 дня назад, ответа в группе нет. Ответьте, пожалуйста, на вопрос бота в группе сегодня до 18:00.') for p in dm), 'текст личного сообщения дня 3 (один пункт)')
+        ok(len(dmb) == 1 and dmb[0]['body']['text'].startswith('⚠️ Сотрудник48, по пунктам контроля срок прошёл, ответа в группе нет:\n1) «Казаков А. — отгрузка 23.10» — срок 23.10, просрочка 4 дня')
+           and '\n2) «Топ-Сервис — контрольный звонок 26.10» — срок 26.10, просрочка 3 дня' in dmb[0]['body']['text'], 'одно личное сообщение Сотрудник18 со списком двух пунктов')
+        ok(any(p['body']['text'].startswith('⚠️ Сотрудник45, по пункту «Договоры — ответ до 26.10» срок 26.10 прошёл 3 дня назад, ответа в группе нет. Ответьте, пожалуйста, на вопрос бота в группе сегодня до 18:00.') for p in dm), 'текст личного сообщения дня 3 (один пункт)')
         m5 = [m for m in mails if m['s'].startswith('Невыполненное поручение')]
-        ok(len(m5) == 1, 'писем по дню 5: %d (Сотрудник6 по Сотрудник16; по самому Сотрудник6 — без письма, 03.11)' % len(m5))
-        ok(any(m['to'] == ['user43@example.org'] and m['cc'] == [] and '6 дней' in m['s'] for m in m5), 'письмо Сотрудник6 по Сотрудник16, копия itm@, «6 дней»')
+        ok(len(m5) == 1, 'писем по дню 5: %d (Сотрудник7 по Сотрудник17; по самому Сотрудник7 — без письма, 03.11)' % len(m5))
+        ok(any(m['to'] == ['user42@example.org'] and m['cc'] == [] and '6 дней' in m['s'] for m in m5), 'письмо Сотрудник7 по Сотрудник17, копия itm@, «6 дней»')
         # 03.11.2026 (remind.py): руководству и itm@ «примите решение» не шлём — пункт уходит в утреннюю сводку (d5.skip = «руководство»)
-        ok(not any(m['to'] == ['user5@example.org'] for m in m5) and (E['C1'].get('d5') or {}).get('skip') == 'руководство', 'по Сотрудник6 (сам руководитель) — письма нет, пункт в утренней сводке')
+        ok(not any(m['to'] == ['user5@example.org'] for m in m5) and (E['C1'].get('d5') or {}).get('skip') == 'руководство', 'по Сотрудник7 (сам руководитель) — письма нет, пункт в утренней сводке')
         ok(not any('tech-main' in str(m) or 'ok-3@' in str(m) or 'imm@' in str(m) for m in mails), 'запрещённым адресатам писем нет')
     # ответы на утренний опрос и вопросы в группе 200
     pm = rec.get('mid') or 'none'
-    api.raw('100', 11, 'Имя5', '1) Вопросов нет. 2) Пункт 1 — клиент не отвечает, новый срок 31.10', 9, 20, rmid=pm)
-    bad1 = api.raw('100', 12, 'Сотрудник46 Сотрудник17', 'Всё нормально, работаем', 9, 30, rmid=pm)
-    api.raw('100', 13, 'Сотрудник14 Сотрудник6', 'Когда будет прайс на ноябрь? Пункт 1 — Статио: предоплата будет 05.11', 9, 40, rmid=pm)
-    api.raw('100', 15, 'Поп Имя27', 'Вопросов нет', 9, 45, rmid=pm)
+    api.raw('100', 11, 'Имя6', '1) Вопросов нет. 2) Пункт 1 — клиент не отвечает, новый срок 31.10', 9, 20, rmid=pm)
+    bad1 = api.raw('100', 12, 'Сотрудник48 Сотрудник18', 'Всё нормально, работаем', 9, 30, rmid=pm)
+    api.raw('100', 13, 'Сотрудник15 Сотрудник7', 'Когда будет прайс на ноябрь? Пункт 1 — Статио: предоплата будет 05.11', 9, 40, rmid=pm)
+    api.raw('100', 15, 'Поп Имя28', 'Вопросов нет', 9, 45, rmid=pm)
     api.raw('100', 1, 'Сотрудник2 М', 'Спасибо, жду', 9, 50, rmid=pm)
-    q1 = api.raw('200', 1, 'Сотрудник2 М', 'Сотрудник49, когда будет готов график ремонта?', 9, 10)
-    qmak = api.raw('200', 23, 'Имя24 Сотрудник70', 'Имя18 Отчество29, можно ли заказать подшипники?', 9, 15, rmid='mak1')
-    api.raw('200', 23, 'Имя24 Сотрудник70', 'Сотрудник2 Отчество1, подтвердите заявку?', 9, 20, mentions=[1])
-    api.raw('200', 23, 'Имя24 Сотрудник70', 'Сколько стоит ремонт?', 9, 25)
+    q1 = api.raw('200', 1, 'Сотрудник2 М', 'Сотрудник51, когда будет готов график ремонта?', 9, 10)
+    qmak = api.raw('200', 23, 'Имя25 Сотрудник72', 'Имя19 Отчество29, можно ли заказать подшипники?', 9, 15, rmid='mak1')
+    api.raw('200', 23, 'Имя25 Сотрудник72', 'Сотрудник2 Отчество1, подтвердите заявку?', 9, 20, mentions=[1])
+    api.raw('200', 23, 'Имя25 Сотрудник72', 'Сколько стоит ремонт?', 9, 25)
     q2 = api.raw('200', 1, 'Сотрудник2 М', 'Коллеги, прошу сообщить остатки по металлу', 9, 30)
     q3 = api.raw('200', 1, 'Сотрудник2 М', 'Анна, подскажите, когда будет приказ?', 9, 35)
-    a2 = api.raw('200', 23, 'Имя24 Сотрудник70', 'Остатки по металлу: 3 тонны листа', 10, 0)
-    NOW[0] = at(10, 5); r1, r2 = run_all(L, env)
+    a2 = api.raw('200', 23, 'Имя25 Сотрудник72', 'Остатки по металлу: 3 тонны листа', 10, 0)
+    NOW[0] = at(10, 5); run_all(L, env)
     P = poll(); rec = P['days'][day0]['morning']
     if on:
-        ok(set(rec['ans']) >= {'11', '12', '13'} and '15' not in rec['ans'] and '1' not in rec['ans'], 'ответы записаны: 11, 12, 13; Имя27 и владелец — нет')
-        ok(rec['ans']['11']['ok'] and rec['ans']['13']['ok'] and not rec['ans']['12']['ok'], 'форма утренних ответов: Имя5 ок, Сотрудник6 ок, Сотрудник17 нет')
+        ok(set(rec['ans']) >= {'11', '12', '13'} and '15' not in rec['ans'] and '1' not in rec['ans'], 'ответы записаны: 11, 12, 13; Имя28 и владелец — нет')
+        ok(rec['ans']['11']['ok'] and rec['ans']['13']['ok'] and not rec['ans']['12']['ok'], 'форма утренних ответов: Имя6 ок, Сотрудник7 ок, Сотрудник18 нет')
         cm = [p for p in posts_to('100') if (p['body'].get('link') or {}).get('mid') == bad1]
-        ok(len(cm) == 1 and cm[0]['body']['text'].startswith('❌ Сотрудник46, ответ на утренний опрос некорректен'), 'один комментарий «некорректен» Сотрудник17')
+        ok(len(cm) == 1 and cm[0]['body']['text'].startswith('❌ Сотрудник48, ответ на утренний опрос некорректен'), 'один комментарий «некорректен» Сотрудник18')
         ok(not any((p['body'].get('link') or {}).get('mid') not in (bad1, None) and p['body']['text'].startswith('❌') for p in posts_to('100')), 'комментариев верным ответам нет')
         rm_ = [p for p in posts_to('100') if p['body']['text'].startswith('⏳')]
-        ok(len(rm_) == 1 and 'Сотрудник3 Сотрудник16' in rm_[0]['body']['text'] and 'Имя5' not in rm_[0]['body']['text'] and 'Поп' not in rm_[0]['body']['text'], 'напоминание неответившим один раз, без ответивших и запрещённых')
+        ok(len(rm_) == 1 and 'Сотрудник3 Сотрудник17' in rm_[0]['body']['text'] and 'Имя6' not in rm_[0]['body']['text'] and 'Поп' not in rm_[0]['body']['text'], 'напоминание неответившим один раз, без ответивших и запрещённых')
     else:
         ok(not api.posts and not mails, 'on=false: ничего не отправлено к 10:05')
         ok(any(d['kind'] == 'remind:morning' for d in P['dry']), 'dry: напоминание неответившим')
     R = rem(); Q = R['q']
     byq = lambda mid: next((q for q in Q.values() if q['mid'] == mid), None)
-    ok(byq(q1) is not None and byq(q1)['to_uid'] == 22 and byq(q1)['mail'] == 'user73@example.org' and byq(q1)['st'] == 'open', 'вопрос Сотрудник49 по имени, почта найдена')
+    ok(byq(q1) is not None and byq(q1)['to_uid'] == 22 and byq(q1)['mail'] == 'user72@example.org' and byq(q1)['st'] == 'open', 'вопрос Сотрудник51 по имени, почта найдена')
     ok(byq(q2) is not None and byq(q2)['to_uid'] is None and byq(q2)['st'] == 'done' and byq(q2)['ans_mid'] == a2, 'вопрос группе от владельца закрыт ответом от 3 слов')
-    ok(byq(q3) is not None and byq(q3)['st'] == 'open', 'вопрос Сотрудник71 записан')
-    ok(byq(qmak) is None or byq(qmak).get('ban') or True, 'вопрос Сотрудник52 (запрещённый) — без напоминаний (проверка ниже)')
+    ok(byq(q3) is not None and byq(q3)['st'] == 'open', 'вопрос Сотрудник73 записан')
+    ok(byq(qmak) is None or byq(qmak).get('ban') or True, 'вопрос Сотрудник54 (запрещённый) — без напоминаний (проверка ниже)')
     ok(not any(q['to_uid'] == 1 for q in Q.values()) and not any('подтвердите заявку' in q['text'] for q in Q.values()), 'вопросы владельцу не берутся')
     ok(not any('Сколько стоит ремонт' in q['text'] for q in Q.values()), 'вопрос без адресата от не-владельца не берётся')
     ok(not byq(q1)['rem'], 'в 10:05 (меньше 2 ч) напоминания ещё нет')
     # 11:30 — первое напоминание в группе по q1; вопрос Юрию ответом и его ответ
-    q4 = api.raw('200', 1, 'Сотрудник2 М', 'Имя24, а по трубе сколько?', 11, 0, rmid=a2)
-    api.raw('200', 23, 'Имя24 Сотрудник70', 'По трубе 500 кг', 11, 15)
+    q4 = api.raw('200', 1, 'Сотрудник2 М', 'Имя25, а по трубе сколько?', 11, 0, rmid=a2)
+    api.raw('200', 23, 'Имя25 Сотрудник72', 'По трубе 500 кг', 11, 15)
     NOW[0] = at(11, 30); run_all(L, env)
     R = rem(); Q = R['q']; qq1 = byq(q1)
     ok(len(qq1['rem']) == 1 and qq1['rem'][0]['kind'] == 'group' and qq1['rem'][0]['t'] == '2026-10-29T11:30', 'q1: напоминание в группе в 11:30')
     ok(byq(q4) is not None and byq(q4)['st'] == 'done', 'q4 Юрию (reply) закрыт его сообщением')
     if on:
         g = [p for p in posts_to('200') if (p['body'].get('link') or {}).get('mid') == q1]
-        ok(len(g) == 1 and g[0]['body']['text'] == '🔔 Сотрудник49, на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.', 'текст напоминания в группе')
+        ok(len(g) == 1 and g[0]['body']['text'] == '🔔 Сотрудник51, на этот вопрос ещё нет ответа. Ответьте, пожалуйста, в группе.', 'текст напоминания в группе')
     NOW[0] = at(13, 35); run_all(L, env)
     ok(len(byq(q1)['rem']) == 1 or len(rem()['q'][[k for k, q in rem()['q'].items() if q['mid'] == q1][0]]['rem']) == 2, 'q1: второе напоминание в 13:35')
-    # 16:57 — вечерний отчёт; вопрос Имя9 (ОМТС) в 16:00
-    q5 = api.raw('200', 23, 'Имя24 Сотрудник70', 'Имя9, когда придут ролики?', 16, 0)      # не Сотрудник34: его сообщение закрыло бы q1
+    # 16:57 — вечерний отчёт; вопрос Имя10 (ОМТС) в 16:00
+    q5 = api.raw('200', 23, 'Имя25 Сотрудник72', 'Имя10, когда придут ролики?', 16, 0)      # не Сотрудник37: его сообщение закрыло бы q1
     NOW[0] = at(16, 57); run_all(L, env)
     P = poll(); ev = P['days'][day0].get('evening') or {}
     ok(bool(ev.get('t')) and not ev.get('skip') and 'Вечерний отчёт, 29.10 (чт)' in (ev.get('text') or ''), 'вечерний отчёт отправлен / dry')
     ok('Клиент — что сделано — дата (дд.мм) — срок следующего шага (дд.мм) — сумма (руб.)' in (ev.get('text') or ''), 'шаблон вечернего отчёта')
     R = rem(); Q = R['q']
     ok(len(byq(q1)['rem']) == 3, 'q1: три напоминания в группе за день (11:30, 13:35, 16:57)')
-    ok(byq(q5) is not None and byq(q5)['to_uid'] == 24 and byq(q5)['mail'] == 'user72@example.org' and not byq(q5)['rem'], 'q5 Имя9: почта ОМТС, напоминаний пока нет')
+    ok(byq(q5) is not None and byq(q5)['to_uid'] == 24 and byq(q5)['mail'] == 'user71@example.org' and not byq(q5)['rem'], 'q5 Имя10: почта ОМТС, напоминаний пока нет')
     em = ev.get('mid') or 'none'
-    api.raw('100', 11, 'Имя5', 'ООО Радуга — выставлен счёт 29.10 — срок оплаты до 05.11 — 120 000 руб.', 17, 5, rmid=em)
-    bad2 = api.raw('100', 12, 'Сотрудник46 Сотрудник17', 'Работала с клиентами, всё хорошо', 17, 10, rmid=em)
-    bad3 = api.raw('100', 14, 'Сотрудник3 Сотрудник16', 'ИП Томашев — отгрузка 29.10 — 104 т р', 17, 20, rmid=em)
+    api.raw('100', 11, 'Имя6', 'ООО Радуга — выставлен счёт 29.10 — срок оплаты до 05.11 — 120 000 руб.', 17, 5, rmid=em)
+    bad2 = api.raw('100', 12, 'Сотрудник48 Сотрудник18', 'Работала с клиентами, всё хорошо', 17, 10, rmid=em)
+    bad3 = api.raw('100', 14, 'Сотрудник3 Сотрудник17', 'ИП Томашев — отгрузка 29.10 — 104 т р', 17, 20, rmid=em)
     NOW[0] = at(17, 35); run_all(L, env)
     P = poll(); ev = P['days'][day0]['evening']
     if on:
-        ok(ev['ans']['11']['ok'] and not ev['ans']['12']['ok'] and not ev['ans']['14']['ok'], 'форма вечерних отчётов: Имя5 ок, Сотрудник17 и Сотрудник16 нет')
+        ok(ev['ans']['11']['ok'] and not ev['ans']['12']['ok'] and not ev['ans']['14']['ok'], 'форма вечерних отчётов: Имя6 ок, Сотрудник18 и Сотрудник17 нет')
         ok(ev['ans']['12']['miss'] == ['даты', 'срока', 'клиента', 'суммы'] and ev['ans']['14']['miss'] == ['срока'], 'что именно не хватает: %s / %s' % (ev['ans']['12']['miss'], ev['ans']['14']['miss']))
         c2 = [p for p in posts_to('100') if (p['body'].get('link') or {}).get('mid') == bad2]
         c3 = [p for p in posts_to('100') if (p['body'].get('link') or {}).get('mid') == bad3]
-        ok(len(c2) == 1 and c2[0]['body']['text'] == '❌ Сотрудник46, отчёт некорректен (не по форме): нет даты / срока / клиента / суммы. Пришлите, пожалуйста, заново ответом на опрос по шаблону.', 'комментарий Сотрудник17 по вечернему отчёту')
-        ok(len(c3) == 1 and c3[0]['body']['text'] == '❌ Сотрудник3, отчёт некорректен (не по форме): нет срока. Пришлите, пожалуйста, заново ответом на опрос по шаблону.', 'комментарий Сотрудник16: нет срока')
+        ok(len(c2) == 1 and c2[0]['body']['text'] == '❌ Сотрудник48, отчёт некорректен (не по форме): нет даты / срока / клиента / суммы. Пришлите, пожалуйста, заново ответом на опрос по шаблону.', 'комментарий Сотрудник18 по вечернему отчёту')
+        ok(len(c3) == 1 and c3[0]['body']['text'] == '❌ Сотрудник3, отчёт некорректен (не по форме): нет срока. Пришлите, пожалуйста, заново ответом на опрос по шаблону.', 'комментарий Сотрудник17: нет срока')
         rm2 = [p for p in posts_to('100') if p['body']['text'].startswith('⏳') and 'ечерний отчёт' in p['body']['text']]   # 30.10: «⏳ Вечерний отчёт за … не сдан»
-        ok(len(rm2) == 1 and 'Сотрудник14 Сотрудник6' in rm2[0]['body']['text'] and 'Имя5' not in rm2[0]['body']['text'], 'напоминание по вечернему отчёту: Сотрудник6 без ответа')
+        ok(len(rm2) == 1 and 'Сотрудник15 Сотрудник7' in rm2[0]['body']['text'] and 'Имя6' not in rm2[0]['body']['text'], 'напоминание по вечернему отчёту: Сотрудник7 без ответа')
     ok(len(rem()['q'][[k for k, q in rem()['q'].items() if q['mid'] == q1][0]]['rem']) == 3, 'q1: в 17:35 нового напоминания нет (меньше 2 ч от 16:57)')
     n_posts_17, n_mails_17 = len(api.posts), len(mails)
-    # 19:05 — письма: q1 (Сотрудник34), q5 (Сотрудник66, копия Сотрудник5), день 3 — Сотрудник17 (копия Сотрудник6) и Сотрудник24 (сама руководитель → только itm@)
+    # 19:05 — письма: q1 (Сотрудник37), q5 (Сотрудник68, копия Сотрудник6), день 3 — Сотрудник18 (копия Сотрудник7) и Сотрудник25 (сама руководитель → только itm@)
     NOW[0] = at(19, 5); run_all(L, env)
     R = rem(); Q = R['q']
     # 30.10.2026, Т. В.: «напоминай пока нормально не выложат отчет» — повтор о вечернем отчёте каждые 30 мин до 19:30 (mx_poll_cfg evening_repeat_until); другого в группы нет
     ok(all(p['body'].get('text', '').startswith('⏳ <b>Вечерний отчёт') and 'напоминание' in p['body'].get('text', '') for p in api.posts[n_posts_17:]), 'в 19:05 в группы — только повтор о вечернем отчёте (до 19:30)')
     mq1 = [r for r in byq(q1)['rem'] if r['kind'] == 'mail']; mq5 = [r for r in byq(q5)['rem'] if r['kind'] == 'mail']
-    ok(len(mq1) == 1 and mq1[0]['to'] == ['user73@example.org'] and mq1[0]['cc'] == [], 'письмо Сотрудник34, без копии (сам главный инженер)')
-    ok(len(mq5) == 1 and mq5[0]['to'] == ['user72@example.org'] and mq5[0]['cc'] == ['user39@example.org'], 'письмо Сотрудник66, копия Сотрудник5')
-    ok(not byq(q3)['rem'] and byq(q3).get('ban'), 'Сотрудник71 — ничего (запрет до 02.11)')
-    ok(byq(qmak) is None or (not byq(qmak)['rem'] and byq(qmak).get('ban')), 'Сотрудник52 — ничего')
+    ok(len(mq1) == 1 and mq1[0]['to'] == ['user72@example.org'] and mq1[0]['cc'] == [], 'письмо Сотрудник37, без копии (сам Имя2 инженер)')
+    ok(len(mq5) == 1 and mq5[0]['to'] == ['user71@example.org'] and mq5[0]['cc'] == ['user38@example.org'], 'письмо Сотрудник68, копия Сотрудник6')
+    ok(not byq(q3)['rem'] and byq(q3).get('ban'), 'Сотрудник73 — ничего (запрет до 02.11)')
+    ok(byq(qmak) is None or (not byq(qmak)['rem'] and byq(qmak).get('ban')), 'Сотрудник54 — ничего')
     E = R['esc']
-    ok(bool(E['A1'].get('d3m')) and bool(E['G1'].get('d3m')), 'день 3, 19:00: письма Сотрудник17 и Сотрудник24')
+    ok(bool(E['A1'].get('d3m')) and bool(E['G1'].get('d3m')), 'день 3, 19:00: письма Сотрудник18 и Сотрудник25')
     if on:
         new_m = mails[n_mails_17:]
         ok(len(new_m) == 4, 'писем в 19:05: %d (ожидалось 4)' % len(new_m))
-        mm = next((m for m in new_m if m['to'] == ['user73@example.org']), {})
+        mm = next((m for m in new_m if m['to'] == ['user72@example.org']), {})
         ok(mm.get('s') == 'Вопрос без ответа в группе «Торговое оборудование» (29.10.2026)', 'тема письма: %s' % mm.get('s'))
-        ok('Сотрудник34 А. В., добрый вечер.' in mm.get('x', '') and 'Т. В. Сотрудник1 задал(а) вам вопрос' in mm.get('x', '') and '«Сотрудник49, когда будет готов график ремонта?»' in mm.get('x', ''), 'текст письма по вопросу')
-        mb = next((m for m in new_m if m['to'] == ['user48@example.org']), {})
-        ok(mb.get('cc') == ['user43@example.org'] and mb.get('s') == 'Невыполненные поручения (2) — до 4 дней' and 'Сотрудник46 Отчество23, добрый вечер.' in mb.get('x', ''), 'письмо Сотрудник17 дня 3: копия itm@ и Сотрудник6, обращение по имени-отчеству, тема: %s' % mb.get('s'))
-        ok(sum(1 for m in new_m if m['to'] == ['user48@example.org']) == 1, 'Сотрудник17 — одно письмо на два пункта')
-        mk = next((m for m in new_m if m['to'] == ['user16@example.org']), {})
-        ok(mk.get('cc') == [], 'Сотрудник24 — без копии')
+        ok('Сотрудник37 А. В., добрый вечер.' in mm.get('x', '') and 'Т. В. Сотрудник1 задал(а) вам вопрос' in mm.get('x', '') and '«Сотрудник51, когда будет готов график ремонта?»' in mm.get('x', ''), 'текст письма по вопросу')
+        mb = next((m for m in new_m if m['to'] == ['user47@example.org']), {})
+        ok(mb.get('cc') == ['user42@example.org'] and mb.get('s') == 'Невыполненные поручения (2) — до 4 дней' and 'Сотрудник48 Отчество23, добрый вечер.' in mb.get('x', ''), 'письмо Сотрудник18 дня 3: копия itm@ и Сотрудник7, обращение по имени-отчеству, тема: %s' % mb.get('s'))
+        ok(sum(1 for m in new_m if m['to'] == ['user47@example.org']) == 1, 'Сотрудник18 — одно письмо на два пункта')
+        mk = next((m for m in new_m if m['to'] == ['user15@example.org']), {})
+        ok(mk.get('cc') == [], 'Сотрудник25 — без копии')
     else:
         ok(not mails and not api.posts, 'on=false: писем и сообщений нет и в 19:05')
         ok(any(d['kind'] == 'mail:q' for d in R['dry']) and any(d['kind'] == 'mail:esc3' for d in R['dry']), 'dry: письма по вопросу и дню 3')
     late = poll()['days'][day0].get('late') or {}
-    ok('Сотрудник14 Сотрудник6' in (late.get('evening') or []) and 'Сотрудник3 Сотрудник16' in (late.get('morning') or []) and (not on or 'Имя5' not in (late.get('morning') or [])), 'после 18:00 — списки неответивших: %s' % late)
+    ok('Сотрудник15 Сотрудник7' in (late.get('evening') or []) and 'Сотрудник3 Сотрудник17' in (late.get('morning') or []) and (not on or 'Имя6' not in (late.get('morning') or [])), 'после 18:00 — списки неответивших: %s' % late)
     # ночь — тишина
     n_posts, n_mails, n_dry = len(api.posts), len(mails), len(rem()['dry']) + len(poll()['dry'])
     NOW[0] = at(22, 30); run_all(L, env)
@@ -276,28 +285,28 @@ def scenario(on):
     ok(len([r for r in byq(q5)['rem'] if r['t'][:10] == day1]) == 2, 'q5, 30.10 09:05: в группу и письмо')
     ok(bool((P['days'].get(day1) or {}).get('morning', {}).get('t')), 'утренний опрос 30.10 отправлен')
     if on:
-        ok(any('повторно' in m['s'] and m['to'] == ['user73@example.org'] for m in mails if m['t'].startswith('30.10')), 'тема повторного письма с «повторно»')
+        ok(any('повторно' in m['s'] and m['to'] == ['user72@example.org'] for m in mails if m['t'].startswith('30.10')), 'тема повторного письма с «повторно»')
     ok(E['A1'].get('d') == 3 and rem()['esc']['A1'].get('d') == 4 and not rem()['esc']['A1'].get('d5'), 'A1: день 4 — без новых действий')
     ok(rem()['esc']['A2'].get('d') == 5 and bool(rem()['esc']['A2'].get('d5')), 'A2: день 5 — письмо руководителю')
-    if on: ok(any(m['t'].startswith('30.10') and m['s'] == 'Невыполненное поручение — 5 дней' and m['to'] == ['user43@example.org'] and 'Казаков А.' in m['x'] for m in mails), 'письмо Сотрудник6 по A2 на 5-й день')
-    # ответ Сотрудник34 закрывает q1
-    api.raw('200', 22, 'Сотрудник49 Сотрудник34', 'График ремонта готов, отправил', 9, 50, 1)
+    if on: ok(any(m['t'].startswith('30.10') and m['s'] == 'Невыполненное поручение — 5 дней' and m['to'] == ['user42@example.org'] and 'Казаков А.' in m['x'] for m in mails), 'письмо Сотрудник7 по A2 на 5-й день')
+    # ответ Сотрудник37 закрывает q1
+    api.raw('200', 22, 'Сотрудник51 Сотрудник37', 'График ремонта готов, отправил', 9, 50, 1)
     NOW[0] = at(10, 5, 1); run_all(L, env)
     R = rem(); Q = R['q']
-    ok(byq(q1)['st'] == 'done' and byq(q1).get('ans_by') == 'Сотрудник49 Сотрудник34', 'q1 закрыт ответом Сотрудник34')
+    ok(byq(q1)['st'] == 'done' and byq(q1).get('ans_by') == 'Сотрудник51 Сотрудник37', 'q1 закрыт ответом Сотрудник37')
     ok(pub['rem.bin']['stats']['done_today'] == 1 and pub['rem.bin']['stats']['open'] >= 2, 'rem.bin: статистика (%s)' % pub['rem.bin']['stats'])
     S = pub['rem.bin']['summary']
-    ok(any(x.startswith('Имя9 Сотрудник66 — вопрос 29.10 в «Торговое оборудование» — напоминаний') for x in S), 'сводка владельцу: вопрос Имя9')
-    ok(any(x.startswith('⛔ 10 дней — требуется решение руководителя: Сотрудник14 Сотрудник6') for x in S), 'сводка: ⛔ 10 дней по Сотрудник6')
-    ok(any('Сотрудник3 Сотрудник16 — поручение «ТДР' in x and 'на решение' in x for x in S), 'сводка: Сотрудник16 — на решение')
+    ok(any(x.startswith('Имя10 Сотрудник68 — вопрос 29.10 в «Торговое оборудование» — напоминаний') for x in S), 'сводка владельцу: вопрос Имя10')
+    ok(any(x.startswith('⛔ 10 дней — требуется решение руководителя: Сотрудник15 Сотрудник7') for x in S), 'сводка: ⛔ 10 дней по Сотрудник7')
+    ok(any('Сотрудник3 Сотрудник17 — поручение «ТДР' in x and 'на решение' in x for x in S), 'сводка: Сотрудник17 — на решение')
     ok(not any('[тел.]' not in x and re.search(r'\+7\s?\d{3}', x) for x in S), 'в сводке нет телефонов')
     PB = pub['poll.bin']
     ok(PB['v'] == 1 and len(PB['days']) == (2 if on else 0) and 'exec' in PB and (on or not PB['exec']), 'poll.bin: дни и исполнители (dry — не в статистике)')
     if on:
-        sv = next((e for e in PB['exec'] if e['n'] == 'Имя5'), {})
-        ok(sv.get('ok') == 2 and sv.get('bad') == 0 and sv.get('none') == 1 and sv.get('pct') == 67, 'poll.bin: Имя5 2 ок, 1 без ответа 30.10 (%s)' % sv)
-        bu = next((e for e in PB['exec'] if e['n'] == 'Сотрудник46 Сотрудник17'), {})
-        ok(bu.get('bad') == 2 and bu.get('pct') == 0, 'poll.bin: Сотрудник17 0 %% (%s)' % bu)
+        sv = next((e for e in PB['exec'] if e['n'] == 'Имя6'), {})
+        ok(sv.get('ok') == 2 and sv.get('bad') == 0 and sv.get('none') == 1 and sv.get('pct') == 67, 'poll.bin: Имя6 2 ок, 1 без ответа 30.10 (%s)' % sv)
+        bu = next((e for e in PB['exec'] if e['n'] == 'Сотрудник48 Сотрудник18'), {})
+        ok(bu.get('bad') == 2 and bu.get('pct') == 0, 'poll.bin: Сотрудник18 0 %% (%s)' % bu)
         d0row = next(r for r in PB['days'] if r['d'] == day0)
         ok(d0row['morning']['14']['st'] == 'none' and d0row['evening']['11']['st'] == 'ok' and d0row['evening']['14']['st'] == 'bad', 'poll.bin: состояния за 29.10')
     # суббота — тишина (вопросы q5, q3 открыты; опросов нет)
@@ -314,11 +323,11 @@ def scenario(on):
     for f in ('poll.json', 'remind.json', os.path.join('hist', '200.json')):
         ok(oct(os.stat(os.path.join(M, f)).st_mode & 0o777) == '0o600', 'права 0600: %s' % f)
     ok(os.path.exists(os.path.join(M, 'hist', '100.json')) and not os.path.exists(os.path.join(M, 'hist', '300.json')) and not os.path.exists(os.path.join(M, 'hist', '400.json')), 'история — только группы с ботом, не каналы')
-    H100 = json.load(open(os.path.join(M, 'hist', '100.json'), encoding='utf-8'))
+    H100 = json.loads(_rd(os.path.join(M, 'hist', '100.json'), encoding='utf-8'))
     ok('old1' in H100['msgs'], 'история «Коммерческого отдела» дополнена из history_all.json')
     # запрещённые адресаты — ни одного сообщения и письма
     ok(not any(int(p['q'].get('user_id') or 0) in (15, 21, 25) for p in api.posts), 'личных сообщений запрещённым нет')
-    ok(not any(set(m['to'] + m['cc']) & {'user28@example.org', 'user29@example.org', 'user30@example.org', 'user56@example.org', 'user31@example.org'} for m in mails), 'писем запрещённым нет')
+    ok(not any(set(m['to'] + m['cc']) & {'user26@example.org', 'user27@example.org', 'user28@example.org', 'user55@example.org', 'user29@example.org'} for m in mails), 'писем запрещённым нет')
     ok(not any((p['body'].get('link') or {}).get('mid') in (q3, qmak) for p in api.posts), 'напоминаний в группе по вопросам запрещённым нет')
     if not on:
         ok(not api.posts and not mails, 'on=false: за весь сценарий ни одного POST и письма')
@@ -332,37 +341,37 @@ def scenario(on):
 
 def units():
     print('--- форма ответов и справочники')
-    ok(MP.check_evening('ООО Радуга — выставлен счёт 29.10 — срок оплаты до 05.11 — 120 000 руб.', 'Имя5') == [], 'форма: полный отчёт')
-    ok(MP.check_evening('Работала с клиентами, всё хорошо', 'Сотрудник46 Сотрудник17') == ['даты', 'срока', 'клиента', 'суммы'], 'форма: пустой отчёт')
-    ok(MP.check_evening('ИП Томашев — отгрузка 29.10 — 104 т р', 'Сотрудник3 Сотрудник16') == ['срока'], 'форма: нет срока')
+    ok(MP.check_evening('ООО Радуга — выставлен счёт 29.10 — срок оплаты до 05.11 — 120 000 руб.', 'Имя6') == [], 'форма: полный отчёт')
+    ok(MP.check_evening('Работала с клиентами, всё хорошо', 'Сотрудник48 Сотрудник18') == ['даты', 'срока', 'клиента', 'суммы'], 'форма: пустой отчёт')
+    ok(MP.check_evening('ИП Томашев — отгрузка 29.10 — 104 т р', 'Сотрудник3 Сотрудник17') == ['срока'], 'форма: нет срока')
     ok(MP.check_evening('Клиент: Имя1, созвон 30.10, до 03.11 оплатят 50 тыс', '') == [], 'форма: «клиент:», тыс')
-    ok(MP.check_evening('Промсервис— заказ на кресла Биг 18 шту , в оплату отдали', 'Сотрудник46 Сотрудник17') == ['даты', 'срока', 'суммы'], 'форма: количество — не сумма')
-    ok(MP.check_evening('«Аверс плюс» — КП отправлено 29.10, ответ 05.11, 192 тыс', 'Имя5') == [], 'форма: вторая дата = срок, кавычки')
+    ok(MP.check_evening('Промсервис— заказ на кресла Биг 18 шту , в оплату отдали', 'Сотрудник48 Сотрудник18') == ['даты', 'срока', 'суммы'], 'форма: количество — не сумма')
+    ok(MP.check_evening('«Аверс плюс» — КП отправлено 29.10, ответ 05.11, 192 тыс', 'Имя6') == [], 'форма: вторая дата = срок, кавычки')
     ok(MP.check_morning('Вопросов нет. По пункту 1 — клиент не отвечает, новый срок 31.10', True) == [], 'утро: по форме')
     ok(len(MP.check_morning('Всё нормально, работаем', True)) == 2, 'утро: ни вопросов, ни даты')
     ok(MP.check_morning('Когда будет прайс на ноябрь?', False) == [], 'утро: вопрос без просроченных')
     ok(MP.check_morning('нет вопросов, пункт 2 сделано', True) == [], 'утро: сделано')
     cfg = MP.load_cfg(); org = MP.org_map(); today = D0
-    ok(MP.banned(cfg, today, name='Поп Имя27') and MP.banned(cfg, today, name='Анна Джанова') and MP.banned(cfg, today, mail='user28@example.org'), 'ban: Имя27, Джанова, Сотрудник71')
-    ok(not MP.banned(cfg, datetime.date(2026, 11, 3), mail='user28@example.org') and MP.banned(cfg, datetime.date(2026, 11, 2), name='Анна Сотрудник71'), 'ban: Сотрудник71 — до 02.11 включительно')
-    ok(MP.banned(cfg, today, mail='user154@example.org') and not MP.banned(cfg, today, name='Сотрудник46 Сотрудник17'), 'ban: регистр почты; Сотрудник17 не запрещена')
-    p = MP.person(cfg, org, 'Имя5', 11); ok(p and p['mail'] == 'user44@example.org' and p['first'] == 'Имя5' and 'Филиалы' in p['dep'], 'person: Имя5 → Сотрудник15 (cfg)')
-    p = MP.person(cfg, org, 'Сотрудник49 Сотрудник34'); ok(p and p['mail'] == 'user73@example.org' and p['dep'] == 'Служба главного инженера', 'person: Сотрудник34 по фамилии (org)')
-    p = MP.person(cfg, org, 'Сотрудник14 Сотрудник6'); ok(p and p['mail'] == 'user43@example.org', 'person: Сотрудник6 → kra@ (первый в оргструктуре)')
-    ok(MP.person(cfg, org, 'Сотрудник32 Сотрудник31') is None, 'person: две фамилии Сотрудник31 с одним инициалом — не угадываем')
-    ok(MP.person(cfg, org, 'Сотрудник3 Сотрудник1') is None or MP.person(cfg, org, 'Сотрудник3 Сотрудник1')['mail'] != 'user23@example.org', 'person: Сотрудник3 Сотрудник1 ≠ Сотрудник49 Сотрудник1')
-    ok(MP.head_of(cfg, org, 'Коммерческий отдел / Филиалы', 'user48@example.org') == 'user43@example.org', 'head: филиалы → Сотрудник6')
-    ok(MP.head_of(cfg, org, 'Коммерческий отдел / Филиалы', 'user43@example.org') is None, 'head: Сотрудник6 сам руководитель → None')
-    ok(MP.head_of(cfg, org, 'ОМТС', 'user72@example.org') == 'user39@example.org', 'head: ОМТС → Сотрудник5')
-    ok(MP.head_of(cfg, org, 'Коммерческий отдел', 'user19@example.org') == 'user16@example.org', 'head: офис-менеджер → Сотрудник24 (Начальник)')
-    ok(MP.head_of(cfg, org, 'Коммерческий отдел', 'user16@example.org') is None, 'head: Сотрудник24 сама начальник → None')
-    ok(MP.head_of(cfg, org, 'Технологический отдел', 'user76@example.org') == 'user30@example.org' and MP.banned(cfg, today, mail='user30@example.org'), 'head: ПТО → Сотрудник52, но он в ban (копии не будет)')
-    names = {'1': 'Сотрудник2 М', '22': 'Сотрудник49 Сотрудник34', '23': 'Имя24 Сотрудник70', '24': 'Имя9 Сотрудник66', '26': 'Сотрудник49 Петров'}
-    m = {'uid': 1, 'text': 'Имя9, когда придут ролики?', 'rmid': '', 'mentions': []}
+    ok(MP.banned(cfg, today, name='Поп Имя28') and MP.banned(cfg, today, name='Анна Джанова') and MP.banned(cfg, today, mail='user26@example.org'), 'ban: Имя28, Джанова, Сотрудник73')
+    ok(not MP.banned(cfg, datetime.date(2026, 11, 3), mail='user26@example.org') and MP.banned(cfg, datetime.date(2026, 11, 2), name='Анна Сотрудник73'), 'ban: Сотрудник73 — до 02.11 включительно')
+    ok(MP.banned(cfg, today, mail='user153@example.org') and not MP.banned(cfg, today, name='Сотрудник48 Сотрудник18'), 'ban: регистр почты; Сотрудник18 не запрещена')
+    p = MP.person(cfg, org, 'Имя6', 11); ok(p and p['mail'] == 'user43@example.org' and p['first'] == 'Имя6' and 'Филиалы' in p['dep'], 'person: Имя6 → Сотрудник16 (cfg)')
+    p = MP.person(cfg, org, 'Сотрудник51 Сотрудник37'); ok(p and p['mail'] == 'user72@example.org' and p['dep'] == 'Служба главного инженера', 'person: Сотрудник37 по фамилии (org)')
+    p = MP.person(cfg, org, 'Сотрудник15 Сотрудник7'); ok(p and p['mail'] == 'user42@example.org', 'person: Сотрудник7 → kra@ (первый в оргструктуре)')
+    ok(MP.person(cfg, org, 'Сотрудник35 Сотрудник34') is None, 'person: две фамилии Сотрудник34 с одним инициалом — не угадываем')
+    ok(MP.person(cfg, org, 'Сотрудник3 Сотрудник1') is None or MP.person(cfg, org, 'Сотрудник3 Сотрудник1')['mail'] != 'user22@example.org', 'person: Сотрудник3 Сотрудник1 ≠ Сотрудник51 Сотрудник1')
+    ok(MP.head_of(cfg, org, 'Коммерческий отдел / Филиалы', 'user47@example.org') == 'user42@example.org', 'head: филиалы → Сотрудник7')
+    ok(MP.head_of(cfg, org, 'Коммерческий отдел / Филиалы', 'user42@example.org') is None, 'head: Сотрудник7 сам руководитель → None')
+    ok(MP.head_of(cfg, org, 'ОМТС', 'user71@example.org') == 'user38@example.org', 'head: ОМТС → Сотрудник6')
+    ok(MP.head_of(cfg, org, 'Коммерческий отдел', 'user18@example.org') == 'user15@example.org', 'head: офис-менеджер → Сотрудник25 (Начальник)')
+    ok(MP.head_of(cfg, org, 'Коммерческий отдел', 'user15@example.org') is None, 'head: Сотрудник25 сама начальник → None')
+    ok(MP.head_of(cfg, org, 'Технологический отдел', 'user75@example.org') == 'user28@example.org' and MP.banned(cfg, today, mail='user28@example.org'), 'head: ПТО → Сотрудник54, но он в ban (копии не будет)')
+    names = {'1': 'Сотрудник2 М', '22': 'Сотрудник51 Сотрудник37', '23': 'Имя25 Сотрудник72', '24': 'Имя10 Сотрудник68', '26': 'Сотрудник51 Петров'}
+    m = {'uid': 1, 'text': 'Имя10, когда придут ролики?', 'rmid': '', 'mentions': []}
     ok(RM.addressee(m, {}, names, BOT) == (24, 'по имени'), 'адресат по имени')
-    m['text'] = 'Сотрудник49, когда?'; ok(RM.addressee(m, {}, names, BOT)[0] is None, 'два Сотрудник49 — адресат не определён')
-    m['text'] = 'Сотрудник49 Сотрудник34, когда?'; ok(RM.addressee(m, {}, names, BOT) == (22, 'по имени'), 'два Сотрудник49 — по фамилии')
-    m['text'] = 'Добрый день, Имя24! Сколько?'; ok(RM.addressee(m, {}, names, BOT) == (23, 'по имени'), 'приветствие перед именем')
+    m['text'] = 'Сотрудник51, когда?'; ok(RM.addressee(m, {}, names, BOT)[0] is None, 'два Сотрудник51 — адресат не определён')
+    m['text'] = 'Сотрудник51 Сотрудник37, когда?'; ok(RM.addressee(m, {}, names, BOT) == (22, 'по имени'), 'два Сотрудник51 — по фамилии')
+    m['text'] = 'Добрый день, Имя25! Сколько?'; ok(RM.addressee(m, {}, names, BOT) == (23, 'по имени'), 'приветствие перед именем')
     m['text'] = 'Сотрудник2 Отчество1, подтвердите?'; ok(RM.addressee(m, {}, names, BOT) == ('owner', 'по имени'), 'владелец по имени')
     m['text'] = 'Коллеги, прошу сообщить'; ok(RM.addressee(m, {}, names, BOT) == (None, ''), 'без адресата')
     m2 = {'uid': 1, 'text': 'когда?', 'rmid': 'x1', 'mentions': [23]}

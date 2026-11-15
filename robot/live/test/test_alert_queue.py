@@ -3,6 +3,18 @@ alert_flush(): оба канала явно отказали → очередь 
 (таймаут MAX после отправки, почта отказала) → очередь очищена, повторной отправки нет. alert(): оба отказали → отметка снята,
 повтор не глушится на 6 ч. Каналы подменены (без сети). Запуск: cd live && unshare -n python3 -W ignore test/test_alert_queue.py → «ALL OK»."""
 import datetime, json, os, sys
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mock_home as MH
 ok = 0
@@ -20,7 +32,7 @@ mode = {'mail': 'ok (очередь)', 'max': 'ok'}
 sent = []
 live.mail_send = lambda subject, text, *a, **k: (sent.append(('mail', subject)), mode['mail'])[1]
 live.max_send = lambda text: (sent.append(('max', text[:40])), mode['max'])[1]
-def queue(): return json.load(open(os.path.join(S, 'alerts_sent.json'))).get('q') or []
+def queue(): return json.loads(_rd(os.path.join(S, 'alerts_sent.json'))).get('q') or []
 
 print('ночная очередь')
 live.alert('n1', 'Фабрика: ночное 1'); live.alert('n2', 'Фабрика: ночное 2')

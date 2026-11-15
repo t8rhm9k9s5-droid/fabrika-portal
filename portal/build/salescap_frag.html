@@ -54,7 +54,7 @@
     var M = D.months[CUR], L = liveMonth(CUR), oct = CUR === '2026-10';
     tabs.innerHTML = D.order.map(function(ym){ var x = D.months[ym], on = ym === CUR;
       return '<a href="#salescap" data-scm="' + esc(ym) + '" role="tab" aria-selected="' + on + '" style="text-decoration:none;color:inherit"><span' + (on ? ' style="outline:2px solid var(--ios-blue)"' : '') + '><b>' + esc(x.label.charAt(0).toUpperCase() + x.label.slice(1)) + '</b> · ' + (x.whole ? 'весь месяц' : 'продажи на ' + esc(x.sales_to)) + '</span></a>'; }).join('');
-    var OUT = L ? L.out : M.out, days = +(L ? L.days : M.out_days) || 0, wdd = L ? L.wd_done : M.out_wd, wd = +((L && L.wd) || M.wd) || 0, last = L ? L.last : M.out_last;
+    var OUT = L ? L.out : M.out, days = +(L ? L.days : M.out_days) || 0, wd = +((L && L.wd) || M.wd) || 0, last = L ? L.last : M.out_last;
     // план: октябрь — за месяц и на дни с отчётами; ноябрь — план в сутки × рабочие дни по дату последнего отчёта (без отчётов — по дату продаж)
     function planM(line){ if (L && L.plan[line]) return L.plan[line]; if (M.plan) return M.plan[line]; if (M.pday && M.pday[line]) return M.pday[line] * wd; return null; }
     var wdTo = +((L && L.wd_done) || (oct ? M.out_wd : M.wd_to_sales)) || 0;   // 12.11 CodeQL: числа — числами

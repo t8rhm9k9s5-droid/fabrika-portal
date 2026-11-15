@@ -74,13 +74,13 @@ REPORTS = [
 CHECK_AT = CFG.get('check_at') or '10:35'
 # 04.11.2026: Gmail считает «11_Гальваника» одним словом — «Гальваника» в запросе такое письмо не находит; перечисляем «01_…12_Гальваника».
 GALV_Q = '(Гальваника OR ' + ' OR '.join('%02d_Гальваника' % m for m in range(1, 13)) + ')'
-QUERY = ('(((from:user29@example.org subject:Отчет) OR ((from:user15@example.org OR from:user14@example.org) ' + GALV_Q + ')'
+QUERY = ('(((from:user27@example.org subject:Отчет) OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')'
          ' OR (from:user3@example.org (subject:"Складские остатки" OR subject:"Жилпромсервис отчеты" OR subject:"ПКС свободные остатки"))'
          ' OR ((from:user5@example.org OR from:user4@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
-         ' OR (from:user31@example.org filename:zip)'
-         ' OR ((from:user23@example.org OR from:user34@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
-         ' OR ((from:user15@example.org OR from:user14@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
-GALV_FROM = ('user15@example.org', 'user14@example.org')
+         ' OR (from:user29@example.org filename:zip)'
+         ' OR ((from:user22@example.org OR from:user33@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
+         ' OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
+GALV_FROM = ('user14@example.org', 'user13@example.org')
 GALV_DATE = re.compile(r'за\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}|\d{2}))?(?!\d)', re.I)
 GALV_NO = re.compile(r'отсутству\w*|\bнет\b|не\s+внес[её]н\w*|не\s+провед[её]н\w*|не\s+заведен\w*|не\s+заведён\w*', re.I)
 GALV_WHAT = re.compile(r'выпуск\w*|данн\w*|1\s*[СC]\b', re.I)
@@ -90,7 +90,7 @@ GALV_SINCE = re.compile(r'(?<![А-Яа-яЁёA-Za-z])(?:начиная\s+)?[сc]
 def galv_none(frm, subj, text, sent, has_pdf):
     """03.11.2026 (Т. В.: робот должен отличать «отчёт не пришёл» от «ПЭО сообщила, что выпуска в 1С нет»): письмо ПЭО с темой «…Гальваника…»
     без PDF, где сказано, что выпуск за дату в 1С отсутствует / нет / не внесён / не проведён → дата 'ГГГГ-ММ-ДД' (за неё отчёт считается пришедшим,
-    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник55 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
+    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник57 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
     за 02.11.2026 в 1С отсутствуют»."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return None
     t = re.sub(r'\s+', ' ', text or '')
@@ -108,7 +108,7 @@ def galv_none(frm, subj, text, sent, has_pdf):
 
 
 def galv_none_since(frm, subj, text, sent, has_pdf):
-    """05.11.2026 (сверка 15:05: письмо Сотрудник55 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
+    """05.11.2026 (сверка 15:05: письмо Сотрудник57 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
     из-за этого ушло ложное «гальваника за 03.11 не пришла»): «выпуска в 1С нет с ДД.ММ» → все даты от ДД.ММ по день до письма
     (за них отчёт считается пришедшим, выпуска нет); иначе []. Те же условия, что у galv_none: ПЭО, тема «…Гальваника…», без PDF."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return []
@@ -216,10 +216,10 @@ def jsave(n, v):
         except Exception as e: log('  ! .bak', n, e.__class__.__name__, e)
 
 
-# REDACTED_B64_9 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
+# REDACTED_B64_8 30.10.2026 аудит P12 (DESIGN 7): оповещения владельцу
 # alert(key, text, critical=False): не чаще раза в 6 ч на ключ (state/alerts_sent.json, атомарно, под замком — участки параллельны);
 # некритичные с 20:00 до 08:00 МСК копятся и уходят в 08:00 одним сообщением (alert_flush — в конце каждого участка); критичные — сразу.
-# Каналы — прежние: max_send (владельцу в MAX) и mail_send (cfg.json → alert_to, как проверка 10:35). Новых адресатов нет.
+# Каналы — прежние: max_send (владельцу в MAX) и mail_send (cfg.json → alert_to, как проверка 10:35). Сотрудник5 адресатов нет.
 ALERT_EVERY = 6 * 3600
 
 
@@ -328,7 +328,7 @@ def _alert_flush_locked():
             # Удаляем только взятые в пакет экземпляры, сохраняя добавленные во время отправки.
             for x in batch:
                 try: S['q'].remove(x)
-                except ValueError: pass
+                except ValueError: pass   # намеренно: это оповещение уже убрал из очереди другой проход
         try: _alerts_io(drop)
         except Exception as e: log('  ! оповещения за ночь: очистка очереди:', e.__class__.__name__, e)
         if oc[0] == 'unknown': log('  ! оповещения за ночь: исход отправки неизвестен — повторно не шлём')
@@ -353,7 +353,7 @@ def prev_workday(d):
     return d
 
 
-# REDACTED_B64_9 1) mail
+# REDACTED_B64_8 1) mail
 # 04.11.2026, Т. В. Сотрудник1: «user4@example.org — лично мой ящик… Почту ты пока читаешь, пока не перестанет туда служебная почта приходить.
 # Во всём остальном owner@ не используешь вообще». Поэтому: ЧТЕНИЕ отчётов из Gmail владельца (cfg.json → mail) — пока остаётся (OWNER_GMAIL_READ),
 # выключить — когда служебная почта перестанет туда приходить (False + пакет кода); ОТПРАВКА с Gmail владельца (запасной SMTP) — выключена совсем,
@@ -478,7 +478,7 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'sday:' + rec['kind'], 'date': rec['date'], 'file': fn})
                     continue
-                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник8) — все дни + сумма месяца
+                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник9) — все дни + сумма месяца
                 if mr:
                     sdj = jload('sales_day.json', {})
                     SDY.merge_month(sdj, mr, iso(sent), fn[:80])
@@ -490,9 +490,9 @@ def ingest_message(raw, recv):
                     continue
             except Exception as e: log('  ! продажи за день:', fn, e.__class__.__name__, e); last_e = e
         if low.endswith('.xlsx') and re.search(r'запас\w*\s*гп|товары\s+на\s+складах', fn + ' ' + subj, re.I):
-            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник11, используй его как базу… движение по складу в разрезе филиалов… склады брака
+            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник12, используй его как базу… движение по складу в разрезе филиалов… склады брака
             #   внутри отчета… на главной — общее количество согласно того отчета»): 1С «Товары на складах» («Запасы ГП», ежедневно на 1c@ —
-            #   запрошено у В. В. Сотрудник8 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
+            #   запрошено у В. В. Сотрудник9 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
             try:
                 import stock_mv as SMV
                 rd = SMV.ingest(fn, data, iso(sent), jload, jsave, log)
@@ -625,7 +625,7 @@ def gas_inbox(recv, limit=30, budget=150):
     return res
 
 
-# REDACTED_B64_9 2) counting
+# REDACTED_B64_8 2) counting
 def stock_days(D, sraw, ds):
     """01.11.2026, пользователь: «Во всех отчетах нужны данные за вчера, за прошлую неделю и за прошлый месяц». parse_1c хранит историю
     остатков только за текущий месяц (wh_hist, free_hist) — копим её в state/stock_days.json: дата → {'w': склад → группа → шт, 'f': ПКС «Доступно»
@@ -689,7 +689,7 @@ def build_all():
     return parts
 
 
-# REDACTED_B64_9 3) status and publishing
+# REDACTED_B64_8 3) status and publishing
 def last_by_kind(recv):
     last = {}
     for r in recv:
@@ -723,7 +723,7 @@ REPORTS_X = [
     ('omts:zps', '1С «Жилпромсервис Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:fts', '1С «ФТС Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:pok', '1С «Покупные товары»', '08:30', 'same', 'mwf'),
-    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник8 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
+    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник9 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
 ]
 
 
@@ -832,7 +832,7 @@ def publish(name, obj):
     return True
 
 
-# REDACTED_B64_9 4) the 10:35 check
+# REDACTED_B64_8 4) the 10:35 check
 def max_send(text):
     """to the owner in MAX, if the MAX bot is set up (token and /owner in ~/.fabrika_max/config.json)"""
     try:
@@ -977,7 +977,7 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
     if sm:
         try:
             import subprocess
-            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user41@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
+            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user40@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
             if r.returncode == 0: return 'ok (sendmail)'
             errs.append('sendmail: %s %s' % (r.returncode, r.stderr[:100].decode('utf-8', 'replace')))
         except Exception as e: errs.append('sendmail: ' + str(e)[:100])
@@ -1092,12 +1092,12 @@ def watch_d(t, hb, alerts, status):
     return out
 
 
-# REDACTED_B64_9 run
+# REDACTED_B64_8 run
 # 29.10.2026, пользователь: «Работа хостинга не должна никак зависеть от почтовых рассылок… Хостинг — это портал в первую очередь…
 # нужны 2-3-10 процессов параллельных». cron раз в 10 минут запускает live.py → main() только РАЗДАЁТ работу: каждый участок —
 # отдельный процесс (python3 live.py --lane <имя>) со своим замком и пределом времени; завис один — остальные работают,
 # следующий запуск того же участка просто пропускается, пока не кончится предыдущий. Участки:
-#   portal  — обновления портала (пакеты с Диска и по почте) — главный, в нём больше ничего нет;
+#   portal  — обновления портала (пакеты с Диска и по почте) — Имя2, в нём больше ничего нет;
 #   reports — отчёты из почты Gmail / itm@ / 1c@ → данные портала (st/ls.bin, lb.bin), сторож бота, проверка 10:35;
 #   bots    — группы MAX: контроль сроков, вопросы без ответа, опросы, напоминания, команды письмом на 1c@;
 #   history — тяжёлое по MAX: вся история и обещания, продажи из отчётов, выгрузки переписки;
@@ -1218,7 +1218,7 @@ def sales_day_backfill():
     mk = jload('sales_day_bf.json', {}) or {}
     pos, size = int(mk.get('pos') or 0), os.path.getsize(idx)
     if pos > size or mk.get('v') != BF_V: pos = 0                       # 30.10.2026 ~18:50: v2 — отчёт «за месяц» (parse_month): архив перечитать один раз —
-                                                                          # письмо Сотрудник8 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
+                                                                          # письмо Сотрудник9 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
     if pos == size: return {'state': 'ok', 'n': 0}
     sdj, n = None, 0
     with open(idx, 'rb') as f:
@@ -1260,7 +1260,7 @@ def sales_day_backfill():
 
 
 REP_BF_V = 1
-REP_BF_FROM = ('user3@example.org', 'user35@example.org', 'user31@example.org')
+REP_BF_FROM = ('user3@example.org', 'user34@example.org', 'user29@example.org')
 
 
 def rep_1c_backfill(budget=40):
@@ -1603,7 +1603,7 @@ def lane_bots():
     except Exception as e:
         status['unans'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
         log('  ! без ответа:', e.__class__.__name__, e)
-    try:                                                   # 30.10.2026, пользователь: «user42@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
+    try:                                                   # 30.10.2026, пользователь: «user41@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
         import sales_ctl as SCT
         status['sales_ctl'] = SCT.run(L, CFG, log, jload, jsave, iso, mail_send)
     except Exception as e:
@@ -1979,9 +1979,14 @@ def _lane_alerts(name, st, prev):
 def run_lane(name):
     fn, budget = next(((f, b) for n, f, b in LANES if n == name), (None, 0))
     if not fn: log('  ! нет такого участка:', name); return None
-    lk = open(os.path.join(L, 'lane_%s.lock' % name), 'w')
-    try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError: return None                            # прошлый запуск этого участка ещё идёт — остальным не мешает
+    # 15.11.2026 CodeQL py/file-not-closed: замок участка — в with (держится до конца участка, закрывается и при ошибке)
+    with open(os.path.join(L, 'lane_%s.lock' % name), 'w') as lk:
+        try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError: return None                        # прошлый запуск этого участка ещё идёт — остальным не мешает
+        return _run_lane(name, fn, budget)
+
+
+def _run_lane(name, fn, budget):
     t0 = time.time(); st = {'t': iso(now()), 'ts': round(t0, 1), 'state': 'идёт', 'pid': os.getpid()}
     c0 = (0, 0, 0, 0) if '--lane' in sys.argv else os.times()      # отдельный процесс участка — с запуска Python (импорты тоже нагрузка)
     prev = jload('lane_%s.json' % name, {}) or {}

@@ -157,7 +157,7 @@ function buildDet(b){
   for (const m of grpMeshes){ if (m === root) continue; m.userData = {kind:'b', b}; root.add(m); }
   if (roofMesh){ roofMesh.userData = {kind:'b', b}; root.add(roofMesh); }
   // outline of the walls and the roof edge
-  const ln = [], c0 = E.centroid(P);
+  const ln = [];
   for (let i = 0; i < n; i++){ const a = P[i], c = P[(i + 1) % n]; ln.push(V(a[0], a[1], g0), V(c[0], c[1], g0), V(a[0], a[1], g0 + eave), V(c[0], c[1], g0 + eave), V(a[0], a[1], g0), V(a[0], a[1], g0 + (pitched ? eave : H))); }
   const el = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ln), new THREE.LineBasicMaterial({color:b.edited ? 0xb06a00 : 0x46535a, transparent:true, opacity:.55})); root.add(el);
   detOpenings(b, root, g0); detExtras(b, root, g0); detBands(b, root, g0, P.map(()=>eave));
@@ -179,7 +179,7 @@ function detOpenings(b, root, g0){
       for (let j = 1; j < k; j++) box(.06, h, .09, s0 + w * j / k, o.z0 + h / 2, .06, 0xe3e6e8);
       box(w + .2, .06, .2, mid, o.z0 - .03, .1, 0xc9ccce);
     } else if (o.t === 'gate'){
-      box(w + .2, h + .1, .08, mid, o.z0 + h / 2, .04, 0x6f777c); const g = box(w, h, .1, mid, o.z0 + h / 2, .06, o.c || 0x9aa3a8);
+      box(w + .2, h + .1, .08, mid, o.z0 + h / 2, .04, 0x6f777c); box(w, h, .1, mid, o.z0 + h / 2, .06, o.c || 0x9aa3a8);
       for (let z = o.z0 + .5; z < o.z1 - .1; z += .5) box(w, .03, .12, mid, z, .07, 0x7d868d);
     } else if (o.t === 'fan'){   // window fan: a frame with a round fan in it
       box(w + .1, h + .1, .07, mid, o.z0 + h / 2, .035, 0xd9dcde); box(w, h, .08, mid, o.z0 + h / 2, .05, 0x39434a);
@@ -263,7 +263,7 @@ function detOverlay(b){
 const gProjN = G('projn');
 function buildProjCanopy(){
   gProjN.clear(); const C = S.projcanopy; if (!C) return;
-  const P = C.v['5'], b0 = gy(C.base), A = dAcc(), zt = b0 + C.top, ze = b0 + C.edge['5'];
+  const P = C.v['5'], b0 = gy(C.base), zt = b0 + C.top, ze = b0 + C.edge['5'];
   const q = [V(P[0][0], P[0][1], 0), V(P[1][0], P[1][1], 0), V(P[2][0], P[2][1], 0), V(P[3][0], P[3][1], 0)]; q[0].y = q[1].y = zt; q[2].y = q[3].y = ze;
   const pos = []; for (const k of [0, 1, 2, 0, 2, 3]) pos.push(q[k].x, q[k].y, q[k].z);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();

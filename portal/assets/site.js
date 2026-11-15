@@ -927,7 +927,6 @@
     })();
 
     // --- телефон: плавающая капсула «Главная / Разделы / Чат / Профиль» и круглая кнопка поиска (макет IOS27_Phone); на карте — инструменты карты ---
-    var srch = null;
     if (isPlan) {
       bar.appendChild(trigger('sections', 'pmap-back', 'grid', 'Разделы'));
       var m3 = link('index.html', 'cube', '3D'); m3.setAttribute('aria-label', 'Модель 3D'); bar.appendChild(m3);
@@ -947,7 +946,7 @@
     if (secRow) document.body.style.setProperty('--sec', secRow[3]);
     if (cur === 'home.html') document.body.classList.add('pg-home');
     document.body.insertBefore(top, document.body.firstChild);
-    document.body.appendChild(side); document.body.appendChild(bar); if (srch) document.body.appendChild(srch); document.body.appendChild(panel);
+    document.body.appendChild(side); document.body.appendChild(bar); document.body.appendChild(panel);
     // 14.11.2026: ушли по ссылке из листа «Разделы» — «Назад» вернёт на эту страницу с открытым листом
     panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a && open === 'sections') try { sessionStorage.setItem('t14.fromsheet', hereKey()); } catch (x) { } }, true);
     panel.querySelector('.grab').addEventListener('click', close);
@@ -957,7 +956,7 @@
       if (e.key === 'Escape' && !panel.hidden) close();
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л')) { e.preventDefault(); if (open !== 'search') show('search'); }
     });
-    document.addEventListener('pointerdown', function (e) { if (!panel.hidden && !panel.contains(e.target) && !bar.contains(e.target) && !top.contains(e.target) && !side.contains(e.target) && !(srch && srch.contains(e.target))) close(); }, true);
+    document.addEventListener('pointerdown', function (e) { if (!panel.hidden && !panel.contains(e.target) && !bar.contains(e.target) && !top.contains(e.target) && !side.contains(e.target)) close(); }, true);
     var y0 = null;
     panel.addEventListener('pointerdown', function (e) { if (panel.scrollTop <= 0 && e.clientY - panel.getBoundingClientRect().top < 56) y0 = e.clientY; });
     panel.addEventListener('pointermove', function (e) { if (y0 !== null && e.clientY - y0 > 48) { y0 = null; close(); } });

@@ -58,9 +58,9 @@ function initCams(){
 }
 function applyEditsData(){
   for (const b of S.buildings){const o=S0.b[b.k], e=b.parent?E.get('b:'+b.parent):E.get('b:'+b.k), own=E.get('b:'+b.k);
-    b.poly=b.parent&&S0.b[b.parent]?(e?o.poly.map(E.xf(e,E.centroid(S0.b[b.parent].poly))):o.poly):E.applyPoly('b:'+b.k,o.poly); b.h=own&&own.h!=null?own.h:o.h; if(o.roof&&b.kind!=='proj'){const f=b.h/o.h; b.roof=o.roof.type==='gable'?Object.assign({},o.roof,{a:o.roof.a*f,r:o.roof.r*f,b:o.roof.b*f}):Object.assign({},o.roof,{low:o.roof.low*f,high:o.roof.high*f})}
-    {const f=e&&(e.dx||e.dy||e.rot)?E.xf(e,E.centroid(b.parent&&S0.b[b.parent]?S0.b[b.parent].poly:o.poly)):null; if(o.openings) b.openings=o.openings.map(x=>f?Object.assign({},x,{p0:f(x.p0),p1:f(x.p1)}):x); if(o.columns) b.columns=f?o.columns.map(f):o.columns}
-    b.name=own&&own.name?own.name:o.name; b.hidden=!!((own&&own.hidden)||(b.parent&&e&&e.hidden)); b.edited=!!own; b.note2=own&&own.note||''}
+    b.poly=b.parent&&S0.b[b.parent]?(e?o.poly.map(E.xf(e,E.centroid(S0.b[b.parent].poly))):o.poly):E.applyPoly('b:'+b.k,o.poly); b.h=own&&own.h!=null?own.h:o.h; if(o.roof&&b.kind!=='proj'){const f=b.h/o.h; b.roof=o.roof.type==='gable'?Object.assign({},o.roof,{a:o.roof.a*f,r:o.roof.r*f,b:o.roof.b*f}):Object.assign({},o.roof,{low:o.roof.low*f,high:o.roof.high*f});}
+    {const f=e&&(e.dx||e.dy||e.rot)?E.xf(e,E.centroid(b.parent&&S0.b[b.parent]?S0.b[b.parent].poly:o.poly)):null; if(o.openings) b.openings=o.openings.map(x=>f?Object.assign({},x,{p0:f(x.p0),p1:f(x.p1)}):x); if(o.columns) b.columns=f?o.columns.map(f):o.columns;}
+    b.name=own&&own.name?own.name:o.name; b.hidden=!!((own&&own.hidden)||(b.parent&&e&&e.hidden)); b.edited=!!own; b.note2=own&&own.note||'';}
   const wb=S0.b.ws, we=E.get('b:ws');
   if(wb&&S.ws_frame){const f=we?E.xf(we,E.centroid(wb.poly)):(p=>p);
     S.ws_frame.O=f(S0.wsf.O); S.ws_frame.es=E.rotVec(S0.wsf.es,we?we.rot:0); S.ws_frame.et=E.rotVec(S0.wsf.et,we?we.rot:0);
@@ -111,15 +111,6 @@ function camBasis(c, p){
   const u = new THREE.Vector3().crossVectors(r, f).normalize();
   const th = Math.tan(c.fov/2*D2R), tv = th*9/16;
   return {C:p.clone(), f, r, u, th, tv};
-}
-function hull(pts){
-  pts = pts.slice().sort((a,b)=>a[0]-b[0] || a[1]-b[1]);
-  if (pts.length < 3) return pts;
-  const cr = (o,a,b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-  const lo = [], up = [];
-  for (const p of pts){ while (lo.length >= 2 && cr(lo[lo.length-2], lo[lo.length-1], p) <= 0) lo.pop(); lo.push(p); }
-  for (let i=pts.length-1;i>=0;i--){ const p = pts[i]; while (up.length >= 2 && cr(up[up.length-2], up[up.length-1], p) <= 0) up.pop(); up.push(p); }
-  up.pop(); lo.pop(); return lo.concat(up);
 }
 /* The ground (or the floor indoors) the camera sees. Along each plan ray from the camera the 16:9 frame cuts out one stretch
    of ground, a linear condition per frame edge; then buildings in the way take out their footprint and the ground they shade:
@@ -463,7 +454,7 @@ function buildFront(){
   // the parking's low wrought fence: posts every 2,5 m, a top and a bottom rail
   for (const ln of F.lines || []){
     if (ln.kind === 'mesh'){                     // chain-link fence: steel posts every 2,5 m and a see-through net
-      const post = [], net = [], top = [], P = ln.closed ? ln.pts.concat([ln.pts[0]]) : ln.pts;
+      const net = [], top = [], P = ln.closed ? ln.pts.concat([ln.pts[0]]) : ln.pts;
       for (let i = 0; i + 1 < P.length; i++){
         const a = P[i], b = P[i+1], L = Math.hypot(b[0]-a[0], b[1]-a[1]), n = Math.max(1, Math.ceil(L / 2.5));
         for (let j = 0; j < n; j++){
@@ -553,7 +544,7 @@ function buildTPx(box){
     let best = null;
     for (let i = 0; i < n; i++){ const a = P[i], c = P[(i+1) % n], L = Math.hypot(c[0]-a[0], c[1]-a[1]); if (L < 1) continue;
       const nx = sgn*(c[1]-a[1])/L, ny = -sgn*(c[0]-a[0])/L, d = nx*FU[0] + ny*FU[1]; if (!best || d > best.d) best = {a, c, L, nx, ny, d}; }
-    const z0 = b.base, top = b.base + b.h, conc = [], steel = [], porc = [], dark = [];
+    const z0 = b.base, top = b.base + b.h, conc = [], steel = [], dark = [];
     // flat slab roof with a cornice ≈0,3 m all round
     const cx = P.reduce((s_, p)=>s_ + p[0], 0)/n, cy = P.reduce((s_, p)=>s_ + p[1], 0)/n;
     const out = P.map(([x, y])=>{ const dx = x - cx, dy = y - cy, l = Math.hypot(dx, dy) || 1; return [x + dx/l*.42, y + dy/l*.42]; });
@@ -736,7 +727,6 @@ function szzInfo(u){
        <dt>Координаты</dt><dd class="mono">${(()=>{ const m = ms(sp[0], sp[1]), l = ll(sp[0], sp[1]); return `МСК-62 X ${nf(m[0], 2)} Y ${nf(m[1], 2)}<br>${nf(l[0], 6)}, ${nf(l[1], 6)}`; })()}</dd></dl>
        ${szzSubTable(s.subs)}${s.warn ? `<p class="warn">${esc(s.warn)}</p>` : ''}${szzSrcNote}`}; }
   if (k === 'rt'){ const r = u.r, cols = SZ.conc_cols.filter(c=>r.mr[c] != null || r.ss[c] != null), nz = r.noise;
-    const m = ms(r.loc[0], r.loc[1]);
     return {k:'Расчётная точка · проект СЗЗ', t:`Точка ${r.n} — ${r.name}`, d:
       `<dl class="kv"><dt>Где</dt><dd>${RT_TYPE[r.type]}, направление ${r.dir}${r.bpt ? `; точка ${r.bpt} границы СЗЗ` : ''}</dd>
        <dt>МСК-62</dt><dd class="mono">X ${nf(r.X, 2)}<br>Y ${nf(r.Y, 2)}</dd><dt></dt><dd class="note">${r.msk_doc ? 'по таблице 9.1.1 проекта' : 'пересчитано из таблиц расчёта (±0,3 м)'}</dd>
@@ -835,7 +825,7 @@ function buildNDV(){
   for (const s of ND.sources){
     const p = s.a, g0 = inTer(p[0], p[1]) ? zat(p[0], p[1]) : S.zmin, ud = {kind:'isa25', s}, mk = [], col = ST_COL[s.status];
     if (s.org){
-      const top = gy(g0) + s.h, bot = gy(g0) + Math.max(0, Math.min(s.h - 1.2, s.on ? bH(s.on) : 0)), r = Math.max(.16, (s.d || .3)/2);
+      const top = gy(g0) + s.h, bot = gy(g0) + Math.max(0, Math.min(s.h - 1.2, s.on ? bH(s.on) : 0));
       // steel pipe of its real diameter and height: galvanised body, sooty top for flues, a flashing where it leaves the roof or a footing on the ground
       const hot = (s.t || 0) > 60, rr = Math.max(.05, (s.dp || s.d || .3)/2), H_ = Math.max(.3, top - bot);
       // one source can be several pipes side by side (s.pair: offsets in metres, e.g. two boiler flues seen on a photo)
@@ -1520,7 +1510,7 @@ function camCard(){
   const c = camByKey(sel.key); if (!c) return hideAll();
   const info = camInfo(c);
   cardK.textContent = c.isNew ? 'Новая камера' : 'Камера со схемы'; cardT.innerHTML = camTitle(c); cardD.innerHTML = info.d; cardM.textContent = info.m; cardM.hidden = false; cardGo.hidden = true;
-  const o = S0.c[c.id] || {}, ce = E.saved(c.key) || {};
+  const ce = E.saved(c.key) || {};
   const sx = c.isNew ? round2(c.x - (c.x0 != null ? c.x0 : c.x)) : round2(ce.dx||0), sy = c.isNew ? round2(c.y - (c.y0 != null ? c.y0 : c.y)) : round2(ce.dy||0);
   const lensOpts = LENS.map(([k,t])=>`<option value="${k}" ${c.lens === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
   const num = (k, label, val, step, unit, min, max, bt) => `<label class="fld"><span>${esc(label)}</span><span class="num">
@@ -2409,7 +2399,6 @@ function openHash(){
   else if (camByKey('c:'+h)) selectCam('c:'+h, true);
 }
 openHash(); window.addEventListener('hashchange', openHash);
-let lastT = performance.now();
 function frame(now){
   if (tween){
     const k = Math.min(1, (now - tween.s) / tween.d), e = k < .5 ? 4*k*k*k : 1 - Math.pow(-2*k+2,3)/2;

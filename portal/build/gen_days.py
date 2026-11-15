@@ -36,7 +36,7 @@ try:
         if e is None: continue
         ts = m.get('tasks') or []
         e.setdefault('meet', []).append([m.get('title') or 'Совещание', len(ts), sum(1 for t in ts if t.get('st') != 'done')])
-except Exception: pass
+except Exception: pass   # намеренно: нет журнала совещаний — дни без строки «Совещания»
 
 # документы, поступившие в этот день (library.json; скрытые не показываем)
 try:
@@ -51,7 +51,7 @@ try:
         e.setdefault('docs', []).append([t[:110], href])
         m = re.search(r'itogi_dnya_(\d{4}-\d{2}-\d{2})', f)
         if m and day(m.group(1)) is not None: D[m.group(1)]['itogi'] = href
-except Exception: pass
+except Exception: pass   # намеренно: нет папки итогов — дни без ссылки «Итоги дня»
 
 for k in D:
     if 'docs' in D[k]: D[k]['docs'] = D[k]['docs'][:30]

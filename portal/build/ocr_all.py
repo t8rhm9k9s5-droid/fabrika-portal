@@ -34,9 +34,9 @@ for ang in (0,28,-62):
         for res in ex.map(ocr_tile,jobs):
             for txt,conf,l,t,w,h in res:
                 cx,cy=l+w/2,t+h/2
-                ox,oy=user25@example.org([cx,cy,1.0])
+                ox,oy=np.dot(Mi,np.array([cx,cy,1.0]))   # 15.11.2026: dot вместо «@» — CodeQL не видел в «@» использования Mi и np
                 # left-bottom anchor (for spot heights the dot sits at the start of the number)
-                lx,ly=user25@example.org([l,t+h*0.85,1.0])
+                lx,ly=np.dot(Mi,np.array([l,t+h*0.85,1.0]))
                 words.append({'t':txt,'c':conf,'x':ox/2,'y':oy/2,'lx':lx/2,'ly':ly/2,'ang':ang,'h':h/2})
     print('angle',ang,'jobs',len(jobs),'words',len(words),flush=True)
 _cg1_dump_func = json.dump

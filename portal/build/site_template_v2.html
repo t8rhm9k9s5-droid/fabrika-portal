@@ -343,8 +343,8 @@ details:not([open]) summary .lbl::after{content:" ▸"}
 <script>
 /*__DATA__*/
 (async function(){
-try{await window.T14Edits.ready()}catch(_){}
-const svg=document.getElementById('map'), wrap=document.getElementById('wrap');
+try{await window.T14Edits.ready();}catch(_){}
+const svg=document.getElementById('map');
 const fovs=document.getElementById('fovs'), marks=document.getElementById('marks');
 const NS='http://www.w3.org/2000/svg';
 const cams=DATA.cams, B=DATA.b;
@@ -352,7 +352,7 @@ const cams=DATA.cams, B=DATA.b;
 for(const key of window.T14Edits.ids('n:')){const r=window.T14Edits.get(key), L0=DATA.loc0||[0,0];
   const x=r.x-L0[0], y=L0[1]-r.y, aa=DATA.geo.ll, mm=DATA.geo.ms;
   cams.push({id:key,num:null,title:r.name||'Камера',tag:null,orig:'',ip:'',x,y,a:(r.az||0)-90,host:null,mk:null,floor:null,approx:false,isNew:true,mtxt:(r.mount&&r.mount.txt)||'',
-    lat:aa[0][0]*x+aa[0][1]*y+aa[0][2],lon:aa[1][0]*x+aa[1][1]*y+aa[1][2],X:mm[0][0]*x+mm[0][1]*y+mm[0][2],Y:mm[1][0]*x+mm[1][1]*y+mm[1][2],dup:false})}
+    lat:aa[0][0]*x+aa[0][1]*y+aa[0][2],lon:aa[1][0]*x+aa[1][1]*y+aa[1][2],X:mm[0][0]*x+mm[0][1]*y+mm[0][2],Y:mm[1][0]*x+mm[1][1]*y+mm[1][2],dup:false});}
 const FOV_R=13, FOV_A=56;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
@@ -366,7 +366,7 @@ document.getElementById('meta').innerHTML=`<b>${cams.length}</b> камер · $
 document.getElementById('magn').setAttribute('transform',`rotate(${G.decl})`);
 document.getElementById('declTxt').textContent=`магн. +${G.decl.toFixed(1).replace('.',',')}°`;
 function llAt(x,y){const a=G.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
-const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник14 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 
 // ---- draw cameras ----
 const camEls={};
@@ -403,7 +403,7 @@ function apply(){
   for(const m of (window.SZM||[])) m.g.setAttribute('transform',`translate(${m.x} ${m.y}) scale(${k})`);
   for(const id in camEls){const {g,c}=camEls[id];g.setAttribute('transform',`translate(${c.x} ${c.y}) scale(${k})`)}
   for(const {g,v} of devEls) g.setAttribute('transform',`translate(${v.x} ${v.y}) scale(${k})`);
-  if(typeof drawHandle==='function') drawHandle();
+  drawHandle();
   // scale bar
   const target=90*k, steps=[2,5,10,20,25,50,100,200]; let s=steps[0]; for(const v of steps){if(v<=target)s=v}
   document.getElementById('scaleTxt').textContent=s+' м'; document.getElementById('scaleBar').style.width=(s/k).toFixed(0)+'px';
@@ -446,12 +446,12 @@ function setFull(on,keep){document.body.classList.toggle('pfull',on);zfitB.textC
   if(!keep){try{localStorage.setItem('t14.pfull',on?'1':'0')}catch(e){}}
   requestAnimationFrame(()=>requestAnimationFrame(()=>{view={...full};apply()}))}
 zfitB.onclick=()=>setFull(!document.body.classList.contains('pfull'));
-try{if(localStorage.getItem('t14.pfull')==='1')setFull(true,true)}catch(e){}
+try{if(localStorage.getItem('t14.pfull')==='1')setFull(true,true);}catch(e){}
 document.addEventListener('keydown',e=>{const t=e.target;if(e.ctrlKey||e.metaKey||e.altKey||(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable)))return;
   const b=e.key==='+'||e.key==='='?'zin':e.key==='-'||e.key==='_'?'zout':e.key==='0'?'zfit':null; if(b){e.preventDefault();document.getElementById(b).click()}});
 window.addEventListener('resize',apply);
 function panTo(x,y,minPxPerM){
-  const r=svg.getBoundingClientRect(); let k=mpp();
+  let k=mpp();
   if(minPxPerM&&1/k<minPxPerM){const f=1/(k*minPxPerM);view.w*=f;view.h*=f}
   view.x=x-view.w/2; view.y=y-view.h/2; apply();
 }
@@ -469,7 +469,6 @@ svg.addEventListener('click',()=>{if(!moved)clearSel()});
 // ---- selection & card ----
 const card=document.getElementById('card'), list=document.getElementById('list');
 let selId=null, selB=null;
-const DIRS=['С','СВ','В','ЮВ','Ю','ЮЗ','З','СЗ'];
 const DIRF=['север','северо-восток','восток','юго-восток','юг','юго-запад','запад','северо-запад'];
 function dirName(a){const bearing=((a+90)%360+360)%360;return DIRF[Math.round(bearing/45)%8]+`, азимут ${Math.round(bearing)}°`}
 function fmt(n){return n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1})}
@@ -482,7 +481,7 @@ function clearSel(){
 function select(id,fromList){
   clearSel(); selId=id; const {g,fov,c}=camEls[id];
   g.classList.add('sel'); fov&&fov.classList.add('sel'); marks.appendChild(g);
-  const li=list.querySelector(`[data-id="${CSS.escape(id)}"]`); if(li){li.classList.add('sel'); if(!fromList) li.scrollIntoView({block:'nearest'})}
+  const li=list.querySelector(`[data-id="${CSS.escape(id)}"]`); if(li){li.classList.add('sel'); if(!fromList) li.scrollIntoView({block:'nearest'});}
   if(fromList) panTo(c.x,c.y,3.2);
   const rows=[];
   rows.push(`<dt>IP</dt><dd><span class="mono">${c.ip}</span><button class="copy" data-copy="${c.ip}">копировать</button></dd>`);
@@ -497,7 +496,7 @@ function select(id,fromList){
   if(c.approx) notes+=`<p class="note warn">Этого здания нет на топосъёмке 2016 г. Камера стоит по схеме, положение условное.</p>`;
   if(!c.num) notes+=`<p class="note">На исходной схеме у этой камеры есть только IP-адрес.</p>`;
   if(c.dup) notes+=`<p class="note">На исходной схеме этот IP подписан у двух камер (060 и 063). Стоит проверить.</p>`;
-  const ce=E.get('c:'+c.id); if(ce){const [la,lo]=llAt(c.x,c.y),[X,Y]=msAt(c.x,c.y);notes+=`<p class="note warn">Камера передвинута вручную${ce.note?': '+esc(ce.note):''}. Сейчас: ${la.toFixed(6).replace('.',',')}, ${lo.toFixed(6).replace('.',',')}; МСК-62 X ${fmt(X)}, Y ${fmt(Y)}.</p>`}
+  const ce=E.get('c:'+c.id); if(ce){const [la,lo]=llAt(c.x,c.y),[X,Y]=msAt(c.x,c.y);notes+=`<p class="note warn">Камера передвинута вручную${ce.note?': '+esc(ce.note):''}. Сейчас: ${la.toFixed(6).replace('.',',')}, ${lo.toFixed(6).replace('.',',')}; МСК-62 X ${fmt(X)}, Y ${fmt(Y)}.</p>`;}
   card.innerHTML=`<span class="lbl">Камера</span><h2>${c.num?`<span class="n">${c.num}</span> ${c.title}`:c.title}</h2><dl class="kv">${rows.join('')}</dl>${mapLinks(c.lat,c.lon)}${notes}`;
   if(c.isNew) card.insertAdjacentHTML('beforeend','<p class="note">Новая камера, добавлена на странице модели. Объектив, направление и высота правятся там.</p>'); else editPanel('c:'+c.id,{kind:'c',title:c.title0,hasHost:!!c.host});
   wireCard();
@@ -540,13 +539,12 @@ function wireCard(){
 function selectText(n){const r=document.createRange();r.selectNodeContents(n);const s=getSelection();s.removeAllRanges();s.addRange(r)}
 
 // ---- list ----
-const SHORTB={};
 function groupKey(c){return c.host||'_out'}
 function renderList(q){
   q=(q||'').trim().toLowerCase();
   const match=c=>!q||[c.num||'',c.title,c.ip,c.orig,bname(c.host)].join(' ').toLowerCase().includes(q);
   const groups={};
-  for(const c of cams){const m=match(c);camEls[c.id].g.classList.toggle('dim',!!q&&!m);if(m)(groups[groupKey(c)]=groups[groupKey(c)]||[]).push(c)}
+  for(const c of cams){const m=match(c);camEls[c.id].g.classList.toggle('dim',!!q&&!m);if(m)(groups[groupKey(c)]=groups[groupKey(c)]||[]).push(c);}
   const keys=Object.keys(groups).sort((a,b)=>{if(a==='_out')return 1;if(b==='_out')return -1;return bname(a).localeCompare(bname(b),'ru')});
   let h='';
   for(const k of keys){
@@ -608,32 +606,32 @@ function szzShow(k,o,elx){clearSel();if(elx)elx.classList.add('sel');const [l,h,
 if(SZ){
   const gz=el('g',{id:'szzZ'},szzL), gn=el('g',{id:'szzN'},szzL), gi=el('g',{id:'szzI'},szzL);
   const B=SZ.boundary.map(p=>p.loc);
-  const zf=el('path',{class:'szz-fill',d:pth(B,true)},gz);
+  el('path',{class:'szz-fill',d:pth(B,true)},gz);
   const zl=el('path',{class:'szz-line',d:pth(B,true)},gz); const zh=el('path',{class:'hit',d:pth(B,true)},gz);
   for(const e of [zl,zh]) e.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('szzb',null,zl)});
   SZ.boundary.forEach((p,i)=>{const [x,y]=P2(p.loc),g=el('g',{class:'szz-v'},gz);el('circle',{cx:x.toFixed(2),cy:y.toFixed(2),r:.9},g);const t=el('text',{x:(x+1.2).toFixed(2),y:(y-1).toFixed(2)},g);t.textContent=p.n;
     g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('szzb',i,g)})});
   for(const L of SZ.noise_iso){const p=el('path',{class:'iso iso'+L.L,d:pth(L.pts,false)},gn);const h=el('path',{class:'hit',d:pth(L.pts,false)},gn);
     const top=P2(L.pts.reduce((a,q)=>q[1]>a[1]?q:a,L.pts[0])),tg=el('g',{class:'isot'},gn),t=el('text',{x:0,y:-3},tg);t.textContent=L.L+' дБА';SZM.push({g:tg,x:top[0],y:top[1]});
-    for(const e of [p,h]) e.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('iso',L,p)})}
+    for(const e of [p,h]) e.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('iso',L,p)});}
   for(const n of SZ.noise_src){const [x,y]=P2(n.loc),g=el('g',{class:'ish'},gn);el('circle',{r:4.5},g);const t=el('text',{x:7,y:4},g);t.textContent='ИШ '+n.n;SZM.push({g,x,y});
-    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('ish',n,g)})}
+    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('ish',n,g)});}
   for(const s of SZ.sources){const g=el('g',{class:'isa'+(s.org?' org':'')},gi),p=P2(s.real||s.a);
     if(s.org) el('circle',{cx:p[0].toFixed(2),cy:p[1].toFixed(2),r:.75},g);
-    else if(s.w>=10){const a=s.a,b=s.b,dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*s.w/2,ny=dx/L*s.w/2;el('path',{class:'area',d:pth([[a[0]+nx,a[1]+ny],[b[0]+nx,b[1]+ny],[b[0]-nx,b[1]-ny],[a[0]-nx,a[1]-ny]],true)},g)}
+    else if(s.w>=10){const a=s.a,b=s.b,dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*s.w/2,ny=dx/L*s.w/2;el('path',{class:'area',d:pth([[a[0]+nx,a[1]+ny],[b[0]+nx,b[1]+ny],[b[0]-nx,b[1]-ny],[a[0]-nx,a[1]-ny]],true)},g);}
     else{const a=P2(s.a),b=P2(s.b),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,L=Math.max(.9,Math.hypot(b[0]-a[0],b[1]-a[1])),ux=(b[0]-a[0])/(Math.hypot(b[0]-a[0],b[1]-a[1])||1),uy=(b[1]-a[1])/(Math.hypot(b[0]-a[0],b[1]-a[1])||1);
-      el('line',{x1:(mx-ux*L/2).toFixed(2),y1:(my-uy*L/2).toFixed(2),x2:(mx+ux*L/2).toFixed(2),y2:(my+uy*L/2).toFixed(2)},g)}
+      el('line',{x1:(mx-ux*L/2).toFixed(2),y1:(my-uy*L/2).toFixed(2),x2:(mx+ux*L/2).toFixed(2),y2:(my+uy*L/2).toFixed(2)},g);}
     el('circle',{class:'hit',cx:p[0].toFixed(2),cy:p[1].toFixed(2),r:1.6},g);
     const t=el('text',{x:(p[0]+1).toFixed(2),y:(p[1]-.9).toFixed(2)},g);t.textContent=s.id;
-    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('isa',s,g)})}
+    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('isa',s,g)});}
   for(const r of SZ.rt){const [x,y]=P2(r.loc),g=el('g',{class:'rt '+r.type},gz);if(r.ctrl)el('circle',{class:'ctrl',r:8.5},g);el('circle',{r:5.2},g);
     const t=el('text',{x:8,y:4},g);t.textContent='т. '+r.n;SZM.push({g,x,y});
-    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('rt',r,g)})}
+    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('rt',r,g)});}
   // fit the whole zone
   document.getElementById('zszz').onclick=()=>{const xs=B.map(p=>P2(p)[0]),ys=B.map(p=>P2(p)[1]),pad=15;const x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
     const r=svg.getBoundingClientRect(),ar=r.width/r.height;let w=x1-x0,h=y1-y0;if(w/h<ar)w=h*ar;else h=w/ar;view={x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h};apply();
     if(svg.classList.contains('noszz')) document.getElementById('tSzz').click()};
-}else{document.getElementById('zszz').hidden=true}
+}else{document.getElementById('zszz').hidden=true;}
 // building card: its emission and noise sources
 window.szzBldHTML=k=>{if(!SZ)return '';const ss=SZ.sources.filter(s=>(s.real?'skChimney':s.on)===k||(s.id==='0122'&&k==='nGef')),ns=SZ.noise_src.filter(n=>n.on===k);
   if(!ss.length&&!ns.length)return '';
@@ -641,7 +639,7 @@ window.szzBldHTML=k=>{if(!SZ)return '';const ss=SZ.sources.filter(s=>(s.real?'sk
 card.addEventListener('click',e=>{const b=e.target.closest('[data-szz]');if(!b||!SZ)return;const [t,id]=b.dataset.szz.split(':');
   const o=t==='isa'?SZ.sources.find(s=>s.id===id):SZ.noise_src.find(n=>String(n.n)===id);if(!o)return;
   if(t==='isa'&&svg.classList.contains('noisa'))document.getElementById('tIsa').click();if(t==='ish'&&svg.classList.contains('nonoise'))document.getElementById('tNoise').click();
-  const g=[...szzL.querySelectorAll(t==='isa'?'.isa':'.ish')][t==='isa'?SZ.sources.indexOf(o):SZ.noise_src.indexOf(o)];szzShow(t,o,g);const p=P2(o.real||o.a||o.loc);panTo(p[0],p[1],6)});
+  const g=[...szzL.querySelectorAll(t==='isa'?'.isa':'.ish')][t==='isa'?SZ.sources.indexOf(o):SZ.noise_src.indexOf(o)];szzShow(t,o,g);const p=P2(o.real||o.a||o.loc);panTo(p[0],p[1],6);});
 
 // ---- 2025: inventory of emission sources, dispersion calculation, НДВ (ООО «Экопроект») ----
 const ND=DATA.ndv||null, ndvL=document.getElementById('ndvL');
@@ -671,8 +669,8 @@ function ndvCard(k,o){
   if(k==='ndvb'){const s=ND.summary,c=ND.comp,mx=s.maxes,mxs=(t,l)=>`<tr><td>${l}</td><td>${esc(subN25(mx[t].sub[0]))} — <b>${nfz(mx[t].sub[1],2)}</b> (Р${mx[t].sub[2]})</td><td class="m">${nfz(mx[t].grp[1],2)}</td></tr>`;
     return [`Выбросы в атмосферу · 2025`,`Инвентаризация и НДВ, 2025 г.`,`<p class="note" style="color:var(--ink)">${esc(s.dev)}; ${esc(s.date)}.</p>
       ${s.objects.map(o=>`<span class="lbl">${esc(o.name)} · НВОС ${o.cat} кат. · ${o.code}</span><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org,'организованный','организованных','организованных')}, ${ruN(o.unorg,'неорганизованный','неорганизованных','неорганизованных')})</dd><dt>Выброс</dt><dd>${nfz(o.ty,3)} т/год; ${esc(o.subst)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd></dl>`).join('')}
-      <p class="note" style="color:var(--ink)">С проектом СЗЗ 2019 г.: было ${ruN(c.n19,'источник','источника','источников')} и ${nfz(c.ty19,1)} т/год, стало ${c.n25} и ${nfz(c.ty25,1)} т/год. Новых — ${c.new.length}, изменились — ${c.changed.length}, нет в 2025 г. — ${c.gone.length} (${c.gone.join(', ')}).</p>
-      <span class="lbl">Сотрудник13, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
+      <p class="note" style="color:var(--ink)">С проектом СЗЗ 2019 г.: было ${ruN(c.n19,'источник','источника','источников')} и ${nfz(c.ty19,1)} т/год, стало ${c.n25} и ${nfz(c.ty25,1)} т/год. Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, нет в 2025 г. — ${c.gone.length} (${c.gone.join(', ')}).</p>
+      <span class="lbl">Сотрудник15, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.result)}</p>
       <span class="lbl">НДВ гальванического цеха, 2026–2032 гг.</span><table class="szzt"><tr><th>Вещество</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c,n,kl,gs,ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td class="m">${fgz(gs)}</td><td class="m">${fgz(ty)}</td></tr>`).join('')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.szz)} ${esc(s.prod)} ${esc(s.heat)}</p><p class="note">${esc(s.org.head)}. ${esc(s.org.eco)}. ${esc(s.meas)}</p>${ndvSrc}`]}
@@ -683,17 +681,17 @@ if(ND){
   const gi=el('g',{id:'ndvI'},ndvL), gr=el('g',{id:'ndvR'},ndvL);
   for(const s of ND.sources){const g=el('g',{class:'i25 '+s.status+(s.org?' org':'')},gi),p=P2(s.a);NDG[s.id]=g;
     if(s.org) el('rect',{x:(p[0]-.7).toFixed(2),y:(p[1]-.7).toFixed(2),width:1.4,height:1.4,transform:`rotate(45 ${p[0].toFixed(2)} ${p[1].toFixed(2)})`},g);
-    else if(s.w>=10){const a=s.a,b=s.b,dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*s.w/2,ny=dx/L*s.w/2;el('path',{class:'area',d:pth([[a[0]+nx,a[1]+ny],[b[0]+nx,b[1]+ny],[b[0]-nx,b[1]-ny],[a[0]-nx,a[1]-ny]],true)},g)}
+    else if(s.w>=10){const a=s.a,b=s.b,dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*s.w/2,ny=dx/L*s.w/2;el('path',{class:'area',d:pth([[a[0]+nx,a[1]+ny],[b[0]+nx,b[1]+ny],[b[0]-nx,b[1]-ny],[a[0]-nx,a[1]-ny]],true)},g);}
     else{const a=P2(s.a),b=P2(s.b||s.a),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,l0=Math.hypot(b[0]-a[0],b[1]-a[1]),L=Math.max(.9,l0),ux=l0?(b[0]-a[0])/l0:1,uy=l0?(b[1]-a[1])/l0:0;
-      el('line',{x1:(mx-ux*L/2).toFixed(2),y1:(my-uy*L/2).toFixed(2),x2:(mx+ux*L/2).toFixed(2),y2:(my+uy*L/2).toFixed(2)},g)}
+      el('line',{x1:(mx-ux*L/2).toFixed(2),y1:(my-uy*L/2).toFixed(2),x2:(mx+ux*L/2).toFixed(2),y2:(my+uy*L/2).toFixed(2)},g);}
     el('circle',{class:'hit',cx:p[0].toFixed(2),cy:p[1].toFixed(2),r:1.6},g);
     const t=el('text',{x:(p[0]+1).toFixed(2),y:(p[1]+2).toFixed(2)},g);t.textContent=s.id;
-    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();ndvShow('i25',s,g)})}
+    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();ndvShow('i25',s,g)});}
   for(const r of ND.rt){const [x,y]=P2(r.loc),g=el('g',{class:'r25 '+r.type},gr);el('rect',{x:-4,y:-4,width:8,height:8,transform:'rotate(45)'},g);
     const t=el('text',{x:7,y:4},g);t.textContent='Р'+r.n;SZM.push({g,x,y});NDG['r'+r.n]=g;
-    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();ndvShow('r25',r,g)})}
+    g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();ndvShow('r25',r,g)});}
   const sb=document.getElementById('ndvSum');if(sb)sb.onclick=()=>ndvShow('ndvb',null,null);
-}else{const sb=document.getElementById('ndvSum');if(sb)sb.hidden=true}
+}else{const sb=document.getElementById('ndvSum');if(sb)sb.hidden=true;}
 window.ndvBldHTML=k=>{if(!ND)return '';const u=ND.buse[k];if(!u)return '';const ss=u.src.map(id=>ND.sources.find(o=>o.id===id)).filter(Boolean);
   return `<span class="lbl">Инвентаризация 2025: ${ss.length} ИЗАВ · ${esc(u.shops.join(', '))}</span>${u.units.length?`<p class="note">${esc(u.units.join('; '))}.</p>`:''}<div class="chips">${ss.map(s=>`<button class="chip" data-n25="i25:${s.id}">${s.id} ${esc(s.outlet)}${s.status==='new'?' · новый':''}</button>`).join('')}</div><button class="lnk" data-n25="ndvb:0">Сводка 2025 г.: объекты НВОС, сравнение с 2019 г., нормативы</button>`};
 card.addEventListener('click',e=>{const b=e.target.closest('[data-n25]');if(!b||!ND)return;const [t,id]=b.dataset.n25.split(':');
@@ -706,7 +704,7 @@ function tog(id,cls,key,def){
   const set=()=>{b.setAttribute('aria-pressed',on);svg.classList.toggle(cls,!on);store.set(key,on)};
   b.onclick=()=>{on=!on;set()}; set();
 }
-tog('tFov','nofov','cctv.fov'); tog('tLab','nolab','cctv.lab'); tog('tElec','noelec','cctv.elec'); tog('tGas','nogas','cctv.gas'); tog('tWat','nowat','cctv.wat'); svg.classList.add('noszz'); for(const id of ['zszz','tSzz']){const e=document.getElementById(id); if(e) e.style.display='none'}   /* 01.11.2026, пользователь (скриншот iPad 30.10): «Убери СЗЗ на этом плане» — граница СЗЗ и её расчётные точки не показываются */ tog('tIsa','noisa','t14.isa19',false); tog('tI25','noi25','t14.i25'); tog('tR25','nor25','t14.r25',false); tog('tNoise','nonoise','t14.noise',false);
+tog('tFov','nofov','cctv.fov'); tog('tLab','nolab','cctv.lab'); tog('tElec','noelec','cctv.elec'); tog('tGas','nogas','cctv.gas'); tog('tWat','nowat','cctv.wat'); svg.classList.add('noszz'); for(const id of ['zszz','tSzz']){const e=document.getElementById(id); if(e) e.style.display='none';}   /* 01.11.2026, пользователь (скриншот iPad 30.10): «Убери СЗЗ на этом плане» — граница СЗЗ и её расчётные точки не показываются */ tog('tIsa','noisa','t14.isa19',false); tog('tI25','noi25','t14.i25'); tog('tR25','nor25','t14.r25',false); tog('tNoise','nonoise','t14.noise',false);
 
 
 // ===== правки: сдвиг, поворот, скрытие, переименование, план внутри =====
@@ -716,8 +714,8 @@ function msAt(x,y){const a=G.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[
 const bPaths={}, bLabs={}, bC={}, planG={}, planOn={};
 document.querySelectorAll('#static .bld[data-b]').forEach(p=>{(bPaths[p.dataset.b]=bPaths[p.dataset.b]||[]).push(p)});
 document.querySelectorAll('#static [data-lb]').forEach(t=>{t.dataset.t0=t.getAttribute('transform')||'';(bLabs[t.dataset.lb]=bLabs[t.dataset.lb]||[]).push(t)});
-for(const k in B){if(B[k].poly&&B[k].poly.length>2)bC[k]=E.centroid(B[k].poly)}
-for(const c of cams){c.x0=c.x;c.y0=c.y;c.a0=c.a;c.title0=c.title}
+for(const k in B){if(B[k].poly&&B[k].poly.length>2)bC[k]=E.centroid(B[k].poly);}
+for(const c of cams){c.x0=c.x;c.y0=c.y;c.a0=c.a;c.title0=c.title;}
 const PL=DATA.plans||{};
 for(const k in PL){
   const p=PL[k], first=bPaths[k]&&bPaths[k][bPaths[k].length-1]; if(!first) continue;
@@ -765,9 +763,9 @@ function drawHandle(){
   edh.innerHTML=''; if(!moveId) return; const k=mpp(), c=curCenter(); if(!c) return;
   let hp;
   if(moveId[0]==='b'){
-    const bk=moveId.slice(2), poly=B[bk].poly, xs=poly.map(q=>q[0]), r0=Math.max(...poly.map(q=>Math.hypot(q[0]-bC[bk][0],q[1]-bC[bk][1])));
+    const bk=moveId.slice(2), poly=B[bk].poly, r0=Math.max(...poly.map(q=>Math.hypot(q[0]-bC[bk][0],q[1]-bC[bk][1])));
     const e=ED(moveId)||{}, a=(e.rot||0)*Math.PI/180; hp=[c[0]+Math.cos(a)*(r0+18*k),c[1]+Math.sin(a)*(r0+18*k)];
-    if(e.dx||e.dy||e.rot){const gp=el('path',{class:'ghostpoly',d:'M'+poly.map(q=>q.join(' ')).join(' L')+' Z'},edh)}
+    if(e.dx||e.dy||e.rot){el('path',{class:'ghostpoly',d:'M'+poly.map(q=>q.join(' ')).join(' L')+' Z'},edh);}
   }else{
     const cc=cams.find(o=>o.id===moveId.slice(2)); if(!cc||cc.a===null) return; const a=cc.a*Math.PI/180; hp=[c[0]+Math.cos(a)*42*k,c[1]+Math.sin(a)*42*k];
   }
@@ -803,7 +801,7 @@ svg.addEventListener('pointermove',ev=>{
 function endDrag(ev){
   if(!drag||(ev&&ev.pointerId!==drag.pointer)) return; ev&&ev.stopPropagation();
   const d=drag; drag=null;
-  if(d.moved&&PREV){const e=PREV.e;PREV=null;E.set(d.id,{dx:e.dx||0,dy:e.dy||0,rot:e.rot||0});moved=true;setTimeout(()=>{moved=false},0)}else PREV=null;
+  if(d.moved&&PREV){const e=PREV.e;PREV=null;E.set(d.id,{dx:e.dx||0,dy:e.dy||0,rot:e.rot||0});moved=true;setTimeout(()=>{moved=false},0);}else PREV=null;
 }
 svg.addEventListener('pointerup',endDrag,true); svg.addEventListener('pointercancel',endDrag,true);
 // ---- the edit panel in the card ----

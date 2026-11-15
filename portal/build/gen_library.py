@@ -44,7 +44,6 @@ links = L.get('links', [])
 # how many sheets and documents the site pages have (for the rows «Чертежи» and «Архив»)
 n_docs = n_arch = None
 try:
-    import re
     t = _cg1_read_file(B + 'docs_v2.html', encoding='utf-8'); n_docs = len(re.findall(r'"img":\s*"plans/', t))
     n_arch = len(_cg1_read_json(B + 'archive/files.json', encoding='utf-8'))
     # 30.10.2026: другая версия документа (alt_of в archive/catalog.py → ALT) открывается из карточки основного — в счёт раздела не входит

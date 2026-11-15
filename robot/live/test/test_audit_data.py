@@ -1,8 +1,20 @@
 """30.10.2026 аудит — данные: пустые ответы Ozon и AutoGRAPH не затирают прежние (P15); IMAP недоступен и письмо, разбор которого упал, —
 повтор и карантин (P16); отчёт с неподтверждённым отправителем — оповещение, строгий режим (P14); документ по тому же адресу (P19);
 выгрузка на Диск только st/exp_* (P20); один список праздников (P21). Без сети. Запуск: cd live && unshare -n python3 -W ignore test/test_audit_data.py"""
-import base64, datetime, email, hashlib, hmac, json, os, sys, time
+import base64, datetime, hashlib, hmac, json, os, sys, time
 from email.message import EmailMessage
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mock_home as MH
 ok = 0
@@ -22,7 +34,7 @@ publish = lambda n, o: pub.__setitem__(n, json.loads(json.dumps(o)))
 live.publish = publish                                              # участки публикуют сюда (содержимое проверяется без шифра)
 
 print('P15 — Ozon: пустой ответ не затирает данные')
-open(os.path.join(L, 'ozon_pks'), 'w').write('client_id=1\napi_key=00000000-0000-0000-0000-000000000000\n')
+_wr('client_id=1\napi_key=00000000-0000-0000-0000-000000000000\n', os.path.join(L, 'ozon_pks'), 'w')
 ANS = {'full': True}
 def call(cid, key, path, body, timeout=25):
     full = ANS['full']
@@ -65,7 +77,7 @@ check('ozd.bin' not in pub and r['state'] == 'подозрительно пус�
       'всё нули без ошибок, а вчера заказы были — st/ozd.bin не затёрт, прежние дни в состоянии, предупреждение')
 
 print('P15 — AutoGRAPH (ГЛОНАСС)')
-open(os.path.join(L, 'glonass'), 'w').write('login=u\npassword=p\n')
+_wr('login=u\npassword=p\n', os.path.join(L, 'glonass'), 'w')
 class FS:
     def __init__(self, *a): self.n, self.logins = 0, 0
     def mask(self, s): return str(s)
@@ -89,10 +101,10 @@ check(st['day'].get(yd) == [{'km': 10}] and not st.get('ok_now'), 'рейсы з
 check(len(R.mail) == n0 + 1 and 'подозрительно пустой' in R.mail[-1][1], 'владельцу — сообщение')
 
 print('P16 — Gmail IMAP: недоступен; письмо, разбор которого упал, — повтор и карантин')
-open(os.path.join(L, 'gmail_app_password'), 'w').write('p')
-def rep_letter(fn, subj='Гальваника ОКТЯБРЬ 2026', auth=True, frm='user15@example.org', mid=None):
+_wr('p', os.path.join(L, 'gmail_app_password'), 'w')
+def rep_letter(fn, subj='Гальваника ОКТЯБРЬ 2026', auth=True, frm='user14@example.org', mid=None):
     m = EmailMessage(); m['From'] = frm; m['To'] = 'user5@example.org'; m['Subject'] = subj
-    m['Date'] = 'Fri, 30 Oct 2026 08:50:00 +0300'; m['Message-ID'] = mid or '<user126@example.org>' % hashlib.sha1(fn.encode()).hexdigest()[:10]
+    m['Date'] = 'Fri, 30 Oct 2026 08:50:00 +0300'; m['Message-ID'] = mid or '<user125@example.org>' % hashlib.sha1(fn.encode()).hexdigest()[:10]
     if auth: m['Authentication-Results'] = 'mx.google.com; dkim=pass header.i=@fabrikant.su; spf=pass smtp.mailfrom=%s; dmarc=pass (p=NONE) header.from=fabrikant.su' % frm
     m.set_content('отчёт'); m.add_attachment(b'%PDF-1.4', maintype='application', subtype='pdf', filename=fn)
     return m.as_bytes()
@@ -112,11 +124,11 @@ class Gm:
 imaplib.IMAP4_SSL = Gm
 Gm.fail = True
 r = live.lane_reports()
-check(str(json.load(open(os.path.join(S, 'status.json')))['mail']).startswith('ошибка'), 'imap.gmail.com недоступен — «ошибка» в состоянии, участок дошёл до конца')
+check(str(json.loads(_rd(os.path.join(S, 'status.json')))['mail']).startswith('ошибка'), 'imap.gmail.com недоступен — «ошибка» в состоянии, участок дошёл до конца')
 Gm.fail = False; R.mail.clear()
 for i in range(3): live.lane_reports()
-seen = json.load(open(os.path.join(S, 'seen.json')))
-recv = json.load(open(os.path.join(S, 'recv.json')))
+seen = json.loads(_rd(os.path.join(S, 'seen.json')))
+recv = json.loads(_rd(os.path.join(S, 'recv.json')))
 check(seen['uids'].count('6') == 1 and seen['uids'].count('7') == 1 and '5' in seen['uids'] and seen['quar'] == ['5'], 'упавший разбор (нет места на диске) — повтор, на 3-й — карантин; хорошие письма — один раз')
 check(any('карантин' in x[1] for x in R.mail), 'о карантине — сообщение владельцу')
 check(any('неподтверждённым отправителем' in x[1] and 'ПРИНЯТ' in x[1] for x in R.mail) and len([r_ for r_ in recv if r_['k'] == 'galv']) == 2,
@@ -125,11 +137,11 @@ check(any('неподтверждённым отправителем' in x[1] an
 print('P14 — строгий режим (cfg.json → auth_strict) и itm@ (Mail.ru)')
 live.CFG['auth_strict'] = True
 Gm.box = {'8': rep_letter('Гальваника 3.pdf', auth=False, mid='<fake8@x>')}
-live.lane_reports(); recv = json.load(open(os.path.join(S, 'recv.json')))
+live.lane_reports(); recv = json.loads(_rd(os.path.join(S, 'recv.json')))
 check(not [r_ for r_ in recv if r_.get('mid') == hashlib.sha256(b'<fake8@x>').hexdigest()[:16]] and any('не принят' in x[1] for x in R.mail), 'auth_strict=true — отчёт без подтверждения не принят, сообщение владельцу')
 live.CFG['auth_strict'] = False
 import itm as IT
-open(os.path.join(L, 'itm_app_password'), 'w').write('p')
+_wr('p', os.path.join(L, 'itm_app_password'), 'w')
 class Mr(Gm):
     box = {'21': rep_letter('OSERR Гальваника.pdf', mid='<i21@x>'), '22': rep_letter('Гальваника И.pdf', auth=False, mid='<i22@x>')}
     def list(self): return 'OK', [b'(\\HasNoChildren) "/" "INBOX"']
@@ -153,9 +165,9 @@ check(r.get('quar') == 1 and not st['folders']['INBOX'].get('retry') and st['qua
 
 print('P19 — документ по тому же адресу обновляется')
 fid = 'ab' * 12
-live.publish_file(fid, b'v1'); p = os.path.join(M['SITE'], 'st', 'f', fid + '.bin'); a = open(p).read()
-live.publish_file(fid, b'v1'); check(open(p).read() == a, 'то же содержимое — файл не переписывается')
-live.publish_file(fid, b'v2 new'); b_ = open(p).read()
+live.publish_file(fid, b'v1'); p = os.path.join(M['SITE'], 'st', 'f', fid + '.bin'); a = _rd(p)
+live.publish_file(fid, b'v1'); check(_rd(p) == a, 'то же содержимое — файл не переписывается')
+live.publish_file(fid, b'v2 new'); b_ = _rd(p)
 def unseal_bytes(s, key):
     b = base64.b64decode(s[6:]); nonce, tag, ct = b[:16], b[16:48], b[48:]
     assert hmac.compare_digest(hmac.new(key, nonce + ct, hashlib.sha256).digest(), tag)
@@ -165,14 +177,14 @@ check(b_ != a and unseal_bytes(b_, bytes.fromhex(MH.KL)) == b'v2 new', 'соде
 
 print('P20 — на Диск 1c@ только st/exp_*.bin')
 import drive_put as DPU, gdrive_1c as GD
-os.makedirs(os.path.join(M['SITE'], 'st'), exist_ok=True); open(os.path.join(M['SITE'], 'st', 'exp_uz.bin'), 'w').write('T14B1.x')
+os.makedirs(os.path.join(M['SITE'], 'st'), exist_ok=True); _wr('T14B1.x', os.path.join(M['SITE'], 'st', 'exp_uz.bin'), 'w')
 DPU.HERE = M['C']
-json.dump([{'id': 'd', 'src': 'st/exp_uz.bin'}, {'id': 'a', 'src': 'live:cfg.json'}, {'id': 'b', 'src': '/etc/passwd'}], open(os.path.join(M['C'], 'drive_put.json'), 'w'))
+_wr(json.dumps([{'id': 'd', 'src': 'st/exp_uz.bin'}, {'id': 'a', 'src': 'live:cfg.json'}, {'id': 'b', 'src': '/etc/passwd'}]), os.path.join(M['C'], 'drive_put.json'), 'w')
 sent = []; GD.put_file = lambda L_, name, data, mime='', sub=None: sent.append(name) or {'ok': True, 'id': 'F'}
 store = {}
 r = DPU.run(L, M['SITE'], lambda *a: None, lambda n, d: store.get(n, d), lambda n, v: store.__setitem__(n, v))
 check(sent == ['exp_uz.bin'] and r['err'].count('не разрешён') == 2 and 'a' not in store['drive_put.json']['done'], '«live:cfg.json» (каталог с ключами) и абсолютный путь — отклонены; st/exp_*.bin — ушёл')
-json.dump([{'id': 'c', 'src': 'st/ls.bin'}], open(os.path.join(M['C'], 'drive_put.json'), 'w'))
+_wr(json.dumps([{'id': 'c', 'src': 'st/ls.bin'}]), os.path.join(M['C'], 'drive_put.json'), 'w')
 r = DPU.run(L, M['SITE'], lambda *a: None, lambda n, d: store.get(n, d), lambda n, v: store.__setitem__(n, v))
 check(sent == ['exp_uz.bin'] and 'не разрешён' in r['err'], 'и файл сайта не из выгрузок (st/ls.bin) — тоже нет')
 

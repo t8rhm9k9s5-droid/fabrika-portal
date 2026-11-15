@@ -1,5 +1,17 @@
 """Тест ozon_day.py (29.10.2026): дни по Москве, отмены, продажи из финансов, товары только вчерашнего дня, публикация."""
 import datetime, os, sys, tempfile
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import ozon as OZ, ozon_hist as OH, ozon_day as OD
 OH.time.sleep = OD.time.sleep = lambda s: None
@@ -58,7 +70,7 @@ check(y['an'] == {'s': 5000, 'u': 3}, 'аналитика «заказано» �
 check([r['id'] for r in top] == ['C', 'A'], 'товары — только вчерашние, без отменённых, по сумме')
 # публикация и пауза 30 минут
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, 'state'))
-open(os.path.join(d, 'ozon_pks'), 'w').write('client_id=123\napi_key=00000000-0000-0000-0000-000000000000\n')
+_wr('client_id=123\napi_key=00000000-0000-0000-0000-000000000000\n', os.path.join(d, 'ozon_pks'), 'w')
 store, pub = {}, {}
 r = OD.run(d, lambda *a: None, lambda n, dflt: store.get(n, dflt), lambda n, v: store.__setitem__(n, v), lambda n, o: pub.__setitem__(n, o), lambda x: x.strftime('%Y-%m-%dT%H:%M'))
 check(r['state'] == 'ok' and 'ozd.bin' in pub and pub['ozd.bin']['days'][0]['d'], 'опубликован st/ozd.bin')

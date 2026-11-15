@@ -28,6 +28,7 @@ def find(name):
         d = D.DEPARTMENTS[k]
         for p in d["heads"] + d["staff"] + [x for sg in d.get("subgroups", []) for x in ([sg["head"]] if sg.get("head") else []) + sg["staff"]]:
             if p["name"] == name: return p
+    return None
 for g, pp in K.PEOPLE:
     for p in pp:
         q = find(p["name"])

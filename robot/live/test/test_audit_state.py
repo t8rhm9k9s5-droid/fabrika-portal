@@ -1,6 +1,18 @@
 """30.10.2026 аудит — повреждённые файлы состояния (P8), атомарная запись при обрыве (P9), повторный запуск cron и общий замок itm@ (P17).
 Запуск: cd live && unshare -n python3 -W ignore test/test_audit_state.py → «ALL OK»."""
-import datetime, fcntl, json, os, random, signal, subprocess, sys, time
+import datetime, json, os, random, signal, subprocess, sys, time
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mock_home as MH
 ok = 0
@@ -13,14 +25,14 @@ live = MH.load_live(M)
 REC = MH.Rec().hook(live)
 live.now = lambda: datetime.datetime(2026, 10, 30, 11, 0, tzinfo=live.MSK)
 S = os.path.join(M['FL'], 'state')
-def corrupt(n, data='{"битый'): open(os.path.join(S, n), 'w').write(data)
+def corrupt(n, data='{"битый'): _wr(data, os.path.join(S, n), 'w')
 
 print('P8 — битый JSON не считается пустым')
 live.jsave('recv.json', [{'k': 'galv', 'date': '2026-10-29', 'got': '2026-10-29T08:50', 'mid': 'm1'}])
 check(os.path.exists(os.path.join(S, 'recv.json.bak')), 'jsave критичного файла пишет и .bak (копия последней удачной записи)')
 corrupt('recv.json')
 v = live.jload('recv.json', [])
-check(v and v[0]['k'] == 'galv' and json.load(open(os.path.join(S, 'recv.json')))[0]['mid'] == 'm1', 'битый recv.json → восстановлен из .bak (не пустой список)')
+check(v and v[0]['k'] == 'galv' and json.loads(_rd(os.path.join(S, 'recv.json')))[0]['mid'] == 'm1', 'битый recv.json → восстановлен из .bak (не пустой список)')
 check([f for f in os.listdir(S) if f.startswith('recv.json.corrupt-')] and not os.path.exists(os.path.join(S, 'recv.json.corrupt')), 'испорченный отложен как .corrupt-<время>')
 check(REC.mail and 'восстановлен из резервной копии' in REC.mail[-1][1], 'владельцу — сообщение о восстановлении')
 corrupt('recv.json'); corrupt('recv.json.bak', 'тоже битый')
@@ -33,15 +45,15 @@ except live.StateCorrupt: raised = True
 check(raised, 'файла нет, но есть метка .corrupt — по-прежнему StateCorrupt (не «пусто» в следующем прогоне)')
 check(live.jload('recv.json', ['x'], peek=True) == ['x'], 'peek=True — только посмотреть: без исключения и переименований')
 # участок reports с битым recv.json: почта не читается, проверка 10:35 не делается, данные портала не пересчитываются
-for n in ('gmail_app_password',): open(os.path.join(M['FL'], n), 'w').write('p')
+for n in ('gmail_app_password',): _wr('p', os.path.join(M['FL'], n), 'w')
 import imaplib
 calls = []
 imaplib.IMAP4_SSL = lambda *a, **k: calls.append(a) or (_ for _ in ()).throw(ConnectionRefusedError(111, 'x'))
 live.jsave('alerts.json', {'2026-10-29': {'t': 'x', 'miss': []}})
 r = live.lane_reports()
-st = json.load(open(os.path.join(S, 'status.json'), encoding='utf-8'))
+st = json.loads(_rd(os.path.join(S, 'status.json'), encoding='utf-8'))
 check(not calls and 'recv.json' in st['mail'] and r['state'].startswith('ошибка'), 'битый recv.json без копии — IMAP не открывается, участок reports сообщает ошибку (fail closed)')
-check(json.load(open(os.path.join(S, 'alerts.json'))) == {'2026-10-29': {'t': 'x', 'miss': []}}, 'проверка 10:35 не выполнялась (нет ложного «не пришли»)')
+check(json.loads(_rd(os.path.join(S, 'alerts.json'))) == {'2026-10-29': {'t': 'x', 'miss': []}}, 'проверка 10:35 не выполнялась (нет ложного «не пришли»)')
 os.remove(os.path.join(S, 'recv.json.corrupt'))
 check(live.jload('recv.json', []) == [], 'метку убрали (разобрано вручную) — снова обычная работа')
 # deploy.json битый — ничего не ставится
@@ -52,14 +64,14 @@ except live.StateCorrupt: raised = True
 p = live.lane_portal()
 check(raised and str(p['deploy'].get('state', '')).startswith('ошибка'), 'битый deploy.json (без .bak) — установка пакетов остановлена, не «всё заново» (раньше: переустановка старых пакетов)')
 # mail_out.json битый — письма по поручению не уходят повторно
-json.dump([{'id': 'x1', 'subject': 'S', 'text': 'T', 'to': ['user128@example.org']}], open(os.path.join(M['C'], 'mail_out.json'), 'w'))
+_wr(json.dumps([{'id': 'x1', 'subject': 'S', 'text': 'T', 'to': ['user127@example.org']}]), os.path.join(M['C'], 'mail_out.json'), 'w')
 corrupt('mail_out.json')
 import mail_q as MQ
 before = len(MQ.pending())
 st = live.lane_mail()
-after = [json.load(open(os.path.join(MQ.OUT, f), encoding='utf-8'))['subject'] for f in MQ.pending()]
+after = [json.loads(_rd(os.path.join(MQ.OUT, f), encoding='utf-8'))['subject'] for f in MQ.pending()]
 check('S' not in after and str(st['mail_out'].get('state', '')).startswith('ошибка'), 'битый mail_out.json — ни одного письма по поручению (раньше: все письма заново)')
-json.dump([], open(os.path.join(M['C'], 'mail_out.json'), 'w'))
+_wr(json.dumps([]), os.path.join(M['C'], 'mail_out.json'), 'w')
 # некритичный файл — заново, но не молча
 corrupt('glonass.json'); n0 = len(REC.mail)
 check(live.jload('glonass.json', {'d': 1}) == {'d': 1} and [f for f in os.listdir(S) if f.startswith('glonass.json.corrupt-')] and len(REC.mail) > n0,
@@ -80,11 +92,11 @@ while True:
 '''
 good = 0
 os.makedirs(MQ.OUT, exist_ok=True)
-for k in range(12):
+for _ in range(12):
     pr = subprocess.Popen([sys.executable, '-W', 'ignore', '-c', prog, os.path.join(M['FL'], 'py'), M['C']], stdout=subprocess.PIPE)
     pr.stdout.readline(); time.sleep(random.uniform(0.05, 0.6)); pr.send_signal(signal.SIGKILL); pr.wait()
     try:
-        a = json.load(open(os.path.join(S, 'recv.json'), encoding='utf-8')); b = json.load(open(os.path.join(MQ.OUT, 'item.json'), encoding='utf-8'))
+        a = json.loads(_rd(os.path.join(S, 'recv.json'), encoding='utf-8')); b = json.loads(_rd(os.path.join(MQ.OUT, 'item.json'), encoding='utf-8'))
         good += 1 if len(a) == 4000 and len(b['big']) == 500 else 0
     except Exception as e: print('    битый после kill:', e)
 check(good == 12, 'kill -9 посреди записи (12 раз) — recv.json и файл письма всегда целые (временный файл + os.replace)')
@@ -96,7 +108,7 @@ MQ.json.dump = bad_dump
 try: MQ._write_json(pp, {'n': 'новое'}); raised = False
 except OSError: raised = True
 MQ.json.dump = real
-check(raised and json.load(open(pp, encoding='utf-8')) == {'n': 'хорошее'}, 'диск кончился посреди записи — прежний файл письма цел (раньше: письмо в bad/ и потеряно)')
+check(raised and json.loads(_rd(pp, encoding='utf-8')) == {'n': 'хорошее'}, 'диск кончился посреди записи — прежний файл письма цел (раньше: письмо в bad/ и потеряно)')
 for f in os.listdir(MQ.OUT):
     if f.endswith('.tmp') or f == 'item.json': os.remove(os.path.join(MQ.OUT, f))
 
@@ -112,7 +124,7 @@ check(pa.stdout.readline().strip() == 'got', 'первый участок взя
 import itm as IT
 t0 = time.time(); lk = IT.imap_lock(M['FL'], 1)
 check(lk is None and 0.9 <= time.time() - t0 < 2.5, 'второй — ждёт не дольше своего предела и пропускает прогон (не входит параллельно)')
-open(os.path.join(M['FL'], 'itm_app_password'), 'w').write('p')
+_wr('p', os.path.join(M['FL'], 'itm_app_password'), 'w')
 imaplib.IMAP4_SSL = lambda *a, **k: (_ for _ in ()).throw(AssertionError('вход в itm@ при занятом замке'))
 IT_wait = IT.imap_lock
 IT.imap_lock = lambda L, wait=20: IT_wait(L, 1)

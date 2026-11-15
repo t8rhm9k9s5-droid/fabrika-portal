@@ -1,7 +1,19 @@
 """30.10.2026 треки: тест glonass.py — GetTrack, чистка сбоев сигнала (выбросы, скачок на 100 км вбок и обратно, дрейф на стоянке,
 (0, 0), порядок и повторы), перерывы в данных, пробег и время в движении по чистому треку, пометка 864 км / 1,24 ч, Дуглас — Пекер и размер
 gl.bin, разбор разных видов ответа, прогон run() с поддельной сессией. Без сети: cd fix/tracks && unshare -n python3 -W ignore test/test_tracks.py"""
-import base64, datetime, json, math, os, random, sys, tempfile, time
+import datetime, json, math, os, random, sys, tempfile, time
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import glonass as GL
 ok = 0
@@ -217,7 +229,7 @@ check(Te.get('endg') and c.get('pos_bad') and 'убрана из трека' in 
 
 print('run() с поддельной сессией')
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, 'state'))
-PW = 'Sekr3t-Pa$$'; open(os.path.join(d, 'glonass'), 'w').write('login=fab\npassword=%s\n' % PW)
+PW = 'Sekr3t-Pa$$'; _wr('login=fab\npassword=%s\n' % PW, os.path.join(d, 'glonass'), 'w')
 store, pub_, logs, calls = {}, {}, [], []
 jl = lambda n, dflt: json.loads(json.dumps(store[n])) if n in store else dflt
 js = lambda n, v: store.__setitem__(n, json.loads(json.dumps(v)))
@@ -298,5 +310,5 @@ G2 = pub_['gl.bin']
 check(r['state'] == 'частично' and 'треки за' in (r['err'] or '') and G2['tracks'][Y]['D1'] and G2['cars'], 'GetTrack ответил 500 — «частично», ошибка видна, прежние треки и машины на месте', r)
 check(store['glonass.json']['ok_trk'] is False, 'неудача — повтор через 10 минут (ok_trk=false)')
 # старый gl.bin без треков: страница и скрипт бота работают как раньше — проверяет test_tracks_page.py
-json.dump(G, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sample_gl.json'), 'w'), ensure_ascii=False)
+_wr(json.dumps(G, ensure_ascii=False), os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sample_gl.json'), 'w')
 print('ALL OK', ok)

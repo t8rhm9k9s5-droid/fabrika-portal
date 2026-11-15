@@ -1,6 +1,18 @@
 """Тест glonass.py (29.10.2026): ключ, вход и кэш токена, повторный вход, 401/503 при входе, где сейчас, рейсы, стоянки, геозоны,
 частоты, пароль нигде не виден. Без сети."""
 import datetime, json, os, sys, tempfile, time
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import glonass as GL
 PW = 'Sekr3t-Pa$$'
@@ -45,9 +57,9 @@ def call(method, params, timeout=25):
 GL.call = call
 # 1) нет ключа
 r = run(); check(r['state'] == 'нет ключа' and not calls, 'нет файла ключа — ни одного запроса')
-open(os.path.join(d, 'glonass_old.bak'), 'w').write('x'); r = run()
+_wr('x', os.path.join(d, 'glonass_old.bak'), 'w'); r = run()
 check(r['state'] == 'нет ключа' and 'glonass_old.bak' in r['err'] and not calls, 'нет ключа — в состоянии подсказка: похожие имена файлов (без содержимого)')
-kp = os.path.join(d, 'Glonass.txt'); open(kp, 'w').write('login = fabrikant\npassword: "%s"\n' % PW)
+kp = os.path.join(d, 'Glonass.txt'); _wr('login = fabrikant\npassword: "%s"\n' % PW, kp, 'w')
 check(GL.key_path(d) == kp, 'ключ принимается и как Glonass.txt')
 check(GL.creds(d)[:2] == ('fabrikant', PW), 'ключ: логин и пароль (с «=», «:», кавычками)')
 # 2) полный прогон
@@ -68,7 +80,7 @@ check(len(st1) == 1 and st1[0]['min'] == 65 and st1[0]['zone'] == 'Клиент 
 check(any(h['zone'] == 'Клиент «Ромашка»' and h['min'] == 65 for h in G['zones_hit']), 'заезд в геозону — в «доставках»')
 blob = json.dumps([store, pub, logs], ensure_ascii=False)
 check(PW not in blob and 'TOKEN-abcdef' not in blob, 'пароля и токена нет ни в state, ни в gl.bin, ни в журнале')
-tok = json.load(open(os.path.join(d, 'state', 'glonass_token.json')))
+tok = json.loads(_rd(os.path.join(d, 'state', 'glonass_token.json')))
 check(tok['token'] == 'TOKEN-abcdef-123456' and oct(os.stat(os.path.join(d, 'state', 'glonass_token.json')).st_mode & 0o777) == '0o600', 'токен — в отдельном файле 600')
 print('    debug parsed:', store['glonass.json']['debug'][today]['parsed'])
 check(store['glonass.json']['debug'][today]['parsed'].get('km') in ('TotalDistance', 'Пробег, км'), 'найденные поля Total — в state для проверки')
@@ -95,9 +107,9 @@ st = store['glonass.json']; st['ts_now'] -= 6 * 60; js('glonass.json', st); r = 
 check(r['state'] in ('ошибка', 'частично') and '503' in (r['err'] or '') and PW not in (r['err'] or ''), '503 при входе — ошибка, пароль в тексте скрыт')
 # 7) в файле вместо логина и пароля — токен (ключ) ТК ГЛОНАСС
 d2 = tempfile.mkdtemp(); os.makedirs(os.path.join(d2, 'state')); TOKF = 'TOKEN-abcdef-123456'
-open(os.path.join(d2, 'glonass'), 'w').write('AB' * 40 + '\n')
+_wr('AB' * 40 + '\n', os.path.join(d2, 'glonass'), 'w')
 check(GL.file_token(d2) == 'AB' * 40, 'токен строкой в файле ключа распознан')
-open(os.path.join(d2, 'glonass'), 'w').write('token=' + TOKF + '\n')
+_wr('token=' + TOKF + '\n', os.path.join(d2, 'glonass'), 'w')
 store2, pub2 = {}, {}
 MODE['login'] = 'ok'; n = len(calls)
 r2 = GL.run(d2, lambda *a: None, lambda n_, df: store2.get(n_, df), lambda n_, v: store2.__setitem__(n_, json.loads(json.dumps(v))), lambda n_, o: pub2.__setitem__(n_, o), iso)

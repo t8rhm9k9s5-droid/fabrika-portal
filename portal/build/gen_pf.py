@@ -111,7 +111,7 @@ frag = '''
     var M = D.months[CUR], L = M.lines || {};
     var fv = function(k){ var l = L[k] || {}; return (M.pdo && l.fp != null ? l.fp : l.f) || 0; };
     var names = Object.keys(L).sort(function(a, b){ return fv(b) - fv(a) || a.localeCompare(b, 'ru'); });   // 03.11, Т. В.: сверху самый большой выпуск
-    var dn = Math.min(M.days || 0, M.wd_done || M.wd || 0), part = dn < (M.wd || 0), PDO = !!M.pdo;
+    var dn = Math.min(M.days || 0, M.wd_done || M.wd || 0), PDO = !!M.pdo;
     var rows = names.map(function(k){
       var l = L[k], f = (PDO && l.fp != null) ? l.fp : l.f, p = l.p ? (PDO ? l.p : Math.round(l.p * dn / (M.wd || 1))) : null, v = (f != null && p) ? pc(f, p) : null;
       return '<tr><td class="nm">' + esc(k) + (l.a ? ' <span class="dim">· уч. ' + l.a + '</span>' : '') + '</td><td>' + n(f) + '</td><td>' + (p ? n(p) : '<span class="dim">—</span>') + '</td><td class="pc">' + (v == null ? '<span class="dim">—</span>' : bar(v) + v + '%') + '</td></tr>';
@@ -154,7 +154,7 @@ frag = '''
     el.querySelectorAll('.mchips button').forEach(function(b){ b.addEventListener('click', function(){ CUR = b.getAttribute('data-m'); CURU = true; prod(D); }); });
     var val = document.getElementById('pf-prod-val'); if (val) val.textContent = ms.length + ' мес.';
   }
-  // 28.10.2026, пользователь: «от Сотрудник51 приходят такие отчёты раз в месяц, мне нужны они за год с разбивкой по месяцам» — ПДО «План-факт <месяц>»
+  // 28.10.2026, пользователь: «от Сотрудник53 приходят такие отчёты раз в месяц, мне нужны они за год с разбивкой по месяцам» — ПДО «План-факт <месяц>»
   var PFM = 'pc', PFL = ['Изо', 'Стандарты', 'Сильвия', 'КаБаРе', 'Кресла руководителя', 'Операторские кресла', 'Бун', 'Самба', 'Анри', 'Мягкая мебель', 'ГКЗ', 'Накладки Самба', 'ГКИ Одди'];
   function pdoTable(PF){
     if (!PF) return '';

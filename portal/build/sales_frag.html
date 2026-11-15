@@ -1045,7 +1045,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     var fk = ks.filter(full), k = fk.length ? fk[fk.length - 1] : ks[ks.length - 1], d = D[k], T = d.types || {}, C = d.cap || {}, tot = (T.tot || C.tot || [0, 0]);
     var mln = function (v) { return v == null ? '—' : v > 0 && v < 5000 ? '<0,01' : (v / 1e6).toFixed(2).replace('.', ','); };
     var pc = function (v, t) { return t ? (v / t * 100 < 0.5 && v > 0 ? '<1' : Math.round(v / t * 100)) + '%' : '—'; };
-    var got = gotOf(k), gd = got ? dd(got) + ' ' + esc(got.slice(11, 16)) : '';
+    var got = gotOf(k);
     var list = function (title, R) {
       if (!R || !R.rows || !R.rows.length) return '';
       var rows = R.rows.slice().sort(function (a, b) { return b[2] - a[2]; }), mx = rows[0][2] || 1, t = R.tot ? R.tot[1] : rows.reduce(function (a, r) { return a + r[2]; }, 0);
@@ -1187,10 +1187,9 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   var KO = null, KOW = null;   // 11.11.2026, Т. В.: «доступны только мне и брату» — данные КО больше не встроены в страницу, их отдаёт бот (op 'sec')
   // ---------- 11.11.2026: закрытые разделы (владелец и брат). Как «Транспорт»: личный вход → скрипт бота проверяет владельца (вход «owner» + «Да, это я»
   //   в Telegram) или список «Пустить» владельца (sec_acl) и отдаёт st/sec_<часть>.bin (ключ владельца). Без личного входа — ничего не видно.
-  var SEC_OWNER = 'REDACTED_HEX_1', SEC = {}, SECR = {};
+  var SEC = {}, SECR = {};
   function secMe() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function secLogged() { var p = secMe(); return !!(p && p.st !== 'pending' && window.T14Acct && T14Acct.tok && T14Acct.tok()); }
-  function secFlag() { try { var f = JSON.parse(localStorage.getItem('t14.sec') || 'null'), p = secMe(); return !!(f && p && f.id === p.id); } catch (e) { return false; } }
   // 13.11.2026, Т. В.: «почему этот раздел не прогружен сразу, а загружается при открытии» — последний ответ бота хранится на устройстве
   //   (только у вошедшего лично, привязан к его id, 24 ч): раздел открывается сразу, свежие данные бот догружает фоном.
   var SEC_TTL = 7 * 24 * 3600e3;   // показ — из сохранённого до 7 дней; свежее бот догружает фоном (здесь и на любой странице — acct.js secWarm)

@@ -59,7 +59,7 @@ ws['A1'] = 'Фабрика — камеры: таблица для загруз�
 ws['A1'].font = f_title
 ws['A2'] = ('Жёлтые столбцы — паспорт камеры: модель, коммутатор и порт, регистратор и канал — заполните. '
             'Белые — как сейчас на сайте, можно поправить. Серые сайт заполняет сам и при загрузке не читает. '
-            'Пустая ячейка — «не менять», дефис «-» — стереть. Новые камеры — в зелёные строки внизу, без ID, с координатами. '
+            'Пустая ячейка — «не менять», дефис «-» — стереть. Сотрудник5 камеры — в зелёные строки внизу, без ID, с координатами. '
             'Загрузка: сайт → кнопка со стрелкой → «Загрузить таблицу камер». Подробно — лист «Как заполнять».')
 ws['A2'].font = f_leg
 ws['A2'].alignment = Alignment(wrap_text=True, vertical='top')
@@ -91,7 +91,7 @@ for row in rows[1:]:
         if k in NUMFMT and isinstance(v, (int, float)): c.number_format = NUMFMT[k]
         if k in ('id', 'num', 'ip'): c.number_format = '@'
 first_new = r + 1
-for i in range(25):
+for _ in range(25):
     r += 1
     for j, k in enumerate(keys, start=1):
         c = ws.cell(row=r, column=j)
@@ -134,7 +134,7 @@ for a, b in [('Столбец или правило', 'Как заполнять
 es = wb.create_sheet('Пример новой камеры')
 es['A1'] = 'Пример строки новой камеры'; es['A1'].font = f_title
 es['A2'] = 'Так выглядит заполненная строка на листе «Камеры». Этот лист сайт не читает — пример не загрузится.'; es['A2'].font = f_leg
-ex = {'name': 'Ворота склада, въезд', 'ip': '10.0.0.12', 'model': 'HiWatch DS-I200(C)', 'port': 'SW-3, порт 4', 'chan': 'NVR-2, канал 5',
+ex = {'name': 'Ворота склада, въезд', 'ip': '10.0.0.13', 'model': 'HiWatch DS-I200(C)', 'port': 'SW-3, порт 4', 'chan': 'NVR-2, канал 5',
       'hr': 3.5, 'az': 180, 'tilt': 20, 'lens': 2.8, 'fov': None, 'range': 20, 'X': None, 'Y': None, 'hidden': 'нет', 'note': 'смонтирована в 2026 г.'}
 # a real spot by the warehouse: the first camera on «Склад готовой продукции №1», 4 m to the south
 sk = next((rw for rw in rows[1:] if 'Склад готовой' in str(rw[keys.index('bld')])), rows[1])

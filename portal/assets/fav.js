@@ -101,5 +101,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
   window.addEventListener('hashchange', soon);
   window.addEventListener('storage', function (e) { if (e.key === KEY) { paint(); if (host) render(host); home(); } });
+  // 15.11.2026: «Назад» из кэша страниц (bfcache) — звёзды и «Сохранённое» на главной по текущему списку
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { paint(); if (host) render(host); home(); } });
   window.T14Fav = { render: render, list: load, toggle: toggle, home: home };
 })();

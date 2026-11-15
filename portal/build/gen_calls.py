@@ -37,7 +37,7 @@ P = {}          # key(name) -> person
 
 def add(p, dept, **kw):
     n = (p.get('name') or '').strip()
-    if not n or n.startswith('—'): return
+    if not n or n.startswith('—'): return None
     k = key(n); q = P.get(k)
     if not q:
         q = P[k] = {'n': n, 'r': p.get('role') or '', 'd': dept, 'e': [], 'p': [], 'x': ''}
@@ -97,6 +97,7 @@ def fleet_of(name, car):
         if dig and re.sub(r'\D', '', f.get('plate') or '')[:3] == dig[0]: return f
     for f in FLEET:
         if sur and sur in key(f.get('name')): return f
+    return None
 def car_full(name, car):
     f = fleet_of(name, car); m = re.sub(r'\s*\b\d{3}\b', '', car or '').strip()
     return (m + ' · ' + f['plate']) if f and f.get('plate') else (car or '')

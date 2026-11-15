@@ -250,7 +250,6 @@ def dates_in(t, d0):
         except ValueError: continue
         if d0 - datetime.timedelta(days=1) <= d <= d0 + datetime.timedelta(days=120): out.append((d, m.start(), m.end(), 'date'))
     for m in DATE_W.finditer(t):
-        pre = (m.group('pre') or '').strip().lower()
         try: d = datetime.date(d0.year, MON[m.group('mon').lower()], int(m.group('d')))
         except ValueError: continue
         if d < d0 - datetime.timedelta(days=180): d = d.replace(year=d.year + 1)

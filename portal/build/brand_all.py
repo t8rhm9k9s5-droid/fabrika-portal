@@ -79,7 +79,7 @@ def titles():
             for v in o: walk(v)
     for jf in (LIB + '/library.json', LIB + '/econ.json', LIB + '/dogovory.json', '/home/claude/build/docs_reissue.json'):
         try: walk(json.loads(pathlib.Path(jf).read_text(encoding='utf-8')))
-        except Exception: pass
+        except Exception: pass   # намеренно: нет или битый один список — названия берутся из остальных
     return T
 
 
@@ -114,7 +114,7 @@ def media():
                 im.convert('RGB').save(MEDIA + 'bg_a4.jpg', quality=85)   # фон листа (детали мебели в левом нижнем углу)
 
 
-# REDACTED_B64_9 PDF
+# REDACTED_B64_8 PDF
 def brand_pdf(src, dst, title, ent, external):
     import pymupdf
     S = pymupdf.open(src)
@@ -173,12 +173,12 @@ def brand_pdf(src, dst, title, ent, external):
     meta.update(title=title, author='ГК «Фабрикант»', keywords=MARK, creator='Фабрика · фирменный стиль', producer='brand_all.py')
     D.set_metadata(meta)
     try: D.subset_fonts()
-    except Exception: pass
+    except Exception: pass   # намеренно: шрифты не урезались — PDF сохраняется с полными (только больше)
     D.save(dst, garbage=3, deflate=True)
     return n
 
 
-# REDACTED_B64_9 Word
+# REDACTED_B64_8 Word
 def brand_docx(src, dst, title, ent):
     from docx import Document
     from docx.shared import Mm, Pt, RGBColor
@@ -208,7 +208,7 @@ def brand_docx(src, dst, title, ent):
             set_fonts(rpd)
     for st in ('Normal',):
         try: d.styles[st].font.name = FONT
-        except KeyError: pass
+        except KeyError: pass   # намеренно: в документе нет такого стиля — оставляем как есть
 
     def clear(part):
         for ch in list(part._element): part._element.remove(ch)
@@ -239,7 +239,7 @@ def brand_docx(src, dst, title, ent):
                 fc = OxmlElement('w:fldChar'); fc.set(qn('w:fldCharType'), kind); r._r.append(fc)
 
     strip = MEDIA + 'strip_%s.jpg' % ent[0]
-    sw, sh_ = Image.open(strip).size
+    Image.open(strip).close()   # полоса читается (битая — ошибка сразу); размер не нужен
     short = title if len(title) <= 70 else title[:68].rstrip() + '…'
     for k, sec in enumerate(d.sections):
         if k > 0:
@@ -283,7 +283,7 @@ def brand_docx(src, dst, title, ent):
     d.save(dst)
 
 
-# REDACTED_B64_9 Excel (LibreOffice UNO)
+# REDACTED_B64_8 Excel (LibreOffice UNO)
 class LO:
     def __init__(self):
         self.prof = tempfile.mkdtemp(prefix='lo_brand_')
@@ -311,7 +311,7 @@ class LO:
 
     def close(self):
         try: self.desk.terminate()
-        except Exception: pass
+        except Exception: pass   # намеренно: LibreOffice уже закрыт
         try: self.proc.wait(10)
         except Exception: self.proc.kill()
         shutil.rmtree(self.prof, ignore_errors=True)
@@ -340,13 +340,13 @@ def brand_sheet(lo, src, dst, title, ent):
             try:
                 ctrl.setActiveSheet(sh)
                 if ctrl.hasFrozenPanes(): frz = (ctrl.getSplitColumn(), ctrl.getSplitRow())
-            except Exception: pass
+            except Exception: pass   # намеренно: закрепления нет или оно недоступно — лист без него
             sh.Rows.insertByIndex(0, 4)
             rows = sh.Rows
             for i, hgt in enumerate((1250, 720, 560, 260)):        # 1/100 мм
                 rr = rows.getByIndex(i); rr.Height = hgt; rr.IsVisible = True
                 try: rr.OptimalHeight = False
-                except Exception: pass
+                except Exception: pass   # намеренно: у строки нет свойства — высота уже задана выше
             band = sh.getCellRangeByPosition(0, 0, last, 2)
             band.CellBackColor = 0xF2F2F2
             band.CharFontName = 'ALS Ekibastuz'
@@ -366,17 +366,17 @@ def brand_sheet(lo, src, dst, title, ent):
             shp.setSize(Size(4000, int(4000 * 321 / 1556)))
             shp.setPosition(Point(250, 200))
             try: shp.Anchor = sh.getCellByPosition(0, 0)
-            except Exception: pass
+            except Exception: pass   # намеренно: привязка к ячейке не поддерживается — плашка остаётся на своём месте
             try:                                                   # область печати сдвинулась вниз — включаем в неё плашку
                 pa = list(sh.getPrintAreas())
                 if pa:
                     for a in pa:
                         if a.StartRow <= 4: a.StartRow = 0
                     sh.setPrintAreas(tuple(pa))
-            except Exception: pass
+            except Exception: pass   # намеренно: у листа нет области печати — печатается весь лист
             if frz and (frz[0] or frz[1]):
                 try: ctrl.freezeAtPosition(frz[0], frz[1] + 4)
-                except Exception: pass
+                except Exception: pass   # намеренно: закрепление не вернулось — на содержимое не влияет
             # печать: подвал «ГК «Фабрикант» · название · Лист N из M»
             try:
                 ps = doc.StyleFamilies.getByName('PageStyles').getByName(sh.PageStyle)
@@ -392,7 +392,7 @@ def brand_sheet(lo, src, dst, title, ent):
             except Exception as e: log('  подвал печати не задан:', name, e)
             done += 1
         try: ctrl.setActiveSheet(doc.Sheets.getByIndex(0))
-        except Exception: pass
+        except Exception: pass   # намеренно: первый лист не выбран — на содержимое не влияет
         dp = doc.DocumentProperties; dp.Keywords = (MARK,); dp.Title = title; dp.Author = 'ГК «Фабрикант»'
         doc.storeToURL(lo.uno.systemPathToFileUrl(dst), (lo.P('FilterName', FILTER[os.path.splitext(src)[1].lower()]),))
         return done
@@ -418,7 +418,7 @@ def has_mark(p):
     except Exception: return False
 
 
-# REDACTED_B64_9 main
+# REDACTED_B64_8 main
 def plan():
     T = titles()
     todo = []
@@ -477,7 +477,7 @@ def main():
         except Exception as e:
             log('  ✗', rel, e); traceback.print_exc(limit=2)
             try: os.path.exists(p + '.brand' + x['ext']) and os.remove(p + '.brand' + x['ext'])
-            except Exception: pass
+            except Exception: pass   # намеренно: недоделанной копии уже нет — исходник не трогается
         pathlib.Path(LOG).write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding='utf-8')
     if lo: lo.close()
 

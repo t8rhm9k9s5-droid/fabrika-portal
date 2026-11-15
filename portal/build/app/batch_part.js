@@ -73,7 +73,7 @@
       gr.list.push(it); gr.nv += nv; gr.ni += ni; items.push(it);
     }
     const batches = [];
-    for (const [key, gr] of groups){
+    for (const [, gr] of groups){
       if (gr.list.length < 2) { gr.list.forEach(it => { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); }); continue; }   // one object: nothing to gain
       const mesh = gr.kind === 'mesh', NV = gr.nv;
       const m00 = gr.list[0].o.material, UV = m00.map ? new Float32Array(NV * 2) : null, LD = m00.isLineDashedMaterial ? new Float32Array(NV) : null;

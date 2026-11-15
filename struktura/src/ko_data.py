@@ -61,6 +61,7 @@ def _parse():
 def _section(root, sid):
     for s in root.find_all("section"):
         if s.attrs.get("id") == sid: return s
+    return None
 
 def _people(root):
     roles = _section(root, "roles"); groups, cur = [], None

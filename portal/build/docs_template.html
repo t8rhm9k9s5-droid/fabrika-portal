@@ -83,7 +83,7 @@ function setT(){img.style.transform=`translate(${x}px,${y}px) scale(${k})`}
 function fit(){const r=st.getBoundingClientRect(),w=img.naturalWidth||1,h=img.naturalHeight||1;k=Math.min(r.width/w,r.height/h);x=(r.width-w*k)/2;y=(r.height-h*k)/2;setT()}
 function zoom(f,cx,cy){const nk=Math.min(6,Math.max(.05,k*f));f=nk/k;x=cx-(cx-x)*f;y=cy-(cy-y)*f;k=nk;setT()}
 function open(i){const d=DOCS.items[i];document.getElementById('vT').innerHTML=`${esc(d.title)}<span class="vs">${esc(d.src)}</span>`;img.onload=fit;img.src=src(d.img);img.alt=d.title;
-  const dl=document.getElementById('vDl');dl.href=src(d.img);dl.setAttribute('download',String(d.img||'').split('/').pop());V.hidden=false;last=document.activeElement;document.getElementById('vX').focus()}
+  const dl=document.getElementById('vDl');dl.href=src(d.img);dl.setAttribute('download',String(d.img||'').split('/').pop());V.hidden=false;last=document.activeElement;document.getElementById('vX').focus();}
 function close(){V.hidden=true;img.removeAttribute('src');if(last)last.focus()}
 document.getElementById('vDl').addEventListener('click',e=>{
   if(!(window.claude&&typeof window.claude.use==='function')) return;      // a normal link works outside Claude
@@ -108,6 +108,6 @@ const up=e=>{P.delete(e.pointerId);if(P.size<2)pinch=null;if(!P.size)st.classLis
 st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
 window.addEventListener('resize',()=>{if(!V.hidden)fit()});
 render();
-const q=new URLSearchParams(location.search).get('open'); if(q){const i=DOCS.items.findIndex(d=>d.id===q); if(i>=0) open(i)}
+const q=new URLSearchParams(location.search).get('open'); if(q){const i=DOCS.items.findIndex(d=>d.id===q); if(i>=0) open(i);}
 })();
 </script>

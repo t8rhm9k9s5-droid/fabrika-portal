@@ -2,8 +2,20 @@
 битый пакет не держит очередь, копии и откат при обрыве установки и при сбое проверки импорта, та же проверка для пакетов по почте,
 drive_pack.py (копия упаковщика) пишет v2. Ключ — тестовый; drive_pack.py НЕ запускается (он читает настоящий ключ), импортируются
 только его чистые функции. Запуск: cd live && unshare -n python3 -W ignore test/test_audit_deploy.py → «ALL OK»."""
-import email, email.policy, io, json, os, signal, subprocess, sys, time, zipfile
+import email, email.policy, io, json, os, signal, subprocess, sys, zipfile
 from email.message import EmailMessage
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mock_home as MH
 ok = 0
@@ -39,7 +51,7 @@ def put(name, files=None, sig='v2', raw=None, signame=None):
     """пакет и подпись — в ~/.fabrika_live/inbox (как от mail_pkg)"""
     pb = raw if raw is not None else PK.pack(zbytes(files), KEY)
     s = PK.sig_v2(KEY, signame or name, pb) if sig == 'v2' else PK.sig_v1(KEY, pb) if sig == 'v1' else sig
-    open(os.path.join(INBOX, name), 'wb').write(pb); open(os.path.join(INBOX, name[:-4] + '.sig'), 'w').write(s)
+    _wr(pb, os.path.join(INBOX, name), 'wb'); _wr(s, os.path.join(INBOX, name[:-4] + '.sig'), 'w')
     return pb
 
 
@@ -47,10 +59,10 @@ def run():
     return DP.check(live.CFG, L, SITE, live.jload, live.jsave, lg, alert=al)
 
 
-def done(): return json.load(open(os.path.join(L, 'state', 'deploy.json'), encoding='utf-8'))['done']
+def done(): return json.loads(_rd(os.path.join(L, 'state', 'deploy.json'), encoding='utf-8'))['done']
 
 
-LIVE0 = open(os.path.join(C, 'live.py'), encoding='utf-8').read()
+LIVE0 = _rd(os.path.join(C, 'live.py'), encoding='utf-8')
 print('переход v1 → v2')
 put('fabrikant-update-20261030-0800.pkg', {'code/note_a.json': '{"a": 1}'}, sig='v1')
 st = run()
@@ -66,9 +78,9 @@ check('v1 больше не принимается' in done()['fabrikant-update-
 print('откат версии и повтор старого пакета')
 old = put('fabrikant-update-20261030-0830.pkg', {'code/note_a.json': '{"a": "старое"}'})
 run()
-check('не новее' in done()['fabrikant-update-20261030-0830.pkg'].get('err', '') and json.load(open(os.path.join(C, 'note_a.json'))) == {'a': 1},
+check('не новее' in done()['fabrikant-update-20261030-0830.pkg'].get('err', '') and json.loads(_rd(os.path.join(C, 'note_a.json'))) == {'a': 1},
       'пакет с меткой старше установленной — отказ (откат кода невозможен)')
-pb = open(os.path.join(INBOX, 'fabrikant-update-20261030-0900.pkg'), 'rb').read()
+pb = _rd(os.path.join(INBOX, 'fabrikant-update-20261030-0900.pkg'), 'rb')
 put('fabrikant-update-20261030-1100.pkg', raw=pb, sig=PK.sig_v2(KEY, 'fabrikant-update-20261030-0900.pkg', pb))
 run()
 check('подпись v2 не сошлась' in done()['fabrikant-update-20261030-1100.pkg'].get('err', ''), 'старый пакет под новым именем со старой подписью — отказ (подпись покрывает имя)')
@@ -77,8 +89,8 @@ put('fabrikant-update-20261030-1200.pkg', {'code/x.json': '{}'}, sig='v2:' + '00
 put('fabrikant-update-20261030-1201.pkg', raw=b'T14Z1' + os.urandom(80))
 put('fabrikant-update-20261030-1202.pkg', {'../evil.py': 'x'})
 put('fabrikant-update-20261030-1203.pkg', {'code/note_d.json': '{"d": 1}'})
-open(os.path.join(INBOX, 'fabrikant-update-20261030-1204.sig'), 'w').write('v2:' + 'ü' * 64)     # не-ASCII в подписи
-open(os.path.join(INBOX, 'fabrikant-update-20261030-1204.pkg'), 'wb').write(b'T14Z1')
+_wr('v2:' + 'ü' * 64, os.path.join(INBOX, 'fabrikant-update-20261030-1204.sig'), 'w')     # не-ASCII в подписи
+_wr(b'T14Z1', os.path.join(INBOX, 'fabrikant-update-20261030-1204.pkg'), 'wb')
 alerts.clear(); run(); D = done()
 check(all(D['fabrikant-update-20261030-12%02d.pkg' % i].get('err') for i in (0, 1, 2, 4)) and D['fabrikant-update-20261030-1203.pkg'].get('files') == 1,
       'чужая подпись, битый zip, путь «../», не-ASCII подпись — отмечены с ошибкой, следующий пакет поставлен (раньше: break — очередь стояла)')
@@ -86,13 +98,13 @@ check(len([a for a in alerts if a[0].startswith('deploy:')]) == 4, 'аудит P
 print('проверка импорта и откат')
 put('fabrikant-update-20261030-1300.pkg', {'code/live.py': 'def broken(:\n', 'code/note_e.json': '{"e": 1}'})
 alerts.clear(); run(); D = done()
-check('проверка импорта' in D['fabrikant-update-20261030-1300.pkg'].get('err', '') and open(os.path.join(C, 'live.py'), encoding='utf-8').read() == LIVE0
+check('проверка импорта' in D['fabrikant-update-20261030-1300.pkg'].get('err', '') and _rd(os.path.join(C, 'live.py'), encoding='utf-8') == LIVE0
       and not os.path.exists(os.path.join(C, 'note_e.json')), 'пакет со сломанным live.py — откат из копии: прежний live.py на месте, новый файл убран')
 check(alerts and 'не установлен' in alerts[0][1], 'владельцу — «пакет не установлен», робот на прежней версии')
 r = subprocess.run([sys.executable, '-W', 'ignore', '-c', 'import live; print("ok")'], cwd=C, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 check(r.stdout.strip() == 'ok', 'после отката робот запускается')
 bak = os.path.join(L, 'deploy_bak', 'fabrikant-update-20261030-1300.pkg')
-check(json.load(open(os.path.join(bak, 'manifest.json'), encoding='utf-8'))['state'] == 'откат' and os.path.exists(os.path.join(bak, 'f', 'code', 'live.py')),
+check(json.loads(_rd(os.path.join(bak, 'manifest.json'), encoding='utf-8'))['state'] == 'откат' and os.path.exists(os.path.join(bak, 'f', 'code', 'live.py')),
       'копия заменяемых файлов — в deploy_bak/<пакет>/, опись «откат»')
 print('обрыв установки')
 put('fabrikant-update-20261030-1400.pkg', {'code/note_a.json': '{"a": 2}', 'code/note_b.json': '{"b": 2}', 'code/note_f.json': '{"f": 2}'})
@@ -110,15 +122,15 @@ os.replace = rep
 DP.check(live.CFG, live.L, live.SITE, live.jload, live.jsave, lambda *a: None)
 '''
 r = subprocess.run([sys.executable, '-W', 'ignore', '-c', kill, os.path.join(L, 'py'), C])
-half = [json.load(open(os.path.join(C, n))) for n in ('note_a.json', 'note_b.json')]
+half = [json.loads(_rd(os.path.join(C, n))) for n in ('note_a.json', 'note_b.json')]
 check(r.returncode == -signal.SIGKILL and half != [{'a': 1}, {'b': 1}], 'процесс убит посреди установки — половина файлов уже новые (пакет целиком не атомарен)')
 st = live.jload('deploy.json', {})
 names = DP.recover(L, st, lg)
-check(names == ['fabrikant-update-20261030-1400.pkg'] and json.load(open(os.path.join(C, 'note_a.json'))) == {'a': 1}
-      and json.load(open(os.path.join(C, 'note_b.json'))) == {'b': 1} and not os.path.exists(os.path.join(C, 'note_f.json')),
+check(names == ['fabrikant-update-20261030-1400.pkg'] and json.loads(_rd(os.path.join(C, 'note_a.json'))) == {'a': 1}
+      and json.loads(_rd(os.path.join(C, 'note_b.json'))) == {'b': 1} and not os.path.exists(os.path.join(C, 'note_f.json')),
       'следующий прогон: опись «ставится» → откат из копии (прежние файлы, новых нет)')
 run(); D = done()
-check(D['fabrikant-update-20261030-1400.pkg'].get('files') == 3 and json.load(open(os.path.join(C, 'note_f.json'))) == {'f': 2}, 'и пакет ставится заново целиком')
+check(D['fabrikant-update-20261030-1400.pkg'].get('files') == 3 and json.loads(_rd(os.path.join(C, 'note_f.json'))) == {'f': 2}, 'и пакет ставится заново целиком')
 print('предел времени участка посреди установки')
 class LaneTimeout(BaseException): pass
 put('fabrikant-update-20261030-1500.pkg', {'code/note_a.json': '{"a": 3}', 'code/note_g.json': '{}'})
@@ -132,10 +144,10 @@ DP.os.replace = rep2
 try: run(); raised = False
 except LaneTimeout: raised = True
 DP.os.replace = real_rep
-st = json.load(open(os.path.join(L, 'state', 'deploy.json')))
-check(raised and json.load(open(os.path.join(C, 'note_a.json'))) == {'a': 2} and not os.path.exists(os.path.join(C, 'note_g.json')) and st.get('installing'),
+st = json.loads(_rd(os.path.join(L, 'state', 'deploy.json')))
+check(raised and json.loads(_rd(os.path.join(C, 'note_a.json'))) == {'a': 2} and not os.path.exists(os.path.join(C, 'note_g.json')) and st.get('installing'),
       'сигнал предела времени посреди установки — откат сразу (в том же процессе), метка «ставится» в deploy.json')
-run(); st = json.load(open(os.path.join(L, 'state', 'deploy.json')))
+run(); st = json.loads(_rd(os.path.join(L, 'state', 'deploy.json')))
 check(st['done']['fabrikant-update-20261030-1500.pkg'].get('files') == 2 and not st.get('installing'), 'следующий прогон: попытка засчитана, пакет поставлен')
 print('временный сбой скачивания — до 3 прогонов, потом ошибка и дальше')
 put('fabrikant-update-20261030-1600.pkg', {'code/note_h.json': '{}'})
@@ -174,7 +186,7 @@ class FakeIMAP:
         nm2 = 'fabrikant-update-20261030-1800.pkg'; pb2 = PK.pack(zbytes({'code/note_n.json': '{}'}), KEY)
         return 'OK', [(b'11 (BODY[] {1}', letter(nm2, pb2, PK.sig_v2(KEY, nm2, pb2)).as_bytes())]
     def logout(self): pass
-open(os.path.join(L, 'itm_app_password'), 'w').write('p')
+_wr('p', os.path.join(L, 'itm_app_password'), 'w')
 MKP.imaplib.IMAP4_SSL = FakeIMAP
 r = MKP.run(L, live.CFG, lg, jl, js)
 check(r['new'] == 1 and store['mail_pkg.json']['seen'] == ['10', '11'], 'IMAP: кривое письмо пропущено и запомнено, следующий пакет принят, seen сохранён')

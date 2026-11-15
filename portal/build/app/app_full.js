@@ -47,7 +47,7 @@ let CAMS = [];
 const lay = {};
 
 /* ===================== SCENE (from the 3D page) ===================== */
-const canvas=document.getElementById('c'), stage=document.getElementById('app');
+const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:(window.T14Perf ? T14Perf.p().aa : true),alpha:false,powerPreference:'high-performance'});   // T14Perf: без сглаживания на «Низком»
 renderer.setPixelRatio(Math.min(matchMedia('(pointer: coarse)').matches?(/Android/i.test(navigator.userAgent)?1.75:(/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?3:1.5):2,window.devicePixelRatio||1));   // phones: less GPU memory; Android (APK lag, 23.10.2026): 1.25; iPhone/iPad: full sharpness (23.10.2026)
 const scene=new THREE.Scene();
@@ -334,13 +334,13 @@ for(let i=0;i<T.ny;i++)for(let j=0;j<T.nx;j++){
   pos[k*3]=x-CX; pos[k*3+2]=-(y-CY);
   let c;
   if(!inFence(x,y)) c=cOut.clone();
-  else{let gd=1e9;for(const g of S.grass){const d=Math.hypot(g[0]-x,g[1]-y);if(d<gd)gd=d} c=gd<10?cGrass.clone():cAsph.clone()}
+  else{let gd=1e9;for(const g of S.grass){const d=Math.hypot(g[0]-x,g[1]-y);if(d<gd)gd=d;} c=gd<10?cGrass.clone():cAsph.clone();}
   c.offsetHSL(0,0,(z-105.6)*0.05);
   colS.set([c.r,c.g,c.b],k*3);
   const hc=hypColor((z-T.range[0])/(T.range[1]-T.range[0])); colH.set([hc.r,hc.g,hc.b],k*3);
 }
-const idx=[];for(let i=0;i<T.ny-1;i++)for(let j=0;j<T.nx-1;j++){const a=i*T.nx+j,b=a+1,c=a+T.nx,d=c+1;idx.push(a,c,b,b,c,d)}
-tg.setIndex(idx); tg.setAttribute('position',new THREE.BufferAttribute(pos,3));{const uv=new Float32Array(nV*2);for(let i=0;i<T.ny;i++)for(let j=0;j<T.nx;j++){const k=i*T.nx+j;uv[k*2]=(T.x0+j*T.step)/7;uv[k*2+1]=(T.y0+i*T.step)/7}tg.setAttribute('uv',new THREE.BufferAttribute(uv,2))} tg.setAttribute('color',new THREE.BufferAttribute(colS.slice(),3));
+const idx=[];for(let i=0;i<T.ny-1;i++)for(let j=0;j<T.nx-1;j++){const a=i*T.nx+j,b=a+1,c=a+T.nx,d=c+1;idx.push(a,c,b,b,c,d);}
+tg.setIndex(idx); tg.setAttribute('position',new THREE.BufferAttribute(pos,3));{const uv=new Float32Array(nV*2);for(let i=0;i<T.ny;i++)for(let j=0;j<T.nx;j++){const k=i*T.nx+j;uv[k*2]=(T.x0+j*T.step)/7;uv[k*2+1]=(T.y0+i*T.step)/7;}tg.setAttribute('uv',new THREE.BufferAttribute(uv,2));} tg.setAttribute('color',new THREE.BufferAttribute(colS.slice(),3));
 function grainTex(){const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#ececea';x.fillRect(0,0,512,512);
   let s=7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647};
   for(let i=0;i<9;i++){const gx=rnd()*512,gy=rnd()*512,r=40+rnd()*120,g=x.createRadialGradient(gx,gy,0,gx,gy,r);const v=rnd()<.5?200:248;g.addColorStop(0,`rgba(${v},${v},${v-4},.35)`);g.addColorStop(1,'rgba(236,236,234,0)');x.fillStyle=g;x.fillRect(0,0,512,512)}
@@ -372,7 +372,7 @@ function buildBuildings(){
   gB.clear(); gBnew.clear(); gStage2.clear(); gTP.clear(); gProj.clear(); gGhost.clear(); gPlan.clear();
   for(const b of S.buildings){
     if(b.hidden||b.kind==='proj'){continue}
-    if(b.kind==='dg'){if(typeof buildDG==='function')buildDG(b);continue}
+    if(b.kind==='dg'){buildDG(b);continue}
     if(b.kind==='canopy'){buildCanopy(b);continue}
     if((b.kind==='mono'||b.kind==='stage2'||b.kind==='gable')&&b.roof){buildMonoStd(b);if(b.det)detOverlay(b);continue}
     if(b.det&&!b.det.overlay){buildDet(b);continue}
@@ -472,7 +472,7 @@ function buildCanopy(b){
   const geo=new THREE.ExtrudeGeometry(sh,{depth:.25,bevelEnabled:false}); geo.rotateX(-Math.PI/2);
   const slab=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xa9b4bb,transparent:true,opacity:.8})); slab.position.y=gy(b.base)+top-.25;
   slab.userData={kind:'b',b}; grp.add(slab); pickables.push(slab); bMeshes[b.k]=slab;
-  for(const [x,y] of b.poly){const post=new THREE.Mesh(new THREE.BoxGeometry(.2,top,.2),new THREE.MeshLambertMaterial({color:0x7d878d}));post.position.copy(V(x,y,gy(b.base)+top/2));post.userData={kind:'b',b};grp.add(post);pickables.push(post)}
+  for(const [x,y] of b.poly){const post=new THREE.Mesh(new THREE.BoxGeometry(.2,top,.2),new THREE.MeshLambertMaterial({color:0x7d878d}));post.position.copy(V(x,y,gy(b.base)+top/2));post.userData={kind:'b',b};grp.add(post);pickables.push(post);}
   gB.add(grp);
 }
 function buildPlanOutline(b){
@@ -485,24 +485,11 @@ function buildPlanOutline(b){
   const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints(hp),new THREE.LineDashedMaterial({color:0xd8402f,dashSize:1.6,gapSize:.7}));hl.computeLineDistances();gPlan.add(hl);
 }
 
-function buildMonopitch(b){
-  // walls rise to b.roof.low on the axis-A side (poly[0]-poly[1]) and to b.roof.high on the opposite side
-  const hs=b.poly.map((p,i)=>b.roof.lowSide.includes(i)?b.roof.low:b.roof.high);
-  const B=b.poly.map(([x,y])=>V(x,y,gy(b.base))), Tp=b.poly.map(([x,y],i)=>V(x,y,gy(b.base)+hs[i]));
-  const tri=[];
-  for(let i=0;i<4;i++){const j=(i+1)%4;tri.push(B[i],B[j],Tp[j],B[i],Tp[j],Tp[i])}
-  tri.push(Tp[0],Tp[1],Tp[2],Tp[0],Tp[2],Tp[3]);
-  const g=new THREE.BufferGeometry().setFromPoints(tri); g.computeVertexNormals();
-  const mat=new THREE.MeshLambertMaterial({color:0x8f6bd0,transparent:true,opacity:.62,side:THREE.DoubleSide});
-  const m=new THREE.Mesh(g,mat); m.userData={kind:'b',b};
-  const e=new THREE.LineSegments(new THREE.EdgesGeometry(g,20),new THREE.LineBasicMaterial({color:0x5b3fa0}));m.add(e);
-  gProj.add(m); pickables.push(m); bMeshes[b.k]=m;
-}
 
 // ---------- fence & gate ----------
 const gF=G('fence');
 function buildFence(){
-  gF.clear(); const P=S.fence, H=2.0, verts=[], top=[]; if(typeof rvFence==='function')rvFence();
+  gF.clear(); const P=S.fence, H=2.0, verts=[], top=[]; rvFence();
   for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];
     const isGate=(Math.hypot(a[0]-S.gate.a[0],a[1]-S.gate.a[1])<0.6&&Math.hypot(b[0]-S.gate.b[0],b[1]-S.gate.b[1])<0.6);
     if(isGate||(S.fence_type&&S.fence_type[i])||(S.fence_open||[]).includes(i)||(S.gates2||[]).some(g=>Math.hypot(a[0]-g.a[0],a[1]-g.a[1])<0.6&&Math.hypot(b[0]-g.b[0],b[1]-g.b[1])<0.6)) continue;
@@ -523,12 +510,12 @@ function buildFence(){
     const c2=Lk.col2||0x9aa6ad; gbar(Lg,.06,.07,mx,my,ga+0.1+Lk.h2,c2); gbar(Lg,.05,.07,mx,my,ga+0.1+Lk.h1+.03,c2);
     for(let s=.12;s<Lg-.05;s+=.24) gbar(.03,Lk.h2-Lk.h1,.03,a[0]+ux*s,a[1]+uy*s,ga+0.1+(Lk.h1+Lk.h2)/2,c2);
     gbar(Lg,.12,.12,mx,my,ga+0.06,0x5b646a);
-    if(Lk.portal){const Pp=Lk.portal,pc=Pp.col||0x6b4a39; for(const q of [a,b]){const gq=gy(zat(q[0],q[1])); gbar(.3,Pp.h,.3,q[0],q[1],gq+Pp.h/2,pc)} gbar(Lg+.5,.35,.3,mx,my,ga+Pp.h-.17,pc)}
+    if(Lk.portal){const Pp=Lk.portal,pc=Pp.col||0x6b4a39; for(const q of [a,b]){const gq=gy(zat(q[0],q[1])); gbar(.3,Pp.h,.3,q[0],q[1],gq+Pp.h/2,pc);} gbar(Lg+.5,.35,.3,mx,my,ga+Pp.h-.17,pc);}
   }
   for(const sg of (S.gates2||[])){const a2=sg.a,b2=sg.b,L2=Math.hypot(b2[0]-a2[0],b2[1]-a2[1]),g2=gy(zat((a2[0]+b2[0])/2,(a2[1]+b2[1])/2)),ang=Math.atan2(b2[1]-a2[1],b2[0]-a2[0]);
     const pm=new THREE.Mesh(new THREE.BoxGeometry(L2,sg.kind==='swing'?2.2:1.7,0.08),new THREE.MeshLambertMaterial({color:sg.col||(sg.kind==='swing'?0xb8452e:0x6f7c85)}));pm.position.copy(V((a2[0]+b2[0])/2,(a2[1]+b2[1])/2,g2+(sg.kind==='swing'?1.15:0.95)));pm.rotation.y=ang;pm.userData={kind:'gate2',g:sg};gF.add(pm);pickables.push(pm);
     if(sg.kind!=='swing'){const rl=new THREE.Mesh(new THREE.BoxGeometry(L2+1.2,0.08,0.14),new THREE.MeshLambertMaterial({color:0x3d474d}));rl.position.copy(V((a2[0]+b2[0])/2,(a2[1]+b2[1])/2,g2+0.05));rl.rotation.y=ang;gF.add(rl);}
-    for(const q of [a2,b2]){const po=new THREE.Mesh(new THREE.BoxGeometry(0.16,2.1,0.16),new THREE.MeshLambertMaterial({color:0x3d474d}));po.position.copy(V(q[0],q[1],gy(zat(q[0],q[1]))+1.05));gF.add(po)}}
+    for(const q of [a2,b2]){const po=new THREE.Mesh(new THREE.BoxGeometry(0.16,2.1,0.16),new THREE.MeshLambertMaterial({color:0x3d474d}));po.position.copy(V(q[0],q[1],gy(zat(q[0],q[1]))+1.05));gF.add(po);}}
 }
 
 
@@ -691,7 +678,7 @@ function buildDet(b){
   for (const m of grpMeshes){ if (m === root) continue; m.userData = {kind:'b', b}; root.add(m); }
   if (roofMesh){ roofMesh.userData = {kind:'b', b}; root.add(roofMesh); }
   // outline of the walls and the roof edge
-  const ln = [], c0 = E.centroid(P);
+  const ln = [];
   for (let i = 0; i < n; i++){ const a = P[i], c = P[(i + 1) % n]; ln.push(V(a[0], a[1], g0), V(c[0], c[1], g0), V(a[0], a[1], g0 + eave), V(c[0], c[1], g0 + eave), V(a[0], a[1], g0), V(a[0], a[1], g0 + (pitched ? eave : H))); }
   const el = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ln), new THREE.LineBasicMaterial({color:b.edited ? 0xb06a00 : 0x46535a, transparent:true, opacity:.55})); root.add(el);
   detOpenings(b, root, g0); detExtras(b, root, g0); detBands(b, root, g0, P.map(()=>eave));
@@ -713,7 +700,7 @@ function detOpenings(b, root, g0){
       for (let j = 1; j < k; j++) box(.06, h, .09, s0 + w * j / k, o.z0 + h / 2, .06, 0xe3e6e8);
       box(w + .2, .06, .2, mid, o.z0 - .03, .1, 0xc9ccce);
     } else if (o.t === 'gate'){
-      box(w + .2, h + .1, .08, mid, o.z0 + h / 2, .04, 0x6f777c); const g = box(w, h, .1, mid, o.z0 + h / 2, .06, o.c || 0x9aa3a8);
+      box(w + .2, h + .1, .08, mid, o.z0 + h / 2, .04, 0x6f777c); box(w, h, .1, mid, o.z0 + h / 2, .06, o.c || 0x9aa3a8);
       if (o.swing){ box(.05, h, .13, mid, o.z0 + h / 2, .075, 0x4f585d); for (const q of [-.25, .25]) box(.03, h * .9, .12, mid + q * w, o.z0 + h / 2, .07, 0x7d868d); box(w, .04, .12, mid, o.z0 + h * .5, .07, 0x7d868d); }
       else for (let z = o.z0 + .5; z < o.z1 - .1; z += .5) box(w, .03, .12, mid, z, .07, 0x7d868d);
     } else if (o.t === 'fan'){   // window fan: a frame with a round fan in it
@@ -798,7 +785,7 @@ function detOverlay(b){
 const gProjN = G('projn');
 function buildProjCanopy(){
   gProjN.clear(); const C = S.projcanopy; if (!C) return;
-  const P = C.v['5'], b0 = gy(C.base), A = dAcc(), zt = b0 + C.top, ze = b0 + C.edge['5'];
+  const P = C.v['5'], b0 = gy(C.base), zt = b0 + C.top, ze = b0 + C.edge['5'];
   const q = [V(P[0][0], P[0][1], 0), V(P[1][0], P[1][1], 0), V(P[2][0], P[2][1], 0), V(P[3][0], P[3][1], 0)]; q[0].y = q[1].y = zt; q[2].y = q[3].y = ze;
   const pos = []; for (const k of [0, 1, 2, 0, 2, 3]) pos.push(q[k].x, q[k].y, q[k].z);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
@@ -1014,11 +1001,11 @@ function buildWorkshop(){
   // windows ОК1: 33,0 × 2,0 m, axes 3–9, sill +1,0
   const okInfo={sys:'окна',title:'Оконный блок ОК1',rows:[['Размер','33,0 × 2,0 м, оси 3–9 по оси А'],['Низ / верх','+1,000 / +3,000'],['Переплёты','алюминиевые, однокамерный стеклопакет, RAL 9003']],text:'Открывающиеся створки для проветривания — по схеме ОК1.',src:SRC.ar};
   wbox(g.ws_walls,11,44,-.22,-.18,1.0,3.0,0x9fc3d6,okInfo,.45);
-  let x=11;const mod=[1.1,1.0,1.3,1.0,1.1];for(let r=0;r<6;r++)for(const w of mod){wbox(g.ws_walls,x-.03,x+.03,-.24,-.16,1.0,3.0,0xe9ecee);x+=w}
+  let x=11;const mod=[1.1,1.0,1.3,1.0,1.1];for(let r=0;r<6;r++)for(const w of mod){wbox(g.ws_walls,x-.03,x+.03,-.24,-.16,1.0,3.0,0xe9ecee);x+=w;}
   wbox(g.ws_walls,43.97,44.03,-.24,-.16,1.0,3.0,0xe9ecee);
   [1.0,2.07,3.0].forEach(z=>wbox(g.ws_walls,11,44,-.24,-.16,z-.03,z+.03,0xe9ecee));
   // gate В-1 and door Дв-4
-  const gate=wbox(g.ws_walls,6.75,9.75,-.22,-.17,0,3.0,0xd9dcdf,{sys:'ворота',title:'Ворота В-1',rows:[['Размер','3,0 × 3,0 м'],['Тип','подъёмные секционные, сэндвич'],['Место','оси 2–3 по оси А, 1,25 м от оси 2']],text:'Для завоза сырья и вывоза продукции. Над воротами внутри две тепловые завесы КЭВ-9П3011Е.',src:SRC.ar});
+  wbox(g.ws_walls,6.75,9.75,-.22,-.17,0,3.0,0xd9dcdf,{sys:'ворота',title:'Ворота В-1',rows:[['Размер','3,0 × 3,0 м'],['Тип','подъёмные секционные, сэндвич'],['Место','оси 2–3 по оси А, 1,25 м от оси 2']],text:'Для завоза сырья и вывоза продукции. Над воротами внутри две тепловые завесы КЭВ-9П3011Е.',src:SRC.ar});
   wlines(g.ws_walls,[0.5,1.0,1.5,2.0,2.5].map(z=>[P(6.75,-.23,z),P(9.75,-.23,z)]),0x7d868d);
   wbox(g.ws_walls,44.735,45.745,-.22,-.17,0,2.1,0x8a949c,{sys:'двери',title:'Дверь Дв-4 в тамбур',rows:[['Размер','1010 × 2100 мм'],['Марка','ДН 21-10 Г ПрБ, ГОСТ 475-2016'],['Место','оси 9–10 по оси А']],text:'Основной вход для работников. За дверью тамбур 2,67 м² и тепловая завеса КЭВ-6П2211Е.',src:SRC.ar});
   const grI=(t,z)=>({sys:'вентиляция',title:t,rows:[['Решётка','АРН-С 450×300'],['Отметка',z],['Система','естественная приточно-вытяжная, ПЕ1 / ВЕ1']],text:'12 приточных решёток над ленточным окном и 12 вытяжных под карнизом между осями 3 и 9, шаг попеременно 2,30 и 3,20 м (75/23-ИОС5.4, л. 2–3).',src:'проект 75/23-ИОС5.4'});
@@ -1113,7 +1100,7 @@ function buildWorkshop(){
   [9.6,6.8,4.04,1.18].forEach(t=>wbox(g.ws_el,t===9.6?6.6:.3,t===9.6?6.7:.4,t-.025,t+.025,3.5,5.25,0x8fa3b0,trI));
   const lI={sys:'электрика',title:'Светильник ССD 430-1 55 ICEBERG',rows:[['Мощность','55 Вт'],['Световой поток','6600 лм, 4000 К'],['Защита','IP65'],['Освещённость','400 лк']],text:'68 светильников в четыре ряда. Управление дистанционное со щита ШУО, кроме тамбура и санблока. Светильники аварийного освещения с маркировкой «А».',src:SRC.e};
   const lmat=new THREE.MeshBasicMaterial({color:0xfff3c4});
-  [[9.6,7.5,47.9],[6.8,1.6,47.9],[4.04,1.6,47.9],[1.18,1.6,47.9]].forEach(([t,a,b])=>{for(let k=0;k<17;k++){const s=a+(b-a)*k/16;const m=wbox(g.ws_el,s-.75,s+.75,t+.12,t+.24,3.3,3.38,lmat,lI)}});
+  [[9.6,7.5,47.9],[6.8,1.6,47.9],[4.04,1.6,47.9],[1.18,1.6,47.9]].forEach(([t,a,b])=>{for(let k=0;k<17;k++){const s=a+(b-a)*k/16;wbox(g.ws_el,s-.75,s+.75,t+.12,t+.24,3.3,3.38,lmat,lI)}});
   [[.85,10.6],[2.05,10.6],[3.95,10.6],[5.2,10.6],[1.5,8.9],[3.0,8.9],[4.5,8.9],[45.3,.9]].forEach(([s,t])=>wcyl(g.ws_el,s,t,2.92,2.98,.15,0xfff3c4,{sys:'электрика',title:'Светильник ДПО 4004, 18 Вт, IP54',src:SRC.e}));
   [[8.25,.12,3.25],[45.24,.12,2.3]].forEach(([s,t,z])=>wbox(g.ws_el,s-.17,s+.17,t,t+.06,z,z+.14,0x2fbf4f,{sys:'электрика',title:'Указатель «Выход»',text:'Светильник аварийного освещения ССА с наклейкой «Выход».',src:SRC.e}));
   // ---------- grounding and lightning protection ----------
@@ -1129,7 +1116,6 @@ function buildWorkshop(){
   const ar2=new THREE.Mesh(new THREE.ConeGeometry(.22,.5,12),wm(B1));ar2.position.copy(P(5.1,W+1.45,.1));ar2.rotation.x=Math.PI/2;g.ws_water.add(ar2);tag(ar2,vvI);
   const ringI={sys:'водопровод',title:'Объединённый хозяйственно-питьевой и противопожарный водопровод В1',rows:[['Трубы','сталь 20, Ø76×5 к пожарным кранам; полипропилен 25×3,5 к приборам'],['Прокладка','открыто вдоль стен']],text:'Магистраль Ø76×5 (сталь 20, 160 п. м) идёт кольцом по стенам на отметке +4,450, к пожарным кранам ПК-1…ПК-6 — спуски-стояки Ст В1-1…В1-7 до +1,350 (аксонометрия В1, 75/23-ИОС5.2 л. 4).',src:SRC.w};
   const zw=4.45, tw0=.3, tw1=W-.3, sw0=.35, sw1=49.2;
-  const det=(s1,s0,t,z)=>[P(s1,t,z),P(s1,t,-.3),P(s0,t,-.3),P(s0,t,z)];
   wpipe(g.ws_water,[P(sw0,tw1,zw),P(sw1,tw1,zw),P(sw1,tw0,zw),P(sw0,tw0,zw),P(sw0,7.6,zw)],.04,B1,ringI);
   const pkI=n=>({sys:'водопровод',title:`Пожарный кран ПК-${n}`,rows:[['Клапан','пожарный запорный DN65'],['Высота','≈1,35 м от пола'],['Расход','2,6 л/с на внутреннее пожаротушение']],src:SRC.w});
   [[1,16.6,W-.25],[2,33.1,W-.25],[3,49.25,5.8],[4,33.0,.25],[5,16.6,.25],[6,.3,7.1]].forEach(([n,s,t])=>{
@@ -1260,7 +1246,7 @@ function netDetail(){
     nAxis(grp,p3,d.c);
     nPick(grp,p3,Math.max(.35,r*2),{kind:'u',u,name:u.name||d.name});
     if(!over){ // route marking on the ground above an underground line
-      const q=nDens(u.pts,2,true).map(p=>V(p[0],p[1],gy(nG(p[0],p[1]))+.07));nAxis(grp,q,d.c,true)}
+      const q=nDens(u.pts,2,true).map(p=>V(p[0],p[1],gy(nG(p[0],p[1]))+.07));nAxis(grp,q,d.c,true);}
     else nOverSupports(u,acc(sup,'gas_over'),acc(fit,'gas_over'),r);
   });
   // ---- risers and jogs between pipe ends that meet on the plan ----
@@ -1273,20 +1259,20 @@ function netDetail(){
       nPick(gU.gas_over,top,.35,{kind:'u',u:uo,name:uo.name||UT.gas_over.name});
       const F=acc(fit,'gas_over');nCylC(F,nP(ax,ay,g-.3),nP(ax,ay,g+.5),ro*1.7+.01,14);       // casing where the pipe leaves the ground
       for(const z of [1.1,1.16])nCylC(F,nP(ax,ay,g+z),nP(ax,ay,g+z+.03),ro*2.1+.012,14);    // insulating flange joint
-      nOverRiserBrackets(ax,ay,g+.6,ah,acc(sup,'gas_over'),ro)}
+      nOverRiserBrackets(ax,ay,g+.6,ah,acc(sup,'gas_over'),ro);}
     else{const [ax,ay,ah]=L.a,[bx,by,bh]=L.b,r=Math.max(ro,(uw.dmm||57)/2000);
       const pts=Math.abs(ah-bh)>.05?[nP(ax,ay,ah),nP(ax,ay,bh),nP(bx,by,bh)]:[nP(ax,ay,ah),nP(bx,by,bh)];
-      const A=nAcc();nPipe(A,pts,r);const m=nMesh(A,nMat(UT.gas_over.c));m.userData={kind:'u',u:uo,name:uo.name||UT.gas_over.name};gU.gas_over.add(m);nAxis(gU.gas_over,pts,UT.gas_over.c)}
+      const A=nAcc();nPipe(A,pts,r);const m=nMesh(A,nMat(UT.gas_over.c));m.userData={kind:'u',u:uo,name:uo.name||UT.gas_over.name};gU.gas_over.add(m);nAxis(gU.gas_over,pts,UT.gas_over.c);}
   }
-  for(const t in sup){const m=nMesh(sup[t],nMat(NC.post,.08));gU[t].add(m)}
-  for(const t in fit){const m=nMesh(fit[t],nMat(0x8c8f8a,.06));gU[t].add(m)}
+  for(const t in sup){const m=nMesh(sup[t],nMat(NC.post,.08));gU[t].add(m);}
+  for(const t in fit){const m=nMesh(fit[t],nMat(0x8c8f8a,.06));gU[t].add(m);}
   // ---- gas devices: cabinet regulator, building inlets ----
   gGD.clear();
   for(const g of (S.gasdev||[])){
     const isSh=g.name.startsWith('ШГРП'),gz=nG(g.x,g.y);
     if(isSh) nShgrp(g,gz); else if(g.box) nGasBox(g,gz); else if(g.stand) rvStand(g); else nInlet(g);
   }
-  nWells(); nPower(); nCables(); nCamCables(); nEquip(); nRadio(); nParts(); nTsh(); nTrees(); if (typeof buildProjCanopy === 'function') buildProjCanopy(); rvBuild();
+  nWells(); nPower(); nCables(); nCamCables(); nEquip(); nRadio(); nParts(); nTsh(); nTrees(); buildProjCanopy(); rvBuild();
 }
 // trees: deciduous crowns of several lumps, conifers as stacked cones (survey symbols); birches — white trunks with dark marks,
 // a tall narrow crown; shrubs — low lumps. Foliage follows the season in Polyany (24.10.2026, the user: «исправь деревья и остальные
@@ -1383,7 +1369,7 @@ function nTsh(){   // 14.11.2026: головная секция ТШ-15НМ на
   const grp=new THREE.Group();grp.matrixAutoUpdate=false;grp.matrix.makeBasis(ex,ey,ez).setPosition(o);
   for(const q of T.m){const P=new Int16Array(ub(q.p)),f=new Float32Array(P.length);for(let i=0;i<P.length;i++)f[i]=P[i]/1000;
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(f,3));geo.setIndex(new THREE.BufferAttribute(new Uint16Array(ub(q.i)),1));geo.computeVertexNormals();
-    const m=new THREE.Mesh(geo,nMat(q.c,.08,true));m.userData={kind:'eq',e:T.e};grp.add(m);pickables.push(m)}
+    const m=new THREE.Mesh(geo,nMat(q.c,.08,true));m.userData={kind:'eq',e:T.e};grp.add(m);pickables.push(m);}
   gPow.add(grp);grp.updateMatrixWorld(true);
 }
 function nRadio(){   // 09.11.2026: радиомост по схеме А. В. Сотрудник1
@@ -1434,7 +1420,7 @@ function nBracket(A,x,y,h,w,r,dx,dy){const p=nP(x,y,h),f=nP(w.fx,w.fy,h),down=ne
   const nrm=pd.clone().sub(fd);nrm.y=0;if(nrm.lengthSq()<1e-6)nrm.set(1,0,0);nrm.normalize();
   const along=new THREE.Vector3(dx,0,-dy).normalize();
   nBox(A,fd.clone().add(new THREE.Vector3(0,.03,0)),nrm.clone().multiplyScalar(.006),along.clone().multiplyScalar(.07),new THREE.Vector3(0,.09,0));   // plate on the wall
-  nCyl(A,p.clone().add(along.clone().multiplyScalar(-.02)),p.clone().add(along.clone().multiplyScalar(.02)),r+.007,12)}                              // clamp
+  nCyl(A,p.clone().add(along.clone().multiplyScalar(-.02)),p.clone().add(along.clone().multiplyScalar(.02)),r+.007,12);}                              // clamp
 function nOverRiserBrackets(x,y,z0,z1,A,r){const w=nNearWall(x,y,z1);if(!w||w.d>1.2)return;for(let z=z0;z<z1;z+=2.0)nBracket(A,x,y,z+r+.03,w,r,0,1)}
 function nPost(A,x,y,h,g,r,dx,dy){const top=nP(x,y,h-r-.03),bot=nP(x,y,g),pr=h-g>3.6?.07:.045;
   nCyl(A,bot,top,pr,10);nDisc(A,top,new THREE.Vector3(0,1,0),pr,10);
@@ -1452,7 +1438,7 @@ function nEntry(p,q,w,r){const F=nAcc(),R=nAcc();const P0=nP(p[0],p[1],p[2]),f=n
 // cabinet gas regulator point: cabinet on a concrete base, vent stack, inlet and outlet into the ground, warning sign
 let nSignTex=null;
 function nSign(){if(nSignTex)return nSignTex;const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');x.fillStyle='#f2c230';x.fillRect(0,0,256,128);x.fillStyle='#c62a2a';
-  x.font='bold 54px sans-serif';x.textAlign='center';x.fillText('ГАЗ',128,62);x.font='bold 26px sans-serif';x.fillText('ОГНЕОПАСНО',128,104);nSignTex=new THREE.CanvasTexture(c);return nSignTex}
+  x.font='bold 54px sans-serif';x.textAlign='center';x.fillText('ГАЗ',128,62);x.font='bold 26px sans-serif';x.fillText('ОГНЕОПАСНО',128,104);nSignTex=new THREE.CanvasTexture(c);return nSignTex;}
 function nShgrp(g,gz){
   let dir=[1,0];const w=nNearWall(g.x,g.y,gz+1);if(w&&w.d>.01){const nx=(g.x-w.fx)/w.d,ny=(g.y-w.fy)/w.d;dir=[-ny,nx]}
   const along=new THREE.Vector3(dir[0],0,-dir[1]).normalize(),front=new THREE.Vector3().crossVectors(_nUp,along).normalize();
@@ -1471,7 +1457,7 @@ function nShgrp(g,gz){
   gGD.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(seam),nLineMat(0x8a6d10)))}
 // gas inlet into a building (place by the plan label, ±2–3 m): sleeve in the wall, valve with a red lever, yellow sign
 function nInlet(g){const w=nNearWall(g.x,g.y,g.z);const F=nAcc(),R=nAcc();const p=nP(g.x,g.y,g.z);
-  let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=p.clone().sub(nP(w.fx,w.fy,g.z));out.y=0;out.normalize()}
+  let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=p.clone().sub(nP(w.fx,w.fy,g.z));out.y=0;out.normalize();}
   const wallP=w?nP(w.fx,w.fy,g.z):p, r=.03;
   nCylC(F,wallP.clone().add(out.clone().multiplyScalar(-.1)),wallP.clone().add(out.clone().multiplyScalar(.12)),.055,14);
   const tip=wallP.clone().add(out.clone().multiplyScalar(.35));nCyl(F,wallP,tip,r,10);
@@ -1479,7 +1465,7 @@ function nInlet(g){const w=nNearWall(g.x,g.y,g.z);const F=nAcc(),R=nAcc();const 
   const v=tip.clone().add(new THREE.Vector3(0,-.6,0));nSph(F,v,.05,12,8);nCylC(F,v.clone().add(new THREE.Vector3(0,-.07,0)),v.clone().add(new THREE.Vector3(0,.07,0)),.045,12);
   nBeam(R,v.clone().add(out.clone().multiplyScalar(.06)),v.clone().add(out.clone().multiplyScalar(.28)),.03,.02);
   const m=nMesh(F,nMat(UT.gas_over.c)),m2=nMesh(R,nMat(NC.red));m.userData={kind:'gd',g};gGD.add(m,m2);pickables.push(m);
-  const pk=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),pickMat);pk.position.copy(tip);pk.userData={kind:'gd',g};gGD.add(pk);pickables.push(pk)}
+  const pk=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),pickMat);pk.position.copy(tip);pk.userData={kind:'gd',g};gGD.add(pk);pickables.push(pk);}
 // a cabinet seen on a photo: a box on short legs against the nearest wall
 function nGasBox(g,gz){const bx=g.box,w=nNearWall(g.x,g.y,gz+1);let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=nP(g.x,g.y,gz).sub(nP(w.fx,w.fy,gz));out.y=0;out.normalize()}
   const side=new THREE.Vector3().crossVectors(out,_nUp).normalize(),A=nAcc(),L=nAcc();const c=nP(g.x,g.y,gz+.25+bx.h/2);
@@ -1489,7 +1475,7 @@ function nGasBox(g,gz){const bx=g.box,w=nNearWall(g.x,g.y,gz+1);let out=new THRE
 // wells: cast-iron hatch, concrete rings Ø1,0 m from the hatch down to the bottom mark, slab and base
 function nWells(){
   gMH.clear();
-  for(const h of S.manholes){const g=nG(h.x,h.y),top=h.top,bot=h.bot,dep=Math.max(.5,top-bot);
+  for(const h of S.manholes){const top=h.top,bot=h.bot;
     const L=nAcc(),Rg=nAcc(),Cn=nAcc();const c=(z)=>nP(h.x,h.y,z);
     nCylC(L,c(top-.02),c(top+.035),.33,20);nCylC(Rg,c(top-.08),c(top+.03),.42,20);                // hatch and frame
     nCylC(Cn,c(top-.32),c(top-.12),.85,20);                                                        // cover slab
@@ -1498,8 +1484,8 @@ function nWells(){
     nCylC(Cn,c(bot-.25),c(bot-.1),.75,20);                                                         // base slab
     if(h.kind==='hydrant'){const sp=nP(h.x+.9,h.y,nG(h.x+.9,h.y));nCyl(Rg,sp,sp.clone().add(new THREE.Vector3(0,2.0,0)),.03,8);nBox(L,sp.clone().add(new THREE.Vector3(0,1.85,0)),new THREE.Vector3(.2,0,0),new THREE.Vector3(0,.15,0),new THREE.Vector3(0,0,.012))}
     const mL=nMesh(L,nMat(h.kind==='hydrant'?NC.red:NC.iron,.05)),mR=nMesh(Rg,nMat(0x55595c,.05)),mC=nMesh(Cn,nMat(NC.conc,.05,true));
-    for(const m of [mL,mR,mC]){m.userData={kind:'mh',h};gMH.add(m)}pickables.push(mL);
-    const pk=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.5,10),pickMat);pk.position.copy(c(top));pk.userData={kind:'mh',h};gMH.add(pk);pickables.push(pk)}
+    for(const m of [mL,mR,mC]){m.userData={kind:'mh',h};gMH.add(m);}pickables.push(mL);
+    const pk=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.5,10),pickMat);pk.position.copy(c(top));pk.userData={kind:'mh',h};gMH.add(pk);pickables.push(pk);}
 }
 // overhead lines: concrete poles with crossarms and insulators, wires with sag; the low line on wooden poles with concrete stubs
 function nPower(){
@@ -1513,7 +1499,7 @@ function nPower(){
       const pk=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(nP(a[0],a[1],a[2]),nP(b[0],b[1],b[2])),2,1.0,5,false),pickMat);pk.userData={kind:'vl',pw};gPow.add(pk);pickables.push(pk)}}
   const poles=S.poles.filter(p=>!p.light).map(p=>({x:p.x,y:p.y,ud:p.bpr?{kind:'rv',o:{cat:'ЛЭП',name:'Опора без проводов («б.пр.»)',note:'На топосъёмке 2016 г. и генплане 03.26 у опоры подписано «б.пр.» — без проводов.',src:'топосъёмка 2016 г.; генплан 03.26'}}:{kind:'pole'}}));
   for(const pw of S.power)if(pw.low)for(const [x,y] of pw.poles)if(!poles.some(p=>Math.hypot(p.x-x,p.y-y)<.5))poles.push({x,y,ud:{kind:'vl',pw},low:true});
-  const Cc=nAcc(),Wd=nAcc(),St=nAcc(),In=nAcc();
+  const Wd=nAcc(),St=nAcc(),In=nAcc();
   for(const p of poles){const g=nG(p.x,p.y),a=att.find(t=>Math.hypot(t.x-p.x,t.y-p.y)<.6);
     let dx=a?a.dx:0,dy=a?a.dy:1;if(!a){let b1=null;for(const q of poles){if(q===p)continue;const d=Math.hypot(q.x-p.x,q.y-p.y);if(d>1&&(!b1||d<b1.d))b1={d,q}}if(b1){dx=(b1.q.x-p.x)/b1.d;dy=(b1.q.y-p.y)/b1.d}}
     const low=p.low||(a&&a.low),Hh=a?(a.z-g)+(low?.3:.12):8.0;
@@ -1813,19 +1799,18 @@ function buildPlans(){
     const b=S.buildings.find(o=>o.k===k); if(!b||b.hidden) continue;
     const P=PLANS[k], o=S0.b[k].poly, A=P.A;
     // the floor plan as a texture on the floor: UVs from the original outline, positions from the edited one
-    const shape=new THREE.Shape(o.map(([x,y])=>new THREE.Vector2(x,y)));
     const tri=THREE.ShapeUtils.triangulateShape(o.map(([x,y])=>new THREE.Vector2(x,y)),[]);
     const pos=[],uv=[], fz=gy(P.floor!=null?P.floor:b.base)+0.06;
     for(const t of tri) for(const i of t){const p=b.poly[i], q=o[i];
       const px=A[0]*q[0]+A[1]*q[1]+A[2], py=A[3]*q[0]+A[4]*q[1]+A[5];
-      const v=V(p[0],p[1],0); pos.push(v.x,fz,v.z); uv.push(px/P.w,1-py/P.h)}
+      const v=V(p[0],p[1],0); pos.push(v.x,fz,v.z); uv.push(px/P.w,1-py/P.h);}
     const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.computeVertexNormals();
     const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:planTex(P.src),side:THREE.DoubleSide})); m.userData={kind:'b',b}; gPlans.add(m); pickables.push(m);
-    const mm=bMeshes[k]; if(mm) mm.traverse(o=>{if(o.isMesh){(Array.isArray(o.material)?o.material:[o.material]).forEach(x=>{x.transparent=true;x.opacity=.12;x.depthWrite=false})}})
+    const mm=bMeshes[k]; if(mm) mm.traverse(o=>{if(o.isMesh){(Array.isArray(o.material)?o.material:[o.material]).forEach(x=>{x.transparent=true;x.opacity=.12;x.depthWrite=false})}});
   }
 }
 function rebuildEdited(){
-  applyEditsData(); buildBuildings(); buildCams(); if(typeof placeWsRoot==='function'){placeWsRoot(); wsRoot.visible=!(S.buildings.find(b=>b.k==='ws')||{}).hidden}
+  applyEditsData(); buildBuildings(); buildCams(); {placeWsRoot(); wsRoot.visible=!(S.buildings.find(b=>b.k==='ws')||{}).hidden}
   buildUtils(); buildPlans(); buildParking(); updLabTexts(); applyLayers();
   for(const k in bMeshes){const b=S.buildings.find(o=>o.k===k);if(b&&b.edited){const e=bMeshes[k]&&bMeshes[k].children&&bMeshes[k].children.find(c=>c.isLineSegments);if(e)e.material.color.setHex(0xb06a00)}}
 }
@@ -1846,9 +1831,9 @@ function initCams(){
 }
 function applyEditsData(){
   for (const b of S.buildings){const o=S0.b[b.k], e=b.parent?E.get('b:'+b.parent):E.get('b:'+b.k), own=E.get('b:'+b.k);
-    b.poly=b.parent&&S0.b[b.parent]?(e?o.poly.map(E.xf(e,E.centroid(S0.b[b.parent].poly))):o.poly):E.applyPoly('b:'+b.k,o.poly); b.h=own&&own.h!=null?own.h:o.h; if(o.roof&&b.kind!=='proj'){const f=b.h/o.h; b.roof=o.roof.type==='gable'?Object.assign({},o.roof,{a:o.roof.a*f,r:o.roof.r*f,b:o.roof.b*f}):Object.assign({},o.roof,{low:o.roof.low*f,high:o.roof.high*f})}
-    {const f=e&&(e.dx||e.dy||e.rot)?E.xf(e,E.centroid(b.parent&&S0.b[b.parent]?S0.b[b.parent].poly:o.poly)):null; if(o.openings) b.openings=o.openings.map(x=>f?Object.assign({},x,{p0:f(x.p0),p1:f(x.p1)}):x); if(o.columns) b.columns=f?o.columns.map(f):o.columns}
-    b.name=own&&own.name?own.name:o.name; b.hidden=!!((own&&own.hidden)||(b.parent&&e&&e.hidden)); b.edited=!!own; b.note2=own&&own.note||''}
+    b.poly=b.parent&&S0.b[b.parent]?(e?o.poly.map(E.xf(e,E.centroid(S0.b[b.parent].poly))):o.poly):E.applyPoly('b:'+b.k,o.poly); b.h=own&&own.h!=null?own.h:o.h; if(o.roof&&b.kind!=='proj'){const f=b.h/o.h; b.roof=o.roof.type==='gable'?Object.assign({},o.roof,{a:o.roof.a*f,r:o.roof.r*f,b:o.roof.b*f}):Object.assign({},o.roof,{low:o.roof.low*f,high:o.roof.high*f});}
+    {const f=e&&(e.dx||e.dy||e.rot)?E.xf(e,E.centroid(b.parent&&S0.b[b.parent]?S0.b[b.parent].poly:o.poly)):null; if(o.openings) b.openings=o.openings.map(x=>f?Object.assign({},x,{p0:f(x.p0),p1:f(x.p1)}):x); if(o.columns) b.columns=f?o.columns.map(f):o.columns;}
+    b.name=own&&own.name?own.name:o.name; b.hidden=!!((own&&own.hidden)||(b.parent&&e&&e.hidden)); b.edited=!!own; b.note2=own&&own.note||'';}
   const wb=S0.b.ws, we=E.get('b:ws');
   if(wb&&S.ws_frame){const f=we?E.xf(we,E.centroid(wb.poly)):(p=>p);
     S.ws_frame.O=f(S0.wsf.O); S.ws_frame.es=E.rotVec(S0.wsf.es,we?we.rot:0); S.ws_frame.et=E.rotVec(S0.wsf.et,we?we.rot:0);
@@ -1899,15 +1884,6 @@ function camBasis(c, p){
   const u = new THREE.Vector3().crossVectors(r, f).normalize();
   const th = Math.tan(c.fov/2*D2R), tv = th*9/16;
   return {C:p.clone(), f, r, u, th, tv};
-}
-function hull(pts){
-  pts = pts.slice().sort((a,b)=>a[0]-b[0] || a[1]-b[1]);
-  if (pts.length < 3) return pts;
-  const cr = (o,a,b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-  const lo = [], up = [];
-  for (const p of pts){ while (lo.length >= 2 && cr(lo[lo.length-2], lo[lo.length-1], p) <= 0) lo.pop(); lo.push(p); }
-  for (let i=pts.length-1;i>=0;i--){ const p = pts[i]; while (up.length >= 2 && cr(up[up.length-2], up[up.length-1], p) <= 0) up.pop(); up.push(p); }
-  up.pop(); lo.pop(); return lo.concat(up);
 }
 /* The ground (or the floor indoors) the camera sees. Along each plan ray from the camera the 16:9 frame cuts out one stretch
    of ground, a linear condition per frame edge; then buildings in the way take out their footprint and the ground they shade:
@@ -2170,13 +2146,13 @@ function applyLayers(){
   tg.attributes.color.array.set(chipOn.hypso ? colH : colS); tg.attributes.color.needsUpdate = true;
   labelsEl.style.display = chipOn.labels === false ? 'none' : '';
   if (!camViewOn) for (const k in camObjs){ const o = camObjs[k], v = !o.c.hidden && condOk(o.c); o.grp.visible = v; o.fovg.visible = v; }
-  areaColors(); if (typeof heatColors === 'function') heatColors();
+  areaColors(); heatColors();
   if (!lay.blind && blindBox) blindBox.hidden = true;
   // workshop view switches layers itself: mirror them on the chips
   let more = 0;
   CHIPS.forEach(([k,,,gs,,sec])=>{ if (gs.length) chipOn[k] = gs.every(g=>lay[g] !== false); if (chipBtn[k]) chipBtn[k].setAttribute('aria-pressed', chipOn[k] ? 'true' : 'false'); if (sec && chipOn[k]) more++; });
   const mc = document.getElementById('moreCnt'); if (mc) mc.textContent = more ? ' · ' + more : '';
-  if (typeof orgApply === 'function') orgApply();
+  orgApply();
 }
 CHIPS.forEach(([k,,,gs,def])=>{ chipOn[k] = !!def; gs.forEach(g=>{ lay[g] = !!def; }); });
 // 22.10.2026: layers with almost nothing in them are not offered any more (4 lines, 4 marks, 1 contour); they stay off
@@ -2211,7 +2187,7 @@ function buildParking(){
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.computeVertexNormals();
     gPark.add(new THREE.Mesh(sg, new THREE.MeshBasicMaterial({color:0xf2f2ee, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3})));
   }
-  buildFront(); buildSZZ(); buildNDV(); if (typeof ctxBuild === 'function') ctxBuild();
+  buildFront(); buildSZZ(); buildNDV(); ctxBuild();
 }
 /* ---------- driveway, lawns, paths, porch and the parking's low fence in front of the admin building (cameras 010–012, 21.10.2026) ---------- */
 const SURF = {concrete:{c:0xaaa79f, dz:.07, t:'Бетон'}, soil:{c:0x6f675d, dz:.04, t:'Грунт со щебнем'}, asphalt:{c:0x8c9195, dz:.05, t:'Асфальт'}, lawn:{c:0x6f9a4f, dz:.08, t:'Газон'}, tiles:{c:0xc4b9a6, dz:.07, t:'Плитка'}, gravel:{c:0xb3aea4, dz:.06, t:'Щебень'},
@@ -2254,7 +2230,7 @@ function buildFront(){
   // the parking's low wrought fence: posts every 2,5 m, a top and a bottom rail
   for (const ln of F.lines || []){
     if (ln.kind === 'mesh'){                     // chain-link fence: steel posts every 2,5 m and a see-through net
-      const post = [], net = [], top = [], P = ln.closed ? ln.pts.concat([ln.pts[0]]) : ln.pts;
+      const net = [], top = [], P = ln.closed ? ln.pts.concat([ln.pts[0]]) : ln.pts;
       for (let i = 0; i + 1 < P.length; i++){
         const a = P[i], b = P[i+1], L = Math.hypot(b[0]-a[0], b[1]-a[1]), n = Math.max(1, Math.ceil(L / 2.5));
         for (let j = 0; j < n; j++){
@@ -2344,7 +2320,7 @@ function buildTPx(box){
     let best = null;
     for (let i = 0; i < n; i++){ const a = P[i], c = P[(i+1) % n], L = Math.hypot(c[0]-a[0], c[1]-a[1]); if (L < 1) continue;
       const nx = sgn*(c[1]-a[1])/L, ny = -sgn*(c[0]-a[0])/L, d = nx*FU[0] + ny*FU[1]; if (!best || d > best.d) best = {a, c, L, nx, ny, d}; }
-    const z0 = b.base, top = b.base + b.h, conc = [], steel = [], porc = [], dark = [];
+    const z0 = b.base, top = b.base + b.h, conc = [], steel = [], dark = [];
     // flat slab roof with a cornice ≈0,3 m all round
     const cx = P.reduce((s_, p)=>s_ + p[0], 0)/n, cy = P.reduce((s_, p)=>s_ + p[1], 0)/n;
     const out = P.map(([x, y])=>{ const dx = x - cx, dy = y - cy, l = Math.hypot(dx, dy) || 1; return [x + dx/l*.42, y + dy/l*.42]; });
@@ -2527,7 +2503,6 @@ function szzInfo(u){
        <dt>Координаты</dt><dd class="mono">${(()=>{ const m = ms(sp[0], sp[1]), l = ll(sp[0], sp[1]); return `МСК-62 X ${nf(m[0], 2)} Y ${nf(m[1], 2)}<br>${nf(l[0], 6)}, ${nf(l[1], 6)}`; })()}</dd></dl>
        ${szzSubTable(s.subs)}${s.warn ? `<p class="warn">${esc(s.warn)}</p>` : ''}${szzSrcNote}`}; }
   if (k === 'rt'){ const r = u.r, cols = SZ.conc_cols.filter(c=>r.mr[c] != null || r.ss[c] != null), nz = r.noise;
-    const m = ms(r.loc[0], r.loc[1]);
     return {k:'Расчётная точка · проект СЗЗ', t:`Точка ${r.n} — ${r.name}`, d:
       `<dl class="kv"><dt>Где</dt><dd>${RT_TYPE[r.type]}, направление ${r.dir}${r.bpt ? `; точка ${r.bpt} границы СЗЗ` : ''}</dd>
        <dt>МСК-62</dt><dd class="mono">X ${nf(r.X, 2)}<br>Y ${nf(r.Y, 2)}</dd><dt></dt><dd class="note">${r.msk_doc ? 'по таблице 9.1.1 проекта' : 'пересчитано из таблиц расчёта (±0,3 м)'}</dd>
@@ -2626,7 +2601,7 @@ function buildNDV(){
   for (const s of ND.sources){
     const p = s.a, g0 = inTer(p[0], p[1]) ? zat(p[0], p[1]) : S.zmin, ud = {kind:'isa25', s}, mk = [], col = ST_COL[s.status];
     if (s.org){
-      const top = gy(g0) + s.h, bot = gy(g0) + Math.max(0, Math.min(s.h - 1.2, s.on ? bH(s.on) : 0)), r = Math.max(.16, (s.d || .3)/2);
+      const top = gy(g0) + s.h, bot = gy(g0) + Math.max(0, Math.min(s.h - 1.2, s.on ? bH(s.on) : 0));
       // steel pipe of its real diameter and height: galvanised body, sooty top for flues, a flashing where it leaves the roof or a footing on the ground
       const hot = (s.t || 0) > 60, rr = Math.max(.05, (s.dp || s.d || .3)/2), H_ = Math.max(.3, top - bot);
       // one source can be several pipes side by side (s.pair: offsets in metres, e.g. two boiler flues seen on a photo)
@@ -2833,9 +2808,9 @@ function updateLabels(){
   for (const r of rulLabels){ tmpV.copy(r.pos).project(camera); const vis = tmpV.z <= 1 && tmpV.z >= -1; r.el.hidden = !vis; if (!vis) continue;
     r.el.style.transform = `translate(${((tmpV.x*.5+.5)*canvas.clientWidth).toFixed(1)}px,${((-tmpV.y*.5+.5)*canvas.clientHeight).toFixed(1)}px) translate(-50%,-50%)`; }
   for (const s of spotLab) placeLab(s.el, V(s.p.x, s.p.y, gy(s.p.z) + 1.5), lay.pzu !== false && dist < 300);
-  if (typeof ctxLabels === 'function') ctxLabels(dist);
-  if (typeof orgLabels === 'function') orgLabels(dist);
-  if (typeof heatLabels === 'function') heatLabels();
+  ctxLabels(dist);
+  orgLabels(dist);
+  heatLabels();
   declutterLabs();
   szzLabels(dist);
   for (const o of ovLabels){ tmpV.copy(o.pos).project(camera); const vis = tmpV.z <= 1 && tmpV.z >= -1; o.el.hidden = !vis; if (!vis) continue;
@@ -2895,7 +2870,7 @@ function bCenter(k, up){ const b = S.buildings.find(o=>o.k===k); const c = E.cen
 function bRadius(k){ const b = S.buildings.find(o=>o.k===k), c = E.centroid(b.poly); return Math.max(8, ...b.poly.map(p=>Math.hypot(p[0]-c[0], p[1]-c[1]))) * 1.15; }
 function goView(name, instant){
   if (camViewOn) exitCamView();
-  if (typeof orgOff === 'function') orgOff();
+  orgOff();
   if (wsInside && name !== 'ws') wsView(false);
   CHIPS.forEach(([k,,,,def])=>{ const v = VIEW_LAYERS[name] && k in VIEW_LAYERS[name] ? VIEW_LAYERS[name][k] : def; if (k !== 'relief') setLayer(k, !!v); });
   document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on', b.dataset.view===name));
@@ -2999,7 +2974,7 @@ function infoBuilding(b){
    ${b.det&&b.det.src?`<dt>Облик</dt><dd>${esc(b.det.src)}</dd>`:''}
    <dt>Центр</dt><dd class="mono">${nf(b.lat,6)}, ${nf(b.lon,6)}</dd>`;
   const ar = areaOf(b.k);
-  let d = (ar ? areaBox(ar) : '') + (typeof heatBox === 'function' ? heatBox(b) : '') + (typeof orgBox === 'function' ? orgBox(b) : '') + (b.note2 ? `<p class="warn">Заметка: ${esc(b.note2)}</p>` : '') + (b.edited && b.name !== S0.b[b.k].name ? `<p>В документах: ${esc(S0.b[b.k].name)}</p>` : '') + (b.note ? `<p>${esc(b.note)}</p>` : '');
+  let d = (ar ? areaBox(ar) : '') + (heatBox(b)) + (orgBox(b)) + (b.note2 ? `<p class="warn">Заметка: ${esc(b.note2)}</p>` : '') + (b.edited && b.name !== S0.b[b.k].name ? `<p>В документах: ${esc(S0.b[b.k].name)}</p>` : '') + (b.note ? `<p>${esc(b.note)}</p>` : '');
   if (b.k === STOCK_BLD && STOCK) d = stockRow() + d;   // the warehouse: today's stock on top
   d += regBox(b) + ndvBld(b) + szzBld(b);
   // 01.11.2026, пользователь (журнал бота №12): фото здания от сотрудников (бот) — сверху карточки, нажатие открывает фото целиком
@@ -3378,7 +3353,7 @@ function camCard(){
   const c = camByKey(sel.key); if (!c) return hideAll();
   const info = camInfo(c);
   cardK.textContent = c.isNew ? 'Новая камера' : 'Камера со схемы'; cardT.innerHTML = camTitle(c); cardD.innerHTML = info.d; cardM.textContent = info.m; cardM.hidden = false; cardGo.hidden = true;
-  const o = S0.c[c.id] || {}, ce = E.saved(c.key) || {};
+  const ce = E.saved(c.key) || {};
   const sx = c.isNew ? round2(c.x - (c.x0 != null ? c.x0 : c.x)) : round2(ce.dx||0), sy = c.isNew ? round2(c.y - (c.y0 != null ? c.y0 : c.y)) : round2(ce.dy||0);
   const lensOpts = LENS.map(([k,t])=>`<option value="${k}" ${c.lens === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
   const num = (k, label, val, step, unit, min, max, bt) => `<label class="fld"><span>${esc(label)}</span><span class="num">
@@ -4277,7 +4252,6 @@ function openHash(){
   else if (camByKey('c:'+h)) selectCam('c:'+h, true);
 }
 openHash(); window.addEventListener('hashchange', openHash);
-let lastT = performance.now();
 let kickUntil = 0, lastDraw = 0, lastLab = 0; const camSig = new Float64Array(17);
 const kick = (ms) => { kickUntil = Math.max(kickUntil, performance.now() + (ms || 1200)); };
 for (const ev of ['pointerdown', 'pointerup', 'click', 'keydown', 'input', 'change', 'wheel', 'transitionend']) document.addEventListener(ev, ()=>kick(), {passive:true, capture:true});
@@ -5548,7 +5522,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     const nCams = camsEl ? +(sumText(camsEl).match(/\d+/) || [0])[0] : 0;
     const nStaff = floorsEl ? +(sumText(floorsEl).match(/(\d+)\s*сотрудник/) || [0, 0])[1] : 0;
     const lit = regEl ? (sumText(regEl).match(/лит\.\s*[^·]+$/) || [''])[0].trim() : '';
-    const g = typeof heatGroupOf === 'function' ? heatGroupOf(b.k) : null, need = g && g.inst ? heatNeed(g) : 0;
+    const g = heatGroupOf(b.k), need = g && g.inst ? heatNeed(g) : 0;
     const H = b.floor ? b.h - (b.floor - b.base) : b.h;
 
     cardK.textContent = [kindName(b), lit, ar ? (ar.free ? ar.name : 'участок ' + ar.n) : ''].filter(Boolean).join(' · ');
@@ -5822,7 +5796,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     return w;
   }
   // ---- official warnings (Гидрометцентр России, Рязанская обл.) and gusts: {gmc: {ok, t, w: [{lv, h, x, t0, t1}]}, gust: [[t, m/s]] | null, got} ----
-  var off = null, offGot = 0, offBusy = false;
+  var off = null, offGot = 0;
   try { var oc = JSON.parse(ls(K_OFF) || 'null'); if (oc && Date.now() - oc.got < 6 * 3600e3) { off = oc; offGot = oc.got; } } catch (e) {}
   function offList(){ var now = Date.now(); return off && off.gmc && off.gmc.w ? off.gmc.w.filter(function(w){ return w.t1 > now; }) : []; }
   function gustAt(t){ var b = null; ((off && off.gust) || []).forEach(function(g){ if (g[1] != null && Math.abs(g[0] - t) <= 95 * 6e4 && (!b || Math.abs(g[0] - t) < Math.abs(b[0] - t))) b = g; }); return b ? b[1] : null; }
@@ -6209,7 +6183,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
       gr.list.push(it); gr.nv += nv; gr.ni += ni; items.push(it);
     }
     const batches = [];
-    for (const [key, gr] of groups){
+    for (const [, gr] of groups){
       if (gr.list.length < 2) { gr.list.forEach(it => { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); }); continue; }   // one object: nothing to gain
       const mesh = gr.kind === 'mesh', NV = gr.nv;
       const m00 = gr.list[0].o.material, UV = m00.map ? new Float32Array(NV * 2) : null, LD = m00.isLineDashedMaterial ? new Float32Array(NV) : null;

@@ -11,7 +11,7 @@ Claude кладёт в папку «Fabrikant» на компьютере пол
 раскладывает (папка — cfg.json → drive_folder или файл ~/.fabrika_live/drive_folder со ссылкой): в корень сайта — только известные файлы сборки; code/… — в ~/.fabrika_live/code; host/… — PHP-файлы хостинга (st/, max/, wx/).
 Без подписи, с чужой подписью или с неизвестными путями — не ставится ничего. Ничего не удаляется: старые блобы остаются (их убирает Claude
 в ~/_удалить). Пока drive_folder не задан — выключено.
-28.10.2026, пользователь: «перенеси на Фабрика — Диск 1c@ вместо моего owner@ всю работу портала» — главный источник теперь Диск user1@example.org,
+28.10.2026, пользователь: «перенеси на Фабрика — Диск 1c@ вместо моего owner@ всю работу портала» — Имя2 источник теперь Диск user1@example.org,
 папка «Фабрика — портал/Обновления», через скрипт Google от имени 1c@ (gdrive_1c.py; без открытой ссылки). Старая папка owner@ (drive_folder) —
 запасная, пока в code/gdrive_1c.json не стоит "old_off": true.
 30.10.2026 аудит P4–P6: подпись .sig v2 (имя + sha256 пакета), только пакеты новее установленного, копии и откат, битый пакет не держит
@@ -65,7 +65,7 @@ def unpack(zb, key):
     return (int.from_bytes(ct, 'big') ^ int.from_bytes(ks[:len(ct)], 'big')).to_bytes(len(ct), 'big')
 
 
-# REDACTED_B64_9 30.10.2026 аудит P4–P6 (DESIGN 8): подписи v2, защита от отката, копии и откат
+# REDACTED_B64_8 30.10.2026 аудит P4–P6 (DESIGN 8): подписи v2, защита от отката, копии и откат
 # .sig v2 = 'v2:' + hex HMAC-SHA256(k_deploy, "T14PKG2\n" + <имя пакета> + "\n" + sha256hex(байты пакета)) — подпись покрывает имя (а в нём метка
 # времени ГГГГММДД-ЧЧММ): старый подписанный пакет под новым именем не пройдёт. Метка должна быть строго новее последней установленной.
 # Старая подпись v1 (hex по байтам) — только пока не установлен ни один пакет v2 (переход), и тоже с проверкой метки. Тот же код — для
@@ -197,7 +197,7 @@ def pre_check(data):
                         errs.append('%s: %s' % (n, (r.stderr + r.stdout).decode('utf-8', 'replace').strip().replace(tmp, n).splitlines()[0][:160]))
                 finally:
                     try: os.remove(tmp)
-                    except OSError: pass
+                    except OSError: pass   # намеренно: временного файла проверки уже нет
         except SyntaxError as e: errs.append('%s: синтаксис, строка %s' % (n, e.lineno))
         except ValueError as e: errs.append('%s: %s' % (n, str(e)[:120]))
         except subprocess.TimeoutExpired: errs.append('%s: php -l дольше 30 с' % n)
@@ -374,7 +374,7 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
         except Exception as e: log('  ! оповещение об откате:', e)
         state_save('deploy.json', st); return st
     files, errs = {}, []
-    try:                                                   # 1) Диск 1c@ (главный)
+    try:                                                   # 1) Диск 1c@ (Имя2)
         g = g1c_listing(L, st)
         if g: files.update(g)
     except Exception as e:

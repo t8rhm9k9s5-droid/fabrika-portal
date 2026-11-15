@@ -143,6 +143,11 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
   window.addEventListener('hashchange', function () { setTimeout(run, 30); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') run(); });
+  // 15.11.2026, Т. В.: «зашёл в раздел, весь прощёлкал — точка не тухнет». Возврат «Назад» (жест на iPhone, кнопка браузера) показывает главную
+  //   из кэша страниц (bfcache) — без загрузки, без visibilitychange, со старой точкой. Теперь перерисовка и при pageshow, и когда отметку
+  //   «просмотрено» записала другая вкладка (storage).
+  window.addEventListener('pageshow', function () { setTimeout(run, 30); });
+  window.addEventListener('storage', function (e) { if (!e.key || e.key === 't14.alseen') setTimeout(run, 30); });
   // страницы дорисовывают меню, «Разделы» и пульс позже (данные с хостинга) — досматриваем первые полминуты и при перерисовках
   var k = 0, iv = setInterval(function () { run(); if (++k > 30) clearInterval(iv); }, 1000);
   try { new MutationObserver(function () { clearTimeout(run.t); run.t = setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true }); } catch (e) { }

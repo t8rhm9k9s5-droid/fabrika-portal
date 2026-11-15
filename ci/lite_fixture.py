@@ -15,7 +15,7 @@ login = login.replace('__ACCT_CFG__', 'null').replace('/*__ACCT_CORE__*/', pathl
 pathlib.Path(OUT + '/index.html').write_text(login, encoding='utf-8')
 for b in ['pf', 'sales', 'leads', 'omts', 'recl', 'ozrev', 'oz', 'promises', 'ls', 'smv', 'smvs']:   # данные — как они лежат на хостинге (зашифрованы)
     # 14.11.2026: туннель прокси контейнера иногда рвётся (ws_closed_mid_exchange) — до 3 попыток, иначе «—» в пульсе и ложный запрет выкладки
-    for _t in range(3):
+    for _ in range(3):
         _r = subprocess.run(['curl', '-sS', '-f', '-m', '60', '--retry', '2', '--cacert', '/root/.ccr/ca-bundle.crt', '-o', OUT + '/st/' + b + '.bin', 'https://techfabrikant.ru/st/' + b + '.bin'])
         if _r.returncode == 0 or _r.returncode == 22: break   # 22 — файла нет на хостинге (404), повтор не поможет
         import time; time.sleep(15)

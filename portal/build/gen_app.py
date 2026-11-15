@@ -32,8 +32,9 @@ const terMat=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleS
 _old = "tg.setIndex(idx); tg.setAttribute('position',new THREE.BufferAttribute(pos,3));"
 assert seg1.count(_old) == 1
 seg1 = seg1.replace("cAsph=new THREE.Color(0xb9b6ad)", "cAsph=new THREE.Color(0xa3a29d)")   # yard asphalt as on the photos (was a light sand colour)
-seg1 = seg1.replace(_old, _old + "{const uv=new Float32Array(nV*2);for(let i=0;i<T.ny;i++)for(let j=0;j<T.nx;j++){const k=i*T.nx+j;uv[k*2]=(T.x0+j*T.step)/7;uv[k*2+1]=(T.y0+i*T.step)/7}tg.setAttribute('uv',new THREE.BufferAttribute(uv,2))}")
-seg1 = seg1.replace("stage=document.getElementById('stage')", "stage=document.getElementById('app')").replace("let EX=3;", "let EX=1;")
+seg1 = seg1.replace(_old, _old + "{const uv=new Float32Array(nV*2);for(let i=0;i<T.ny;i++)for(let j=0;j<T.nx;j++){const k=i*T.nx+j;uv[k*2]=(T.x0+j*T.step)/7;uv[k*2+1]=(T.y0+i*T.step)/7;}tg.setAttribute('uv',new THREE.BufferAttribute(uv,2));}")
+seg1 = seg1.replace(", stage=document.getElementById('stage')", "")   # 15.11.2026 CodeQL: в модели портала переменная stage не нужна (setMove — только в шаблоне)
+seg1 = seg1.replace("let EX=3;", "let EX=1;")
 seg1 = seg1.replace("renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));",
                     "renderer.setPixelRatio(Math.min(matchMedia('(pointer: coarse)').matches?(/Android/i.test(navigator.userAgent)?1.75:(/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?3:1.5):2,window.devicePixelRatio||1));   // phones: less GPU memory; Android (APK lag, 23.10.2026): 1.25; iPhone/iPad: full sharpness (23.10.2026)")
 assert 'pointer: coarse' in seg1
@@ -43,7 +44,7 @@ seg1 = seg1.replace("gg.userData={kind:'gate'}; gF.add(gg); pickables.push(gg);\
   for(const sg of (S.gates2||[])){const a2=sg.a,b2=sg.b,L2=Math.hypot(b2[0]-a2[0],b2[1]-a2[1]),g2=gy(zat((a2[0]+b2[0])/2,(a2[1]+b2[1])/2)),ang=Math.atan2(b2[1]-a2[1],b2[0]-a2[0]);
     const pm=new THREE.Mesh(new THREE.BoxGeometry(L2,sg.kind==='swing'?2.2:1.7,0.08),new THREE.MeshLambertMaterial({color:sg.col||(sg.kind==='swing'?0xb8452e:0x6f7c85)}));pm.position.copy(V((a2[0]+b2[0])/2,(a2[1]+b2[1])/2,g2+(sg.kind==='swing'?1.15:0.95)));pm.rotation.y=ang;pm.userData={kind:'gate2',g:sg};gF.add(pm);pickables.push(pm);
     if(sg.kind!=='swing'){const rl=new THREE.Mesh(new THREE.BoxGeometry(L2+1.2,0.08,0.14),new THREE.MeshLambertMaterial({color:0x3d474d}));rl.position.copy(V((a2[0]+b2[0])/2,(a2[1]+b2[1])/2,g2+0.05));rl.rotation.y=ang;gF.add(rl);}
-    for(const q of [a2,b2]){const po=new THREE.Mesh(new THREE.BoxGeometry(0.16,2.1,0.16),new THREE.MeshLambertMaterial({color:0x3d474d}));po.position.copy(V(q[0],q[1],gy(zat(q[0],q[1]))+1.05));gF.add(po)}}
+    for(const q of [a2,b2]){const po=new THREE.Mesh(new THREE.BoxGeometry(0.16,2.1,0.16),new THREE.MeshLambertMaterial({color:0x3d474d}));po.position.copy(V(q[0],q[1],gy(zat(q[0],q[1]))+1.05));gF.add(po);}}
 }""")
 assert "(S.fence_open||[]).includes(i)" in seg1 and "kind:'gate2'" in seg1
 # main gate as on the photos of 23.10.2026 (S.gate.look, post_edits.kpp2_photos): solid lower panel, lattice above, steel portal over the drive
@@ -54,7 +55,7 @@ seg1 = seg1.replace("gg.userData={kind:'gate'}; gF.add(gg); pickables.push(gg);"
     const c2=Lk.col2||0x9aa6ad; gbar(Lg,.06,.07,mx,my,ga+0.1+Lk.h2,c2); gbar(Lg,.05,.07,mx,my,ga+0.1+Lk.h1+.03,c2);
     for(let s=.12;s<Lg-.05;s+=.24) gbar(.03,Lk.h2-Lk.h1,.03,a[0]+ux*s,a[1]+uy*s,ga+0.1+(Lk.h1+Lk.h2)/2,c2);
     gbar(Lg,.12,.12,mx,my,ga+0.06,0x5b646a);
-    if(Lk.portal){const Pp=Lk.portal,pc=Pp.col||0x6b4a39; for(const q of [a,b]){const gq=gy(zat(q[0],q[1])); gbar(.3,Pp.h,.3,q[0],q[1],gq+Pp.h/2,pc)} gbar(Lg+.5,.35,.3,mx,my,ga+Pp.h-.17,pc)}
+    if(Lk.portal){const Pp=Lk.portal,pc=Pp.col||0x6b4a39; for(const q of [a,b]){const gq=gy(zat(q[0],q[1])); gbar(.3,Pp.h,.3,q[0],q[1],gq+Pp.h/2,pc);} gbar(Lg+.5,.35,.3,mx,my,ga+Pp.h-.17,pc);}
   }""", 1)
 assert "if(S.gate.look)" in seg1
 segM = cut("// ---------- camera mounts", "// ---------- utilities ----------")
@@ -273,6 +274,20 @@ import perf_hooks as _PH; app = _PH.app(app)   # 26.10.2026: качество о
 app = _CC.app(app)   # 28.10.2026: угол обзора камеры из данных и строка «сверено по кадру» в карточке камеры
 app = _AX.app(app)   # 09.11.2026: опоры газа (skip/brk), распашные ворота, радиомост, котлы по списку А. В. в карточке отопления
 app = _TS.app(app)   # 14.11.2026: nTsh() — деталь ТШ-15НМ в слое оборудования
+# 15.11.2026 CodeQL js/unneeded-defensive-code: в собранной модели все части на месте — проверка «typeof F === 'function'» для функции,
+#   объявленной на верхнем уровне этого же скрипта, всегда истинна; убирается только здесь (в частях остаётся: часть собирается и без соседей).
+import re as _re_ug
+_TOP = set(_re_ug.findall(r'(?m)^(?:async )?function (\w+)\(', app))
+_ug = [0]
+def _ug_if(m):
+    if m.group(1) not in _TOP: return m.group(0)
+    _ug[0] += 1; return ''
+def _ug_q(m):
+    if m.group(1) not in _TOP: return m.group(0)
+    _ug[0] += 1; return m.group(2)
+app = _re_ug.sub(r"if ?\(typeof (\w+) ?=== ?'function'\) ?(?=\{?\1\()", _ug_if, app)
+app = _re_ug.sub(r"typeof (\w+) ?=== ?'function' ?\? ?(\1\([^()]*\)) ?: ?(?:''|null)", _ug_q, app)
+print('gen_app: лишних проверок typeof убрано', _ug[0])
 out = (shell + '\n'
        '<script id="perf-js" src="assets/perf.js"></script>\n'
        '<script id="lib-loader">' + LOADER + '</script>\n'

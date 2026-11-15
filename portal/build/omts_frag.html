@@ -100,12 +100,6 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
           x.items.map(function (it) { return '<li>' + esc(it.nom) + (it.char ? ' <small>' + esc(it.char) + '</small>' : '') + ' — ' + esc(it.qty) + ' ' + esc(it.unit) + (it.st ? ' · <small>' + esc(it.st) + '</small>' : '') + (it.term ? ' · срок ' + esc(it.term) : '') + '</li>'; }).join('') + '</ul></details>';
       }).join('') + (L.length > lim ? '<button class="more" data-more="' + r.k + '">Показать ещё (' + (L.length - lim) + ')</button>' : '');
   }
-  function stock(r){
-    var P = r.p;
-    return '<div class="chips2"><span>складов <b>' + (P.whs || []).length + '</b></span><span>позиций <b>' + n(P.n_items) + '</b></span><span>штук <b>' + n(P.total) + '</b></span></div>' +
-      (P.whs || []).map(function (w) { return '<details class="rq"><summary><b>' + esc(w.wh) + '</b><em class="age">' + n(w.q) + ' шт</em></summary><ul>' +
-        w.items.map(function (it) { return '<li>' + esc(it.nom) + (it.char ? ' <small>' + esc(it.char) + '</small>' : '') + ' — ' + n(it.q) + '</li>'; }).join('') + '</ul></details>'; }).join('');
-  }
   function terms(){
     var T = window.OMTS_TERMS;
     if (!T || !T.groups) return '<p class="ihdr">Сроки поставки материалов</p><div class="igroup"><p class="note">Документ ОМТС «Сроки поставки материалов» ещё не получен.</p></div>';

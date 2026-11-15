@@ -271,7 +271,7 @@ details:not([open]) summary .lbl::after{content:" ▸"}
 <script>
 /*__DATA__*/
 (function(){
-const svg=document.getElementById('map'), wrap=document.getElementById('wrap');
+const svg=document.getElementById('map');
 const fovs=document.getElementById('fovs'), marks=document.getElementById('marks');
 const NS='http://www.w3.org/2000/svg';
 const cams=DATA.cams, B=DATA.b;
@@ -287,8 +287,7 @@ const G=DATA.geo;
 document.getElementById('meta').innerHTML=`<b>${cams.length}</b> камер · ${G.center[0].toLocaleString('ru-RU')}° с.ш., ${G.center[1].toLocaleString('ru-RU')}° в.д. · север вверху · МСК-62`;
 document.getElementById('magn').setAttribute('transform',`rotate(${G.decl})`);
 document.getElementById('declTxt').textContent=`магн. +${G.decl.toFixed(1).replace('.',',')}°`;
-function llAt(x,y){const a=G.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
-const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник14 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 
 // ---- draw cameras ----
 const camEls={};
@@ -363,7 +362,7 @@ document.getElementById('zout').onclick=()=>zoomAt(1.6,view.x+view.w/2,view.y+vi
 document.getElementById('zfit').onclick=()=>{view={...full};apply()};
 window.addEventListener('resize',apply);
 function panTo(x,y,minPxPerM){
-  const r=svg.getBoundingClientRect(); let k=mpp();
+  let k=mpp();
   if(minPxPerM&&1/k<minPxPerM){const f=1/(k*minPxPerM);view.w*=f;view.h*=f}
   view.x=x-view.w/2; view.y=y-view.h/2; apply();
 }
@@ -381,7 +380,6 @@ svg.addEventListener('click',()=>{if(!moved)clearSel()});
 // ---- selection & card ----
 const card=document.getElementById('card'), list=document.getElementById('list');
 let selId=null, selB=null;
-const DIRS=['С','СВ','В','ЮВ','Ю','ЮЗ','З','СЗ'];
 const DIRF=['север','северо-восток','восток','юго-восток','юг','юго-запад','запад','северо-запад'];
 function dirName(a){const bearing=((a+90)%360+360)%360;return DIRF[Math.round(bearing/45)%8]+`, азимут ${Math.round(bearing)}°`}
 function fmt(n){return n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1})}
@@ -394,7 +392,7 @@ function clearSel(){
 function select(id,fromList){
   clearSel(); selId=id; const {g,fov,c}=camEls[id];
   g.classList.add('sel'); fov&&fov.classList.add('sel'); marks.appendChild(g);
-  const li=list.querySelector(`[data-id="${CSS.escape(id)}"]`); if(li){li.classList.add('sel'); if(!fromList) li.scrollIntoView({block:'nearest'})}
+  const li=list.querySelector(`[data-id="${CSS.escape(id)}"]`); if(li){li.classList.add('sel'); if(!fromList) li.scrollIntoView({block:'nearest'});}
   if(fromList) panTo(c.x,c.y,3.2);
   const rows=[];
   rows.push(`<dt>IP</dt><dd><span class="mono">${c.ip}</span><button class="copy" data-copy="${c.ip}">копировать</button></dd>`);
@@ -443,13 +441,12 @@ function wireCard(){
 function selectText(n){const r=document.createRange();r.selectNodeContents(n);const s=getSelection();s.removeAllRanges();s.addRange(r)}
 
 // ---- list ----
-const SHORTB={};
 function groupKey(c){return c.host||'_out'}
 function renderList(q){
   q=(q||'').trim().toLowerCase();
   const match=c=>!q||[c.num||'',c.title,c.ip,c.orig,bname(c.host)].join(' ').toLowerCase().includes(q);
   const groups={};
-  for(const c of cams){const m=match(c);camEls[c.id].g.classList.toggle('dim',!!q&&!m);if(m)(groups[groupKey(c)]=groups[groupKey(c)]||[]).push(c)}
+  for(const c of cams){const m=match(c);camEls[c.id].g.classList.toggle('dim',!!q&&!m);if(m)(groups[groupKey(c)]=groups[groupKey(c)]||[]).push(c);}
   const keys=Object.keys(groups).sort((a,b)=>{if(a==='_out')return 1;if(b==='_out')return -1;return bname(a).localeCompare(bname(b),'ru')});
   let h='';
   for(const k of keys){

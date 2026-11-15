@@ -182,12 +182,15 @@ def _take_lock(log):
     os.makedirs(OUT, exist_ok=True)
     lp = os.path.join(OUT, 'mail.lock')
     lk = open(lp, 'a+')
-    try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        if not _stale_kill(lp, log): lk.close(); return None, {'state': 'уже работает'}
+    try:                                                       # 15.11.2026 CodeQL py/file-not-closed: ошибка до возврата — замок закрывается
         try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError: lk.close(); return None, {'state': 'уже работает (замок занят)'}
-    lk.seek(0); lk.truncate(); lk.write('%d %f\n' % (os.getpid(), time.time())); lk.flush()
+        except OSError:
+            if not _stale_kill(lp, log): lk.close(); return None, {'state': 'уже работает'}
+            try: fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError: lk.close(); return None, {'state': 'уже работает (замок занят)'}
+        lk.seek(0); lk.truncate(); lk.write('%d %f\n' % (os.getpid(), time.time())); lk.flush()
+    except BaseException:
+        lk.close(); raise
     return lk, None
 
 
@@ -335,7 +338,7 @@ def work(send, log=lambda *a: None, budget=BUDGET, clock=time.time, only=None):
     return res
 
 
-# REDACTED_B64_37 send="bot": письма отправляет скрипт бота через Gmail (29.10.2026)
+# REDACTED_B64_8 send="bot": письма отправляет скрипт бота через Gmail (29.10.2026)
 # Формат — fabrika/notes/mail_via_gmail.md, «Интерфейс 1»; менять только вместе со скриптом бота.
 MO_ATT_MAX = 8 * 1024 * 1024                                       # вложений на письмо (байт): больше — письмо уходит без них, att_skipped
 MO_CAP = 12 * 1024 * 1024                                          # примерно байт писем в одном st/mo.bin; остальные — в следующий прогон

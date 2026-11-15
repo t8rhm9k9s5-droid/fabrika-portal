@@ -6,6 +6,17 @@
 падает (raise_kind='trap' — BaseException: «ни одного вызова»; 'refused' — ConnectionRefusedError: как недоступный сервер)."""
 import json, os, re, shutil, sys, tempfile
 
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))      # work/py/live
 PACKER = os.path.join(os.path.dirname(HERE), 'drive_pack.py')            # work/py/drive_pack.py (копия упаковщика)
 KL, KO, KC, KD = '11' * 32, '22' * 32, '33' * 32, '44' * 32              # тестовые k_live, k_owner, k_cmd, k_deploy
@@ -64,7 +75,7 @@ subprocess.run = _srun
 
 
 def code_map():
-    src = open(PACKER, encoding='utf-8').read()
+    src = _rd(PACKER, encoding='utf-8')
     return eval(re.search(r"CODE = (\{.*?\})\n", src, re.S).group(1), {'A': '/nonexistent'})
 
 
@@ -75,18 +86,18 @@ def make(send='smtp', read='imap', passwords=True, k_owner=True, trap='trap', so
     for n in code_map():
         p = os.path.join(HERE, n)
         if os.path.isfile(p): shutil.copy(p, os.path.join(C, n))
-    for n, body in STUBS.items(): open(os.path.join(FL, 'py', n), 'w', encoding='utf-8').write(body)
-    c = {'k_live': KL, 'k_deploy': KD, 'site': os.path.join(T, 'www'), 'mail': 'user125@example.org'}
+    for n, body in STUBS.items(): _wr(body, os.path.join(FL, 'py', n), 'w', encoding='utf-8')
+    c = {'k_live': KL, 'k_deploy': KD, 'site': os.path.join(T, 'www'), 'mail': 'user124@example.org'}
     c.update(cfg or {})
-    json.dump(c, open(os.path.join(FL, 'cfg.json'), 'w'))
-    if k_owner: open(os.path.join(C, 'k_owner.txt'), 'w').write(KO)
-    open(os.path.join(C, 'k_cmd.txt'), 'w').write(KC)
-    for n in ('mail_out.json', 'mail_out_reissue.json'): open(os.path.join(C, n), 'w').write('[]')   # настоящие письма в макет не берём
-    json.dump({'send': send, 'read': read}, open(os.path.join(C, 'mail_cfg.json'), 'w'))
+    _wr(json.dumps(c), os.path.join(FL, 'cfg.json'), 'w')
+    if k_owner: _wr(KO, os.path.join(C, 'k_owner.txt'), 'w')
+    _wr(KC, os.path.join(C, 'k_cmd.txt'), 'w')
+    for n in ('mail_out.json', 'mail_out_reissue.json'): _wr('[]', os.path.join(C, n), 'w')   # настоящие письма в макет не берём
+    _wr(json.dumps({'send': send, 'read': read}), os.path.join(C, 'mail_cfg.json'), 'w')
     if passwords:
-        for n in ('gmail_app_password', 'itm_app_password'): open(os.path.join(FL, n), 'w').write('test-pass')
+        for n in ('gmail_app_password', 'itm_app_password'): _wr('test-pass', os.path.join(FL, n), 'w')
     TRAPD = os.path.join(T, 'trap'); os.makedirs(TRAPD); TRAPF = os.path.join(T, 'trap.log')
-    open(os.path.join(TRAPD, 'sitecustomize.py'), 'w').write(SITECUSTOMIZE)
+    _wr(SITECUSTOMIZE, os.path.join(TRAPD, 'sitecustomize.py'), 'w')
     ENV = dict(os.environ, PYTHONPATH=TRAPD, FABRIKA_TRAP=TRAPF, FABRIKA_TRAP_KIND=trap, FABRIKA_TRAP_SOCK=sock)
     return {'T': T, 'FL': FL, 'C': C, 'SITE': os.path.join(T, 'www'), 'ENV': ENV, 'TRAPF': TRAPF}
 
@@ -101,7 +112,7 @@ def unseal(s, key):
 
 
 def trap_log(M):
-    return open(M['TRAPF']).read() if os.path.exists(M['TRAPF']) else ''
+    return _rd(M['TRAPF']) if os.path.exists(M['TRAPF']) else ''
 
 
 def load_live(M):

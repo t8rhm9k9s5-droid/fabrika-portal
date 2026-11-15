@@ -4,7 +4,6 @@
 синий — Сотрудник25, зелёный — Сотрудник22."""
 import os as _os
 _SRC = _os.path.dirname(_os.path.abspath(__file__))
-_ROOT = _os.path.dirname(_SRC)
 import html, re
 from difflib import SequenceMatcher
 from importlib.machinery import SourceFileLoader

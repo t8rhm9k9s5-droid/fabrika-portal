@@ -70,7 +70,7 @@ function netDetail(){
     nAxis(grp,p3,d.c);
     nPick(grp,p3,Math.max(.35,r*2),{kind:'u',u,name:u.name||d.name});
     if(!over){ // route marking on the ground above an underground line
-      const q=nDens(u.pts,2,true).map(p=>V(p[0],p[1],gy(nG(p[0],p[1]))+.07));nAxis(grp,q,d.c,true)}
+      const q=nDens(u.pts,2,true).map(p=>V(p[0],p[1],gy(nG(p[0],p[1]))+.07));nAxis(grp,q,d.c,true);}
     else nOverSupports(u,acc(sup,'gas_over'),acc(fit,'gas_over'),r);
   });
   // ---- risers and jogs between pipe ends that meet on the plan ----
@@ -83,13 +83,13 @@ function netDetail(){
       nPick(gU.gas_over,top,.35,{kind:'u',u:uo,name:uo.name||UT.gas_over.name});
       const F=acc(fit,'gas_over');nCylC(F,nP(ax,ay,g-.3),nP(ax,ay,g+.5),ro*1.7+.01,14);       // casing where the pipe leaves the ground
       for(const z of [1.1,1.16])nCylC(F,nP(ax,ay,g+z),nP(ax,ay,g+z+.03),ro*2.1+.012,14);    // insulating flange joint
-      nOverRiserBrackets(ax,ay,g+.6,ah,acc(sup,'gas_over'),ro)}
+      nOverRiserBrackets(ax,ay,g+.6,ah,acc(sup,'gas_over'),ro);}
     else{const [ax,ay,ah]=L.a,[bx,by,bh]=L.b,r=Math.max(ro,(uw.dmm||57)/2000);
       const pts=Math.abs(ah-bh)>.05?[nP(ax,ay,ah),nP(ax,ay,bh),nP(bx,by,bh)]:[nP(ax,ay,ah),nP(bx,by,bh)];
-      const A=nAcc();nPipe(A,pts,r);const m=nMesh(A,nMat(UT.gas_over.c));m.userData={kind:'u',u:uo,name:uo.name||UT.gas_over.name};gU.gas_over.add(m);nAxis(gU.gas_over,pts,UT.gas_over.c)}
+      const A=nAcc();nPipe(A,pts,r);const m=nMesh(A,nMat(UT.gas_over.c));m.userData={kind:'u',u:uo,name:uo.name||UT.gas_over.name};gU.gas_over.add(m);nAxis(gU.gas_over,pts,UT.gas_over.c);}
   }
-  for(const t in sup){const m=nMesh(sup[t],nMat(NC.post,.08));gU[t].add(m)}
-  for(const t in fit){const m=nMesh(fit[t],nMat(0x8c8f8a,.06));gU[t].add(m)}
+  for(const t in sup){const m=nMesh(sup[t],nMat(NC.post,.08));gU[t].add(m);}
+  for(const t in fit){const m=nMesh(fit[t],nMat(0x8c8f8a,.06));gU[t].add(m);}
   // ---- gas devices: cabinet regulator, building inlets ----
   gGD.clear();
   for(const g of (S.gasdev||[])){
@@ -216,7 +216,7 @@ function nBracket(A,x,y,h,w,r,dx,dy){const p=nP(x,y,h),f=nP(w.fx,w.fy,h),down=ne
   const nrm=pd.clone().sub(fd);nrm.y=0;if(nrm.lengthSq()<1e-6)nrm.set(1,0,0);nrm.normalize();
   const along=new THREE.Vector3(dx,0,-dy).normalize();
   nBox(A,fd.clone().add(new THREE.Vector3(0,.03,0)),nrm.clone().multiplyScalar(.006),along.clone().multiplyScalar(.07),new THREE.Vector3(0,.09,0));   // plate on the wall
-  nCyl(A,p.clone().add(along.clone().multiplyScalar(-.02)),p.clone().add(along.clone().multiplyScalar(.02)),r+.007,12)}                              // clamp
+  nCyl(A,p.clone().add(along.clone().multiplyScalar(-.02)),p.clone().add(along.clone().multiplyScalar(.02)),r+.007,12);}                              // clamp
 function nOverRiserBrackets(x,y,z0,z1,A,r){const w=nNearWall(x,y,z1);if(!w||w.d>1.2)return;for(let z=z0;z<z1;z+=2.0)nBracket(A,x,y,z+r+.03,w,r,0,1)}
 function nPost(A,x,y,h,g,r,dx,dy){const top=nP(x,y,h-r-.03),bot=nP(x,y,g);
   nCyl(A,bot,top,.045,10);nDisc(A,top,new THREE.Vector3(0,1,0),.045,10);
@@ -234,7 +234,7 @@ function nEntry(p,q,w,r){const F=nAcc(),R=nAcc();const P0=nP(p[0],p[1],p[2]),f=n
 // cabinet gas regulator point: cabinet on a concrete base, vent stack, inlet and outlet into the ground, warning sign
 let nSignTex=null;
 function nSign(){if(nSignTex)return nSignTex;const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');x.fillStyle='#f2c230';x.fillRect(0,0,256,128);x.fillStyle='#c62a2a';
-  x.font='bold 54px sans-serif';x.textAlign='center';x.fillText('ГАЗ',128,62);x.font='bold 26px sans-serif';x.fillText('ОГНЕОПАСНО',128,104);nSignTex=new THREE.CanvasTexture(c);return nSignTex}
+  x.font='bold 54px sans-serif';x.textAlign='center';x.fillText('ГАЗ',128,62);x.font='bold 26px sans-serif';x.fillText('ОГНЕОПАСНО',128,104);nSignTex=new THREE.CanvasTexture(c);return nSignTex;}
 function nShgrp(g,gz){
   let dir=[1,0];const w=nNearWall(g.x,g.y,gz+1);if(w&&w.d>.01){const nx=(g.x-w.fx)/w.d,ny=(g.y-w.fy)/w.d;dir=[-ny,nx]}
   const along=new THREE.Vector3(dir[0],0,-dir[1]).normalize(),front=new THREE.Vector3().crossVectors(_nUp,along).normalize();
@@ -253,7 +253,7 @@ function nShgrp(g,gz){
   gGD.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(seam),nLineMat(0x8a6d10)))}
 // gas inlet into a building (place by the plan label, ±2–3 m): sleeve in the wall, valve with a red lever, yellow sign
 function nInlet(g){const w=nNearWall(g.x,g.y,g.z);const F=nAcc(),R=nAcc();const p=nP(g.x,g.y,g.z);
-  let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=p.clone().sub(nP(w.fx,w.fy,g.z));out.y=0;out.normalize()}
+  let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=p.clone().sub(nP(w.fx,w.fy,g.z));out.y=0;out.normalize();}
   const wallP=w?nP(w.fx,w.fy,g.z):p, r=.03;
   nCylC(F,wallP.clone().add(out.clone().multiplyScalar(-.1)),wallP.clone().add(out.clone().multiplyScalar(.12)),.055,14);
   const tip=wallP.clone().add(out.clone().multiplyScalar(.35));nCyl(F,wallP,tip,r,10);
@@ -261,7 +261,7 @@ function nInlet(g){const w=nNearWall(g.x,g.y,g.z);const F=nAcc(),R=nAcc();const 
   const v=tip.clone().add(new THREE.Vector3(0,-.6,0));nSph(F,v,.05,12,8);nCylC(F,v.clone().add(new THREE.Vector3(0,-.07,0)),v.clone().add(new THREE.Vector3(0,.07,0)),.045,12);
   nBeam(R,v.clone().add(out.clone().multiplyScalar(.06)),v.clone().add(out.clone().multiplyScalar(.28)),.03,.02);
   const m=nMesh(F,nMat(UT.gas_over.c)),m2=nMesh(R,nMat(NC.red));m.userData={kind:'gd',g};gGD.add(m,m2);pickables.push(m);
-  const pk=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),pickMat);pk.position.copy(tip);pk.userData={kind:'gd',g};gGD.add(pk);pickables.push(pk)}
+  const pk=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),pickMat);pk.position.copy(tip);pk.userData={kind:'gd',g};gGD.add(pk);pickables.push(pk);}
 // a cabinet seen on a photo: a box on short legs against the nearest wall
 function nGasBox(g,gz){const bx=g.box,w=nNearWall(g.x,g.y,gz+1);let out=new THREE.Vector3(1,0,0);if(w&&w.d>.01){out=nP(g.x,g.y,gz).sub(nP(w.fx,w.fy,gz));out.y=0;out.normalize()}
   const side=new THREE.Vector3().crossVectors(out,_nUp).normalize(),A=nAcc(),L=nAcc();const c=nP(g.x,g.y,gz+.25+bx.h/2);
@@ -271,7 +271,7 @@ function nGasBox(g,gz){const bx=g.box,w=nNearWall(g.x,g.y,gz+1);let out=new THRE
 // wells: cast-iron hatch, concrete rings Ø1,0 m from the hatch down to the bottom mark, slab and base
 function nWells(){
   gMH.clear();
-  for(const h of S.manholes){const g=nG(h.x,h.y),top=h.top,bot=h.bot,dep=Math.max(.5,top-bot);
+  for(const h of S.manholes){const top=h.top,bot=h.bot;
     const L=nAcc(),Rg=nAcc(),Cn=nAcc();const c=(z)=>nP(h.x,h.y,z);
     nCylC(L,c(top-.02),c(top+.035),.33,20);nCylC(Rg,c(top-.08),c(top+.03),.42,20);                // hatch and frame
     nCylC(Cn,c(top-.32),c(top-.12),.85,20);                                                        // cover slab
@@ -279,8 +279,8 @@ function nWells(){
     for(let z=top-.32-.9;z>bot;z-=.9)nCylC(Cn,c(z-.015),c(z+.015),.585,20);                       // ring joints
     nCylC(Cn,c(bot-.25),c(bot-.1),.75,20);                                                         // base slab
     const mL=nMesh(L,nMat(NC.iron,.05)),mR=nMesh(Rg,nMat(0x55595c,.05)),mC=nMesh(Cn,nMat(NC.conc,.05,true));
-    for(const m of [mL,mR,mC]){m.userData={kind:'mh',h};gMH.add(m)}pickables.push(mL);
-    const pk=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.5,10),pickMat);pk.position.copy(c(top));pk.userData={kind:'mh',h};gMH.add(pk);pickables.push(pk)}
+    for(const m of [mL,mR,mC]){m.userData={kind:'mh',h};gMH.add(m);}pickables.push(mL);
+    const pk=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.5,10),pickMat);pk.position.copy(c(top));pk.userData={kind:'mh',h};gMH.add(pk);pickables.push(pk);}
 }
 // overhead lines: concrete poles with crossarms and insulators, wires with sag; the low line on wooden poles with concrete stubs
 function nPower(){
@@ -294,7 +294,7 @@ function nPower(){
       const pk=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(nP(a[0],a[1],a[2]),nP(b[0],b[1],b[2])),2,1.0,5,false),pickMat);pk.userData={kind:'vl',pw};gPow.add(pk);pickables.push(pk)}}
   const poles=S.poles.filter(p=>!p.light).map(p=>({x:p.x,y:p.y,ud:{kind:'pole'}}));
   for(const pw of S.power)if(pw.low)for(const [x,y] of pw.poles)if(!poles.some(p=>Math.hypot(p.x-x,p.y-y)<.5))poles.push({x,y,ud:{kind:'vl',pw},low:true});
-  const Cc=nAcc(),Wd=nAcc(),St=nAcc(),In=nAcc();
+  const Wd=nAcc(),St=nAcc(),In=nAcc();
   for(const p of poles){const g=nG(p.x,p.y),a=att.find(t=>Math.hypot(t.x-p.x,t.y-p.y)<.6);
     let dx=a?a.dx:0,dy=a?a.dy:1;if(!a){let b1=null;for(const q of poles){if(q===p)continue;const d=Math.hypot(q.x-p.x,q.y-p.y);if(d>1&&(!b1||d<b1.d))b1={d,q}}if(b1){dx=(b1.q.x-p.x)/b1.d;dy=(b1.q.y-p.y)/b1.d}}
     const low=p.low||(a&&a.low),Hh=a?(a.z-g)+(low?.3:.12):8.0;

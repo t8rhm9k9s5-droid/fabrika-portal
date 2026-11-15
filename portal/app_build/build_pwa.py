@@ -8,6 +8,18 @@
 from _cg1_file_io import read_file as _cg1_read_file, load_json as _cg1_load_json
 import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import os, re, sys, json, shutil, glob, time, zipfile, hashlib
+
+
+def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
+    with open(*a, **k) as _f:
+        return _f.read()
+
+
+def _wr(_d, *a, **k):
+    with open(*a, **k) as _f:
+        return _f.write(_d)
+
+
 B = '/home/claude/app_build'
 SITE = '/home/claude/site_zip'
 OUT = f'{B}/pwa/terekhina14'
@@ -60,7 +72,7 @@ if os.environ.get('T14_ACCT_URL') or os.path.exists('/home/claude/push/acct_live
     _SEC = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'; _S = json.loads(pathlib.Path(_SEC).read_text())
     _M, _why = _ACCT.plan_master(_S, _ACCT.load_keyring())      # a new site key is decided here, so acct.json already says «shared: false»
     if _why != 'same key': _ACCT.save_enc_secret(_S, _SEC); print('site key:', _why)
-    json.dump({'url': os.environ.get('T14_ACCT_URL') or json.loads(pathlib.Path(PUSH).read_text())['url'], 'pub': _ACCT.keys()['pub'], 'salt': _S['salt'], 'iter': _S['iter'], 'shared': not _S.get('master_hex')}, open(f'{OUT}/acct.json', 'w', encoding='utf-8'))
+    _wr(json.dumps({'url': os.environ.get('T14_ACCT_URL') or json.loads(pathlib.Path(PUSH).read_text())['url'], 'pub': _ACCT.keys()['pub'], 'salt': _S['salt'], 'iter': _S['iter'], 'shared': not _S.get('master_hex')}), f'{OUT}/acct.json', 'w', encoding='utf-8')
 _cg1_json_value_63 = {'name': 'Фабрика', 'short_name': 'Фабрика', 'description': 'Портал «Фабрика»: карта производства, производство, склад, документы, изделия и чат', 'lang': 'ru', 'start_url': './home.html', 'scope': './',
            'display': 'standalone', 'background_color': '#141A26', 'theme_color': '#242528',
            'icons': [{'src': 'icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png'}, {'src': 'icons/icon-512.png', 'sizes': '512x512', 'type': 'image/png'},

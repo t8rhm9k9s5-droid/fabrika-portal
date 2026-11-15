@@ -146,7 +146,7 @@ html:root:not([data-theme="light"]) .al-x svg{stroke:#ebebf5}
 @media (hover:none){.al-x{display:none}.al-h{padding-right:0}}
 .pnav .pi,.fs .fs-i{position:relative}
 .al-dot.al-ic-dot{position:absolute;top:-3px;left:-3px;width:9px;height:9px;margin:0;box-shadow:0 0 0 2px var(--p-bg,#f2f2f7)}
-/* «Пульс фабрики» первой строкой главной (13.11.2026, Т. В.): три главные цифры; справа — тревоги плитками шириной в плитку раздела.
+/* «Пульс фабрики» первой строкой главной (13.11.2026, Т. В.): три Имя2 цифры; справа — тревоги плитками шириной в плитку раздела.
    Без бликов и мигания: цвет цифры — зелёный / оранжевый / красный, точка у подписи того же цвета. Сетка — как у «Разделов» (6 / 3 / 2). */
 .al-n,.al-n::before,.al-ic::after,.al-dot{animation:none!important}
 .al-n.al-crit::before{opacity:.5}
@@ -309,3 +309,9 @@ html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html bod
 @media (min-width:700px) and (max-width:1099px){
   .fhome .pk-grid>li:last-child:nth-child(3n+1),.fhome .fh-secs>li:last-child:nth-child(3n+1),.pz-k>:last-child:nth-child(3n+1),.rz-map>:last-child:nth-child(3n+1){grid-column:1/-1}
   .fhome .pk-grid>li:last-child:nth-child(3n+2),.fhome .fh-secs>li:last-child:nth-child(3n+2),.pz-k>:last-child:nth-child(3n+2),.rz-map>:last-child:nth-child(3n+2){grid-column:span 2}}
+/* 15.11.2026, Т. В. (iPhone, скрин 06:20): «крестик на алерте западает за границу — часть крестика исчезает». На телефоне «×» уезжал вверх на полкнопки
+   и срезался скруглением плашки (overflow:hidden). Центр — без transform и без margin:auto (их по-разному понимают движки и экономный режим):
+   top = 50 % − половина кнопки; на ПК у плитки тревоги на главной — в углу, как было. */
+.al-x,.al-x:focus-visible{top:calc(50% - 14px)!important;bottom:auto!important;margin:0!important;transform:none!important}
+.al-tile .al-x{top:12px!important;bottom:auto!important;margin:0!important}
+@media (max-width:900px){.al-tile .al-x,.fhome .fh-top .al-tile .al-x{top:calc(50% - 14px)!important;bottom:auto!important;margin:0!important}}
