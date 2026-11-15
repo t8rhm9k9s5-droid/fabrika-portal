@@ -33,16 +33,20 @@
   function enableCameraChoice(P) {
     Object.entries(P.camEls).forEach(function (entry) { entry[1].g.dataset.cameraId = entry[0]; });
     P.svg.addEventListener('click', function (event) {
-      if (P.dragged() || !event.detail) return;
+      if (P.dragged() || !event.detail || P.svg.classList.contains('moving') || event.target.closest('#edh')) return;
       var marker = event.target.closest('.cam[data-camera-id]');
-      if (!marker) return;
-      var ids = new Set([marker.dataset.cameraId]);
-      document.elementsFromPoint(event.clientX, event.clientY).forEach(function (hit) {
-        var other = hit.closest('.cam[data-camera-id]');
-        if (other && P.svg.contains(other)) ids.add(other.dataset.cameraId);
+      var ids = new Set(), x = event.clientX, y = event.clientY;
+      if (marker) ids.add(marker.dataset.cameraId);
+      // In Safari and Chromium a marker's text may cover a neighbouring icon
+      // while whitespace in that same label hits the building below it.
+      Object.entries(P.camEls).forEach(function (entry) {
+        var g = entry[1].g, box = g.getBoundingClientRect();
+        if (box.width && box.height && x >= box.left && x <= box.right && y >= box.top && y <= box.bottom
+            && getComputedStyle(g).visibility === 'visible') ids.add(entry[0]);
       });
-      if (ids.size < 2) return;
+      if (!ids.size || (ids.size === 1 && marker)) return;
       event.stopPropagation();
+      if (ids.size === 1) { P.select(ids.values().next().value, false); return; }
       P.clearSel();
       var card = document.getElementById('card'), heading = document.createElement('h2');
       heading.textContent = 'Выберите камеру на плане';

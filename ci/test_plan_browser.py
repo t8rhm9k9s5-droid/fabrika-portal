@@ -19,16 +19,21 @@ window.addEventListener('load', () => setTimeout(() => {
       const box = marker.getBoundingClientRect();
       const x = box.left + box.width / 2, y = box.top + box.height / 2;
       const target = document.elementFromPoint(x, y);
-      if (!target || !target.closest('#map')) { covered++; continue; }
+      if (!target || !target.closest('#map')) {
+        covered++;
+        marker.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter',bubbles:true}));
+        if (!marker.classList.contains('sel')) missed.push(markers.indexOf(marker));
+        continue;
+      }
       target.dispatchEvent(new MouseEvent('click', {bubbles:true, detail:1, clientX:x, clientY:y}));
       const options = Array.from(document.querySelectorAll('#card button[data-choice]'));
       if (options.length) {
         shared++;
         const intended = options.find(button => button.dataset.choice === marker.dataset.cameraId);
         if (intended) intended.click();
-        else { missed.push(marker.dataset.cameraId); continue; }
+        else { missed.push(markers.indexOf(marker)); continue; }
       } else { direct++; }
-      if (!marker.classList.contains('sel')) missed.push(marker.dataset.cameraId);
+      if (!marker.classList.contains('sel')) missed.push(markers.indexOf(marker));
     }
     const first = markers[0];
     first.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
