@@ -123,6 +123,7 @@ pa = subprocess.Popen([sys.executable, '-c', code, os.path.join(M['FL'], 'py'), 
 check(pa.stdout.readline().strip() == 'got', 'первый участок взял замок входа в itm@')
 import itm as IT
 t0 = time.time(); lk = IT.imap_lock(M['FL'], 1)
+if lk: lk.close()                                              # 15.11.2026 CodeQL: замок не должен был выдаться — всё равно закрыть
 check(lk is None and 0.9 <= time.time() - t0 < 2.5, 'второй — ждёт не дольше своего предела и пропускает прогон (не входит параллельно)')
 _wr('p', os.path.join(M['FL'], 'itm_app_password'), 'w')
 imaplib.IMAP4_SSL = lambda *a, **k: (_ for _ in ()).throw(AssertionError('вход в itm@ при занятом замке'))

@@ -1238,7 +1238,7 @@ function netDetail(){
   const acc=(store,t)=>store[t]||(store[t]=nAcc());
   // ---- pipes ----
   U.forEach((u,ui)=>{
-    if(u.t==='heat'){nHeat(u);return}
+    if(u.t==='heat'){nHeat(u);return;}
     const d=UT[u.t],r=(u.dmm||100)/2000,over=u.t==='gas_over',grp=gU[u.t];
     const P=over?u.pts.map(p=>[p[0],p[1],p[2],true]):nDens(u.pts,2,u.t!=='sewer');
     const p3=P.map(p=>nP(p[0],p[1],p[2]));
@@ -1482,7 +1482,7 @@ function nWells(){
     nCyl(Cn,c(bot-.1),c(top-.32),.58,20);nCyl(Cn,c(bot-.1),c(top-.32),.5,20);                    // rings, outer and inner face
     for(let z=top-.32-.9;z>bot;z-=.9)nCylC(Cn,c(z-.015),c(z+.015),.585,20);                       // ring joints
     nCylC(Cn,c(bot-.25),c(bot-.1),.75,20);                                                         // base slab
-    if(h.kind==='hydrant'){const sp=nP(h.x+.9,h.y,nG(h.x+.9,h.y));nCyl(Rg,sp,sp.clone().add(new THREE.Vector3(0,2.0,0)),.03,8);nBox(L,sp.clone().add(new THREE.Vector3(0,1.85,0)),new THREE.Vector3(.2,0,0),new THREE.Vector3(0,.15,0),new THREE.Vector3(0,0,.012))}
+    if(h.kind==='hydrant'){const sp=nP(h.x+.9,h.y,nG(h.x+.9,h.y));nCyl(Rg,sp,sp.clone().add(new THREE.Vector3(0,2.0,0)),.03,8);nBox(L,sp.clone().add(new THREE.Vector3(0,1.85,0)),new THREE.Vector3(.2,0,0),new THREE.Vector3(0,.15,0),new THREE.Vector3(0,0,.012));}
     const mL=nMesh(L,nMat(h.kind==='hydrant'?NC.red:NC.iron,.05)),mR=nMesh(Rg,nMat(0x55595c,.05)),mC=nMesh(Cn,nMat(NC.conc,.05,true));
     for(const m of [mL,mR,mC]){m.userData={kind:'mh',h};gMH.add(m);}pickables.push(mL);
     const pk=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.5,10),pickMat);pk.position.copy(c(top));pk.userData={kind:'mh',h};gMH.add(pk);pickables.push(pk);}
