@@ -1228,8 +1228,11 @@
     if (!A || !A.tok || !A.tok() || !me || !f || f.id !== me.id) return;
     var c = JSON.parse(localStorage.getItem('t14.glc') || 'null');
     if (c && c.id === me.id && Date.now() - c.t < 30 * 6e4) return;
+    // 15.11.2026 (проверка PR №2): за 4 с и пока идёт запрос могли выйти/войти другим — сохраняем только если вход тот же
+    function same() { var m = A.me && A.me(); return !!(m && m.id === me.id && A.tok && A.tok()); }
     setTimeout(function () {
-      A.api('gl', { tok: A.tok(), fresh: 0 }).then(function (r) { if (r && r.gl) try { localStorage.setItem('t14.glc', JSON.stringify({ id: me.id, t: Date.now(), r: r })); } catch (e) { } }, function () { });
+      if (!same()) return;
+      A.api('gl', { tok: A.tok(), fresh: 0 }).then(function (r) { if (r && r.gl && same()) try { localStorage.setItem('t14.glc', JSON.stringify({ id: me.id, t: Date.now(), r: r })); } catch (e) { } }, function () { });
     }, 4000);
   } catch (e) { /* без подкачки */ }
 })();
@@ -1245,7 +1248,7 @@
     var p = document.querySelector('.tabpanel'), de = document.documentElement;
     if (!p) return;
     var kb = window.innerHeight - vv.height > 120;              // клавиатура (или другая панель снизу) открыта
-    if (kb && !p.hidden && p.offsetParent !== null) {
+    if (kb && !p.hidden && p.getClientRects().length) {   // не offsetParent: у position:fixed он всегда null (проверка PR №2)
       var top = Math.round(vv.offsetTop + 8), h = Math.round(vv.height - 16);
       p.style.setProperty('top', top + 'px', 'important'); p.style.setProperty('bottom', 'auto', 'important');
       p.style.setProperty('max-height', h + 'px', 'important'); de.classList.add('kb-open');
