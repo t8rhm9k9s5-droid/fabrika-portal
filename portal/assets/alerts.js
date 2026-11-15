@@ -50,7 +50,11 @@
     if (sub && sub.parentNode) return { p: sub.parentNode, before: sub.nextSibling };
     var m = document.querySelector('main.ios') || document.querySelector('main') || document.querySelector('.ios');
     // 15.11.2026 ~22:00, Т. В.: «раздел должен начинаться с максимальной верхней точки» — тревоги раздела под заголовком и подписью, а не над ними
-    if (m) { var h = m.querySelector('h1'); if (h && h.parentNode === m) { var nx = h.nextElementSibling; if (nx && nx.tagName === 'P') h = nx; return { p: m, before: h.nextSibling }; } return { p: m, before: m.firstChild }; }
+    if (m) {
+      var h = m.querySelector('h1');
+      if (h) { while (h.parentNode && h.parentNode !== m) h = h.parentNode; var nx = h.nextElementSibling; if (h.tagName === 'H1' && nx && nx.tagName === 'P') h = nx; return { p: m, before: h.nextSibling }; }
+      return { p: m, before: m.firstChild };
+    }
     var top = document.querySelector('.ptop');
     return top ? { p: top.parentNode, before: top.nextSibling, loose: true } : null;
   }

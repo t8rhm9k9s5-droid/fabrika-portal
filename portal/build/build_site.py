@@ -432,6 +432,8 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           # 14.11.2026 ~08:10, Т. В.: «обновлённый дизайн — включаю для всех»: V22 по умолчанию у всех; «Классика» на устройстве — по выбору
           "var sk=sp?sp[1]:g('t14.skin');if(!sk)sk='v22';"
           "if(sk==='v22')d.setAttribute('data-skin','v22');"
+          # 15.11.2026, Т. В. (компьютер, видео «Glassy SideBar»): стрелка «›» раскрывает левую панель с названиями — выбор запоминается
+          "if(g('t14.side')==='open')d.setAttribute('data-side','open');"
           # 14.11.2026, Т. В.: «каждый вход на портал — через Face ID, где его нет — код из 4 цифр». Личный вход и перерыв больше минуты —
           #   страница скрыта до отрисовки, замок (assets/acct.js, lockScreen) открывает её после Face ID / кода.
           "try{var lm=JSON.parse(g('t14.me')||'null');if(lm&&g('t14.tok')&&g('t14.qlon')==='1'&&lm.st!=='pending'&&(g('t14.locked')==='1'||Date.now()-(+g('t14.lact')||0)>6e4||Date.now()-(+g('t14.linp')||Date.now())>6e5)){d.setAttribute('data-lock','1');"

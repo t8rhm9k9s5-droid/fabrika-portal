@@ -253,7 +253,7 @@
     e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
   });
   function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
-  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
+  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
@@ -838,16 +838,26 @@
         if (/Профиль/.test(t)) d = 'Личный вход, вид, тема, уведомления';
         return [t.trim(), d];
       }
-      function place(e) { var x = e.clientX + 14, y = e.clientY + 18, w = tip.offsetWidth, h = tip.offsetHeight; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = e.clientY - h - 10; tip.style.left = Math.round(x) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      // 15.11.2026, Т. В. (видео «Glassy SideBar»): плашка — у значка, выезжает из панели (не у курсора)
+      function place(a) { var s = side.getBoundingClientRect(), r = a.getBoundingClientRect(), h = tip.offsetHeight, y = r.top + r.height / 2 - h / 2;
+        y = Math.max(8, Math.min(innerHeight - h - 8, y)); tip.style.left = Math.round(s.right + 12) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      function railOn() { var t = side.querySelector('.pnavs .pt'); return !!t && getComputedStyle(t).display === 'none'; }   // названия скрыты — узкая панель
       side.addEventListener('mousemove', function (e) {
         var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab');
         if (!a || !side.contains(a)) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); return; }
-        if (getComputedStyle(a.querySelector('.pt') || a).display !== 'none' && !document.documentElement.hasAttribute('data-skin')) { tip.classList.remove('on'); return; }   // подписи и так видны
-        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); tmr = setTimeout(function () { tip.classList.add('on'); }, 250); }
-        place(e);
+        if (!railOn()) { curEl = null; tip.classList.remove('on'); return; }   // панель раскрыта или широкая — подписи и так видны
+        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); place(a); tmr = setTimeout(function () { place(a); tip.classList.add('on'); }, 180); }
       });
       side.addEventListener('mouseleave', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
       side.addEventListener('click', function () { tip.classList.remove('on'); });
+      // 15.11.2026, Т. В.: «стрелочка — нажимаешь, и всё меню выезжает вправо с надписями». Только там, где панель узкая (компьютер, V22 или 701–1279 px).
+      var de = document.documentElement, exp = el('button', 'pexp', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'); exp.type = 'button'; document.body.appendChild(exp);
+      function expSync() { var open = de.getAttribute('data-side') === 'open', can = matchMedia('(min-width:701px)').matches && (open || railOn());
+        exp.classList.toggle('on', can); exp.setAttribute('aria-expanded', open ? 'true' : 'false'); exp.setAttribute('aria-label', open ? 'Свернуть меню' : 'Развернуть меню с названиями'); exp.title = ''; }
+      exp.addEventListener('click', function () { var open = de.getAttribute('data-side') !== 'open'; tip.classList.remove('on'); curEl = null;
+        de.classList.add('side-anim'); if (open) de.setAttribute('data-side', 'open'); else de.removeAttribute('data-side'); try { localStorage.setItem('t14.side', open ? 'open' : '') } catch (e) { }
+        setTimeout(function () { de.classList.remove('side-anim'); }, 320); expSync(); });
+      expSync(); setTimeout(expSync, 0); addEventListener('load', expSync); addEventListener('resize', expSync); window.T14SideSync = expSync;   // панель ещё не в документе — проверить после вставки
     })();
 
     // --- шапка раздела ---
@@ -1207,4 +1217,44 @@
   function sxStart() { try { var k = 0; (function go() { if (!window.T14Acct && ++k < 30) return setTimeout(go, 100); sxPart(here()); })(); } catch (e) { } }   // 13.11: без задержки 1,2 с — есть сохранённое — сразу, нет — сразу запрос
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sxStart); else sxStart();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountNav); else mountNav();
+})();
+// 15.11.2026 ~22:45, Т. В.: «данные на портале в фоне не обновляются… зачем мне загружать данные по машинам, когда я зашёл» — тихая подкачка
+//   «Транспорта» с любой страницы портала: у кого есть доступ (флаг t14.gl своего входа), раз в 30 мин, через 4 с после открытия; ответ — в t14.glc
+//   (transport.html показывает его сразу). Хостинг обновляет ГЛОНАСС сам (днём 15 мин, ночью час).
+(function glPrefetch() {
+  try {
+    if (/transport\.html$/.test(location.pathname)) return;
+    var A = window.T14Acct, me = A && A.me && A.me(), f = JSON.parse(localStorage.getItem('t14.gl') || 'null');
+    if (!A || !A.tok || !A.tok() || !me || !f || f.id !== me.id) return;
+    var c = JSON.parse(localStorage.getItem('t14.glc') || 'null');
+    if (c && c.id === me.id && Date.now() - c.t < 30 * 6e4) return;
+    setTimeout(function () {
+      A.api('gl', { tok: A.tok(), fresh: 0 }).then(function (r) { if (r && r.gl) try { localStorage.setItem('t14.glc', JSON.stringify({ id: me.id, t: Date.now(), r: r })); } catch (e) { } }, function () { });
+    }, 4000);
+  } catch (e) { /* без подкачки */ }
+})();
+// 15.11.2026 ~22:50, Т. В. (видео 22:25): «при поиске улетает строка поиска вверх, невозможно сдвинуть до конца, посмотреть, что набрал» —
+//   с 2.5.77 прокручивается вся страница, и iPhone при клавиатуре сдвигает видимую область, а лист меню (position:fixed) остаётся по старому окну
+//   и уходит верхом за экран. Пока открыта клавиатура — лист ставится в видимую часть экрана над клавиатурой (visualViewport), строка поиска
+//   прилипает к верху листа (portal.css .tabpanel .psearch sticky).
+(function kbSheet() {
+  var vv = window.visualViewport; if (!vv) return;
+  var raf = 0;
+  function fit() {
+    raf = 0;
+    var p = document.querySelector('.tabpanel'), de = document.documentElement;
+    if (!p) return;
+    var kb = window.innerHeight - vv.height > 120;              // клавиатура (или другая панель снизу) открыта
+    if (kb && !p.hidden && p.offsetParent !== null) {
+      var top = Math.round(vv.offsetTop + 8), h = Math.round(vv.height - 16);
+      p.style.setProperty('top', top + 'px', 'important'); p.style.setProperty('bottom', 'auto', 'important');
+      p.style.setProperty('max-height', h + 'px', 'important'); de.classList.add('kb-open');
+    } else if (de.classList.contains('kb-open')) {
+      p.style.removeProperty('top'); p.style.removeProperty('bottom'); p.style.removeProperty('max-height'); de.classList.remove('kb-open');
+    }
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(fit); }
+  vv.addEventListener('resize', kick); vv.addEventListener('scroll', kick);
+  document.addEventListener('focusin', function () { setTimeout(kick, 60); setTimeout(kick, 400); });
+  document.addEventListener('focusout', function () { setTimeout(kick, 120); });
 })();
