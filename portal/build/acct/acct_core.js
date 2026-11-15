@@ -90,13 +90,20 @@
     }).then(function (r) { if (!r.ok) throw new Error('Сервер ответил ' + r.status); return r.json(); }, function (e) { throw e && /работает в приложении|Нет связи с сервером/.test(e.message) ? e : new Error('Нет связи с сервером — проверьте интернет.'); })
       .then(function (j) { if (j && j.ok === false && j.error) throw new Error(j.error); return j; });
   }
+  // 15.11.2026: доступ по группам — в k/<id>.bin после 32 байт ключа сайта идут ключи наборов групп (JSON); они ложатся в «sets» устройства
+  function takeKr(raw) {
+    var u = new Uint8Array(raw); if (u.length <= 32) return Promise.resolve(raw);
+    var j = JSON.parse(td.decode(u.slice(32))), ids = Object.keys(j), sets = {};
+    return Promise.all(ids.map(function (k) { return S.importKey('raw', new Uint8Array(j[k].match(/../g).map(function (h) { return parseInt(h, 16); })), 'AES-GCM', false, ['decrypt']).then(function (ck) { sets[k] = ck; }); }))
+      .then(function () { return kvSet('sets', sets); }).then(function () { return u.slice(0, 32).buffer; });
+  }
   function siteKey(id, Kkey, krB64) {            // the current one on the site, otherwise the server's copy
     return fetch('k/' + id + '.bin', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.arrayBuffer() : null; }, function () { return null; }).then(function (buf) {
       if (buf) return ungcm(Kkey, buf, 'fabrika-kr').catch(function () { return null; });
       return null;
     }).then(function (M) {
-      if (M) return M;
-      if (krB64) return ungcm(Kkey, unb64(krB64), 'fabrika-kr');
+      if (M) return takeKr(M);
+      if (krB64) return ungcm(Kkey, unb64(krB64), 'fabrika-kr').then(takeKr);
       throw new Error('nokey');
     });
   }
@@ -115,7 +122,7 @@
       .then(function (raw) { slot = JSON.parse(td.decode(raw)); return aes(unb64(slot.K)); })
       .then(function (k) { Kkey = k; return siteKey(id, Kkey, r.kr); })
       .then(function (M) { return checkKey(M); })
-      .catch(function (e) { if (e && (e.message === 'nokey' || e.message === 'badkey')) throw new Error(r && r.st === 'pending' ? 'Сотрудник4 ещё не подтвердили — попробуйте позже.' : 'Ключ сайта сменился — подождите обновления сайта (каждый день в 18:00) или спросите администратора.'); throw e; })
+      .catch(function (e) { if (e && (e.message === 'nokey' || e.message === 'badkey')) throw new Error(r && r.st === 'pending' ? 'Сотрудник5 ещё не подтвердили — попробуйте позже.' : 'Ключ сайта сменился — подождите обновления сайта (каждый день в 18:00) или спросите администратора.'); throw e; })
       .then(function (M) {
         return kvSet('uk', Kkey).then(function () { return kvSet('uid', id); }).then(function () {
           saveMe({ id: id, login: slot.login, name: r.name || slot.name, role: r.role, st: r.st }, slot.tok); return M;

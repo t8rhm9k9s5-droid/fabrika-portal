@@ -15,7 +15,8 @@ import os, re, sys, json, hmac, hashlib, secrets, shutil, time, mimetypes
 import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 B = '/home/claude/app_build'
-SRC = f'{B}/pwa/terekhina14'
+STAND = bool(os.environ.get('T14_ENC_SRC'))   # стенд: рабочие файлы сборки (enc_map, release_state, news) не трогаем
+SRC = os.environ.get('T14_ENC_SRC') or f'{B}/pwa/terekhina14'   # 15.11.2026: стенд доступа по группам собирает из своей малой копии
 ENC = f'{B}/enc'
 SECRET = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'
 ITER = 250000
@@ -42,6 +43,16 @@ if KR and not KR.get('shared', True) and KR['_age'] >= ACCT.KEYRING_FRESH: print
 print('site key:', why, '| keyring:', 'none' if KR is None else '%d people, rev %s, shared %s, %.0f min old' % (len(KR.get('users', [])), KR.get('rev'), KR.get('shared'), KR['_age'] / 60))
 ivkey = hmac.new(master, b'iv-derivation', hashlib.sha256).digest()
 aes = AESGCM(master)
+# 15.11.2026: доступ по группам (access.py, build/access_map.json) — страницы групп шифруются ключом набора групп, а не ключом сайта
+import access as ACC
+AMAP = ACC.load_map(); ACC_ON = ACC.is_on(AMAP)
+if ACC_ON and ACC.ensure_secret(S): ACCT.save_enc_secret(S, SECRET)
+SETK = {}
+def set_aes(sid):
+    if sid not in SETK:
+        k = ACC.set_key(S, sid); SETK[sid] = (AESGCM(k), hmac.new(k, b'iv-derivation', hashlib.sha256).digest())
+    return SETK[sid]
+print('access by groups:', 'ON' if ACC_ON else 'off')
 
 MIME = {'.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
         '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
@@ -68,14 +79,17 @@ for root, _, names in os.walk(SRC):
         rel = os.path.relpath(os.path.join(root, n), SRC).replace(os.sep, '/')
         if rel in SKIP or rel.startswith(PUBLIC_DIRS): continue
         data = pathlib.Path(os.path.join(root, n)).read_bytes()
-        iv = hmac.new(ivkey, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
-        blob = iv + aes.encrypt(iv, data, None)
+        sid = ACC.set_of(rel, AMAP) if ACC_ON else None
+        fa, fiv = set_aes(sid) if sid else (aes, ivkey)
+        iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
+        blob = iv + fa.encrypt(iv, data, None)
         name = hashlib.sha256(blob).hexdigest()[:24] + '.bin'
         pathlib.Path(f'{OUT}/b/{name}').write_bytes(blob)
-        files[rel] = [name, mime(rel), len(data)]
+        files[rel] = [name, mime(rel), len(data)] + ([sid] if sid else [])
 pre = [p for p in PRE if p in files]
 # 13.11.2026, Т. В.: «раз в сутки проверка целостности портала и всех документов по реестру» — карта путь → блок для реестра (docs_registry.py; наружу не уходит)
-with open('/home/claude/app_build/enc_map.json', 'w', encoding='utf-8') as _em: json.dump(files, _em, ensure_ascii=False)
+if not STAND:
+    with open('/home/claude/app_build/enc_map.json', 'w', encoding='utf-8') as _em: json.dump(files, _em, ensure_ascii=False)
 docs = [p for p in DOCS if p in files]
 _H8 = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:8]
 # 28.10.2026: уведомления всем — только «крупный выпуск» (решает build_pwa.py → release_state.json → last.public). Скрипт уведомлений шлёт пуш всем,
@@ -86,10 +100,10 @@ except Exception: _RS = {}
 # 28.10.2026 20:05: хвост меняется ОДИН раз на крупный выпуск (метка enc_for = last.t). Раньше каждая следующая сборка build_host после крупного
 #   выпуска давала новый хвост → пуш всем повторялся (28.10: 18:30 и 19:50, с устаревшим текстом news.txt от 26.10).
 _last = _RS.get('last') or {}
-if not _RS.get('enc_pub') or (_last.get('public') and _RS.get('enc_for') != _last.get('t')):
+if not STAND and (not _RS.get('enc_pub') or (_last.get('public') and _RS.get('enc_for') != _last.get('t'))):
     _RS['enc_pub'] = _H8; _RS['enc_for'] = _last.get('t')
     pathlib.Path('/home/claude/app_build/release_state.json').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8')
-VERSION = time.strftime('%Y%m%d%H%M%S') + '-' + _RS['enc_pub']
+VERSION = time.strftime('%Y%m%d%H%M%S') + '-' + (_RS.get('enc_pub') or 'stand')
 NEWS = f'{B}/news.txt'                    # «что нового» for the push notification text (private: lives only inside m.bin)
 news = pathlib.Path(NEWS).read_text(encoding='utf-8').strip()[:300] if os.path.exists(NEWS) else ''
 # 28.10.2026: news.txt больше не обновлялся (auto_news.py жил в старой публикации GitHub) — в пуше висел текст от 26.10. Теперь текст пуша —
@@ -98,7 +112,7 @@ try:
     _vj = pathlib.Path('/home/claude/site/assets/version.js').read_text(encoding='utf-8'); _vj = json.loads(_vj[_vj.index('{'):_vj.rindex('}') + 1])
     _today = time.strftime('%d.%m.%Y', time.gmtime(time.time() + 3 * 3600))
     _its = [i for e in _vj.get('log', []) if e.get('date') == _today for i in e.get('items', [])]
-    if _its:
+    if _its and not STAND:
         news = ('Что нового на портале\n' + '; '.join(re.sub(r'\s*\(\d+\)$', '', i) for i in _its[:4]))[:300]
         pathlib.Path(NEWS).write_text(news + '\n', encoding='utf-8')
 except Exception as _e: print('news:', _e)
@@ -115,7 +129,9 @@ if ACCT_ON:
 login = login.replace('__ACCT_CFG__', json.dumps(ACFG)).replace('/*__ACCT_CORE__*/', pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8'))
 _core = pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8')   # 12.11 CodeQL: проверка не внутри assert (python -O её выкидывает)
 if '__ACCT' in login or '</script' in _core.lower(): raise SystemExit('build_enc: в странице входа остался __ACCT или </script в acct_core.js')
-nk = ACCT.write_keyring(OUT, master, KR) if ACFG else 0
+_SETS = sorted({f[3] for f in files.values() if len(f) > 3}); _PG = ACC.people_groups(KR) if ACC_ON else {}
+nk = ACCT.write_keyring(OUT, master, KR, (lambda uid: ACC.payload(master, _PG.get(uid), _SETS, S, AMAP)) if ACC_ON else None) if ACFG else 0
+if ACC_ON: print('group sets:', _SETS, '| people with groups:', len(_PG))
 print('personal keys k/*.bin:', nk)
 login = login.replace('<head>\n', f'<head>\n<base href="{BASE}">\n', 1)
 for n in ('index.html', 'login.html', '404.html'): pathlib.Path(f'{OUT}/{n}').write_text(login, encoding='utf-8')
