@@ -1,0 +1,27 @@
+name: Portal review
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install catalogue readers
+        run: python -m pip install 'openpyxl>=3.1,<4' 'pdfplumber>=0.11,<0.12' 'pypdf>=6,<7'
+      - name: Check catalogue rows and printed pages
+        run: python ci/test_catalog.py
+      - name: Check report navigation
+        run: node ci/test_report_routes.js
+      - name: Check document links and download sizes
+        run: node ci/test_document_routes.js
+      - name: Check building links, camera totals and report captions
+        run: python ci/test_portal_audit.py
+      - name: Check pointer and keyboard selection in Chrome
+        run: python ci/test_plan_browser.py
