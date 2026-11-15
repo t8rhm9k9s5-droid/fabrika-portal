@@ -8,7 +8,7 @@
   'use strict';
   var E = window.T14Edits;
 
-  function here() { var p = location.pathname.split('/').pop() || 'index.html'; return p; }
+  function here() { var p = location.pathname.split('/').pop() || 'home.html'; return p; }
   var BADGE_PAINT = null;
   // 04.11.2026, «Назад» по уровням (см. mountNav). Правило сверки после шага назад по истории — одно для страницы и для <head> новой страницы
   //   (build_site.py _NAV кладёт его в window.T14NavDecide): N — где были (t14.nav: u — место, up — уровень выше, sheet — «Разделы»), k — где
@@ -27,7 +27,7 @@
       var e0 = performance.getEntriesByType('navigation')[0];
       if (e0 && e0.type === 'back_forward') {
         var N0 = JSON.parse(sessionStorage.getItem('t14.nav') || 'null'), st0 = history.state || {},
-          r0 = navDecide(N0, (location.pathname.split('/').pop() || 'index.html') + location.search + (location.hash.length > 1 ? location.hash : ''), st0);
+          r0 = navDecide(N0, (location.pathname.split('/').pop() || 'home.html') + location.search + (location.hash.length > 1 ? location.hash : ''), st0);
         if (r0 && r0.sheet) sessionStorage.setItem('t14.sheet', r0.sheet);
         if (r0 && r0.back) history.back();
         else if (r0 && r0.u && !r0.here) { sessionStorage.setItem('t14.navrep', JSON.stringify({ to: r0.u, p: st0.t14p || null })); location.replace(r0.u); }
@@ -458,6 +458,16 @@
       .sort(function (a, b) { return b.sc - a.sc || a.i - b.i; });
   }
   window.T14Search = { rank: rank, stem: stem, terms: terms, index: function () { return loadIndex(); } };
+  var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
+      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
+  function sectionFor(route) {
+    var page = route.split('#')[0];
+    var sections = { 'sales.html#recl': 'quality', 'sales.html#rev': 'online', 'sales.html#mp': 'online',
+      'sales.html#ko': 'people', 'sales.html#struct': 'people', 'sales.html#peo': 'fin' };
+    var key = sections[route] || DOMOF[page];
+    return PORTAL.find(function (entry) { return entry[0] === route || entry[0] === 'razdel.html#' + key; });
+  }
+  function sectionLabel(section) { return section ? 'Раздел «' + section[1] + '»' : 'Страница портала'; }
   function loadIndex() {
     if (SIDX) return SIDX;
     // 28.10.2026, пользователь: «почему нет перехода к списку камер, плану или карте» — ключевые слова разделов и строки «Камеры»
@@ -467,9 +477,9 @@
     var base = PORTAL.slice(1).map(function (p) { return { t: p[1], x: p[4], u: p[0], g: 'Разделы', i: p[2], c: p[3], k: KW[p[0]] || '' }; })
       .concat([{ t: 'Камеры видеонаблюдения — на модели 3D', x: 'Список камер, зоны обзора и слепые зоны; нажмите камеру — вид из неё', u: 'index.html', g: 'Разделы', i: 'cube', c: 'var(--ic-map)', k: 'камера камеры видеонаблюдение видео обзор слепые' },
                { t: 'Камеры на плане', x: 'Карта производства → План 2D', u: 'plan.html', g: 'Разделы', i: 'map', c: 'var(--ic-map)', k: 'камера камеры видеонаблюдение план' }])
-      .concat(SUBS.map(function (p) { return { t: p[1], x: 'Раздел «' + (PORTAL.filter(function (q) { return q[0] === p[4]; })[0] || [0, ''])[1] + '»', u: p[0], g: 'Разделы', i: p[2], c: p[3] }; }))
+      .concat(SUBS.map(function (p) { return { t: p[1], x: sectionLabel(sectionFor(p[4])), u: p[0], g: 'Разделы', i: p[2], c: p[3] }; }))
       // 04.11.2026: вкладки разделов — по названию и словам (раньше поиск знал только сами разделы)
-      .concat(TABS.map(function (p) { var s0 = PORTAL.filter(function (q) { return q[0] === p[0].split('#')[0]; })[0] || [0, '', 's_file', 'var(--ic-grey)']; return { t: p[1], x: 'Раздел «' + s0[1] + '»', u: p[0], g: 'Разделы', i: s0[2], c: s0[3], k: p[2] || '' }; }));
+      .concat(TABS.map(function (p) { var section = sectionFor(p[0]); return { t: p[1], x: sectionLabel(section), u: p[0], g: 'Разделы', i: section ? section[2] : 's_file', c: section ? section[3] : 'var(--ic-grey)', k: p[2] || '' }; }));
     SIDX = fetch('assets/search.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
       .then(function (a) { return base.concat(Array.isArray(a) ? a : []); });
     return SIDX;
@@ -487,14 +497,72 @@
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
     ['calls.html#bus', 'Служебные автобусы', 'автобусы маршрут расписание развозка'], ['library.html#regs', 'Регламенты', 'регламенты порядок процессы'], ['library.html#dog', 'Типовые договоры', 'договоры шаблоны формы юрист']];
+  // 15.11.2026, Т. В. (видео App Store): «посмотри анимацию в меню снизу — как она переезжает с плитки на плитку и аккуратно прыгает
+  //   через 2 плитки, у нас дергается». Было: подсветка гасла на одной вкладке и загоралась на другой. Стало: одна «линза» под вкладками
+  //   переезжает к выбранной пружиной (через две плитки — одним движением), в пути приподнимается и светлеет, как стекло в iOS 26.
+  //   Переход по ссылке на другую страницу — линза на новой странице доезжает от прежней вкладки. Экономный режим и «меньше движения» — без анимации.
+  function lensBar(bar) {
+    var R = document.documentElement;
+    if (R.getAttribute('data-plat') === 'android' || !bar || bar.querySelector('.tb-lens')) return;
+    var L = document.createElement('i'); L.className = 'tb-lens'; L.setAttribute('aria-hidden', 'true');
+    bar.insertBefore(L, bar.firstChild); bar.classList.add('has-lens');
+    var at = null, mv = null, lift = null, KEY = 't14.lens';
+    function items() { return [].filter.call(bar.children, function (c) { return c !== L; }); }
+    function active() {
+      var it = items();
+      return it.filter(function (c) { return c.getAttribute('aria-expanded') === 'true'; })[0] ||
+        it.filter(function (c) { return c.getAttribute('aria-current') === 'page' || c.classList.contains('on'); })[0] || null;
+    }
+    function still() {
+      var rm = false; try { rm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { rm = false; }
+      return rm || !L.animate || R.getAttribute('data-fx') === 'lite' || R.getAttribute('data-perf') === 'eco';
+    }
+    function box(el) { return { x: el.offsetLeft, w: el.offsetWidth }; }
+    function go(el, from) {
+      if (!el || !el.offsetWidth) { L.style.opacity = '0'; at = el || null; return; }
+      var b = box(el);
+      L.style.left = b.x + 'px'; L.style.width = b.w + 'px'; L.style.opacity = '1';
+      var a = from === undefined ? (at && at !== el && at.offsetWidth ? box(at) : null) : from;
+      at = el;
+      if (!a || (a.x === b.x && a.w === b.w) || still()) return;
+      var hops = Math.abs(b.x - a.x) / Math.max(1, b.w), dur = Math.round(360 + Math.min(3, hops) * 60);
+      if (mv) mv.cancel(); if (lift) lift.cancel();
+      // пружина с лёгким перелётом — как у iOS; «подъём» стекла идёт отдельно и успевает опуститься к остановке
+      mv = L.animate([{ left: a.x + 'px', width: a.w + 'px' }, { left: b.x + 'px', width: b.w + 'px' }], { duration: dur, easing: 'cubic-bezier(.3,1.32,.45,1)' });
+      lift = L.animate([{ transform: 'scale(1,1)' }, { transform: 'scale(1.1,1.2)', offset: .35 }, { transform: 'scale(1,1)' }], { duration: dur, easing: 'ease-in-out' });
+      L.classList.add('moving'); bar.classList.add('lensing');
+      var my = mv;   // отменённый прошлый переезд не должен снимать «подъём» с нового
+      mv.onfinish = mv.oncancel = function () { if (mv !== my) return; L.classList.remove('moving'); bar.classList.remove('lensing'); };
+    }
+    // с прошлой страницы: на какой вкладке стояла линза перед переходом (только что — не дольше 4 с)
+    var from0 = null;
+    try {
+      var s = JSON.parse(sessionStorage.getItem(KEY) || 'null'); sessionStorage.removeItem(KEY);
+      if (s && Date.now() - s.t < 4000 && s.n === items().length && items()[s.i]) from0 = box(items()[s.i]);
+    } catch (e) { from0 = null; }
+    go(active(), from0);
+    bar.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]'); if (!a || !bar.contains(a)) return;
+      var it = items(), i = it.indexOf(at);
+      if (i >= 0 && a !== at) try { sessionStorage.setItem(KEY, JSON.stringify({ i: i, n: it.length, t: Date.now() })); } catch (x) { }
+      if (a !== at && !still()) go(a);   // ещё до загрузки новой страницы линза начинает путь
+    });
+    var raf = 0;
+    function sync() { raf = 0; var el = active(); if (el !== at) go(el); else if (el) go(el, null); }
+    function later() { if (!raf) raf = requestAnimationFrame(sync); }
+    if (window.MutationObserver) new MutationObserver(later).observe(bar, { subtree: true, attributes: true, attributeFilter: ['aria-expanded', 'aria-current'] });
+    if (window.ResizeObserver) new ResizeObserver(function () { if (at) go(at, null); }).observe(bar); else window.addEventListener('resize', function () { if (at) go(at, null); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (at) go(at, null); });
+    // нажатие: капсула чуть «вдыхает», как в iOS 26
+    bar.addEventListener('pointerdown', function (e) { if (e.target !== bar && !still()) bar.classList.add('press'); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (t) { bar.addEventListener(t, function () { bar.classList.remove('press'); }); });
+  }
   function mountNav() {
     if (document.getElementById('tabbar')) return;
-    var cur = here(); if (!/\.html$/.test(cur)) cur = 'index.html';
+    var cur = here(); if (!/\.html$/.test(cur)) cur = 'home.html';
     var sec = PARENT[cur] || cur, isPlan = cur === 'plan.html';
     if (cur === 'sales.html' && /^#(struct|sec-|ko$)/.test(location.hash)) sec = 'sales.html#struct';   // 12.11.2026: «Структура» живёт на странице продаж
     // 13.11.2026: новая структура — пункт меню раздела «горит» и на его странице раздела, и на страницах его отчётов
-    var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
-      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
     function onSec(u) {
       if (u === sec) return true;
       var d = cur === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : sec === 'sales.html#struct' ? 'people' : DOMOF[cur];
@@ -683,7 +751,9 @@
       BOTS.forEach(function (x) {
         var a = irow('a', ICON[x[1]], x[2], x[3], ''); a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; a.addEventListener('click', function () { close(); }); g3.appendChild(a); });
       // 14.11.2026, Т. В. (опрос: приложение для iPhone без затрат; 14.11 17:27 — раздел называется «Пароль приложения»): как поставить значок, Face ID, пуши о тревогах, Siri, кнопку в Telegram
-      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'Пароль приложения', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
+      var password = irow('button', ICON.s_device, 'var(--ic-items)', 'Пароль приложения', 'личный вход и смена пароля');
+      password.type = 'button'; password.addEventListener('click', function () { close(); if (window.T14UI) T14UI.account(); }); g3.appendChild(password);
+      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'Установка на iPhone и iPad', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
       if (APK) { var apk = irow('a', ICON.s_apk, 'var(--ic-calls)', 'Скачать приложение (APK)', 'Android'); apk.href = APK; apk.setAttribute('download', 'Фабрика.apk'); apk.addEventListener('click', function () { close(); }); g3.appendChild(apk); }
       var pb = document.getElementById('pushBtn');
       if (pb) {
@@ -805,7 +875,7 @@
       var u = SUBS.filter(function (p) { return p[0] === pg; })[0]; if (u && !hs) return u[1];
       return 'Назад';
     }
-    function relKey(href) { var a = new URL(href, location.href); return (a.pathname.split('/').pop() || 'index.html') + a.search + (a.hash.length > 1 ? a.hash : ''); }
+    function relKey(href) { var a = new URL(href, location.href); return (a.pathname.split('/').pop() || 'home.html') + a.search + (a.hash.length > 1 ? a.hash : ''); }
     function hereKey() { return cur + location.search + (location.hash.length > 1 ? location.hash : ''); }
     function navGet() { try { return JSON.parse(sessionStorage.getItem('t14.nav') || 'null'); } catch (e) { return null; } }
     function track() {                                      // запомнить место, уровень выше и (в записи истории) откуда пришли
@@ -818,7 +888,7 @@
         // 05.11.2026 (1.29.0): «откуда пришли» — t14.nav пишут только страницы с оболочкой; после «Модели» (index.html, без оболочки) в t14.nav
         //   лежала страница ДО неё, «Назад» считал её «шагом раньше» и уходил history.back() — в модель. Если браузер знает, откуда пришли
         //   (referrer с нашего сайта) и это другая страница, чем в t14.nav, — верим браузеру; внутри одной страницы (#вид → #вид) — как раньше.
-        var ref = ''; try { var ru = new URL(document.referrer); if (document.referrer && ru.origin === location.origin) ref = (ru.pathname.split('/').pop() || 'index.html') + ru.search + (ru.hash.length > 1 ? ru.hash : ''); } catch (e) { ref = ''; }
+        var ref = ''; try { var ru = new URL(document.referrer); if (document.referrer && ru.origin === location.origin) ref = (ru.pathname.split('/').pop() || 'home.html') + ru.search + (ru.hash.length > 1 ? ru.hash : ''); } catch (e) { ref = ''; }
         var nuPage = nu ? nu.split(/[?#]/)[0] : '', trustNu = nu && nu !== k && (nuPage === cur || !ref || ref.split(/[?#]/)[0] === nuPage);
         var pv = R && R.to === k ? R.p : st && st.t14k ? (st.t14p || null) : (trustNu ? nu : (ref && ref !== k ? ref : (st && st.t14p) || null));
         var fs0 = ''; try { fs0 = sessionStorage.getItem('t14.fromsheet') || ''; sessionStorage.removeItem('t14.fromsheet'); } catch (e) { }
@@ -947,6 +1017,7 @@
     if (cur === 'home.html') document.body.classList.add('pg-home');
     document.body.insertBefore(top, document.body.firstChild);
     document.body.appendChild(side); document.body.appendChild(bar); document.body.appendChild(panel);
+    lensBar(bar);
     // 14.11.2026: ушли по ссылке из листа «Разделы» — «Назад» вернёт на эту страницу с открытым листом
     panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a && open === 'sections') try { sessionStorage.setItem('t14.fromsheet', hereKey()); } catch (x) { } }, true);
     panel.querySelector('.grab').addEventListener('click', close);

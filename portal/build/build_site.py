@@ -5,7 +5,9 @@
 """Assemble the website in two forms:
    /home/claude/site      — for publishing as a Claude artifact (the main page stays a fragment; the tool adds the skeleton)
    /home/claude/site_zip  — standalone static site for any web server or a local folder (full documents, local three.js fallback)"""
+from library_files import update_library_sizes
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
+from site_widgets import build_minimap, repair_note
 import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
 import os, re, shutil, subprocess, zipfile
 
@@ -32,6 +34,10 @@ def full(frag):
 # index.html (the 3D app) is written by gen_app.py into the site folder as a fragment; plan.html and docs.html come from build/
 subprocess.run(['python3', '/home/claude/build/gen_stores.py'], check=True)
 subprocess.run(['python3', '/home/claude/build/gen_calls.py'], check=True)   # «Кому звонить» (27.10.2026)   # «Остатки ОП» с fabrikant.su/stock (26.10.2026)
+# Generate the register after branding and conversion, so new previews are included on the first build.
+for _script in ('brand_all.py', 'docs2pdf.py'):
+    subprocess.run(['python3', os.path.join('/home/claude/build', _script)])
+subprocess.run(['python3', '/home/claude/build/gen_library.py'], check=True)
 frags = {'index.html': _cg1_read_file(os.path.join(SITE, 'index.html'), encoding='utf-8')}
 for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products.html', '/home/claude/build/products_frag.html'), ('plan.html', '/home/claude/build/plan_frag.html'), ('docs.html', '/home/claude/build/docs_v2.html'), ('staff.html', '/home/claude/build/staff_frag.html'), ('archive.html', '/home/claude/build/archive_frag.html'), ('stock.html', '/home/claude/build/stock_frag.html'), ('library.html', '/home/claude/build/library_frag.html'), ('chat.html', '/home/claude/build/chat_frag.html'), ('admin.html', '/home/claude/build/admin_frag.html'), ('stores.html', '/home/claude/build/stores_frag.html'), ('sales.html', '/home/claude/build/sales_frag.html'), ('calls.html', '/home/claude/build/calls_frag.html'), ('omts.html', '/home/claude/build/omts_frag.html'),
                   # 29.10.2026: «Транспорт (ГЛОНАСС)» — только владельцу (пользователь: «Только я»); данных в странице нет — их отдаёт скрипт бота по личному входу владельца (op gl)
@@ -74,9 +80,9 @@ with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
 # 28.10.2026, пользователь: «карта с камерами, с фактическими и со слепыми зонами, чтобы включались слепые зоны отдельно» — assets/blind.js
-_tf = "tog('tFov','nofov','cctv.fov');"
+_tf = "/*T14PLAN*/"   # 15.11.2026: метка в site_template_v2.html (переключатели переписаны)
 assert frags['plan.html'].count(_tf) == 1
-frags['plan.html'] = frags['plan.html'].replace(_tf, "window.T14Plan={cams,camEls,B,svg,el,store,DATA,fit:(x,y,w,h)=>{view={x,y,w,h};apply()}};" + _tf, 1)
+frags['plan.html'] = frags['plan.html'].replace(_tf, "window.T14Plan={cams,camEls,B,svg,el,store,DATA,select,clearSel,dragged:()=>moved,fit:(x,y,w,h)=>{const m=rootOf(x+w/2,y+h/2);view={x:m.x-w/2,y:m.y-h/2,w,h};apply()}};" + _tf, 1)
 frags['plan.html'] += '\n<script src="assets/blind.js"></script>\n'
 frags['plan.html'] += '<script src="assets/mapinfo.js"></script>\n'   # 02.11.2026: сводка карты в свободной области
 
@@ -385,7 +391,10 @@ except Exception as _e:
     print('автопарк для «Транспорта»:', _e); _FL = None
 assert frags['transport.html'].count('__FLEET__') == 1
 # 14.11.2026: ремонты, ТО и затраты на транспорт (build/transport/repairs.json ← письма security@/auto@ на 1c@)
-frags['transport.html'] = frags['transport.html'].replace('__REPAIRS__', _js.dumps(_cg1_read_json('/home/claude/build/transport/repairs.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+_repairs = _cg1_read_json('/home/claude/build/transport/repairs.json', encoding='utf-8')
+if isinstance(_repairs, dict) and isinstance(_repairs.get('note'), str):
+    _repairs['note'] = repair_note(_repairs['note'])
+frags['transport.html'] = frags['transport.html'].replace('__REPAIRS__', _js.dumps(_repairs, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['transport.html'] = frags['transport.html'].replace('__FLEET__', _js.dumps(_FL, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__SALES__', _sj).replace('<script src="assets/edits.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/edits.js"></script>', 1)
 # quality by the strength of the device (26.10.2026): assets/perf.js — in the model (gen_app.py) and on the plan
@@ -444,7 +453,7 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
 _NAV = ("<script>(function(){function D(N,k,s){if(!N||!N.u||N.u===k)return null;if(N.up===k&&N.sheet)return{here:1,sheet:N.sheet};return null}"
         "window.T14NavDecide=D;"
         "try{var e=performance.getEntriesByType('navigation')[0];if(!e||e.type!=='back_forward')return;var S=sessionStorage,N=JSON.parse(S.getItem('t14.nav')||'null'),"
-        "h=location.hash.length>1?location.hash:'',k=(location.pathname.split('/').pop()||'index.html')+location.search+h,st=history.state||{},r=D(N,k,st);if(!r)return;"
+        "h=location.hash.length>1?location.hash:'',k=(location.pathname.split('/').pop()||'home.html')+location.search+h,st=history.state||{},r=D(N,k,st);if(!r)return;"
         "if(r.sheet)S.setItem('t14.sheet',r.sheet);if(r.here)return;if(r.back){history.back();return}"
         "S.setItem('t14.navrep',JSON.stringify({to:r.u,p:st.t14p||null}));location.replace(r.u)}catch(x){}})()</script>\n")
 for _n in frags:
@@ -612,32 +621,7 @@ try:   # офисы продаж — снимок отчётов группы MA
                     'ops': [{'k': o.get('k'), 'n': o.get('n'), 'of': (o.get('stat') or {}).get('of'), 'sent': (o.get('stat') or {}).get('sent'), 'last': (o.get('stat') or {}).get('last')} for o in (_sb.get('ops') or [])]}
 except Exception as _e: print('пульс, офисы:', _e)
 try:   # карта производства: контуры зданий и территории с плана (настоящие, упрощённые), число зданий и камер
-    _pl = frags['plan.html']
-    _bn = {}
-    for _m in re.finditer(r'<text[^>]*data-[a-z]+="(b[\w]+)"[^>]*>([^<]{2,80})</text>', _pl): _bn.setdefault(_m.group(1), re.sub(r'\s+', ' ', _m.group(2)).strip())
-    def _r1(d): return re.sub(r'-?\d+\.\d+', lambda m: ('%.1f' % float(m.group(0))).rstrip('0').rstrip('.'), d)
-    _B = re.findall(r'<path class="bld[^"]*" data-b="(\w+)" d="([^"]+)"', _pl)
-    # 02.11.2026, Т. В.: «карта бесцветная» — здания на главной в цвете по назначению (производство, склады, офис и быт, инженерные, стройка)
-    _bcl = {b: c for c, b in re.findall(r'<path class="(bld[^"]*)" data-b="(\w+)"', _pl)}
-    def _bkind(b, c):
-        nm = _bn.get(b, '').lower()
-        if re.search(r'bld-(new|stage2|proj|plan|gp)', c): return 'new'
-        if re.search(r'склад', nm) or b in ('nSklad', 'b45', 'b37n'): return 'wh'
-        if re.search(r'bld-(tp|dg|chim)', c) or re.match(r'(tp|tr|kot|knTP|dg)', b) or nm == 'тп': return 'eng'
-        if re.search(r'кпп|админ|раздевал|гараж|переход', nm) or re.match(r'(byt|mKpp|nKpp|chapel)', b): return 'adm'
-        if re.search(r'цех|гальван|покраск|мебел|металл|стан|поролон|промзон', nm) or b == 'bProd': return 'prod'
-        return 'oth'
-    _yd = re.search(r'<path class="yard" d="([^"]+)"', _pl)
-    _cams = _js.JSONDecoder().raw_decode(_pl[_pl.index('const DATA=') + 11:])[0].get('cams') or []
-    _svg = ('<svg viewBox="6 8 430 272" role="img" aria-label="Схема территории: здания">' + ('<path class="mp" d="%s"/>' % _r1(_yd.group(1)) if _yd else '') +
-            ''.join('<a href="plan.html#%s"><path class="mb k-%s" d="%s">%s</path></a>' % (b, _bkind(b, _bcl.get(b, '')), _r1(d), ('<title>%s</title>' % _bn[b].replace('&', '&amp;').replace('<', '&lt;')) if b in _bn else '') for b, d in _B) + '</svg>')
-    _svg += ('<p class="fm-lg">' + ''.join('<span><i class="k-%s"></i>%s</span>' % kv for kv in (('prod', 'производство'), ('wh', 'склады'), ('adm', 'офис и быт'), ('eng', 'инженерные'), ('new', 'стройка и проект'))) + '</p>')
-    try:   # камеры — по модели 3D (там свежий список, со схемой видеокамер 24.09.2026); без неё — по плану
-        _cams = _js.loads(re.search(r'<script id="site-json"[^>]*>(?:window\.T14_SITE=)?(.*?);?</script>', frags['index.html'], re.S).group(1)).get('cams') or _cams
-    except Exception:
-        # намеренно: если модель 3D не прочитана, сохраняем список камер, уже полученный из плана.
-        pass
-    _PU['map'] = {'b': len(set(b for b, _ in _B)), 'c': len(_cams)}
+    _svg, _PU['map'] = build_minimap(frags['plan.html'])
     frags['home.html'] = frags['home.html'].replace('<!--MINIMAP-->', _svg, 1)
 except Exception as _e: print('пульс, карта:', _e)
 # 28.10.2026, пользователь: «Все данные должны собираться в иерархии… почему операторские кресла?» → «Рубли и процент вместе»:
@@ -694,6 +678,11 @@ except Exception as _e8:
     import traceback as _tb; _tb.print_exc()
     raise SystemExit('assets/metrics.js (один источник цифр) не собран: %r' % (_e8,))
 # 13.11.2026 (Т. В., единый вид разделов): «Пульс раздела» на razdel.html — живые цифры T14M (metrics.js + live.js), сборочные — pulse_data.js (gen_pulse.py)
+_price_dir = pathlib.Path('/home/claude/library/raw/prices')
+_staged_price = pathlib.Path('/home/claude/build/catalog/staging/prais_2026-10-28.xlsx')
+_staged_price.parent.mkdir(parents=True, exist_ok=True)
+subprocess.run(['python3', '/home/claude/build/gen_catalog.py', '--prices-dir', str(_price_dir),
+                '--xlsx-output', str(_staged_price)], check=True)
 subprocess.run(['python3', '/home/claude/build/gen_pulse.py'], check=True)
 if '<script src="assets/pulse.js"></script>' not in frags['razdel.html']:
     frags['razdel.html'] = frags['razdel.html'].replace('<script src="assets/edits.js"></script>', '<script src="assets/live.js"></script>\n<script src="assets/edits.js"></script>\n<script src="assets/pulse_data.js"></script>\n<script src="assets/pulse.js"></script>', 1)
@@ -713,7 +702,6 @@ for _k in ('catalogs', 'prices', 'certs'):
 import subprocess as _sp
 _sp.run(['python3', '/home/claude/build/gen_assort.py'], check=True)
 # 02.11.2026, Т. В.: «Изделия и материалы» — только каталог; ассортимент с продажами и остатками со страницы убран (assort.json остаётся для пульса)
-_sp.run(['python3', '/home/claude/build/gen_catalog.py'], check=True)
 frags['products.html'] = frags['products.html'].replace('<!--ASSORT-->', _cg1_read_file('/home/claude/build/catalog_frag.html', encoding='utf-8'), 1)
 os.makedirs(os.path.join(SITE, 'assets', 'img'), exist_ok=True)
 for _f in ('oslo-320.webp', 'oslo-640.webp', 'samba-320.webp', 'samba-640.webp'):
@@ -795,10 +783,10 @@ _lib = '/home/claude/library/raw'
 # 28.10.2026: PDF-копии Word/Excel для просмотра внутри портала (docs2pdf.py; gen_library.py → D.view). Старые копии переделываются только при смене исходника
 # 14.11.2026, Т. В.: «все файлы на портале, какими бы они ни были, обязаны иметь только фирменный стиль, кроме каталогов и презентаций» —
 #   brand_all.py ставит новые и заменённые файлы library/raw на фирменный бланк (оригиналы — library/orig), уже оформленные пропускает
-subprocess.run(['python3', '/home/claude/build/brand_all.py'])
-subprocess.run(['python3', '/home/claude/build/docs2pdf.py'])
 if os.path.exists(os.path.join(SITE, 'library')): shutil.rmtree(os.path.join(SITE, 'library'))
 if os.path.isdir(_lib) and any(f for _, _, fs in os.walk(_lib) for f in fs): shutil.copytree(_lib, os.path.join(SITE, 'library'))
+shutil.copy2(_staged_price, pathlib.Path(SITE) / 'library' / 'prices' / _staged_price.name)
+frags['library.html'] = update_library_sizes(frags['library.html'], SITE)
 # 28.10.2026, пользователь: «у тебя или день потерялся» — на «Производстве» и «ОМТС» не было live.js, страницы показывали запасные данные.
 # Любая страница, которая читает данные хостинга (T14Live), получает live.js ровно один раз.
 _LJ = '<script src="assets/live.js"></script>'

@@ -87,7 +87,10 @@ html[data-skin="v22"][data-skin][data-skin].t14-intro :is(.pz-k,.pk-grid,.fh-sec
 @keyframes v22-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (hover:hover){html[data-skin="v22"][data-skin][data-skin] :is(.pz-k>a.gl,.fhome .pk,.fhome .fs,.rz-map a,.fav-list .irow){transition:transform .18s ease,box-shadow .18s ease}
   html[data-skin="v22"][data-skin][data-skin] :is(.pz-k>a.gl,.fhome .pk,.fhome .fs,.rz-map a,.fav-list .irow):hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(20,22,26,.06),0 18px 36px rgba(20,22,26,.12)!important}}
-html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *,html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *:hover{animation:none!important;transition:none!important;transform:none!important}
+/* 15.11.2026: в режиме «эконом» transform:none больше не трогает содержимое SVG — иначе на плане 2D камеры, подписи и повёрнутые надписи
+   (атрибут transform) съезжали в угол */
+html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *,html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] *:hover{animation:none!important;transition:none!important}
+html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] :not(svg):not(svg *),html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] :not(svg):not(svg *):hover{transform:none!important}
 @media (prefers-reduced-motion:reduce){html[data-skin="v22"][data-skin][data-skin] *{animation:none!important;transition:none!important}}
 @media (min-width:900px){html[data-skin="v22"][data-skin][data-skin] .v22-week{max-width:460px;margin:-4px 0 12px auto}html[data-skin="v22"][data-skin][data-skin] .v22-week button{padding:6px 4px;border-radius:14px}}
 @media (prefers-color-scheme:dark){

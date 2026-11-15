@@ -21,7 +21,7 @@
       });
     } catch (e) { }
   }
-  var page = (location.pathname.split('/').pop() || 'index.html');
+  var page = (location.pathname.split('/').pop() || 'home.html');
   function norm(h) { h = String(h || ''); if (h.charAt(0) === '#') h = page + h; return decodeURIComponent(h.replace(/^\.\//, '')); }
   function id(x) { return x.file ? 'f:' + x.file : (x.href ? 'h:' + norm(x.href) : 'k:' + x.k); }
   var ITEMS = F.items.filter(function (x) { return x.k.indexOf('lc-') !== 0; });     // lc- — служебные «новое в разделе», свет не держат

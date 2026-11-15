@@ -342,7 +342,7 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
   }
   // 28.10.2026, поручение пользователя: «какие формы остатков уходят мне и на сайт» — все рассылки об остатках одной таблицей
   var SRC = [
-    ['Товары на складах («Запасы ГП»)', '1С, за месяц; ежедневная рассылка запрошена 03.11', 'Начальный остаток, приход, расход и конечный остаток по всем складам и филиалам, брак и рекламации — внутри филиалов (образец — отчёт М. М. Сотрудник10 за октябрь)', 'рассылка 1С', 'Склад → «Все склады · движение», плитка «Склад · все склады» на главной'],
+    ['Товары на складах («Запасы ГП»)', '1С, за месяц; ежедневная рассылка запрошена 03.11', 'Начальный остаток, приход, расход и конечный остаток по всем складам и филиалам, брак и рекламации — внутри филиалов (образец — отчёт М. М. Сотрудник12 за октябрь)', 'рассылка 1С', 'Склад → «Все склады · движение», плитка «Склад · все склады» на главной'],
     ['Складские остатки продукции ФАБРИКАНТ', '1С, каждый рабочий день утром (остаток на 0:00)', '4 файла по группам — стулья, операторские и руководительские кресла, мягкая мебель; все склады: Рязань (готовая продукция) и 7 офисов продаж', 'рассылка 1С', 'Склад → «Все склады и ОП», «Динамика», «Проверить в 1С»; бот → «Склад»'],
     ['ПКС свободные остатки склада', '1С, каждый день ~9:35 (в рассылку отдела продаж — и в выходные)', 'Свободный остаток по складам Рязани вместе со складом ПКС, все товары, со штрихкодами (файл «склады маркетплейсов матрица»)', 'рассылка 1С', 'Главная цифра «Склада» — это и есть остаток склада; поиск по штрихкоду; «Только в ПКС»'],
     ['Жилпромсервис отчёты', '1С, каждый рабочий день', 'Покупные товары и диаграммы по операторским и руководительским креслам', 'рассылка 1С', 'ОМТС → «Покупные товары»'],
@@ -357,14 +357,14 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
         '<span class="isub">' + esc(r[1]) + '</span><span class="isub">' + esc(r[2]) + '</span><span class="isub"><b>На портале:</b> ' + esc(r[4]) + '</span></span></span></div>'; }).join('') + '</div>' +
       '<p class="ifoot">Все склады и филиалы — по отчёту 1С «Товары на складах» (решение 03.11). Свободный остаток Рязани — по «ПКС свободные остатки склада» (решение 23.10). «Складские остатки» на 0:00 — для всех складов и офисов продаж и для проверки минусов в 1С.</p>'; }
   // ---- 02.11.2026, пользователь: «Возьми-ка этот отчет за основу… движение внутри склада и конечный остаток по каждому складу… разделив на склад»;
-  //      опрос: «5 групп, все 26 складов», «Склад → «Движение за месяц»». Данные — stock_move.py (1С «Товары на складах», письмо М. Сотрудник10).
+  //      опрос: «5 групп, все 26 складов», «Склад → «Движение за месяц»». Данные — stock_move.py (1С «Товары на складах», письмо М. Сотрудник12).
   var MV = []; try { MV = JSON.parse(document.getElementById('move-data').textContent) || []; } catch (e) { MV = []; }
   var MNOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   function mName(m){ var p = m.split('-'); return MNOM[+p[1] - 1] + ' ' + p[0]; }
   function mOf(sfx){ if (!sfx) return MV[0]; for (var i = 0; i < MV.length; i++) if (MV[i].m === sfx) return MV[i]; return null; }
   function mSfx(M){ return M === MV[0] ? '' : '-' + M.m; }
   function mWh(M){ var L = []; M.g.forEach(function(g){ g.w.forEach(function(w){ L.push({g: g.n, w: w}); }); }); return L; }
-  // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник10, используй его как базу. То есть движение
+  // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник12, используй его как базу. То есть движение
   //   по складу в разрезе филиалов то же самое. Склады брака тоже можно указать уже внутри отчета.» → филиалы (Рязань и ОП по городам),
   //   внутри — склады, брак и рекламации — с отметкой; всё — по конечному остатку, больше — выше. Разбор — app_build/host/live/stock_mv.py.
   var KCOL = {'': '#007aff', brak: '#ff3b30', vyst: '#ff9500'}, KTAG = {brak: 'брак', vyst: 'выставка'};
@@ -401,6 +401,49 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
     var nm = href ? '<a href="' + href + '">' + name + '</a>' : name;
     return '<tr class="' + cls + '"><td>' + nm + '</td><td><b' + (v[3] < 0 ? ' class="neg"' : '') + '>' + nf(v[3]) + '</b></td><td>' + df(v[3] - v[0]) + '</td><td>' + nf(v[0]) + '</td><td>' + nf(v[1]) + '</td><td>' + nf(v[2]) + '</td></tr>';
   }
+  function defectList(M, omitEmpty){
+    var BK = []; M.g.forEach(function(g){ g.w.forEach(function(w){ if (w.k === 'brak') BK.push([g, w]); }); });
+    BK.sort(function(a, b){ return b[1].v[3] - a[1].v[3]; });
+    if (!BK.length && omitEmpty) return '';
+    if (!BK.length) return '<p class="ifoot">' + (M.nbrak || (M.brak && M.brak[3]) ? 'В отчёте есть итог по браку, но нет детализации по складам.' : 'В отчёте за этот период склады брака и рекламаций не выделены.') + '</p>';
+    return '<p class="ihdr">Брак и рекламации · ' + nf((M.brak || [])[3]) + ' шт</p><div class="igroup">' + BK.map(function(x){ var w = x[1];
+      return '<a class="irow" href="#mw' + whIdx(M, w) + mSfx(M) + '"><span class="itile" style="--c:' + KCOL.brak + '">' + IC.warn + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x[0].n) + ' · ' + esc(w.l || w.n) + '</span><span class="isub">' + vsub(w.v) + '</span></span>' + vq(w.v) + '<span class="ichev"></span></span></a>'; }).join('') + '</div>';
+  }
+  function defects(){
+    var M = MV[0], total = window.T14M && T14M.get ? T14M.get('stockAll') : null;
+    var current = '';
+    if (total && total.brak && (!M || total.date > M.to || (total.date === M.to && total.brak[3] !== (M.brak || [])[3]))) {
+      current = '<p>Сводный остаток брака на ' + day(total.date) + ': <b>' + nf(total.brak[3]) + '</b> шт.</p>';
+    }
+    V.innerHTML = '<a class="back" href="#">Склад</a><h1>Брак и рекламации на складах</h1>' + current +
+      (M ? '<p class="ifoot">Отчёт о движении по складам на ' + day(M.to) + '.</p>' + defectList(M) :
+        '<p class="ifoot">Выгрузка движения по складам пока недоступна.</p>');
+  }
+  var purchasedReport = null, purchasedLoading = !!(window.T14Live && T14Live.bin);
+  function purchased(){
+    var report = purchasedReport, p = report && report.p;
+    var h = '<a class="back" href="#">Склад</a><h1>Покупная мебель</h1>';
+    if (report && report.t) h += '<p class="ifoot">Отчёт «Покупные товары» от ' + day(report.t.slice(0, 10)) + '.</p>';
+    if (p && p.total != null) h += '<p>Общий остаток: <b>' + nf(p.total) + '</b> шт.</p>';
+    if (p && Array.isArray(p.whs) && p.whs.length) {
+      h += p.whs.map(function (wh) {
+        var items = wh.items || [];
+        return '<h2>' + esc(wh.wh) + '</h2>' + (items.length ?
+          '<div class="igroup"><div class="wtbl"><table><thead><tr><th>Позиция</th><th>Характеристика</th><th>Остаток, шт</th></tr></thead><tbody>' +
+          items.map(function (item) { return '<tr><td>' + esc(item.nom) + '</td><td>' + esc(item.char) + '</td><td>' + nf(item.q) + '</td></tr>'; }).join('') +
+          '</tbody></table></div></div>' : '<p class="ifoot">Позиции по складу в отчёте отсутствуют.</p>');
+      }).join('');
+    } else if (report && report.hdr && report.hdr.length && report.rows && report.rows.length) {
+      h += '<div class="igroup"><div class="wtbl"><table><thead><tr>' +
+        report.hdr.map(function (v) { return '<th>' + esc(v) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        report.rows.map(function (row) { return '<tr>' + row.map(function (v) { return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') +
+        '</tbody></table></div></div>';
+    } else {
+      h += '<p class="ifoot">' + (purchasedLoading ? 'Загружаем отчёт «Покупные товары»…' :
+        report ? 'В отчёте нет списка позиций по складам.' : 'Выгрузка «Покупные товары» пока недоступна.') + '</p>';
+    }
+    V.innerHTML = h;
+  }
   function move(sfx){
     var M = mOf(sfx); if (!M) return main();
     var T = M.tot, B = M.brak || [0, 0, 0, 0], ng = M.neg || [], ngq = ng.reduce(function(a, x){ return a + x[3]; }, 0);
@@ -417,10 +460,7 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
       '<div class="hst"><div><span>на ' + day(M.from) + '</span><b>' + nf(T[0]) + '</b></div><div><span>приход</span><b>' + nf(T[1]) + '</b></div><div><span>расход</span><b>' + nf(T[2]) + '</b></div></div></div>' +
       '<p class="ihdr">Филиалы и склады</p>' + mvTable(M, rows) +
       '<p class="ifoot">Как в отчёте: по каждому филиалу — его склады, в том числе брак, рекламации и выставки. Нажмите на филиал или склад — подробно по видам, моделям и характеристикам.</p>';
-    var BK = []; M.g.forEach(function(g){ g.w.forEach(function(w){ if (w.k === 'brak') BK.push([g, w]); }); });
-    BK.sort(function(a, b){ return b[1].v[3] - a[1].v[3]; });
-    if (BK.length) h += '<p class="ihdr">Брак и рекламации · ' + nf(B[3]) + ' шт</p><div class="igroup">' + BK.map(function(x){ var w = x[1];
-      return '<a class="irow" href="#mw' + whIdx(M, w) + mSfx(M) + '"><span class="itile" style="--c:' + KCOL.brak + '">' + IC.warn + '</span><span class="ic"><span class="ibody"><span class="ititle">' + esc(x[0].n) + ' · ' + esc(w.l.toLowerCase()) + '</span><span class="isub">' + vsub(w.v) + '</span></span>' + vq(w.v) + '<span class="ichev"></span></span></a>'; }).join('') + '</div>';
+    h += defectList(M, true);
     if (ng.length) h += '<p class="ihdr">Проверить в 1С</p><div class="igroup"><details><summary class="irow"><span class="itile" style="--c:#ff3b30">' + IC.warn + '</span><span class="ic"><span class="ibody"><span class="ititle">Отрицательный конечный остаток · ' + ng.length + ' поз.</span><span class="isub">всего ' + nf(ngq) + ' шт — минус только в учёте</span></span><span class="ichev"></span></span></summary>' +
       '<div class="vars mvc"><table><thead><tr><th>Склад · модель · характеристика</th><th>Конец</th></tr></thead><tbody>' + ng.map(function(x){ return '<tr><td>' + esc(x[0]) + ' · ' + esc(x[1]) + '<br><span style="color:var(--ios-2)">' + esc(x[2]) + '</span></td><td class="neg">' + nf(x[3]) + '</td></tr>'; }).join('') + '</tbody></table></div></details></div>';
     h += '<p class="ifoot">Источник: ' + esc(M.rep) + ' — ' + esc(M.src) + '. Период ' + day(M.from) + ' — ' + day(M.to) + '. Количество — в базовых единицах 1С.</p>';
@@ -469,9 +509,23 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
       var box = el.querySelector('.mvc'); if (box.innerHTML) return; var p = el.getAttribute('data-k').split(':'); box.innerHTML = chars(w.t[+p[0]].m[+p[1]], ''); }, true);
     q.addEventListener('input', function(){ B.innerHTML = body(q.value.trim().toLowerCase()); });
   }
-  function route(){ var h = location.hash, mm; if (/^#g\\d+$/.test(h)) group(+h.slice(2)); else if (/^#w\\d+$/.test(h)) wh(+h.slice(2)); else if ((mm = /^#move(?:-(\\d{4}-\\d{2}))?$/.exec(h))) move(mm[1]); else if ((mm = /^#mw(\\d+)(?:-(\\d{4}-\\d{2}))?$/.exec(h))) moveWh(+mm[1], mm[2]); else if ((mm = /^#mb(\\d+)(?:-(\\d{4}-\\d{2}))?$/.exec(h))) moveBranch(+mm[1], mm[2]); else if (h === '#dyn') move(); else if (h === '#src') src(); else if (h === '#free') free(); else main(); window.scrollTo(0, 0); }
+  function route(){ var h = location.hash, mm; if (h === '#s-pok') purchased(); else if (h === '#brak') defects(); else if (/^#g\\d+$/.test(h)) group(+h.slice(2)); else if (/^#w\\d+$/.test(h)) wh(+h.slice(2)); else if ((mm = /^#move(?:-(\\d{4}-\\d{2}))?$/.exec(h))) move(mm[1]); else if ((mm = /^#mw(\\d+)(?:-(\\d{4}-\\d{2}))?$/.exec(h))) moveWh(+mm[1], mm[2]); else if ((mm = /^#mb(\\d+)(?:-(\\d{4}-\\d{2}))?$/.exec(h))) moveBranch(+mm[1], mm[2]); else if (h === '#dyn') move(); else if (h === '#src') src(); else if (h === '#free') free(); else main(); window.scrollTo(0, 0); }
   window.addEventListener('hashchange', route); route();
+  function setPurchased(data) {
+    purchasedReport = ((data && data.kinds) || []).filter(function (r) { return r.k === 'pok'; })[0] || null;
+    purchasedLoading = false;
+    if (location.hash === '#s-pok') purchased();
+  }
+  if (purchasedLoading) T14Live.bin('omts.bin').then(function (data) {
+    if (purchasedLoading) setPurchased(data);
+  }, function () { if (purchasedLoading) setPurchased(null); });
+  window.addEventListener('t14bin', function (e) {
+    if (!e.detail) return;
+    if (e.detail.name === 'omts.bin') setPurchased(e.detail.data);
+    if (e.detail.name === 'smv.bin') setMovement(e.detail.data);
+  });
   // 27.10.2026: the hosting takes the 1С reports from the mail itself — its stock (st/ls.bin, assets/live.js) replaces the build's when newer
+  if (window.T14M && T14M.on) T14M.on(function () { if (location.hash === '#brak') defects(); });
   if (window.T14M) T14M.start(['ls.bin', 'smv.bin', 'smvs.bin']);   // 04.11.2026: единый источник (assets/metrics.js) — раньше страницы
   if (window.T14Live) T14Live.load().then(function (L) {
     var S = L && L.stock; if (!S || !S.date || !S.groups) return;
@@ -483,12 +537,13 @@ html:root[data-theme="dark"] .mvc td.neg,html:root[data-theme="dark"] .mvq b.neg
     D = S; T = D.total; window.T14Stock = D; route();
   });
   // 03.11.2026: движение по складам — робот хостинга берёт отчёт 1С «Товары на складах» из почты сам (st/smv.bin); новее сборки — заменяет
-  if (window.T14Live && T14Live.bin) T14Live.bin('smv.bin').then(function (z) {
+  function setMovement(z) {
     if (!z || !z.months || !z.months.length) return; var m = {}, ch = false;
     MV.forEach(function(x){ m[x.m] = x; });
     z.months.forEach(function(x){ if (!x || !x.m || !x.g) return; var o = m[x.m]; if (!o || x.to > o.to || (x.to === o.to && String(x.got || '') > String(o.got || ''))) { m[x.m] = x; ch = true; } });
     if (!ch) return; MV = Object.keys(m).sort().reverse().map(function(k){ return m[k]; }); route();
-  });
+  }
+  if (window.T14Live && T14Live.bin) T14Live.bin('smv.bin').then(setMovement);
   if (window.T14Live && T14Live.bin) T14Live.bin('oz.bin').then(function (z) { if (z && z.stocks) { OZ = z; if (!location.hash) route(); } });
   window.T14Stock = D;
   // for the assistant: the stock as text

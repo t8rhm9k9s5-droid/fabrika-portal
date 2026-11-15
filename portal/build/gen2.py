@@ -186,7 +186,7 @@ extra.append(f'<path class="edge" d="{path([(440,2813),(415,2863),(620,2956),(64
 a1, a2 = T((4738, 1589)), T((4268, 2164))
 sang = math.degrees(math.atan2(a2[1] - a1[1], a2[0] - a1[0])); sang = sang - 180 if sang > 90 else sang
 sx, sy = T((4560, 2080))
-extra.append(f'<text class="street" x="{sx:.2f}" y="{sy:.2f}" transform="rotate({sang:.1f} {sx:.2f} {sy:.2f})">ул. Терехина</text>')
+extra.append(f'<text class="street" x="{sx:.2f}" y="{sy:.2f}" transform="rotate({sang:.1f} {sx:.2f} {sy:.2f})">ул. Терехина, 14</text>')   # 15.11.2026: адрес площадки на плане
 
 # ---------- graticule (WGS84) ----------
 ll2px = None

@@ -182,10 +182,27 @@ ul.szzn{margin:4px 0 8px;padding-left:18px;font-size:12.5px;line-height:1.45} ul
 button:focus-visible,input:focus-visible,.item:focus-visible,.chip:focus-visible{outline:2px solid var(--cam);outline-offset:2px}
 .north{position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));width:64px;text-align:center;font-family:var(--f-narrow);font-weight:700;color:var(--ink);pointer-events:none}
 .north svg{display:block;margin:0 auto}
+
+/* 15.11.2026 — чистый план: по умолчанию здания с литерами и кадастровыми номерами; остальное — галочками в «Слоях» */
+.nocam #marks .cam:not(.sel),.nocam #marks .dev,.nocam .fov:not(.sel),.nocam .hitg.spot{display:none}
+.nonames .blab:not(.blab-proj):not(.blab-stage2):not(.blab-plan):not(.blab-tp):not(.blab-dg){display:none}
+#lits{display:none}
+.nocad #cadL{display:none} .nopar #parcels{display:none}
+#cadL{pointer-events:none}
+#cadL text{text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--paper);stroke-linejoin:round}
+#cadL .cl{font-family:var(--f-narrow);font-weight:700;font-size:13px;fill:var(--ink);stroke-width:3px;letter-spacing:.01em}
+#cadL .cn{font-family:var(--f-mono);font-size:9.5px;fill:var(--muted);stroke-width:2.6px}
+.togs .tgh{flex-basis:100%;font:600 11px/1.2 var(--f-body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:10px 0 2px}
+.togs .tgh:first-child{margin-top:0}
+/* в листе «Слои» портала переключатели — строки с переключателем (ui.css); заголовки групп — подписи внутри той же группы */
+.tabpanel .togs .tgh{display:block;margin:0;padding:14px 16px 6px;font:600 12px/1.2 var(--f-body);letter-spacing:.05em;color:var(--ios-2,var(--muted));border-top:.5px solid var(--ios-sep,var(--rule))}
+.tabpanel .togs .tgh:first-child{border-top:0}
+.tabpanel .togs .tgh+.tog{border-top:0}
+@media (max-width:700px){html body.has-portal .north{top:calc(64px + env(safe-area-inset-top,0px))} html body.has-portal .north small{display:none}}
 .north small{display:block;font-weight:400;font-size:.7rem;color:var(--cam);line-height:1.1}
-.scale{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:.75rem;color:var(--ink);pointer-events:none}
+.scale{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,min(env(safe-area-inset-bottom,0px),34px));font-family:var(--f-mono);font-size:.75rem;color:var(--ink);pointer-events:none}
 .scale .bar{height:6px;border:1.5px solid var(--ink);border-top:none;margin-top:2px}
-.hint{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));font-size:.78rem;color:var(--muted);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:3px 8px;border-radius:4px;pointer-events:none}
+.hint{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,min(env(safe-area-inset-bottom,0px),34px));font-size:.78rem;color:var(--muted);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:3px 8px;border-radius:4px;pointer-events:none}
 aside{border-left:1px solid var(--rule);background:var(--panel);display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .top{flex:none;max-height:64%;overflow:auto;border-bottom:1px solid var(--rule)}
 .top .sec:last-child{border-bottom:0}
@@ -278,13 +295,23 @@ details:not([open]) summary .lbl::after{content:" ▸"}
       <label class="lbl" for="q">Поиск камеры</label>
       <input id="q" type="search" placeholder="Номер, название или IP — например 042, склад, 10.45" autocomplete="off">
       <div class="togs">
-        <button class="tog" id="tFov" aria-pressed="true">Зоны обзора</button>
-        <button class="tog" id="tLab" aria-pressed="true">Номера камер</button>
-        <button class="tog" id="tElec" aria-pressed="true">Электросети</button>
-        <button class="tog" id="tGas" aria-pressed="true">Газ</button>
-        <button class="tog" id="tWat" aria-pressed="true">Вода и стоки</button>
-        <button class="tog" id="tSzz" aria-pressed="false" hidden>СЗЗ</button>
-        <button class="tog" id="tI25" aria-pressed="true">Выбросы 2025</button>
+        <!-- 15.11.2026, Т. В.: «основной вид карты 2D — адреса с литерами и кадастровыми номерами зданий; камеры, обзор, слепые зоны, вода, газ,
+             СЗЗ — галочками» -->
+        <span class="tgh">План</span>
+        <button class="tog" id="tCad" aria-pressed="true">Литеры и кадастровые номера</button>
+        <button class="tog" id="tPar" aria-pressed="true">Земельные участки</button>
+        <button class="tog" id="tNames" aria-pressed="false">Названия цехов</button>
+        <span class="tgh">Видеонаблюдение</span>
+        <button class="tog" id="tCam" aria-pressed="false">Камеры</button>
+        <button class="tog" id="tFov" aria-pressed="false">Зоны обзора</button>
+        <button class="tog" id="tLab" aria-pressed="false">Номера камер</button>
+        <span class="tgh">Сети</span>
+        <button class="tog" id="tElec" aria-pressed="false">Электросети</button>
+        <button class="tog" id="tGas" aria-pressed="false">Газ</button>
+        <button class="tog" id="tWat" aria-pressed="false">Вода и стоки</button>
+        <span class="tgh">Экология</span>
+        <button class="tog" id="tSzz" aria-pressed="false">Санитарно-защитная зона</button>
+        <button class="tog" id="tI25" aria-pressed="false">Выбросы 2025</button>
         <button class="tog" id="tR25" aria-pressed="false">РТ 2025</button>
         <button class="tog" id="tIsa" aria-pressed="false">Выбросы 2019</button>
         <button class="tog" id="tNoise" aria-pressed="false">Шум</button>
@@ -347,6 +374,29 @@ try{await window.T14Edits.ready();}catch(_){}
 const svg=document.getElementById('map');
 const fovs=document.getElementById('fovs'), marks=document.getElementById('marks');
 const NS='http://www.w3.org/2000/svg';
+// ---- 15.11.2026, Т. В. (видео iPhone): «карта не вращается вокруг оси, лагает, приближаешь — она опять назад». Слои плана — в группе #rot:
+//   карту можно повернуть двумя пальцами (компас — обратно на север); вид «по умолчанию» на телефоне повёрнут так, чтобы участок занял экран.
+//   Корневые координаты SVG (view) всегда «по экрану», координаты плана (DATA, правки) — внутри #rot; rootOf/mapOf переводят между ними.
+const rot=document.createElementNS(NS,'g'); rot.id='rot';
+for(const n of [...svg.childNodes]){if(n.nodeType===1&&n.localName==='defs')continue;rot.appendChild(n)}
+svg.appendChild(rot);
+{const ap=svg.appendChild.bind(svg), ib=svg.insertBefore.bind(svg), isDefs=n=>n&&n.localName==='defs';
+ svg.appendChild=n=>isDefs(n)?ap(n):rot.appendChild(n);
+ svg.insertBefore=(n,r)=>isDefs(n)?ib(n,svg.firstChild):(r&&r.parentNode===rot?rot.insertBefore(n,r):rot.insertBefore(n,rot.firstChild));}
+let theta=0, drawnTheta=0;
+const PIV={x:DATA.W/2,y:DATA.H/2};
+function rootOf(x,y){if(!theta)return {x,y};const f=theta*Math.PI/180,c=Math.cos(f),n=Math.sin(f),dx=x-PIV.x,dy=y-PIV.y;return {x:PIV.x+c*dx-n*dy,y:PIV.y+n*dx+c*dy}}
+function mapOf(x,y){if(!theta)return {x,y};const f=-theta*Math.PI/180,c=Math.cos(f),n=Math.sin(f),dx=x-PIV.x,dy=y-PIV.y;return {x:PIV.x+c*dx-n*dy,y:PIV.y+n*dx+c*dy}}
+const north=document.querySelector('.north');
+function setRot(){
+  if(drawnTheta===theta)return; drawnTheta=theta;
+  rot.setAttribute('transform',theta?`rotate(${theta.toFixed(3)} ${PIV.x} ${PIV.y})`:'');
+  const na=north&&north.querySelector('svg'); if(na)na.style.transform=theta?`rotate(${theta.toFixed(2)}deg)`:'';   // крутится стрелка, буква «С» — ровно
+  // надписи плана остаются читаемыми — разворачиваем их обратно (кроме идущих вдоль улиц: у них свой поворот)
+  for(const t of rot.querySelectorAll('#static text')){if(t.dataset.tf0===undefined)t.dataset.tf0=t.getAttribute('transform')||'';if(t.dataset.tf0)continue;
+    const x=t.getAttribute('x'),y=t.getAttribute('y');if(x===null||y===null)continue;
+    if(theta)t.setAttribute('transform',`rotate(${(-theta).toFixed(3)} ${x} ${y})`);else t.removeAttribute('transform')}
+}
 const cams=DATA.cams, B=DATA.b;
 // cameras added on the model page: local metres -> plan coordinates
 for(const key of window.T14Edits.ids('n:')){const r=window.T14Edits.get(key), L0=DATA.loc0||[0,0];
@@ -397,12 +447,21 @@ for(const v of DATA.devs){
 const full={x:0,y:0,w:DATA.W,h:DATA.H};
 let view={...full};
 function mpp(){const r=svg.getBoundingClientRect();return Math.max(view.w/r.width,view.h/r.height)}
+// рамка SVG без превью жеста: getBoundingClientRect у элемента с CSS transform отдаёт уже повёрнутую/увеличенную рамку
+let baseRect=null;
+function SR(){return svg.style.transform&&baseRect?baseRect:(baseRect=svg.getBoundingClientRect())}
+function normView(v){const r=SR();if(!r.width||!r.height)return v;const k=Math.max(v.w/r.width,v.h/r.height),cx=v.x+v.w/2,cy=v.y+v.h/2;return {x:cx-r.width*k/2,y:cy-r.height*k/2,w:r.width*k,h:r.height*k}}
+let shown=null, prevRaf=0;
 function apply(){
+  if(prevRaf){cancelAnimationFrame(prevRaf);prevRaf=0}
+  svg.style.transform=''; view=normView(view); setRot();
   svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
-  const k=mpp(); svg.classList.toggle('far',1/k<1.6); svg.classList.toggle('zin',1/k>5);
-  for(const m of (window.SZM||[])) m.g.setAttribute('transform',`translate(${m.x} ${m.y}) scale(${k})`);
-  for(const id in camEls){const {g,c}=camEls[id];g.setAttribute('transform',`translate(${c.x} ${c.y}) scale(${k})`)}
-  for(const {g,v} of devEls) g.setAttribute('transform',`translate(${v.x} ${v.y}) scale(${k})`);
+  shown={view:{...view},theta};
+  const k=mpp(), cr=theta?` rotate(${(-theta).toFixed(2)})`:''; svg.classList.toggle('far',1/k<1.6); svg.classList.toggle('zin',1/k>5);
+  for(const m of (window.SZM||[])) m.g.setAttribute('transform',`translate(${m.x} ${m.y}) scale(${k})${cr}`);
+  for(const id in camEls){const {g,c}=camEls[id];g.setAttribute('transform',`translate(${c.x} ${c.y}) scale(${k})${cr}`)}
+  for(const {g,v} of devEls) g.setAttribute('transform',`translate(${v.x} ${v.y}) scale(${k})${cr}`);
+  if(typeof cadLay==='function'&&CADS) cadLay(k);
   drawHandle();
   // scale bar
   const target=90*k, steps=[2,5,10,20,25,50,100,200]; let s=steps[0]; for(const v of steps){if(v<=target)s=v}
@@ -417,26 +476,52 @@ function toUser(clientX,clientY){
   const pt=svg.createSVGPoint(); pt.x=clientX; pt.y=clientY;
   return pt.matrixTransform(svg.getScreenCTM().inverse());
 }
+// координаты плана под пальцем/курсором (поворот снят) — для правок и всего, что ставится на план
+function toMap(clientX,clientY){const p=toUser(clientX,clientY);return mapOf(p.x,p.y)}
 svg.addEventListener('wheel',e=>{e.preventDefault();const p=toUser(e.clientX,e.clientY);zoomAt(Math.pow(1.0018,e.deltaY),p.x,p.y)},{passive:false});
-const ptrs=new Map(); let moved=false, start=null, pinch=null;
+// превью жеста: SVG не перерисовывается на каждом кадре (на iPhone это и давало «лаг») — двигается готовая картинка (CSS transform),
+//   а план перерисовывается один раз, когда пальцы отпущены
+function preview(){
+  prevRaf=0; if(!shown)return; const r=SR(); if(!r.width)return;
+  const v0=shown.view, v1=normView(view), k0=v0.w/r.width, k1=v1.w/r.width, sc=k0/k1, f=(theta-shown.theta)*Math.PI/180, c=Math.cos(f)*sc, n=Math.sin(f)*sc;
+  const s0x=(PIV.x-v0.x)/k0, s0y=(PIV.y-v0.y)/k0, s1x=(PIV.x-v1.x)/k1, s1y=(PIV.y-v1.y)/k1;   // центр поворота стоит на месте в корневых координатах
+  svg.style.transformOrigin='0 0';
+  svg.style.transform=`matrix(${c.toFixed(6)},${n.toFixed(6)},${(-n).toFixed(6)},${c.toFixed(6)},${(s1x-(c*s0x-n*s0y)).toFixed(2)},${(s1y-(n*s0x+c*s0y)).toFixed(2)})`;
+}
+function later(){if(!prevRaf)prevRaf=requestAnimationFrame(preview)}
+const ptrs=new Map(); let moved=false, start=null, pinch=null, gest=false;
+function beginPan(p){const r=SR(), v=normView(view); start={x:p.x,y:p.y,view:v,k:v.w/(r.width||1)}}
+function beginPinch(){
+  const [a,b]=[...ptrs.values()], r=SR(), v=normView(view), k=v.w/(r.width||1);
+  const q=mapOf(v.x+((a.x+b.x)/2-r.left)*k, v.y+((a.y+b.y)/2-r.top)*k);
+  pinch={d:Math.hypot(a.x-b.x,a.y-b.y),a:Math.atan2(b.y-a.y,b.x-a.x),k,th:theta,q,rotOn:false,off:0}; start=null;
+}
 svg.addEventListener('pointerdown',e=>{
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===1){moved=false;start={x:e.clientX,y:e.clientY,view:{...view},k:mpp()}}
-  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),view:{...view},mid:toUser((a.x+b.x)/2,(a.y+b.y)/2)}}
+  if(ptrs.size===1){moved=false;beginPan(ptrs.get(e.pointerId))}
+  if(ptrs.size===2)beginPinch();
 });
 svg.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2&&pinch){
-    const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(d<10)return;
-    view={...pinch.view}; zoomAt(pinch.d/d,pinch.mid.x,pinch.mid.y); moved=true; return;
+    const [a,b]=[...ptrs.values()], d=Math.hypot(a.x-b.x,a.y-b.y); if(d<10)return;
+    const r=SR(); let da=(Math.atan2(b.y-a.y,b.x-a.x)-pinch.a)*180/Math.PI; da=((da%360)+540)%360-180;
+    if(!pinch.rotOn&&Math.abs(da)>10){pinch.rotOn=true;pinch.off=da>0?10:-10}   // поворот — после 10°, чтобы обычный щипок не крутил карту
+    if(pinch.rotOn){theta=pinch.th+da-pinch.off;theta=((theta%360)+540)%360-180}
+    const k=Math.min(full.w*2.6/r.width,Math.max(25/r.width,pinch.k*pinch.d/d)), m=rootOf(pinch.q.x,pinch.q.y), mx=(a.x+b.x)/2-r.left, my=(a.y+b.y)/2-r.top;
+    view={x:m.x-mx*k,y:m.y-my*k,w:r.width*k,h:r.height*k}; moved=true; gest=true; later(); return;
   }
   if(ptrs.size===1&&start){
     const dx=e.clientX-start.x, dy=e.clientY-start.y;
     if(!moved&&Math.hypot(dx,dy)>5){moved=true;svg.classList.add('dragging');try{svg.setPointerCapture(e.pointerId)}catch(_){}}
-    if(moved){view={...start.view,x:start.view.x-dx*start.k,y:start.view.y-dy*start.k};apply()}
+    if(moved){view={...start.view,x:start.view.x-dx*start.k,y:start.view.y-dy*start.k};gest=true;later()}
   }
 });
-function up(e){ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(ptrs.size===0){svg.classList.remove('dragging');start=null;setTimeout(()=>{moved=false},0)}}
+function up(e){
+  ptrs.delete(e.pointerId);
+  if(ptrs.size<2&&pinch){pinch=null;const rest=[...ptrs.values()][0];if(rest)beginPan(rest)}   // второй палец отпущен — двигаем дальше от текущего вида, без отскока назад
+  if(ptrs.size===0){svg.classList.remove('dragging');start=null;if(gest){gest=false;apply()}setTimeout(()=>{moved=false},0)}
+}
 svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
 document.getElementById('zin').onclick=()=>zoomAt(1/1.6,view.x+view.w/2,view.y+view.h/2);
 document.getElementById('zout').onclick=()=>zoomAt(1.6,view.x+view.w/2,view.y+view.h/2);
@@ -444,7 +529,7 @@ document.getElementById('zout').onclick=()=>zoomAt(1.6,view.x+view.w/2,view.y+vi
 const zfitB=document.getElementById('zfit');
 function setFull(on,keep){document.body.classList.toggle('pfull',on);zfitB.textContent=on?'⤡':'⤢';zfitB.title=on?'Вернуть меню (0)':'На весь экран (0)';zfitB.setAttribute('aria-label',on?'Вернуть боковое меню':'План на весь экран, без бокового меню');zfitB.setAttribute('aria-pressed',String(on));
   if(!keep){try{localStorage.setItem('t14.pfull',on?'1':'0')}catch(e){}}
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{view={...full};apply()}))}
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{typeof fitHome==='function'?fitHome():(view={...full},apply())}))}
 zfitB.onclick=()=>setFull(!document.body.classList.contains('pfull'));
 try{if(localStorage.getItem('t14.pfull')==='1')setFull(true,true);}catch(e){}
 document.addEventListener('keydown',e=>{const t=e.target;if(e.ctrlKey||e.metaKey||e.altKey||(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable)))return;
@@ -453,7 +538,7 @@ window.addEventListener('resize',apply);
 function panTo(x,y,minPxPerM){
   let k=mpp();
   if(minPxPerM&&1/k<minPxPerM){const f=1/(k*minPxPerM);view.w*=f;view.h*=f}
-  view.x=x-view.w/2; view.y=y-view.h/2; apply();
+  const m=rootOf(x,y); view.x=m.x-view.w/2; view.y=m.y-view.h/2; apply();
 }
 
 // ---- buildings ----
@@ -628,7 +713,7 @@ if(SZ){
     const t=el('text',{x:8,y:4},g);t.textContent='т. '+r.n;SZM.push({g,x,y});
     g.addEventListener('click',ev=>{if(moved)return;ev.stopPropagation();szzShow('rt',r,g)});}
   // fit the whole zone
-  document.getElementById('zszz').onclick=()=>{const xs=B.map(p=>P2(p)[0]),ys=B.map(p=>P2(p)[1]),pad=15;const x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
+  document.getElementById('zszz').onclick=()=>{const RP=B.map(p=>{const q=P2(p);return rootOf(q[0],q[1])}),xs=RP.map(p=>p.x),ys=RP.map(p=>p.y),pad=15;const x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
     const r=svg.getBoundingClientRect(),ar=r.width/r.height;let w=x1-x0,h=y1-y0;if(w/h<ar)w=h*ar;else h=w/ar;view={x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h};apply();
     if(svg.classList.contains('noszz')) document.getElementById('tSzz').click()};
 }else{document.getElementById('zszz').hidden=true;}
@@ -704,7 +789,18 @@ function tog(id,cls,key,def){
   const set=()=>{b.setAttribute('aria-pressed',on);svg.classList.toggle(cls,!on);store.set(key,on)};
   b.onclick=()=>{on=!on;set()}; set();
 }
-tog('tFov','nofov','cctv.fov'); tog('tLab','nolab','cctv.lab'); tog('tElec','noelec','cctv.elec'); tog('tGas','nogas','cctv.gas'); tog('tWat','nowat','cctv.wat'); svg.classList.add('noszz'); for(const id of ['zszz','tSzz']){const e=document.getElementById(id); if(e) e.style.display='none';}   /* 01.11.2026, пользователь (скриншот iPad 30.10): «Убери СЗЗ на этом плане» — граница СЗЗ и её расчётные точки не показываются */ tog('tIsa','noisa','t14.isa19',false); tog('tI25','noi25','t14.i25'); tog('tR25','nor25','t14.r25',false); tog('tNoise','nonoise','t14.noise',false);
+/*T14PLAN*/
+/* 15.11.2026, Т. В.: основной вид — только здания с литерами и кадастровыми номерами; камеры, сети, СЗЗ и экология — галочками (новые ключи p2.*,
+   чтобы чистый план открылся у всех; СЗЗ, убранная 01.11, снова включается галочкой, кнопка «СЗЗ» у масштаба — только при включённой зоне) */
+tog('tCad','nocad','p2.cad',true); tog('tPar','nopar','p2.par',true); tog('tNames','nonames','p2.names',false);
+tog('tCam','nocam','p2.cam',false); tog('tFov','nofov','p2.fov',false); tog('tLab','nolab','p2.lab',false);
+tog('tElec','noelec','p2.elec',false); tog('tGas','nogas','p2.gas',false); tog('tWat','nowat','p2.wat',false);
+{const zb=document.getElementById('zszz'),tz=document.getElementById('tSzz');if(tz)tz.hidden=!DATA.szz;tog('tSzz','noszz','p2.szz',false);
+ const sz=()=>{if(zb)zb.style.display=(!DATA.szz||svg.classList.contains('noszz'))?'none':''};sz();if(tz)tz.addEventListener('click',()=>setTimeout(sz,0));}
+tog('tIsa','noisa','p2.isa19',false); tog('tI25','noi25','p2.i25',false); tog('tR25','nor25','p2.r25',false); tog('tNoise','nonoise','p2.noise',false);
+// камеры, зоны обзора и номера — вместе: включили «Зоны обзора» или «Номера камер» — включаются и сами камеры
+for(const id of ['tFov','tLab']) document.getElementById(id).addEventListener('click',()=>{if(document.getElementById(id).getAttribute('aria-pressed')==='true'&&svg.classList.contains('nocam'))document.getElementById('tCam').click()});
+document.getElementById('tCam').addEventListener('click',()=>{try{window.dispatchEvent(new Event('t14layers'))}catch(e){}});
 
 
 // ===== правки: сдвиг, поворот, скрытие, переименование, план внутри =====
@@ -782,18 +878,18 @@ svg.addEventListener('pointerdown',ev=>{
   if(!moveId||ev.button>0) return;
   const t=ev.target; let kind=null;
   if(t.closest&&t.closest('#edh .rh')) kind='rot';
-  else if(moveId[0]==='b'){const k=moveId.slice(2), f=bMap(k), q=toUser(ev.clientX,ev.clientY), poly=f?B[k].poly.map(f):B[k].poly; if(inPoly([q.x,q.y],poly)) kind='move'}
+  else if(moveId[0]==='b'){const k=moveId.slice(2), f=bMap(k), q=toMap(ev.clientX,ev.clientY), poly=f?B[k].poly.map(f):B[k].poly; if(inPoly([q.x,q.y],poly)) kind='move'}
   else {const o=camEls[moveId.slice(2)]; if(o&&o.g.contains(t)) kind='move'}
   if(!kind) return;
   ev.stopPropagation(); ev.preventDefault();
-  const p=toUser(ev.clientX,ev.clientY);
+  const p=toMap(ev.clientX,ev.clientY);
   drag={kind,p0:p,e0:Object.assign({},E.get(moveId)||{}),id:moveId,pointer:ev.pointerId,moved:false};
   if(kind==='rot'){const c=curCenter();drag.c=c;drag.a0=Math.atan2(p.y-c[1],p.x-c[0])}
   try{svg.setPointerCapture(ev.pointerId)}catch(_){}
 },true);
 svg.addEventListener('pointermove',ev=>{
   if(!drag||ev.pointerId!==drag.pointer) return; ev.stopPropagation();
-  const p=toUser(ev.clientX,ev.clientY), e=Object.assign({},drag.e0);
+  const p=toMap(ev.clientX,ev.clientY), e=Object.assign({},drag.e0);
   if(drag.kind==='move'){e.dx=(drag.e0.dx||0)+(p.x-drag.p0.x);e.dy=(drag.e0.dy||0)-(p.y-drag.p0.y);if(ev.shiftKey){e.dx=Math.round(e.dx);e.dy=Math.round(e.dy)}}
   else{let d=(Math.atan2(p.y-drag.c[1],p.x-drag.c[0])-drag.a0)*180/Math.PI;if(ev.shiftKey)d=Math.round(d/5)*5;e.rot=(drag.e0.rot||0)+d}
   PREV={id:drag.id,e}; drag.moved=true; applyEdits();
@@ -826,7 +922,71 @@ function refreshCard(){
 E.on((src,id)=>{applyEdits(); if(!drag) refreshCard(); renderList(qi.value)});
 applyEdits();
 
-renderIntro(); renderList(''); apply();
-requestAnimationFrame(apply);
+// ---- 15.11.2026: литеры и кадастровые номера зданий — подпись постоянного экранного размера, подробнее при приближении ----
+//   мелко на экране — только литера, крупнее — литера и номер в квартале («:147»), ещё крупнее — «лит. Б» и полный номер
+var CADS=[];
+{const cg=el('g',{id:'cadL'},svg); svg.insertBefore(cg,fovs);
+ for(const k in B){const m=B[k]||{},cad=(m.cad||[]).filter(c=>c&&c.n).sort((a,b)=>(a.m==='gp')-(b.m==='gp')).map(c=>c.n)[0]||'',lit=m.lit||''; if(!lit&&!cad) continue;   // сначала номер здания по ЕГРН, подпись генплана — потом
+  const p=svg.querySelector('path.bld[data-b="'+CSS.escape(k)+'"]'); if(!p) continue;
+  const P=m.poly||[]; let L=0,A=0; for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];L=Math.max(L,Math.hypot(b[0]-a[0],b[1]-a[1]));A+=a[0]*b[1]-b[0]*a[1];}
+  A=Math.abs(A)/2; const W=L?A/L:0;
+  const g=el('g',{class:'cadg'},cg); CADS.push({k,p,g,t1:el('text',{class:'cl'},g),t2:el('text',{class:'cn'},g),lit,cad,L,W,A});}
+ // части одного здания с той же литерой (И1–И4 из четырёх корпусов) — подпись одна, на самой большой части
+ const best={}, sc=o=>(o.cad?1e7:0)+o.A; for(const o of CADS){const key=o.lit||('#'+o.k); if(!best[key]||sc(best[key])<sc(o))best[key]=o;}
+ CADS=CADS.filter(o=>{const keep=best[o.lit||('#'+o.k)]===o; if(!keep)o.g.remove(); return keep}).sort((a,b)=>b.A-a.A);}
+function cadLay(k){
+  const placed=[], hit=(x0,y0,x1,y1)=>placed.some(r=>x0<r[2]&&x1>r[0]&&y0<r[3]&&y1>r[1]);
+  for(const o of CADS){                                   // от больших зданий к малым; подписи не налезают друг на друга
+    // 15.11.2026: рамка здания запоминается (getBBox на каждом кадре тормозил iPhone), пересчёт — только если здание сдвинули правкой
+    const bk=(o.p.getAttribute('d')||'')+'|'+(o.p.getAttribute('transform')||''); if(o.bk!==bk){o.bk=bk;try{o.bb=o.p.getBBox()}catch(e){o.bb=null}}
+    const b=o.bb;
+    if(!b||!b.width||o.p.style.display==='none'||o.p.getAttribute('display')==='none'){o.g.setAttribute('display','none');continue}
+    const cx=b.x+b.width/2, cy=b.y+b.height/2, rp=rootOf(cx,cy), lp=(o.L||Math.max(b.width,b.height))/k, wp=(o.W||Math.min(b.width,b.height))/k, sx=(rp.x-view.x)/k, sy=(rp.y-view.y)/k;
+    let t=0; if(wp>=13&&lp>=16)t=1; if(wp>=24&&lp>=62)t=2; if(wp>=34&&lp>=138)t=3;
+    let l1='',l2='';
+    for(;t>0;t--){
+      if(!o.lit&&t<2){t=0;break}
+      l1=o.lit?(t>=3?'лит. '+o.lit:o.lit):''; l2=t>=3?o.cad:(t>=2&&o.cad?':'+o.cad.split(':').pop():'');
+      const w=Math.max(l1.length*7.4,l2.length*6)+6, h=(l1&&l2)?28:17;
+      if(!hit(sx-w/2,sy-h/2,sx+w/2,sy+h/2)){placed.push([sx-w/2,sy-h/2,sx+w/2,sy+h/2]);break}
+    }
+    if(!t){o.g.setAttribute('display','none');continue}
+    o.g.removeAttribute('display');
+    if(o.l1!==l1||o.l2!==l2){o.l1=l1;o.l2=l2;o.t1.textContent=l1;o.t2.textContent=l2;o.t1.setAttribute('y',l2?(l1?-6:0):0);o.t2.setAttribute('y',l1?8:0)}
+    o.g.setAttribute('transform',`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${k})${theta?` rotate(${(-theta).toFixed(2)})`:''}`);
+  }
+}
+// ---- 15.11.2026: «вид сверху, максимально для устройства» — участок (здания и ограждение) вписывается в экран между «Назад» и нижним меню ----
+let homePts=null;
+function fitHome(keepTheta){
+  // точки контуров зданий и ограждения (в координатах плана) — один раз
+  if(!homePts){homePts=[];for(const e of svg.querySelectorAll('#static path.bld,#static .fence,#static path.fence,#static polyline.fence')){
+    if(e.getAttribute('transform'))continue;
+    const d=e.getAttribute('d')||e.getAttribute('points')||'';d.replace(/(-?[\d.]+)[ ,](-?[\d.]+)/g,(_,x,y)=>{homePts.push([+x,+y]);return _});}}
+  const r=svg.getBoundingClientRect(); if(homePts.length<3||!r.width||!r.height){theta=0;view={...full};apply();return}
+  const ph=document.body.classList.contains('has-portal')&&r.width<=700, pt=ph?70:16, pb=ph?104:16, px=ph?10:20;
+  const aw=Math.max(50,r.width-2*px), ah=Math.max(50,r.height-pt-pb);
+  const boxAt=th=>{const f=th*Math.PI/180,c=Math.cos(f),n=Math.sin(f);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(const [x,y] of homePts){const dx=x-PIV.x,dy=y-PIV.y,X=PIV.x+c*dx-n*dy,Y=PIV.y+n*dx+c*dy;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y}
+    return {x0,y0,x1,y1,s:Math.max((x1-x0)/aw,(y1-y0)/ah)}};
+  // 15.11.2026, Т. В.: «максимально возможно для устройства» — участок поворачивается так, чтобы занять экран (север — по компасу);
+  //   выигрыш меньше 12 % — оставляем север вверху
+  let best=keepTheta?theta:0, bb=boxAt(best);
+  if(!keepTheta){const b0=bb;for(let t=-90;t<90;t+=1){const x=boxAt(t);if(x.s<bb.s){bb=x;best=t}} if(b0.s<=bb.s*1.12){best=0;bb=b0}}
+  theta=best; const s=bb.s;
+  view={x:(bb.x0+bb.x1)/2-(px+aw/2)*s, y:(bb.y0+bb.y1)/2-(pt+ah/2)*s, w:r.width*s, h:r.height*s}; apply();
+}
+// компас: нажатие — плавно на север, вид остаётся на том же месте
+if(north){north.removeAttribute('aria-hidden');north.setAttribute('role','button');north.setAttribute('aria-label','Север вверх');north.style.cursor='pointer';north.style.pointerEvents='auto';
+  north.addEventListener('click',()=>{
+    if(!theta)return; const v=normView(view), c=mapOf(v.x+v.w/2,v.y+v.h/2), t0=theta, T0=performance.now(), still=matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.getAttribute('data-fx')==='lite';
+    const at=()=>{const m=rootOf(c.x,c.y);view={x:m.x-v.w/2,y:m.y-v.h/2,w:v.w,h:v.h}};
+    if(still){theta=0;at();apply();return}
+    (function step(now){const q=Math.min(1,(now-T0)/340), e=1-Math.pow(1-q,3); theta=t0*(1-e); at(); if(q<1){preview();requestAnimationFrame(step)} else {theta=0;at();apply()}})(T0);
+  });}
+window.T14PlanHome=fitHome;
+
+renderIntro(); renderList(''); fitHome();
+requestAnimationFrame(()=>{fitHome()});
 })();
 </script>

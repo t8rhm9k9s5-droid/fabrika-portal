@@ -305,12 +305,28 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     h += '<p class="ihdr">Сотрудник8</p><div class="igroup"><a class="irow" href="#cls"><span class="ic"><span class="ibody"><span class="ititle">Классификация клиентов</span><span class="isub">тип (9 каналов), класс ABC по выручке, статус активности — утверждено 29.10.2026</span></span><span class="ichev"></span></span></a></div>';
     var RO = ROPEN;
     h += '<p class="ihdr" id="reclh">Рекламации</p><div class="igroup">' + (RO && RO.n ? '<a class="irow" href="#recl"><span class="ic"><span class="ibody"><span class="ititle">Незакрытые рекламации · ' + n(RO.n) + '</span><span class="isub">старше 30 дней — ' + RO.old30 + ' · маркетплейсы ' + rmp(true).length + ', клиенты ' + rmp(false).length + ' · 1С на ' + dd(RO.asof) + '</span></span><span class="ival' + (RO.old30 ? ' bad' : '') + '">' + RO.old30 + '</span><span class="ichev"></span></span></a>' : '') + '<a class="irow" href="#recl"><span class="ic"><span class="ibody"><span class="ititle">Рекламации: контрольные точки и форма отчёта</span><span class="isub">7 точек по Р-КО-01 со сроками, форма реестра' + (DOCS && DOCS.recl && DOCS.recl.cnt ? ' · писем: ' + DOCS.recl.cnt : '') + '</span></span><span class="ichev"></span></span></a></div>';
-    var cols = ops().filter(function (o) { return o.stat && o.stat.of != null; });
-    h += '<p class="ihdr">Сдача отчётов по дням</p><div class="igroup"><div class="mtx"><table><thead><tr><th>День</th>' + cols.map(function (o) { return '<th>' + esc(SHORT[o.k] || o.n) + '</th>'; }).join('') + '</tr></thead><tbody>' +
-      day.slice().reverse().map(function (x) { return '<tr><td>' + dd(x) + ' <span class="src">' + wd(x) + '</span></td>' + cols.map(function (o) { var t = o.rep[x]; return t ? '<td>' + esc(t) + '</td>' : (x >= tiso ? '<td class="wk">·</td>' : '<td class="no">нет</td>'); }).join('') + '</tr>'; }).join('') +
-      '</tbody></table></div></div>';
+    h += reportsTable(day, tiso);
     h += '<p class="ifoot">Источник: ' + (D.src ? 'группа MAX — ' + esc(D.src.max || '—') + ', письма офисов — ' + esc(D.src.mail || '—') : 'снимок сборки') + '. Обновлено ' + esc((D.t || '').replace('T', ' ')) + '.</p>';
     V.innerHTML = h;
+  }
+  function reportsTable(days, today) {
+    var offices = (D.ops || []).filter(function (o) { return o.k !== 'net'; });
+    var heading = '<p class="ihdr">Сдача отчётов по дням</p>';
+    if (!offices.length || !days.length) return heading + '<p class="ifoot">Выгрузка не содержит данных о сдаче отчётов за этот период.</p>';
+    return heading + '<div class="igroup"><div class="mtx"><table><thead><tr><th>День</th>' +
+      offices.map(function (o) { return '<th>' + esc(SHORT[o.k] || o.n) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      days.slice().reverse().map(function (date) {
+        return '<tr><td>' + dd(date) + ' <span class="src">' + wd(date) + '</span></td>' + offices.map(function (o) {
+          var time = o.rep && o.rep[date];
+          return time ? '<td>' + esc(time) + '</td>' : (date >= today ? '<td class="wk">Пока нет</td>' : '<td class="no">Нет отметки</td>');
+        }).join('') + '</tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+  function reportsPage(date) {
+    var today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+    var days = D.days || [], caption = 'Вечерние отчёты офисов' + (date ? ' · ' + dd(date) + ' ' + date.slice(0, 4) : '');
+    V.innerHTML = '<a class="back" href="#">Продажи</a><h1>' + caption + '</h1>' +
+      reportsTable(date ? [date] : days, today) + (date ? '<p><a href="#s-days">Все дни</a></p>' : '');
   }
   function op(k) {
     var o = ops().filter(function (x) { return x.k === k; })[0]; if (!o) return main();
@@ -477,21 +493,27 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 28.10.2026: продажи по видам продукции (ПЭО «Средние цены реализации» по месяцам: 1С «Продажи» по виду номенклатуры сбыт) и загрузка линий
-  var CAP = __CAP__, LMODE = 's';
+  var CAP = __CAP__;
   var L2CAP = {'Изо': 'Изо', 'Стандарт': 'Стандарты', 'КаБаРе': 'КаБаРе', 'Сильвия': 'Сильвия', 'Кр.руков.': 'Кресла руководителя', 'Операт.кр.': 'Операторские кресла', 'Бун': 'Бун', 'Анри': 'Анри', 'М.мебель': 'Мягкая мебель'};
   var MSH = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-  function linesBlock() {
-    var Lm = CALC.lines, ms = Object.keys(Lm).sort(), names = {}, tot = 0;
+  function linesBlock(mode) {
+    mode = mode || 's';
+    var Lm = CALC.lines, ms = Object.keys(Lm).filter(function (m) { return Lm[m]; }).sort(), names = {}, tot = 0;
     ms.forEach(function (m) { Object.keys(Lm[m]).forEach(function (k) { if (k !== 'Итог' && k) names[k] = (names[k] || 0) + (Lm[m][k].s || 0); }); tot += (Lm[m]['Итог'] || {}).s || 0; });
     var ks = Object.keys(names).sort(function (a, b) { return names[b] - names[a]; });
-    function cell(r) { if (!r) return '—'; return LMODE === 's' ? (r.s / 1e6).toFixed(1).replace('.', ',') : LMODE === 'q' ? n(r.q) : (r.p ? n(r.p) : (r.q ? n(r.s / r.q) : '—')); }
+    function cell(r) {
+      if (!r) return '—';
+      if (mode === 's') return r.s == null ? '—' : (r.s / 1e6).toFixed(1).replace('.', ',');
+      if (mode === 'q') return n(r.q);
+      return r.p != null ? n(r.p) : r.s != null && r.q ? n(r.s / r.q) : '—';
+    }
     var last = ms[ms.length - 1], lastFull = ms.length > 1 ? ms[ms.length - 2] : last;
     var h = '<p class="ihdr" id="lines">Цены и объёмы по видам продукции · отчёт ПЭО</p><div class="igroup">' +
       '<div class="chips2"><span>месяцев <b>' + ms.length + '</b></span>' +
-      ['s', 'q', 'p'].map(function (x) { return '<a href="#lines" data-lm="' + x + '" style="text-decoration:none;color:inherit"><span' + (LMODE === x ? ' style="outline:2px solid var(--ios-blue)"' : '') + '>' + ({s: 'сумма по отчёту, млн ₽', q: 'штуки', p: 'цена, ₽'})[x] + '</span></a>'; }).join('') + '</div>' +
+      ['s', 'q', 'p'].map(function (x) { return '<a href="#lines-' + x + '" style="text-decoration:none;color:inherit"><span' + (mode === x ? ' style="outline:2px solid var(--ios-blue)"' : '') + '>' + ({s: 'сумма по отчёту, млн ₽', q: 'штуки', p: 'цена, ₽'})[x] + '</span></a>'; }).join('') + '</div>' +
       '<div class="mtx"><table><thead><tr><th>Вид</th>' + ms.map(function (m) { return '<th>' + MSH[+m.slice(5) - 1] + '</th>'; }).join('') + '<th>итого</th></tr></thead><tbody>' +
       ks.map(function (k) { var sum = {s: 0, q: 0}; ms.forEach(function (m) { var r = Lm[m][k]; if (r) { sum.s += r.s || 0; sum.q += r.q || 0; } });
-        return '<tr><td>' + esc(k) + '</td>' + ms.map(function (m) { return '<td>' + cell(Lm[m][k]) + '</td>'; }).join('') + '<td><b>' + cell(LMODE === 'p' ? {s: sum.s, q: sum.q} : sum) + '</b></td></tr>'; }).join('') +
+        return '<tr><td>' + esc(k) + '</td>' + ms.map(function (m) { return '<td>' + cell(Lm[m][k]) + '</td>'; }).join('') + '<td><b>' + cell(mode === 'p' ? {s: sum.s, q: sum.q} : sum) + '</b></td></tr>'; }).join('') +
       '</tbody></table></div>';
     if (CAP && CAP.w) {
       var rows = ks.filter(function (k) { return L2CAP[k] && CAP.w[L2CAP[k]]; }).map(function (k) { var r = Lm[lastFull][k] || {}, mcap = CAP.w[L2CAP[k]] * 4.33, u = mcap ? (r.q || 0) / mcap : 0;
@@ -501,11 +523,27 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     }
     return h + '<p class="ifoot" style="margin:8px 16px 12px"><b>Это не вся выручка компании.</b> Источник — ежемесячные отчёты ПЭО «Средние цены реализации»: продажи изделий по видам номенклатуры сбыт за период отчёта (ПЭО присылает его около 25-го числа — месяц в нём неполный), без ФТС, проектов и прочих продаж. Полная выручка — по отчёту 1С «Продажи» (Сотрудник25 Ю. А.): июль 118,4, август 108,3, сентябрь 154,6, октябрь по 26.10 — 83,5 млн ₽ с НДС. Таблица нужна для средних цен и штук по видам; красным — вид продукции продаётся меньше чем на 70% мощности линии.</p></div>';
   }
-  document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[data-lm]'); if (!a) return; e.preventDefault(); LMODE = a.getAttribute('data-lm'); main(); var el = document.getElementById('lines'); if (el) el.scrollIntoView(); });
+  function linesPage(mode) {
+    var months = Object.keys((CALC && CALC.lines) || {});
+    var hasTypes = months.some(function (m) { return Object.keys(CALC.lines[m] || {}).some(function (k) { return k && k !== 'Итог'; }); });
+    V.innerHTML = '<a class="back" href="#">Продажи</a><h1>Цены и объёмы по видам продукции</h1>' +
+      (hasTypes ? linesBlock(mode) : '<p class="ifoot">В доступной выгрузке нет данных отчёта ПЭО по видам продукции.</p>');
+  }
   function rub(v) { return v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' млн ₽' : n(v) + ' ₽'; }
   // 28.10.2026, поручение: «выгрузить буфер заказов и ответственным задать по нему вопросы» — 1С «Анализ заказов покупателей»
   function buf() {
-    var B = DOCS && DOCS._buffer; if (!B) return main();
+    var B = DOCS && DOCS._buffer;
+    if (!B || !Array.isArray(B.m)) {
+      V.innerHTML = '<a class="back" href="#">Продажи</a><h1>Буфер заказов</h1><p class="ifoot">' +
+        (!B ? 'Выгрузка буфера заказов из 1С пока недоступна.' : 'В выгрузке отсутствует детализация заказов.') + '</p>';
+      return;
+    }
+    if (!B.m.length) {
+      V.innerHTML = '<a class="back" href="#">Продажи</a><h1>Буфер заказов</h1><p class="ifoot">' +
+        (B.t ? 'Выгрузка от ' + dd(B.t) + '. ' : '') +
+        (B.n === 0 ? 'Неотгруженных заказов нет.' : 'Список заказов в выгрузке отсутствует.') + '</p>';
+      return;
+    }
     var ref = (B.t || '').slice(0, 10), h = '<a class="back" href="#">Продажи</a><h1>Буфер заказов</h1><p class="lead">Заказы покупателей, которые ещё не отгружены (1С «Анализ заказов покупателей», «Осталось отгрузить»). Выгрузка от ' + dd(B.t) + ' — ' + esc(B.fr || '') + '.</p>' +
       '<div class="igroup hero" style="margin-top:14px"><div class="hnum">' + rub(B.sum) + '</div><div class="hsub">' + B.n + ' заказов у ' + B.m.length + ' менеджеров</div>' +
       '<div class="hst"><div><span>дата отгрузки прошла</span><b' + (B.late ? ' class="bad"' : '') + '>' + B.late + '</b></div><div><span>на сумму</span><b>' + rub(B.late_s) + '</b></div><div><span>файл</span><b style="font-size:13px">' + esc(B.file || '') + '</b></div></div></div>';
@@ -727,7 +765,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   var LEADS = null, LEADS_FAIL = false;
   function leadsSub() { var e = document.getElementById('leadsSub'); if (e && LEADS && LEADS.tot) e.textContent = 'отмечено ' + LEADS.tot.done + ' из ' + LEADS.tot.rows + (LEADS.tot.today ? ', сегодня +' + LEADS.tot.today : '') + ' · сверка 20.11, итог 27.11'; }
   function leads() {
-    var D = LEADS, h = '<a class="back" href="#">Продажи</a><h1>Лиды выставок</h1><p class="lead">Особый контроль Т. В. Сотрудник1. Контакты выставок 2022–2025 разложены по офисам; в каждой таблице жёлтые столбцы — дата контакта, результат, следующий шаг, статус. Торопит всех ' + esc((D && D.chaser) || 'Сотрудник41 Д. Р.') + '.</p>';
+    var D = LEADS, h = '<a class="back" href="#">Продажи</a><h1>Лиды выставок</h1><p class="lead">Особый контроль Т. В. Сотрудник1. Контакты выставок 2022–2025 разложены по офисам; в каждой таблице жёлтые столбцы — дата контакта, результат, следующий шаг, статус. Торопит всех ' + esc((D && D.chaser) || 'Сотрудник40 Д. Р.') + '.</p>';
     // 13.11 вечер, Т. В.: «загружая ход работы — что за бардак». Нет данных (робот ещё не собрал / нет связи) — честно и сразу, не «загружаю» без конца
     if (!D || !D.offices) { V.innerHTML = h + (LEADS_FAIL ? '<p class="lead">Ход работы пока не получен: робот собирает его из таблиц офисов раз в час. Обновите страницу позже.</p>' : '<p class="lead">Загружаю ход работы…</p>'); return; }
     var dm = function (d) { return d ? d.slice(8, 10) + '.' + d.slice(5, 7) : ''; }, T = D.tot || {}, pc = function (a, b) { return b ? Math.round(100 * a / b) : 0; };
@@ -1599,17 +1637,30 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       'Кабинет ООО «ПКС» (Seller ID 53022) продаёт и со складов Ozon (FBO), и со своего склада (FBS — отгрузка в пункт приёма Ozon в Рязани). Wildberries и Сотрудник10 Имя4 на портал пока не подключены — здесь только Ozon.</p>';
     V.innerHTML = h;
   }
-  function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf') buf(); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom(); else main(); window.scrollTo(0, 0); }
+  function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf' || location.hash === '#s-buf') buf();
+    else if ((m = /^#s-days(?:-(\d{4}-\d{2}-\d{2}))?$/.exec(location.hash))) reportsPage(m[1]);
+    else if ((m = /^#lines(?:-([sqp]))?$/.exec(location.hash))) linesPage(m[1]); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom(); else main(); window.scrollTo(0, 0); }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live) {
     if (window.T14M) T14M.start(['sales.bin']);              // 04.11.2026: единый источник получает файл раньше страницы — числа совпадают
-    if (T14Live.bin) T14Live.bin('sales.bin').then(function (S) {
+    function watchReport(name, apply) {
+      if (!T14Live.bin) return;
+      var refreshed = false;
+      window.addEventListener('t14bin', function (e) {
+        if (e.detail && e.detail.name === name) {
+          refreshed = true;
+          apply(e.detail.data);
+        }
+      });
+      T14Live.bin(name).then(function (data) { if (!refreshed) apply(data); });
+    }
+    watchReport('sales.bin', function (S) {
       // 30.10.2026: продажи за день — хостинг сам разбирает рассылки 1С (sales_rep → sday); 03.11.2026 ~20:30: сводим со снимком сборки по дням (sdMerge)
       var hs = S && S.sday && S.sday.days ? S.sday : null;
       if (hs) SDAY = sdMerge(SB, hs);
       if (S && S.ops && String(S.t || '') >= String(D.t || '')) { D = S; route(); } else if (hs) route(); });
     T14Live.load().then(function (L) { if (L && L.stock && L.stock.allwh) { STOCK = L.stock; route(); } });
-    if (T14Live.bin) T14Live.bin('docs.bin').then(function (Z) { if (Z && Z.kinds) { DOCS = {}; Z.kinds.forEach(function (k) { DOCS[k.k] = k; }); DOCS._buffer = Z.buffer || null; if (location.hash === '#recl' || location.hash === '#buf') route(); else if (!location.hash) main(); } });
+    watchReport('docs.bin', function (Z) { if (Z && (Z.buffer || Z.kinds)) { DOCS = {}; (Z.kinds || []).forEach(function (k) { DOCS[k.k] = k; }); DOCS._buffer = Z.buffer || null; if (location.hash === '#recl' || location.hash === '#buf' || location.hash === '#s-buf') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('staff.bin').then(function (Z) { if (Z && Z.changes) { KOW = Z; if (location.hash === '#ko') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('leads.bin').then(function (Z) { if (Z && Z.offices) { LEADS = Z; leadsSub(); } else LEADS_FAIL = true; if (location.hash === '#leads') leads(); }, function () { LEADS_FAIL = true; if (location.hash === '#leads') leads(); });
     setTimeout(function () { if (!LEADS) { LEADS_FAIL = true; if (location.hash === '#leads') leads(); } }, 8000);   // 13.11.2026: лиды выставок
@@ -1617,7 +1668,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (T14Live.bin) T14Live.bin('ozd.bin').then(function (Z) { if (Z && Z.days && Z.days.length) { OD = Z; if (location.hash === '#mp') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('ozh.bin').then(function (Z) { if (Z && Z.days && Z.days.length && (!OZ || String(Z.t || '') >= String(OZ.t || ''))) { var pl = OZ && OZ.plan; OZ = Z; if (pl && !OZ.plan) OZ.plan = pl; if (location.hash === '#mp') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('promises.bin').then(function (P) { if (P && P.n != null) { PROM = P; if (location.hash === '#prom') route(); else if (!location.hash) main(); } });
-    if (T14Live.bin) T14Live.bin('pf.bin').then(function (P) { if (P && P.tz) { TZ = P.tz; CALC = P.calc || null; if (/^#tzlist|^#peo|^#tz1c/.test(location.hash)) route(); else if (!location.hash) main(); } });
+    watchReport('pf.bin', function (P) { if (P && (P.tz || P.calc)) { TZ = P.tz || null; CALC = P.calc || null; if (/^#tzlist|^#peo|^#tz1c|^#lines/.test(location.hash)) route(); else if (!location.hash) main(); } });
     // 02.11.2026: ежедневные рассылки 1С на 1c@ — «Реестр рекламаций» и «ТЗ в работе»; хостинг разбирает их (rep_1c.py) → st/recl.bin, st/tz1c.bin.
     //   Свежее вшитого в сборку — показываем с хостинга.
     if (T14Live.bin) T14Live.bin('recl.bin').then(function (Z) { if (Z && Z.open && Z.open.docs && (!ROPEN || String(Z.open.asof || '') >= String(ROPEN.asof || ''))) { ROPEN = Z.open; if (Z.all && Z.all.docs) RALL = Z.all; if (location.hash === '#recl') route(); else if (!location.hash) main(); } });

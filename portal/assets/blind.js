@@ -26,7 +26,7 @@
     return pts.length > 3 ? pts : null;
   }
   function obstacles() {                                                // здания как нарисованы сейчас (с ручными сдвигами), без проектных
-    var L = [], B = P.B, svg = P.svg, inv = svg.getScreenCTM && svg.getScreenCTM() ? svg.getScreenCTM().inverse() : null;
+    var L = [], B = P.B, svg = P.svg, base = svg.querySelector('#rot') || svg, inv = base.getScreenCTM && base.getScreenCTM() ? base.getScreenCTM().inverse() : null;   // 15.11.2026: план в повёрнутой группе #rot — координаты плана, не экрана
     [].forEach.call(svg.querySelectorAll('path.bld'), function (el) {
       var k = el.getAttribute('data-b'), b = B[k] || {}; if (SKIP_SRC[b.src]) return;
       if (el.style.display === 'none' || (el.closest('g') && el.closest('g').style.display === 'none')) return;
@@ -92,6 +92,7 @@
   var gCov, gBl, defs, info, box, btns = [];
   function draw() {
     btns.forEach(function (b) { b.setAttribute('aria-pressed', !!ON[b.getAttribute('data-bk')]); });
+    if (box) box.hidden = !(ON.cov || ON.bl);   // 15.11.2026, Т. В.: на чистом плане кнопок нет — панель только при включённом обзоре или слепых зонах
     if (!ON.cov && !ON.bl) { gCov.innerHTML = ''; gBl.innerHTML = ''; info.hidden = true; return; }
     if (!CACHE || CACHE.R !== R) CACHE = compute();
     var C = CACHE; info.hidden = false; if (!C) { info.innerHTML = 'Не нашёл ограждение участка на плане.'; return; }
@@ -128,14 +129,15 @@
       '#blindBox .blr{display:flex;gap:4px;margin:8px 0 4px}#blindBox .blr button{padding:3px 8px;font-size:12px}#blindBox .blr button[aria-pressed=true]{background:var(--ink,#1d282e);color:var(--panel,#fff)}' +
       '#blindBox p{margin:6px 2px}#blindBox .bln{font-size:11.5px;color:var(--muted,#5f6d74)}#blindBox details summary{cursor:pointer;font-weight:600;margin:4px 2px}#blindBox .blz{display:flex;flex-direction:column;gap:3px;max-height:30vh;overflow:auto;margin-top:4px}' +
       '#blindBox .blz button{font:inherit;text-align:left;border:0;background:color-mix(in srgb,#d92d20 9%,transparent);color:inherit;border-radius:6px;padding:4px 7px;cursor:pointer}#blindBox .blz b{color:#b42318}' +
-      '@media (max-width:700px){#blindBox{left:max(8px,env(safe-area-inset-left,0px));top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 64px);max-width:calc(100% - 70px)}}';
+      '#blindBox[hidden]{display:none}@media (max-width:700px){#blindBox{left:max(8px,env(safe-area-inset-left,0px));top:auto;bottom:calc(max(12px,min(env(safe-area-inset-bottom,0px),34px)) + 64px);max-width:calc(100% - 70px)}}';
     document.head.appendChild(css);
     box = document.createElement('div'); box.id = 'blindBox';
     box.innerHTML = '<div class="blt"><button type="button" data-bk="cov" title="Что видят уличные камеры с учётом зданий">Фактический обзор</button><button type="button" data-bk="bl" title="Двор, куда не смотрит ни одна уличная камера">Слепые зоны</button></div><div class="bli" hidden></div>';
     var host = svg.parentNode; host.appendChild(box); info = box.querySelector('.bli');
     btns = [].slice.call(box.querySelectorAll('[data-bk]'));
     var togs = document.querySelector('.togs');                        // те же переключатели — во вкладке «Слои»
-    if (togs) ['bl', 'cov'].forEach(function (k) { var b = document.createElement('button'); b.className = 'tog'; b.type = 'button'; b.setAttribute('data-bk', k); b.textContent = k === 'bl' ? 'Слепые зоны' : 'Фактический обзор'; togs.insertBefore(b, togs.firstChild); btns.push(b); });
+    var aft = document.getElementById('tLab');                          // 15.11.2026: в группе «Видеонаблюдение», после «Номера камер»
+    if (togs) ['bl', 'cov'].forEach(function (k) { var b = document.createElement('button'); b.className = 'tog'; b.type = 'button'; b.setAttribute('data-bk', k); b.textContent = k === 'bl' ? 'Слепые зоны' : 'Фактический обзор'; togs.insertBefore(b, aft && aft.parentNode === togs ? aft.nextSibling : togs.firstChild); btns.push(b); });
     btns.forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-bk'); setOn(k, !ON[k]); }); });
     R = st('t14.blind.r', 25); if (RANGES.indexOf(R) < 0) R = 25;
     ON.cov = !!st('t14.blind.cov', false); ON.bl = !!st('t14.blind.bl', false);

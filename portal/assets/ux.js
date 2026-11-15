@@ -12,7 +12,7 @@
   function rnd(n) { var s = '', a = 'abcdefghijkmnpqrstuvwxyz23456789'; for (var i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
   var dev = ''; try { dev = localStorage.getItem('t14.uxd') || ''; if (!/^[a-z0-9]{12}$/.test(dev)) { dev = rnd(12); localStorage.setItem('t14.uxd', dev); } } catch (e) { dev = rnd(12); }
   function usr() { try { var me = JSON.parse(localStorage.getItem('t14.me') || 'null'); return me && me.id ? String(me.id).slice(0, 8) : ''; } catch (e) { return ''; } }
-  function pg() { return (location.pathname.split('/').pop() || 'index.html') + (location.hash.length > 1 ? location.hash.split('?')[0].slice(0, 40) : ''); }
+  function pg() { return (location.pathname.split('/').pop() || 'home.html') + (location.hash.length > 1 ? location.hash.split('?')[0].slice(0, 40) : ''); }
   function mvObj() { var ps = []; MV.forEach(function (m, p) { var qs = []; m.forEach(function (v, c) { qs.push(JSON.stringify(c) + ':' + v); }); ps.push(JSON.stringify(p) + ':{' + qs.join(',') + '}'); }); return JSON.parse('{' + ps.join(',') + '}'); }   // формат прежний: {страница: {клетка: число}}, без записи свойств по ключу из адреса
   function now() { return Math.round(Date.now() / 1000); }
   function push(e) { if (nEv > 3000) return; EV.push(e); nEv++; if (EV.length >= 150) flush(); }

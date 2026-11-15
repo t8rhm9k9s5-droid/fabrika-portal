@@ -3821,7 +3821,7 @@ const FILE = (()=>{
         out[c.photo] = await new Promise((res, rej)=>{ const fr = new FileReader(); fr.onload = ()=>res(fr.result); fr.onerror = rej; fr.readAsDataURL(b); }); } catch(e){} }
     return out;
   }
-  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
+  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:min(env(safe-area-inset-bottom,0px),34px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
   async function singleFile(){
     const css = document.getElementById('app-css').textContent, glass = document.getElementById('glass-css');   // glass-css: the look, the tab bar, the font (review/ui.py)
     const [three, orbit, ejs, ajs, pjs] = await Promise.all([txt('lib-three','lib/three.min.js'), txt('lib-orbit','lib/OrbitControls.js'), txt('edits-js','assets/edits.js'), txt('app-js','app.js'), txt('perf-js','assets/perf.js').catch(()=>'')]);
@@ -4242,6 +4242,18 @@ new MutationObserver(setSky).observe(document.documentElement, {attributes:true,
 initCams(); initAttached(); applyEditsData();
 setSky(); resize(); rebuildAll(); started0 = true; LIST.build();
 goView('site', true);
+// 15.11.2026, Т. В.: «карта 3D должна начинаться с обзора АБК» — слои как у «Площадки», камера сразу у административного здания
+//   (со стороны улицы Терехина, сверху под углом); ссылка с # (здание, участок) открывает своё, как раньше
+function abkView(instant){
+  if (!S.buildings.some(o => o.k === 'b10')) return false;
+  const t = bCenter('b10', 3), c = new THREE.Vector3(10, 0, 0), out = t.clone().sub(c); out.y = 0;
+  if (out.lengthSq() < 1) out.set(1, 0, 0); out.normalize();
+  const d = out.multiplyScalar(.78).add(new THREE.Vector3(0, .62, 0)).normalize(), dist = Math.max(70, bRadius('b10') * 3.6) * portrait();
+  const p = t.clone().addScaledVector(d, dist);
+  if (instant){ camera.position.copy(p); controls.target.copy(t); controls.update(); } else flyTo(p, t);
+  return true;
+}
+if (!location.hash) abkView(true);
 // a link like index.html#b18 opens that building, #area6 the buildings of production area 6
 function openHash(){
   const h = decodeURIComponent(location.hash.slice(1)); if (!h) return;

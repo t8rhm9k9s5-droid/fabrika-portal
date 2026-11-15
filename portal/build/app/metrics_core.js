@@ -253,7 +253,7 @@
   }
 
   // ---------- прочее для главной: карта, офисы продаж, обещания ----------
-  function map() { var M = SNAP.map; return M ? { k: 'map', b: M.b, c: M.c, v: M.c, src: 'модель и план (снимок сборки)', card: M.b + ' ' + pl(M.b, 'здание', 'здания', 'зданий') + ' на плане · ' + M.c + ' ' + pl(M.c, 'камера', 'камеры', 'камер') } : null; }
+  function map() { var M = SNAP.map; return M ? { k: 'map', b: M.b, c: M.c, v: M.c, src: 'план 2D (снимок сборки)', card: M.b + ' ' + pl(M.b, 'здание', 'здания', 'зданий') + ' на плане · ' + M.c + ' ' + pl(M.c, 'камера', 'камеры', 'камер') } : null; }
   function offices() {
     var Z = LIVE['sales.bin'], B = SNAP.sales || {}, D = Z && Z.ops && S(Z.t) >= S(B.t) ? Z : null, ops;
     if (D) ops = D.ops.map(function (o) { var s = o.stat || {}; return { k: o.k, n: o.n, of: s.of, sent: s.sent, last: s.last }; });

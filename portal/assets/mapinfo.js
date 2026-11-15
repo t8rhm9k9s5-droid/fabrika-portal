@@ -21,28 +21,63 @@
     var C = null; try { C = window.T14Blind && window.T14Blind.calc(); } catch (e) { C = null; }
     var pc = C && C.yard ? Math.round(C.blind / C.yard * 100) : null;
     var h = '<summary>Сводка карты</summary><div class="mib">' +
-      '<p><b>' + nf(cams) + '</b> ' + pl(cams, 'камера', 'камеры', 'камер') + (C ? ' · уличных ' + C.cams.length + ', в зданиях ' + C.inside : '') + '</p>' +
+      '<p><b>' + nf(cams) + '</b> ' + pl(cams, 'камера', 'камеры', 'камер') + (C ? ' · уличных ' + C.cams.length + ', в зданиях ' + C.inside + (C.skipped ? ', прочие (скрыты или без места/направления) ' + C.skipped : '') : '') + '</p>' +
       (C ? '<p><button type="button" class="mibl">Слепые зоны</button> ' + nf(C.blind) + ' м² · ' + pc + '% двора · обзор до ' + C.R + ' м</p>' : '<p>Слепые зоны — считаются…</p>') +
       '<p><b>' + nb + '</b> ' + pl(nb, 'объект', 'объекта', 'объектов') + ' на плане: здания, навесы, КПП, ТП</p>' +
       '<p class="mil">' + L.map(function (x) { return '<span><i style="background:' + x.c + '"></i>' + x.t + (x.n ? ' · ' + x.n : '') + '</span>'; }).join('') +
       '<span><i style="background:#3b82f6;border-radius:50%"></i>камеры</span><span><i style="background:rgba(59,130,246,.25)"></i>зоны обзора</span><span><i style="background:repeating-linear-gradient(45deg,#d92d20 0 2px,transparent 2px 4px)"></i>слепые зоны</span></p>' +
       '<p class="min">Слои включаются во вкладке «Слои»; число у сети — участков линий на плане.</p></div>';
-    box.innerHTML = h; box.open = st('t14.mapinfo.open', window.innerWidth > 700);
+    box.innerHTML = h; box.open = st('t14.mapinfo.open2', false);
+    box.hidden = svg.classList.contains('nocam');   // 15.11.2026, Т. В.: сводка камер — только при включённом слое «Камеры», свёрнута
     var b = box.querySelector('.mibl'); if (b) b.addEventListener('click', function () { if (window.T14Blind) window.T14Blind.show(); });
+  }
+  // 15.11.2026, аудит портала (F-11): метки камер перекрываются — по клику показываем выбор из совпавших камер, а не открываем соседнюю
+  function enableCameraChoice(P) {
+    Object.entries(P.camEls).forEach(function (entry) { entry[1].g.dataset.cameraId = entry[0]; });
+    P.svg.addEventListener('click', function (event) {
+      if (P.dragged() || !event.detail || P.svg.classList.contains('moving') || event.target.closest('#edh')) return;
+      var marker = event.target.closest('.cam[data-camera-id]');
+      var ids = new Set(), x = event.clientX, y = event.clientY;
+      if (marker) ids.add(marker.dataset.cameraId);
+      // In Safari and Chromium a marker's text may cover a neighbouring icon
+      // while whitespace in that same label hits the building below it.
+      Object.entries(P.camEls).forEach(function (entry) {
+        var g = entry[1].g, box = g.getBoundingClientRect();
+        if (box.width && box.height && x >= box.left && x <= box.right && y >= box.top && y <= box.bottom
+            && getComputedStyle(g).visibility === 'visible') ids.add(entry[0]);
+      });
+      if (!ids.size || (ids.size === 1 && marker)) return;
+      event.stopPropagation();
+      if (ids.size === 1) { P.select(ids.values().next().value, false); return; }
+      P.clearSel();
+      var card = document.getElementById('card'), heading = document.createElement('h2');
+      heading.textContent = 'Выберите камеру на плане';
+      card.replaceChildren(heading);
+      ids.forEach(function (id) {
+        var cam = P.camEls[id], button = document.createElement('button');
+        button.type = 'button'; button.className = 'chip'; button.dataset.choice = id;
+        button.textContent = cam.g.getAttribute('aria-label') + (cam.c.floor ? ' · этаж ' + cam.c.floor : '');
+        button.addEventListener('click', function () { P.select(id, false); });
+        card.appendChild(button);
+      });
+      card.querySelector('button').focus({preventScroll: true});
+    }, true);
   }
   function init() {
     var P = window.T14Plan; if (!P || !P.svg) return false;
     var css = document.createElement('style');
-    css.textContent = '#mapInfo{position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 48px);width:min(290px,calc(100% - 90px));background:var(--panel,#fff);color:var(--ink,#1d282e);border:1px solid var(--rule,#d5dbd6);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.12);font:13px/1.35 system-ui,sans-serif;padding:8px 12px}' +
-      '#mapInfo summary{cursor:pointer;font-weight:600;list-style:none}#mapInfo summary::-webkit-details-marker{display:none}#mapInfo summary::after{content:" ▾";opacity:.6}#mapInfo[open] summary::after{content:" ▴"}' +
+    css.textContent = '.cam{pointer-events:bounding-box}.cam .hit{fill:transparent;stroke:none;pointer-events:all}.cam text{pointer-events:all}' +
+      '#mapInfo{position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(max(12px,min(env(safe-area-inset-bottom,0px),34px)) + 48px);width:min(290px,calc(100% - 90px));background:var(--panel,#fff);color:var(--ink,#1d282e);border:1px solid var(--rule,#d5dbd6);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.12);font:13px/1.35 system-ui,sans-serif;padding:8px 12px}' +
+      '#mapInfo[hidden]{display:none}#mapInfo summary{cursor:pointer;font-weight:600;list-style:none}#mapInfo summary::-webkit-details-marker{display:none}#mapInfo summary::after{content:" ▾";opacity:.6}#mapInfo[open] summary::after{content:" ▴"}' +
       '#mapInfo p{margin:6px 0}#mapInfo .mil{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px}#mapInfo .mil span{display:inline-flex;align-items:center;gap:5px}#mapInfo .mil i{width:12px;height:12px;border-radius:3px;display:inline-block}' +
       '#mapInfo .min{font-size:11.5px;color:var(--muted,#5f6d74)}#mapInfo .mibl{font:inherit;font-weight:600;border:1px solid #d92d20;color:#b42318;background:transparent;border-radius:999px;padding:2px 9px;cursor:pointer}' +
       '@media (max-width:700px){#mapInfo{left:auto;right:max(8px,env(safe-area-inset-right,0px));bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + 52px);width:min(270px,calc(100% - 80px))}}';
     document.head.appendChild(css);
     box = document.createElement('details'); box.id = 'mapInfo';
-    box.addEventListener('toggle', function () { ss('t14.mapinfo.open', box.open); });
+    box.addEventListener('toggle', function () { ss('t14.mapinfo.open2', box.open); });
     P.svg.parentNode.appendChild(box); render();
-    window.addEventListener('t14blind', render); window.addEventListener('t14edits', function () { setTimeout(render, 50); });
+    enableCameraChoice(P);
+    window.addEventListener('t14blind', render); window.addEventListener('t14layers', function () { setTimeout(render, 0); }); window.addEventListener('t14edits', function () { setTimeout(render, 50); });
     return true;
   }
   (function wait(n) { if (!init() && n < 200) setTimeout(function () { wait(n + 1); }, 100); })(0);

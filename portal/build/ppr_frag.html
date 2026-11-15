@@ -59,6 +59,14 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   try { var h = /m=(\d+)/.exec(location.hash); if (h) M = Math.max(0, Math.min(11, +h[1] - 1)); } catch (e) { }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n(x) { return String(Math.round(x * 10) / 10).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  var monthIn = ['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
+  function numberForm(count, one, few, many) {
+    var last = count % 10, two = count % 100;
+    if (two >= 11 && two <= 14) return many;
+    if (last === 1) return one;
+    return last >= 2 && last <= 4 ? few : many;
+  }
+  function activity(count) { return numberForm(count, 'мероприятие', 'мероприятия', 'мероприятий'); }
   function rowsFor(m, mode) { return (D.rows || []).filter(function (r) { return mode === 'ops' ? /[SDW]/.test(r[7]) : r[4][m] > 0 && !/[SDW]/.test(r[7]); }); }
   function draw() {
     var R = rowsFor(M, MODE), h = '';
@@ -72,13 +80,13 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     } else {
       var hrs = R.reduce(function (a, r) { return a + (MODE === 'ops' ? 0 : r[4][M] * (r[5] || 0)); }, 0), eqs = {}, who = {};
       R.forEach(function (r) { eqs[r[1]] = 1; if (MODE !== 'ops') who[r[6] || '—'] = (who[r[6] || '—'] || 0) + r[4][M] * (r[5] || 0); });
-      h += '<div class="pp-k"><div><b>' + R.length + '</b><span>' + (MODE === 'ops' ? 'проверок операторов' : 'мероприятий в ' + MN[M].toLowerCase().replace(/ь$/, 'е').replace(/й$/, 'е')) + '</span></div><div><b>' + Object.keys(eqs).length + '</b><span>единиц оборудования</span></div>' +
+      h += '<div class="pp-k"><div><b>' + R.length + '</b><span>' + (MODE === 'ops' ? numberForm(R.length, 'проверка', 'проверки', 'проверок') + ' операторов' : activity(R.length) + ' в ' + monthIn[M]) + '</span></div><div><b>' + Object.keys(eqs).length + '</b><span>единиц оборудования</span></div>' +
         (MODE === 'ops' ? '' : '<div><b>' + n(hrs) + ' ч</b><span>трудоёмкость, где указана</span></div>') + '</div>';
       if (MODE !== 'ops') h += '<p class="pp-h">Кто делает · часов в месяце</p><div class="pp-sec" style="padding:4px 16px 10px">' + Object.keys(who).sort(function (a, b) { return who[b] - who[a]; }).map(function (w) { return '<div class="pp-a"><span>' + esc(w) + '</span><small>' + n(who[w]) + ' ч</small></div>'; }).join('') + '</div>';
       var S = {}; R.forEach(function (r) { (S[r[0]] = S[r[0]] || []).push(r); });
       h += '<p class="pp-h">По участкам</p>' + Object.keys(S).map(function (s) {
         var L = S[s], E = {}; L.forEach(function (r) { (E[r[1]] = E[r[1]] || []).push(r); });
-        return '<details class="pp-sec"><summary><b>' + esc(s || 'Без участка') + '</b><small>' + L.length + ' мероприятий</small></summary><div class="pp-eq">' + Object.keys(E).map(function (e) {
+        return '<details class="pp-sec"><summary><b>' + esc(s || 'Без участка') + '</b><small>' + L.length + ' ' + activity(L.length) + '</small></summary><div class="pp-eq">' + Object.keys(E).map(function (e) {
           return '<h4>' + esc(e) + '</h4>' + E[e].map(function (r) { return '<div class="pp-a"><span>' + esc(r[2]) + '</span><small>' + (MODE === 'ops' ? esc(r[3]) : (r[4][M] > 1 ? r[4][M] + ' раза · ' : '') + (r[5] ? n(r[5]) + ' ч' : 'часы не указаны')) + '</small><em>' + esc(r[6] || 'исполнитель не указан') + (MODE === 'ops' ? '' : ' · периодичность: ' + esc(r[3] || 'не указана')) + '</em></div>'; }).join('');
         }).join('') + '</div></details>';
       }).join('');

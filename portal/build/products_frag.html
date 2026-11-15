@@ -80,7 +80,7 @@ main.pitems{min-width:0;max-width:100%}
       <div class="pph"><img id="pdlgI" alt="" width="640" height="1000" decoding="async"></div>
       <div>
         <dl id="pdlgD"></dl>
-        <p class="pnote">Цена — по запросу: прайс в портал ещё не загружен. Характеристики и размеры добавим из утверждённого каталога.</p>
+        <p class="pnote">Выберите исполнение в прайсе. Если для сочетания ткани и цвета на фото цена не указана, уточните её в отделе продаж.</p>
         <div class="ios" style="padding:0;max-width:none"><div class="igroup" id="pdlgL"></div></div>
       </div>
     </div>
@@ -102,8 +102,21 @@ main.pitems{min-width:0;max-width:100%}
     var dl = document.getElementById('pdlgD'); dl.innerHTML = '';
     it.d.forEach(function (r) { var dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = r[0]; dd.textContent = r[1]; dl.appendChild(dt); dl.appendChild(dd); });
     var L = document.getElementById('pdlgL'); L.innerHTML = '';
-    [['library.html#catalogs', 'Каталог продукции'], ['library.html#certs', 'Сертификаты и выписки']].forEach(function (x) {
-      var a = document.createElement('a'); a.className = 'irow'; a.href = x[0]; a.innerHTML = '<span class="ic"><span class="ibody"><span class="ititle"></span></span><span class="ichev"></span></span>'; a.querySelector('.ititle').textContent = x[1]; L.appendChild(a); });
+    var family = Array.from(document.querySelectorAll('#catalog .cmod')).find(function (model) {
+      return model.dataset.family === it.t.toLowerCase() && model.dataset.section === 'стулья';
+    });
+    var links = family ? [['#' + family.id, 'Исполнения и цены в прайсе']] : [['library.html#prices~products', 'Открыть прайс-лист']];
+    links.concat([['library.html#catalogs~products', 'Каталог продукции'], ['library.html#certs~products', 'Сертификаты и выписки']]).forEach(function (x) {
+      var a = document.createElement('a'); a.className = 'irow'; a.href = x[0]; a.innerHTML = '<span class="ic"><span class="ibody"><span class="ititle"></span></span><span class="ichev"></span></span>'; a.querySelector('.ititle').textContent = x[1];
+      if (family && x[0] === '#' + family.id) {
+        a.addEventListener('click', function () {
+          dlg.hidden = true;
+          family.closest('.ctype').open = true;
+          family.open = true;
+          family.querySelector('summary').focus();
+        });
+      }
+      L.appendChild(a); });
     last = document.activeElement; dlg.hidden = false; document.getElementById('pdlgX').focus();
   }
   function closeItem() { dlg.hidden = true; if (location.hash) history.replaceState(null, '', location.pathname); if (last) try { last.focus(); } catch (e) { } }

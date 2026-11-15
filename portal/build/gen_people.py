@@ -22,7 +22,7 @@ TAIL = '''<script src="assets/edits.js"></script>
 '''
 
 CHAT = '<title>Фабрика — чат</title>\n' + HEAD + '''
-body.pg-chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+body.pg-chat{padding-bottom:calc(150px + min(env(safe-area-inset-bottom,0px),34px))}
 .chat-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .ppl{border:0;background:none;color:var(--ios-blue);font:400 15px var(--f-body);padding:4px 0 8px;cursor:pointer}
 .log{display:flex;flex-direction:column;gap:3px;margin-top:10px}
@@ -36,7 +36,7 @@ body.pg-chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 .bb.del{background:none;border:.5px dashed var(--ios-sep);color:var(--ios-2);font-style:italic}
 .bb.sel{outline:2px solid var(--ios-blue);outline-offset:2px}
 .adm{font-size:10.5px;color:var(--ios-blue);margin-left:4px}
-.compose{position:fixed;z-index:58;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));
+.compose{position:fixed;z-index:58;left:0;right:0;bottom:calc(84px + min(env(safe-area-inset-bottom,0px),34px));padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));
   display:flex;align-items:flex-end;gap:8px;background:color-mix(in srgb,var(--ios-bg) 88%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
 @media (min-width:640px){.compose{left:50%;right:auto;width:min(760px,100%);transform:translateX(-50%)}}
 .compose[hidden]{display:none}
@@ -46,7 +46,7 @@ body.pg-chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 .compose .send svg{width:20px;height:20px}
 .compose .fix{flex:none;height:36px;border:0;border-radius:18px;background:var(--ios-fill);color:var(--ios-blue);font:500 14px var(--f-body);padding:0 12px;cursor:pointer}
 .compose .fix[hidden]{display:none}
-.fixbox{position:fixed;z-index:59;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(136px + env(safe-area-inset-bottom,0px));
+.fixbox{position:fixed;z-index:59;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(136px + min(env(safe-area-inset-bottom,0px),34px));
   background:var(--ios-group);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:12px 14px;max-height:40vh;overflow:auto}
 @media (min-width:640px){.fixbox{left:50%;right:auto;width:min(736px,calc(100% - 24px));transform:translateX(-50%)}}
 .fixbox p{margin:0 0 6px;font-size:15px}
@@ -244,7 +244,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
       act('Отклонить', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     } else {
       if (u.st === 'active' && u.id !== me.id) act(u.role === 'admin' ? 'Сделать сотрудником' : 'Сделать администратором', '', function () { return A.api('userset', { tok: A.tok(), id: u.id, role: u.role === 'admin' ? 'user' : 'admin' }); });
-      if (u.st === 'active') act('Новый пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
+      if (u.st === 'active') act('Сотрудник5 пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
       if (u.id !== me.id) act(u.st === 'off' ? 'Включить доступ' : 'Отключить доступ', u.st === 'off' ? '' : 'red', function () { return A.api('userset', { tok: A.tok(), id: u.id, st: u.st === 'off' ? 'active' : 'off' }); });
       if (u.id !== me.id && u.st === 'off') act('Удалить совсем', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     }
@@ -255,7 +255,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     where.appendChild(c); where.appendChild(UI.el('p', 'ifoot', 'Передайте лично (не в общий чат). Пароль показывается один раз; сменить его можно в «Ещё» → «Личный вход».'));
   }
   function addPerson() {
-    var s = UI.sheet('Новый человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
+    var s = UI.sheet('Сотрудник5 человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
     var nm = UI.field('Имя, фамилия', 'text', 'Имя1 Имя1'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
     var role = UI.el('button', 'irow', '<span class="ic"><span class="ibody"><span class="ititle">Администратор</span><span class="isub">люди, уведомления, документы, чат</span></span><span class="isw"></span></span>'); role.type = 'button'; role.setAttribute('aria-pressed', 'false');
     role.addEventListener('click', function () { role.setAttribute('aria-pressed', String(role.getAttribute('aria-pressed') !== 'true')); });
@@ -313,7 +313,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     var act = D.users.filter(function (u) { return u.st === 'active'; }).length;
     var s = UI.sheet('Общий пароль', D.shared ? 'Сейчас сайт открывается и общим паролем, и личными входами.' : 'Выключен: сайт открывается только личными входами.'), f = UI.el('div', 'iform');
     if (D.shared) {
-      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Новых людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
+      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Сотрудник5 людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
       var go = UI.btn('Выключить общий пароль', 'red'); f.appendChild(go);
       go.addEventListener('click', function () { if (!go.dataset.arm) { go.dataset.arm = 1; go.textContent = 'Точно? Нажмите ещё раз'; return; } UI.busy(go, true); A.api('shared', { tok: A.tok(), on: false }).then(function () { s.close(); load(); }, function (e) { UI.busy(go, false); UI.msg(f, e.message, true); }); });
     }
@@ -380,7 +380,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     }
     function draw(J) {
       f.innerHTML = ''; f.appendChild(stat(J));
-      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Новый токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
+      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Сотрудник5 токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
       f.appendChild(act(J.token ? 'Заменить токен и переподключить' : 'Сохранить токен и подключить', 'pri', function () {
         var v = tk.lastChild.value.trim(); if (!v) return Promise.reject(new Error('Вставьте токен.'));
         return mxCall('token', { token: v }).then(function (r) { tk.lastChild.value = ''; return r; });

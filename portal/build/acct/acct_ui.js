@@ -226,7 +226,7 @@
   }
   // ---------------- «На iPhone» (14.11.2026, Т. В., опрос «приложение для iPhone без затрат»: значок, Face ID, пуши о тревогах, Siri, Telegram)
   function iphone() {
-    var s = sheet('Пароль приложения', 'Портал как приложение — без App Store и без затрат');   // 14.11.2026 17:27, Т. В.: раздел называется «Пароль приложения»;
+    var s = sheet('Установка на iPhone и iPad', 'Портал как приложение — без App Store и без затрат');
     var B = 'https://techfabrikant.ru/';
     function step(n, t, x) { var d = el('div', 'iph-st', '<b></b><p></p>'); d.firstChild.textContent = n + '. ' + t; d.lastChild.textContent = x; s.body.appendChild(d); }
     var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');
@@ -271,9 +271,11 @@
   function lockCss() {
     if (document.getElementById('t14lock-css')) return;
     var st = el('style'); st.id = 't14lock-css';
+    // 15.11.2026, Т. В. (iPhone, скриншот замка): низ экрана под замком был цветом страницы, а не замка — фон всего окна тоже цвета замка
     st.textContent = 'html[data-lock] body{visibility:hidden}html[data-lock] body .ilock{visibility:visible}' +
+      'html[data-lock],html[data-lock] body{background:#f2f2f7!important}@media (prefers-color-scheme:dark){html[data-lock]:not([data-theme=light]),html[data-lock]:not([data-theme=light]) body{background:#000!important}}html[data-lock][data-theme=dark],html[data-lock][data-theme=dark] body{background:#000!important}' +
       '.ilock{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:var(--sheet-bg,#f2f2f7);color:var(--ios-label,#1c1c1e);' +
-      'padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto;font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+      'padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + min(env(safe-area-inset-bottom,0px),34px));overflow:auto;font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
       '@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .ilock{background:#000;color:#f2f2f7}}:root[data-theme=dark] .ilock{background:#000;color:#f2f2f7}' +
       '.ilock-in{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}' +
       '.ilock-in h2{margin:6px 0 0;font-weight:600;font-size:22px;line-height:1.25;font-family:inherit}.ilock-in .lsub{margin:0;color:var(--ios-2,#8e8e93);font-size:15px}' +
