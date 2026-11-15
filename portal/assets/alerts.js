@@ -28,7 +28,8 @@
     '<path d="M12 9.2v4.7" stroke="var(--al-c)" stroke-width="2.3" stroke-linecap="round"/><circle cx="12" cy="17.1" r="1.3" fill="var(--al-c)"/></svg>';
   var XBTN = '<button class="al-x" type="button" aria-label="Скрыть до завтра" title="Скрыть до завтра"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>';
   function forHere(a) {
-    if (a.lvl === 'crit' || page === 'home.html') return true;
+    // 15.11.2026 ~21:45, Т. В. (видео 21:39): «алерты, не относящиеся к данному разделу, в разделе не печатать» — критичные тоже только на главной и в своём разделе
+    if (page === 'home.html') return true;
     return (a.secs || []).indexOf(secOf()) >= 0 || String(a.href || '').split('#')[0] === page;
   }
   // ---------- карточка-уведомление ----------
@@ -48,7 +49,8 @@
     var sub = document.getElementById('fhSub');                               // главная: сразу под датой и погодой
     if (sub && sub.parentNode) return { p: sub.parentNode, before: sub.nextSibling };
     var m = document.querySelector('main.ios') || document.querySelector('main') || document.querySelector('.ios');
-    if (m) return { p: m, before: m.firstChild };
+    // 15.11.2026 ~22:00, Т. В.: «раздел должен начинаться с максимальной верхней точки» — тревоги раздела под заголовком и подписью, а не над ними
+    if (m) { var h = m.querySelector('h1'); if (h && h.parentNode === m) { var nx = h.nextElementSibling; if (nx && nx.tagName === 'P') h = nx; return { p: m, before: h.nextSibling }; } return { p: m, before: m.firstChild }; }
     var top = document.querySelector('.ptop');
     return top ? { p: top.parentNode, before: top.nextSibling, loose: true } : null;
   }

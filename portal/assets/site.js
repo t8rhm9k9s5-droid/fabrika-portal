@@ -497,16 +497,17 @@
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
     ['calls.html#bus', 'Служебные автобусы', 'автобусы маршрут расписание развозка'], ['library.html#regs', 'Регламенты', 'регламенты порядок процессы'], ['library.html#dog', 'Типовые договоры', 'договоры шаблоны формы юрист']];
-  // 15.11.2026, Т. В. (видео App Store): «посмотри анимацию в меню снизу — как она переезжает с плитки на плитку и аккуратно прыгает
-  //   через 2 плитки, у нас дергается». Было: подсветка гасла на одной вкладке и загоралась на другой. Стало: одна «линза» под вкладками
-  //   переезжает к выбранной пружиной (через две плитки — одним движением), в пути приподнимается и светлеет, как стекло в iOS 26.
-  //   Переход по ссылке на другую страницу — линза на новой странице доезжает от прежней вкладки. Экономный режим и «меньше движения» — без анимации.
+  // 15.11.2026, Т. В. (видео App Store, второй раз: «анимация меню не такая, как мы договорились»): одна «линза» под вкладками, как в iOS 26 —
+  //   переезжает к выбранной вкладке пружиной (только transform: плавно и на iPhone), в пути светлеет, приподнимается и тянется (через две
+  //   плитки — длиннее, одним движением), капсула чуть «вдыхает», значок новой вкладки на миг увеличивается. Переход на другую страницу —
+  //   линза на новой странице доезжает от прежней вкладки. Положение меню не меняется. Экономный режим и «меньше движения» — без анимации.
   function lensBar(bar) {
     var R = document.documentElement;
     if (R.getAttribute('data-plat') === 'android' || !bar || bar.querySelector('.tb-lens')) return;
-    var L = document.createElement('i'); L.className = 'tb-lens'; L.setAttribute('aria-hidden', 'true');
+    var L = document.createElement('i'), G = document.createElement('b');
+    L.className = 'tb-lens'; L.setAttribute('aria-hidden', 'true'); G.className = 'tb-glass'; L.appendChild(G);
     bar.insertBefore(L, bar.firstChild); bar.classList.add('has-lens');
-    var at = null, mv = null, lift = null, KEY = 't14.lens';
+    var at = null, mv = null, sq = null, KEY = 't14.lens';
     function items() { return [].filter.call(bar.children, function (c) { return c !== L; }); }
     function active() {
       var it = items();
@@ -518,20 +519,20 @@
       return rm || !L.animate || R.getAttribute('data-fx') === 'lite' || R.getAttribute('data-perf') === 'eco';
     }
     function box(el) { return { x: el.offsetLeft, w: el.offsetWidth }; }
+    function place(b) { if (L.style.width !== b.w + 'px') L.style.width = b.w + 'px'; L.style.transform = 'translateX(' + b.x + 'px)'; }
     function go(el, from) {
       if (!el || !el.offsetWidth) { L.style.opacity = '0'; at = el || null; return; }
-      var b = box(el);
-      L.style.left = b.x + 'px'; L.style.width = b.w + 'px'; L.style.opacity = '1';
+      var b = box(el); place(b); L.style.opacity = '1';
       var a = from === undefined ? (at && at !== el && at.offsetWidth ? box(at) : null) : from;
       at = el;
-      if (!a || (a.x === b.x && a.w === b.w) || still()) return;
-      var hops = Math.abs(b.x - a.x) / Math.max(1, b.w), dur = Math.round(360 + Math.min(3, hops) * 60);
-      if (mv) mv.cancel(); if (lift) lift.cancel();
-      // пружина с лёгким перелётом — как у iOS; «подъём» стекла идёт отдельно и успевает опуститься к остановке
-      mv = L.animate([{ left: a.x + 'px', width: a.w + 'px' }, { left: b.x + 'px', width: b.w + 'px' }], { duration: dur, easing: 'cubic-bezier(.3,1.32,.45,1)' });
-      lift = L.animate([{ transform: 'scale(1,1)' }, { transform: 'scale(1.1,1.2)', offset: .35 }, { transform: 'scale(1,1)' }], { duration: dur, easing: 'ease-in-out' });
+      if (!a || a.x === b.x || still()) return;
+      var hops = Math.min(3, Math.abs(b.x - a.x) / Math.max(1, b.w)), dur = Math.round(400 + hops * 70);
+      if (mv) mv.cancel(); if (sq) sq.cancel();
+      mv = L.animate([{ transform: 'translateX(' + a.x + 'px)' }, { transform: 'translateX(' + b.x + 'px)' }], { duration: dur, easing: 'cubic-bezier(.28,1.3,.42,1)' });
+      sq = G.animate([{ transform: 'scale(1,1)' }, { transform: 'scale(' + (1.08 + hops * .14).toFixed(2) + ',1.22)', offset: .36 }, { transform: 'scale(1,1)' }], { duration: dur, easing: 'ease-in-out' });
       L.classList.add('moving'); bar.classList.add('lensing');
-      var my = mv;   // отменённый прошлый переезд не должен снимать «подъём» с нового
+      el.classList.remove('tb-pop'); void el.offsetWidth; el.classList.add('tb-pop');
+      var my = mv;   // отменённый прошлый переезд не снимает «подъём» с нового
       mv.onfinish = mv.oncancel = function () { if (mv !== my) return; L.classList.remove('moving'); bar.classList.remove('lensing'); };
     }
     // с прошлой страницы: на какой вкладке стояла линза перед переходом (только что — не дольше 4 с)
@@ -545,12 +546,12 @@
       var a = e.target.closest && e.target.closest('a[href]'); if (!a || !bar.contains(a)) return;
       var it = items(), i = it.indexOf(at);
       if (i >= 0 && a !== at) try { sessionStorage.setItem(KEY, JSON.stringify({ i: i, n: it.length, t: Date.now() })); } catch (x) { }
-      if (a !== at && !still()) go(a);   // ещё до загрузки новой страницы линза начинает путь
+      if (a !== at && !e.defaultPrevented) go(a);   // ещё до загрузки новой страницы линза начинает путь
     });
     var raf = 0;
     function sync() { raf = 0; var el = active(); if (el !== at) go(el); else if (el) go(el, null); }
     function later() { if (!raf) raf = requestAnimationFrame(sync); }
-    if (window.MutationObserver) new MutationObserver(later).observe(bar, { subtree: true, attributes: true, attributeFilter: ['aria-expanded', 'aria-current'] });
+    if (window.MutationObserver) new MutationObserver(later).observe(bar, { subtree: true, attributes: true, attributeFilter: ['aria-expanded', 'aria-current', 'class'] });
     if (window.ResizeObserver) new ResizeObserver(function () { if (at) go(at, null); }).observe(bar); else window.addEventListener('resize', function () { if (at) go(at, null); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (at) go(at, null); });
     // нажатие: капсула чуть «вдыхает», как в iOS 26
@@ -558,7 +559,7 @@
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (t) { bar.addEventListener(t, function () { bar.classList.remove('press'); }); });
   }
   function mountNav() {
-    if (document.getElementById('tabbar')) return;
+    if (document.getElementById('tabbar')) { document.documentElement.classList.remove('t14-wait'); return; }
     var cur = here(); if (!/\.html$/.test(cur)) cur = 'home.html';
     var sec = PARENT[cur] || cur, isPlan = cur === 'plan.html';
     if (cur === 'sales.html' && /^#(struct|sec-|ko$)/.test(location.hash)) sec = 'sales.html#struct';   // 12.11.2026: «Структура» живёт на странице продаж
@@ -654,7 +655,9 @@
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
         // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник10 (пользователь: «Берем Gemini и Сотрудник10 в дополнение к ChatGPT в раздел поиска»)
         // 02.11.2026, замечания Т. В.: «Удали Сотрудник10 из поиска и ИИ-интеграций портала» (Сотрудник10 Имя4 и Сотрудник10 Сотрудник26 не трогаем)
-        var AIS = [['', 'Авто'], ['gpt', 'ChatGPT'], ['gemini', 'Gemini']], prov = '';
+        // 15.11.2026 ~20:00, Т. В.: «Gemini выключай, если он не работает» — не работает: модели Gemini 2.5 закрыты для ключа (404), 3.x — 429 без
+        //   оплаченной квоты (проверка 12.11, SnabGpt). Кнопка убрана; сохранённый выбор gemini сбрасывается на «Авто» (проверка ниже).
+        var AIS = [['', 'Авто'], ['gpt', 'ChatGPT']], prov = '';
         // 28.10.2026: показываем только подключённых помощников (сервер отдаёт их в «me» → ais; запоминаем на сутки)
         var conn = null; try { var cj = JSON.parse(localStorage.getItem('t14.ais') || 'null'); if (cj && Date.now() - cj.t < 864e5) conn = cj.v; } catch (e) { conn = null; }
         var toKey = function (x) { return x === 'openai' || x === 'anthropic' ? 'gpt' : x; };
@@ -692,7 +695,11 @@
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
           var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник10' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
-          var via = '';
+          var via = '', my = (go.n = (go.n || 0) + 1);
+          // 15.11.2026 ~20:00, Т. В. (видео 19:43): «ChatGPT вообще никакого поиска не делает» — «Помощник думает…» висел без конца: у запроса не было
+          //   предела времени. Теперь 35 с; поздний ответ не показывается (уже задан другой вопрос или вышло время).
+          var lim = function (pr) { return Promise.race([pr, new Promise(function (ok, bad) { setTimeout(function () { bad(new Error('Помощник не ответил за 35 секунд.')); }, 35000); })]); };
+          var ask0 = ask; ask = function (pv) { return lim(ask0(pv)).then(function (x) { if (my !== go.n) throw new Error('#old'); return x; }, function (e) { if (my !== go.n) throw new Error('#old'); throw e; }); };
           ask(prov).then(null, function (e) {
             if (!prov || !busy(e && e.message)) throw e;
             via = NAMES[prov] || prov; out.textContent = via + (/не подключ/i.test(String(e && e.message || '')) ? ' не подключён' : ' сейчас перегружен') + ' — спрашиваю другого помощника…';
@@ -707,11 +714,13 @@
             if (x && x.name) { var by = el('small', 'pai-by'); by.textContent = 'Ответил: ' + x.name + (via && via !== x.name ? ' (' + via + ' был перегружен)' : ''); out.appendChild(document.createElement('br')); out.appendChild(by); }
           }, function (e) {
             var m = String(e && e.message || '');
+            if (m === '#old') return;
             out.className = 'pai-a err'; lastAsk = '';
             // 05.11.2026 (1.29.0): срок входа истёк — пояснение и кнопка «Войти заново» (как в «Транспорте» 1.28.4), а не отсылка в «Профиль»
             if (window.T14UI && T14UI.expired && T14UI.expired(m)) { out.textContent = T14UI.expiredText + ' '; var rb = T14UI.reloginBtn(''); rb.style.cssText = 'display:block;margin-top:8px'; out.appendChild(rb); return; }
             out.textContent = /войдите|доступ/i.test(m) ? 'Помощнику нужен личный вход: «Профиль» → «Личный вход».' :
-              busy(m) ? 'Помощники сейчас перегружены и не ответили. Повторите через минуту (Enter) или выберите другого помощника.' : m;
+              busy(m) ? 'Помощники сейчас перегружены и не ответили. Повторите через минуту (Enter) или выберите другого помощника.' :
+              /35 секунд/.test(m) ? m + ' Нажмите Enter, чтобы спросить ещё раз.' : m;
           });
         }
         r.addEventListener('click', go); b._go = go; return b;
@@ -753,7 +762,7 @@
       // 14.11.2026, Т. В. (опрос: приложение для iPhone без затрат; 14.11 17:27 — раздел называется «Пароль приложения»): как поставить значок, Face ID, пуши о тревогах, Siri, кнопку в Telegram
       var password = irow('button', ICON.s_device, 'var(--ic-items)', 'Пароль приложения', 'личный вход и смена пароля');
       password.type = 'button'; password.addEventListener('click', function () { close(); if (window.T14UI) T14UI.account(); }); g3.appendChild(password);
-      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'Установка на iPhone и iPad', 'значок, Face ID, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
+      var iph = irow('button', ICON.s_device, 'var(--ic-items)', 'Установка на iPhone и iPad', 'значок, уведомления, Siri'); iph.type = 'button'; iph.addEventListener('click', function () { close(); if (window.T14UI && T14UI.iphone) T14UI.iphone(); }); g3.appendChild(iph);
       if (APK) { var apk = irow('a', ICON.s_apk, 'var(--ic-calls)', 'Скачать приложение (APK)', 'Android'); apk.href = APK; apk.setAttribute('download', 'Фабрика.apk'); apk.addEventListener('click', function () { close(); }); g3.appendChild(apk); }
       var pb = document.getElementById('pushBtn');
       if (pb) {
@@ -1003,7 +1012,9 @@
       conf.tabs.forEach(function (t) { bar.appendChild(trigger(t[0], '', t[0] === 'layers' ? 'layers2' : 'search', t[0] === 'find' ? 'Объекты' : t[1])); });
       bar.appendChild(trigger('profile', '', 'user', 'Профиль'));
     } else {
-      bar.appendChild(link('home.html', 's_home', 'Главная'));
+      var hm = link('home.html', 's_home', 'Главная'); bar.appendChild(hm);
+      // 15.11.2026, Т. В. («лагает при переключении разделов»): «Главная» на самой главной перезагружала страницу — теперь закрывает лист и наверх
+      if (cur === 'home.html') hm.addEventListener('click', function (e) { e.preventDefault(); if (open) close(); try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (x) { window.scrollTo(0, 0); } });
       var bs = trigger('sections', cur === 'home.html' || cur === 'chat.html' ? '' : 'on', 's_grid', 'Разделы'); bar.appendChild(bs);
       // 13.11.2026, Т. В.: «чат пока убери»
       // 14.11.2026, Т. В.: «кнопку поиска интегрируем в общее меню — на одной плашке, как в 3D-карте» (круглой отдельной кнопки больше нет)
@@ -1017,7 +1028,8 @@
     if (cur === 'home.html') document.body.classList.add('pg-home');
     document.body.insertBefore(top, document.body.firstChild);
     document.body.appendChild(side); document.body.appendChild(bar); document.body.appendChild(panel);
-    lensBar(bar);
+    try { lensBar(bar); } catch (e) { /* без линзы — подсветка вкладок как раньше */ }
+    document.documentElement.classList.remove('t14-wait');   // 15.11.2026: страница показывается сразу целиком — с шапкой и меню
     // 14.11.2026: ушли по ссылке из листа «Разделы» — «Назад» вернёт на эту страницу с открытым листом
     panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a && open === 'sections') try { sessionStorage.setItem('t14.fromsheet', hereKey()); } catch (x) { } }, true);
     panel.querySelector('.grab').addEventListener('click', close);
@@ -1103,6 +1115,10 @@
   function scrollMode() {
     if (here() === 'plan.html' || !window.matchMedia || !matchMedia('(pointer: coarse)').matches) return;
     var de = document.documentElement, B = document.body; if (!B || de.classList.contains('t14sc')) return;
+    // 15.11.2026 ~20:15, Т. В. (опрос «Ставь на портал»): прокручивается ВСЯ СТРАНИЦА, как в тесте меню (без отскока — ui.css). Прокрутка body давала на iPhone
+    //   (полный экран, black-translucent) окно короче экрана на строку часов: непрозрачная полоса сверху или поднятое меню (видео 17:56 и 19:27, «окно 844 / экран 912»).
+    //   Body прокручивается только в тесте t/home.html?sc=body (data-tt="body"). «Откат» — fabrika/work/menu_rollback_2577 (RULES.md).
+    if (de.getAttribute('data-tt') !== 'body') return;
     de.classList.add('t14sc');
     var to = function (fn) { return function (x, y) { if (x && typeof x === 'object') B[fn](x); else B[fn](+x || 0, +y || 0); }; };
     window.scrollTo = window.scroll = to('scrollTo'); window.scrollBy = to('scrollBy');

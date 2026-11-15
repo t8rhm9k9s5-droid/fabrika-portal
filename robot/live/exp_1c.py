@@ -106,13 +106,17 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
             res['state'] = 'папка «Вся почта» не открылась'; res['folders'] = [n for _, n, _ in allf][:30]; return res
         res['folder'] = name
         typ, data = M.uid('SEARCH', None, 'SINCE', st['since'])
-        uids = sorted(int(u) for u in (data[0] or b'').split()) if typ == 'OK' else []
+        # 15.11.2026 (F4-06, реестр Рекса): отказ поиска — не «писем нет»: выгрузку не завершаем, повтор в следующий прогон
+        if typ != 'OK':
+            res['state'] = 'Gmail: поиск не удался — повтор в следующий прогон'; jsave('exp_1c.json', st); return res
+        uids = sorted(int(u) for u in (data[0] or b'').split())
         res['total'] = len(uids)
         # 1) заголовки
         todo = [u for u in uids if str(u) not in st['hdr']]
         while todo and time.time() - t0 < budget * 0.4:
             part, todo = todo[:150], todo[150:]
             typ, d = M.uid('FETCH', ','.join(map(str, part)), '(RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC DATE SUBJECT MESSAGE-ID)])')
+            if typ != 'OK': todo = part + todo; break        # F4-06: отказ — не пустой ответ; эти письма — в следующий прогон
             cur = None
             for x in d or []:
                 if not isinstance(x, tuple): continue
@@ -141,7 +145,9 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
                 h = st['hdr'][str(u)]
                 if str(u) in full and h['sz'] < MAX_MSG: typ, d = M.uid('FETCH', str(u), '(BODY.PEEK[])')
                 else: typ, d = M.uid('FETCH', str(u), '(BODY.PEEK[TEXT]<0.20000>)')
-                body = next((x[1] for x in d or [] if isinstance(x, tuple)), b'') or b''
+                got = next((x[1] for x in d or [] if isinstance(x, tuple)), None)
+                if typ != 'OK' or got is None: pending = True; continue   # F4-06: письмо не пришло — не записываем пустым, повтор позже
+                body = got or b''
                 row = dict(h, a=[], full=str(u) in full)
                 if str(u) in full and h['sz'] < MAX_MSG:
                     msg = email.message_from_bytes(body, policy=email.policy.default)
@@ -199,9 +205,10 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
             if publish('exp_1c_%d.bin' % p_, {'part': p_, 'files': files}): dirty.discard(p_)
         st['dirty'] = sorted(dirty)
         if not dirty:
-            publish('exp_1c_idx.bin', {'id': st['id'], 't': res['t'], 'since': st['since'], 'msgs': sorted(st['msgs'].values(), key=lambda r: r.get('t') or ''),
-                                       'part_of': pmap, 'parts': len(sizes), 'keep_days': KEEP_DAYS})
-            st['done_t'] = res['t']; res['state'] = 'готово: %d писем, частей %d' % (len(st['msgs']), len(sizes))
+            ok = publish('exp_1c_idx.bin', {'id': st['id'], 't': res['t'], 'since': st['since'], 'msgs': sorted(st['msgs'].values(), key=lambda r: r.get('t') or ''),
+                                            'part_of': pmap, 'parts': len(sizes), 'keep_days': KEEP_DAYS})
+            if ok: st['done_t'] = res['t']; res['state'] = 'готово: %d писем, частей %d' % (len(st['msgs']), len(sizes))
+            else: res['state'] = 'индекс не опубликован — повтор в следующий прогон'   # F4-06: без опубликованного индекса выгрузка не готова
     else: st['dirty'] = sorted(dirty)
     jsave('exp_1c.json', st)
     res.update({'hdr': len(st['hdr']), 'msgs': len(st['msgs'])})

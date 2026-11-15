@@ -1125,6 +1125,7 @@ def lane_portal():
         import deploy as DP
         ds = DP.check(CFG, L, SITE, jload, jsave, log, alert=alert)          # 30.10.2026 аудит P5/P6/P12: ошибки пакетов — владельцу
         if ds: status['deploy'] = {k: ds.get(k) for k in ('t', 'last', 'err')}
+        status['ver_ping'] = ver_ping()                       # 15.11.2026: версия сайта сменилась — пуш о ней сразу (скрипт бота, op claude vernow)
     except Exception as e:
         status['deploy'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}         # 30.10.2026 аудит P12: виден в hs.bin и считается сбоем блока
         log('  ! выкладка:', e.__class__.__name__, e)
@@ -1134,6 +1135,32 @@ def lane_portal():
     except Exception as e:
         status['ux'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! сводка интерфейса:', e.__class__.__name__, e)
     return status
+
+
+def ver_ping():
+    """15.11.2026, Т. В.: «если версия прилетела, почему портал пуш сразу не присылает?» (опрос: «Сразу после установки»). Раньше скрипт бота
+    сам смотрел sw.js раз в 10 минут и ждал ещё 11 (остаток от кэша GitHub Pages) — пуш приходил через 20–30 минут после «Обновить».
+    Теперь: VERSION в sw.js сменилась → подписанный op claude {do: vernow} (ключ code/k_cmd.txt, адрес — code/mail_cmd.json gas).
+    Тихие часы и «не чаще раза в день» решает скрипт. Сбой — повтор на следующем прогоне (версия не отмечается)."""
+    import urllib.request
+    try:
+        with open(os.path.join(SITE, 'sw.js'), encoding='utf-8') as f: m = re.search(r"const VERSION = '([^']+)'", f.read())
+        if not m: return 'нет версии'
+        st = jload('ver_ping.json', {})
+        if st.get('v') == m.group(1): return 'та же'
+        if not st.get('v'): jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time())}); return 'начало'
+        with open(os.path.join(CODE, 'k_cmd.txt'), encoding='utf-8') as f: k = f.read().strip()
+        with open(os.path.join(CODE, 'mail_cmd.json'), encoding='utf-8') as f: url = json.load(f).get('gas')
+        if not k or not url: return 'нет ключа или адреса'
+        body = json.dumps({'items': [{'do': 'vernow'}]}, separators=(',', ':')); t = int(time.time())
+        sig = hmac.new(k.encode('utf-8'), ('claude:%d:%s' % (t, body)).encode('utf-8'), hashlib.sha256).hexdigest()
+        rq = urllib.request.Request(url, data=json.dumps({'op': 'claude', 't': t, 'body': body, 'sig': sig}).encode('utf-8'),
+                                    headers={'Content-Type': 'text/plain;charset=utf-8'})
+        with urllib.request.urlopen(rq, timeout=60) as r: ans = r.read().decode('utf-8', 'replace')[:200]
+        if '"vernow"' in ans: jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time())}); return 'пуш: ' + ans[:60]
+        return 'ответ: ' + ans[:80]
+    except Exception as e:
+        log('  ! пуш о версии:', e.__class__.__name__, str(e)[:120]); return 'ошибка: %s' % (str(e)[:80] or e.__class__.__name__)
 
 
 def _auth_gate(raw, where, warn):

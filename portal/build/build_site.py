@@ -434,8 +434,12 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           "if(sk==='v22')d.setAttribute('data-skin','v22');"
           # 14.11.2026, Т. В.: «каждый вход на портал — через Face ID, где его нет — код из 4 цифр». Личный вход и перерыв больше минуты —
           #   страница скрыта до отрисовки, замок (assets/acct.js, lockScreen) открывает её после Face ID / кода.
-          "try{var lm=JSON.parse(g('t14.me')||'null');if(lm&&g('t14.tok')&&lm.st!=='pending'&&(g('t14.locked')==='1'||Date.now()-(+g('t14.lact')||0)>6e4||Date.now()-(+g('t14.linp')||Date.now())>6e5)){d.setAttribute('data-lock','1');"
+          "try{var lm=JSON.parse(g('t14.me')||'null');if(lm&&g('t14.tok')&&g('t14.qlon')==='1'&&lm.st!=='pending'&&(g('t14.locked')==='1'||Date.now()-(+g('t14.lact')||0)>6e4||Date.now()-(+g('t14.linp')||Date.now())>6e5)){d.setAttribute('data-lock','1');"
           "var ls=document.createElement('style');ls.id='t14lock-early';ls.textContent='html[data-lock] body{visibility:hidden}html[data-lock] body .ilock{visibility:visible}';document.head.appendChild(ls)}}catch(e){}"
+          # 15.11.2026, Т. В. («лагает при переключении разделов»): страница появлялась без шапки и меню, потом всё сдвигалось вниз — теперь
+          #   первая отрисовка ждёт оболочку (site.js снимает t14-wait), не дольше 1,2 с; браузер до того держит прежнюю страницу
+          "d.classList.add('t14-wait');try{var hw=document.createElement('style');hw.textContent='html.t14-wait body{visibility:hidden}';document.head.appendChild(hw)}catch(e){}"
+          "setTimeout(function(){d.classList.remove('t14-wait')},1200);"
           "d.setAttribute('data-plat',/Android/i.test(u)?'android':(/iPhone|iPad|iPod/.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))?'ios':'desk');"
           "var c=g('t14.power');if(!c){var f=g('t14.fx');c=f==='lite'?'eco':f==='full'?'max':'auto'}"
           "if(c==='eco'||c==='max')L=c;else{try{var m=JSON.parse(g('t14.dev')||'null');if(m&&m.ua===u&&m.base&&Date.now()-(m.t||0)<2592e6)L=m.base}catch(e){}"

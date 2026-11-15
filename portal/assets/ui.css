@@ -4,7 +4,7 @@
 @font-face{font-family:"ALS Ekibastuz";font-style:normal;font-weight:600 700;font-display:swap;src:url(fonts/als-ekibastuz-700.woff2) format("woff2"),url(fonts/als-ekibastuz-700.otf) format("opentype")}
 @font-face{font-family:"ALS Ekibastuz";font-style:normal;font-weight:800 1000;font-display:swap;src:url(fonts/als-ekibastuz-900.woff2) format("woff2"),url(fonts/als-ekibastuz-900.otf) format("opentype")}
 /* нижнее меню, 23.10.2026: 54 px, ниже к краю экрана; --tb-top — где кончается меню (от низа экрана) */
-:root{--tb-top:calc(max(18px,min(env(safe-area-inset-bottom,0px),34px) - 16px) + 54px)}
+:root{--tb-top:calc(max(18px,env(safe-area-inset-bottom,0px) - 16px) + 54px)}
 /* «Фабрика» — one look for every page (22.10.2026): the colours, type and glass of the 3D model and the same tab bar below.
    The pages keep their own markup; their variables are pointed at these tokens (html:root wins over a page's :root). */
 html:root{
@@ -124,7 +124,7 @@ html body .grid > .doc::after{content:"";flex:none;width:7px;height:7px;border-r
 .tabbar::before,.tabpanel::before{content:"";position:absolute;top:0;right:0;bottom:0;left:0;inset:0;border-radius:inherit;background:var(--sheen);pointer-events:none;z-index:-1}
 .tabpanel{background:var(--glass-text);-webkit-backdrop-filter:var(--blur-text);backdrop-filter:var(--blur-text)}
 .tabbar{position:fixed;z-index:60;left:max(26px,env(safe-area-inset-left,0px));right:max(26px,env(safe-area-inset-right,0px));
-  bottom:max(18px,min(env(safe-area-inset-bottom,0px),34px) - 16px);height:54px;border-radius:27px;display:grid;grid-template-columns:repeat(var(--n,4),1fr);padding:0 6px;box-sizing:border-box}
+  bottom:max(18px,env(safe-area-inset-bottom,0px) - 16px);height:54px;border-radius:27px;display:grid;grid-template-columns:repeat(var(--n,4),1fr);padding:0 6px;box-sizing:border-box}
 @media (min-width:600px){ .tabbar{left:50%;right:auto;width:min(calc(110px * var(--n,4)),calc(100% - 24px));transform:translateX(-50%)} }
 .tabbar > button,.tabbar > a{position:relative;display:grid;justify-items:center;align-content:center;gap:3px;border:0;background:none;color:var(--fg);
   font:500 11px/1 var(--f-body);cursor:pointer;border-radius:22px;margin:4px 0;text-decoration:none;transition:transform .35s var(--spring),background .2s,color .2s}
@@ -133,7 +133,7 @@ html body .grid > .doc::after{content:"";flex:none;width:7px;height:7px;border-r
 .tabbar > [aria-expanded="true"]{color:var(--accent);background:var(--glass-sel)}
 .tabbar > .dot::after{content:"";position:absolute;top:6px;left:calc(50% + 9px);width:8px;height:8px;border-radius:50%;background:var(--accent);border:2px solid var(--surface-solid)}
 .tabpanel{position:fixed;z-index:60;left:8px;right:8px;bottom:calc(var(--tb-top) + 8px);border-radius:26px;padding:8px 14px 16px;
-  max-height:calc(100vh - 84px - min(env(safe-area-inset-bottom,0px),34px) - 70px);max-height:calc(100dvh - 84px - min(env(safe-area-inset-bottom,0px),34px) - 70px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;font-family:var(--f-body)}
+  max-height:calc(100vh - 84px - env(safe-area-inset-bottom,0px) - 70px);max-height:calc(100dvh - 84px - env(safe-area-inset-bottom,0px) - 70px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;font-family:var(--f-body)}
 @media (min-width:600px){ .tabpanel{left:50%;right:auto;width:min(560px,calc(100% - 24px));transform:translateX(-50%)} }
 .tabpanel[hidden]{display:none!important}
 .tabpanel .grab{display:block;width:44px;height:22px;margin:0 auto;border:0;background:none;cursor:pointer;position:relative}
@@ -219,3 +219,7 @@ html.no-flexgap .tabpanel .tiles a > * + *{margin-top:6px}
 html.no-flexgap .kpis > * + *{margin-left:10px}
 /* 28.10.2026, аудит касаний: на сенсорных экранах капсулы .btn/.cp («Открыть», «Скачать», «Скопировать») были 30 px высотой — минимум 40 px */
 @media (pointer:coarse){html body button.btn,html body button.cp{min-height:40px}}
+
+/* 15.11.2026 ~20:15, Т. В. («Ставь на портал»): на сенсорных экранах прокручивается вся страница — без отскока у края (как тест меню, где меню не улетало
+   и под часами видно содержимое). «Откат» — fabrika/work/menu_rollback_2577 (RULES.md). */
+@media (pointer:coarse){html{min-height:100%;overscroll-behavior:none}body{overscroll-behavior:none}}

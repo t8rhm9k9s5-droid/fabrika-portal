@@ -1972,7 +1972,7 @@ const FILE = (()=>{
         out[c.photo] = await new Promise((res, rej)=>{ const fr = new FileReader(); fr.onload = ()=>res(fr.result); fr.onerror = rej; fr.readAsDataURL(b); }); } catch(e){} }
     return out;
   }
-  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:min(env(safe-area-inset-bottom,0px),34px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
+  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
   async function singleFile(){
     const css = document.getElementById('app-css').textContent, glass = document.getElementById('glass-css');   // glass-css: the look, the tab bar, the font (review/ui.py)
     const [three, orbit, ejs, ajs] = await Promise.all([txt('lib-three','lib/three.min.js'), txt('lib-orbit','lib/OrbitControls.js'), txt('edits-js','assets/edits.js'), txt('app-js','app.js')]);

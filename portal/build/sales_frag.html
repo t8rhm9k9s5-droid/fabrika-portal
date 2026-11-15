@@ -687,7 +687,9 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (!OD || !OD.days || OD.days.length < 2) return '';
     var t = OD.days[0], y = OD.days[1], yo = y.orders || {}, to = t.orders || {}, yf = y.fin;
     var upd = String(OD.t || '').slice(11, 16), sale = odFin(yf, 'accruals_for_sale'), ret = odFin(yf, 'refunds_and_cancellations'), cost = odCost(yf);
-    var h = '<div class="igroup hero" style="margin-top:14px"><div class="hsub" style="margin:0 0 4px">Вчера, ' + dd(y.d) + ' (' + wd(y.d) + ') · Ozon</div>' +
+    // 15.11.2026 (F4-07, реестр Рекса): Ozon не отдал заказы FBO или FBS — честная пометка, а не нули (робот держит прежние значения)
+    var miss = (OD.miss || []).map(function (x) { return String(x).toUpperCase(); }).join(' и '), mw = miss ? '<p class="ifoot" style="margin:8px 16px 0;color:var(--warn,#c77700)">Заказы ' + esc(miss) + ' сейчас не обновились у Ozon — показаны прежние данные; где их нет — неполно.</p>' : '';
+    var h = mw + '<div class="igroup hero" style="margin-top:14px"><div class="hsub" style="margin:0 0 4px">Вчера, ' + dd(y.d) + ' (' + wd(y.d) + ') · Ozon</div>' +
       '<div class="hnum">' + rub(yo.s || 0) + '</div><div class="hsub">заказано: ' + odNb(odPl(yo.n, ['заказ', 'заказа', 'заказов'])) + ', ' + odNb(n(yo.u || 0) + ' шт') + (yo.cn ? ' · отменено ' + odNb(n(yo.cn) + ' на ' + rub(yo.cs)) : '') + '</div>' +
       '<div class="hst"><div><span>продажи (выкуплено)</span><b>' + (sale == null ? '—' : rub(sale)) + '</b></div>' +
       '<div><span>возвраты и отмены</span><b class="' + (ret && ret < 0 ? 'bad' : '') + '">' + (ret == null ? '—' : rub(ret)) + '</b></div>' +
@@ -1639,7 +1641,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   }
   function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf' || location.hash === '#s-buf') buf();
     else if ((m = /^#s-days(?:-(\d{4}-\d{2}-\d{2}))?$/.exec(location.hash))) reportsPage(m[1]);
-    else if ((m = /^#lines(?:-([sqp]))?$/.exec(location.hash))) linesPage(m[1]); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom(); else main(); window.scrollTo(0, 0); }
+    else if ((m = /^#lines(?:-([sqp]))?$/.exec(location.hash))) linesPage(m[1]); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom();
+    // 15.11.2026 (F4-02, реестр Рекса): «Весь Рунет» — раздел внутри «Онлайн-продаж»: остаёмся в них и прокручиваем к разделу, а не уходим на главную продаж
+    else if (location.hash === '#runet') { online(); var rn = document.getElementById('runet'); if (rn) { try { rn.scrollIntoView({ block: 'start' }); } catch (eR) { rn.scrollIntoView(); } } else window.scrollTo(0, 0); return; }
+    else main(); window.scrollTo(0, 0); }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live) {
     if (window.T14M) T14M.start(['sales.bin']);              // 04.11.2026: единый источник получает файл раньше страницы — числа совпадают

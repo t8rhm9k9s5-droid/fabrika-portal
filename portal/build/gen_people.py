@@ -22,7 +22,7 @@ TAIL = '''<script src="assets/edits.js"></script>
 '''
 
 CHAT = '<title>Фабрика — чат</title>\n' + HEAD + '''
-body.pg-chat{padding-bottom:calc(150px + min(env(safe-area-inset-bottom,0px),34px))}
+body.pg-chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 .chat-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .ppl{border:0;background:none;color:var(--ios-blue);font:400 15px var(--f-body);padding:4px 0 8px;cursor:pointer}
 .log{display:flex;flex-direction:column;gap:3px;margin-top:10px}
@@ -36,7 +36,7 @@ body.pg-chat{padding-bottom:calc(150px + min(env(safe-area-inset-bottom,0px),34p
 .bb.del{background:none;border:.5px dashed var(--ios-sep);color:var(--ios-2);font-style:italic}
 .bb.sel{outline:2px solid var(--ios-blue);outline-offset:2px}
 .adm{font-size:10.5px;color:var(--ios-blue);margin-left:4px}
-.compose{position:fixed;z-index:58;left:0;right:0;bottom:calc(84px + min(env(safe-area-inset-bottom,0px),34px));padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));
+.compose{position:fixed;z-index:58;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));
   display:flex;align-items:flex-end;gap:8px;background:color-mix(in srgb,var(--ios-bg) 88%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
 @media (min-width:640px){.compose{left:50%;right:auto;width:min(760px,100%);transform:translateX(-50%)}}
 .compose[hidden]{display:none}
@@ -46,7 +46,7 @@ body.pg-chat{padding-bottom:calc(150px + min(env(safe-area-inset-bottom,0px),34p
 .compose .send svg{width:20px;height:20px}
 .compose .fix{flex:none;height:36px;border:0;border-radius:18px;background:var(--ios-fill);color:var(--ios-blue);font:500 14px var(--f-body);padding:0 12px;cursor:pointer}
 .compose .fix[hidden]{display:none}
-.fixbox{position:fixed;z-index:59;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(136px + min(env(safe-area-inset-bottom,0px),34px));
+.fixbox{position:fixed;z-index:59;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(136px + env(safe-area-inset-bottom,0px));
   background:var(--ios-group);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:12px 14px;max-height:40vh;overflow:auto}
 @media (min-width:640px){.fixbox{left:50%;right:auto;width:min(736px,calc(100% - 24px));transform:translateX(-50%)}}
 .fixbox p{margin:0 0 6px;font-size:15px}

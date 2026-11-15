@@ -27,12 +27,17 @@ const SITE = process.argv[2], SHOTS = process.argv[3], BASE = 'http://localhost:
     cards: [...document.querySelectorAll('#lt-p .pz-k > .gl')].map(e => [(e.querySelector('.t') || {}).textContent, ((e.querySelector('.v') || {}).firstChild || {}).textContent]), err: document.getElementById('err').textContent, tg: window.__tg.map(x => x[0]) }));
   console.log('после входа:', JSON.stringify(st1).slice(0, 700));
   if (!st1.lite) bad.push('лёгкий режим не открылся: ' + st1.err); if (st1.tabs !== 11) bad.push('вкладок ' + st1.tabs);
-  if (!st1.cards.length || st1.cards.filter(c => (c[1] || '').trim() === '—').length > 1) bad.push('карточки продаж: ' + JSON.stringify(st1.cards));
+  if (st1.cards.length < 2 || st1.cards.filter(c => !String(c[1] == null ? '' : c[1]).trim() || String(c[1]).trim() === '—').length > 1) bad.push('карточки продаж: ' + JSON.stringify(st1.cards));
   await pg.screenshot({ path: path.join(SHOTS, 'lite_1_sales.png'), fullPage: true });
   for (const s of ['prod', 'supply']) {
     await pg.click('.lt-n button[data-s="' + s + '"]'); await pg.waitForTimeout(1500);
     const c = await pg.evaluate(() => [...document.querySelectorAll('#lt-p .pz-k > .gl')].map(e => [(e.querySelector('.t') || {}).textContent, ((e.querySelector('.v') || {}).firstChild || {}).textContent]));
-    console.log(s + ':', JSON.stringify(c)); if (c.filter(x => (x[1] || '').trim() === '—').length > 0) bad.push(s + ': есть «—» ' + JSON.stringify(c));
+    // 15.11.2026 (F4-08, реестр Рекса): пустой список и пустое значение тоже ошибка; ноль — допустимое значение
+    const empty = v => { const t = String(v == null ? '' : v).trim(); return !t || t === '—'; };
+    console.log(s + ':', JSON.stringify(c));
+    if (c.length < 2) bad.push(s + ': карточек ' + c.length + ' (нужно не меньше 2)');
+    if (c.some(x => !String(x[0] || '').trim())) bad.push(s + ': карточка без названия ' + JSON.stringify(c));
+    if (c.some(x => empty(x[1]))) bad.push(s + ': пустое значение или «—» ' + JSON.stringify(c));
     await pg.screenshot({ path: path.join(SHOTS, 'lite_2_' + s + '.png'), fullPage: true });
   }
   await pg.click('#lt-p .pz-k > a.gl'); await pg.waitForTimeout(300);

@@ -47,7 +47,7 @@
   // окно входа: если на этом устройстве включён быстрый вход — сверху кнопка Face ID и поле кода
   function qlBlock(s, before) {
     A.ql.get().then(function (q) {
-      if (!q) return;
+      if (!q || q.np) return;   // 15.11.2026: быстрый вход без сохранённого пароля — после истечения входа нужен пароль (форма ниже)
       var box = el('div', 'iform iql');
       box.appendChild(el('p', 'ihdr', 'Быстрый вход'));
       var who = el('p', 'ifoot'); who.textContent = 'Логин ' + q.l + ' · на этом устройстве'; box.appendChild(who);
@@ -70,6 +70,7 @@
   }
   // сразу после входа паролем — предложить быстрый вход (если на этом устройстве его ещё нет)
   function qlOffer(s, login, pw) {
+    if (!A.ql.on()) { unlock(); return qlDone(s); }   // 15.11.2026: быстрый вход — только если человек сам включил его в профиле
     Promise.all([A.ql.get(), A.ql.bioOk()]).then(function (x) {
       if (x[0] && x[0].l === login) { unlock(); return qlDone(s); }
       s.close(); lockScreen({ pw: pw }); return;   // 14.11.2026: Face ID / код — обязательно, не предложение
@@ -124,34 +125,50 @@
     function qlStatus() {
       return A.ql.get().then(function (q) {
         q = q && q.l === p.login ? q : null;
-        qs.textContent = q ? 'Каждый вход на портал здесь — по ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'PIN-коду из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' или ') + '. Пароль хранится только на этом устройстве, в зашифрованном виде.'
-          : 'Не настроен — при следующем входе портал попросит личный пароль, затем вход по биометрии устройства или PIN-коду.';
+        qs.textContent = !A.ql.on() ? 'Выключено — портал не блокируется и не спрашивает ' + A.ql.bioName() + ' или код. Включить можно в любой момент.'
+          : q ? 'Каждый вход на портал здесь — по ' + [q.bio ? A.ql.bioName() : '', q.pin ? 'PIN-коду из ' + q.pin.n + ' цифр' : ''].filter(Boolean).join(' или ') + (q.np ? '. Пароль на устройстве не хранится: раз в 30 дней, когда истечёт личный вход, портал один раз спросит пароль.' : '. Пароль хранится только на этом устройстве, в зашифрованном виде.')
+          : 'Включено, но ещё не настроено — выключите и включите снова: портал предложит ' + A.ql.bioName() + ' или PIN-код.';
         return q;
       });
     }
-    // 14.11.2026, Т. В.: «галочка «Использовать PIN-код»; иначе Touch ID / Face ID / Windows Hello, если есть на устройстве; если нет ни
-    //   того, ни другого — PIN-код. Блокировка через 1 минуту». Вход по биометрии или PIN обязателен; смена способа — один раз личный пароль.
+    // 14.11.2026, Т. В.: «галочка «Использовать PIN-код»; иначе Touch ID / Face ID / Windows Hello…». 15.11.2026, Т. В.: «убери пока Face ID,
+    //   оставь на усмотрение пользователя — включить или отключить; по умолчанию его нет» — Имя2 переключатель; замок только при включённом.
+    function swRow(title, sub, on, dis, onChange) {
+      var row = el('label', 'igroup qlx'); row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;margin:8px 0 0;cursor:pointer';
+      var t = el('span'); t.style.flex = '1'; t.innerHTML = '<b style="font-weight:500"></b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px"></small>';
+      t.querySelector('b').textContent = title; t.querySelector('small').textContent = sub;
+      var cb = el('input'); cb.type = 'checkbox'; cb.checked = on; cb.disabled = !!dis; cb.setAttribute('role', 'switch'); cb.setAttribute('aria-label', title);
+      cb.style.cssText = 'appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;position:relative;cursor:pointer;flex:none;transition:background .2s;background:' + (on ? '#34c759' : 'rgba(120,120,128,.32)') + (dis ? ';opacity:.5' : '');
+      cb.style.backgroundImage = 'radial-gradient(circle 13.5px at ' + (on ? '35.5px' : '15.5px') + ' 50%, #fff 96%, transparent 100%)';
+      cb.addEventListener('change', function () { onChange(cb.checked); });
+      row.append(t, cb); qf.appendChild(row); return row;
+    }
     function qlPaint() {
       [].slice.call(qf.querySelectorAll('.qlx')).forEach(function (n) { n.remove(); });
       Promise.all([qlStatus(), A.ql.bioOk()]).then(function (x) {
-        var q = x[0], bio = x[1], pinPref = lsGet('t14.qlpin') === '1' || !bio;
-        var row = el('label', 'igroup qlx'); row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;margin:8px 0 0;cursor:pointer';
-        var t = el('span'); t.style.flex = '1'; t.innerHTML = '<b style="font-weight:500">Использовать PIN-код</b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px"></small>';
-        t.querySelector('small').textContent = bio ? (pinPref ? 'Вход по PIN-коду вместо ' + A.ql.bioName() : 'Выключено — вход по ' + A.ql.bioName()) : 'На этом устройстве нет входа по биометрии — только PIN-код';
-        var cb = el('input'); cb.type = 'checkbox'; cb.checked = pinPref; cb.disabled = !bio; cb.setAttribute('role', 'switch');
-        cb.style.cssText = 'appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;position:relative;cursor:pointer;flex:none;transition:background .2s;background:' + (pinPref ? '#34c759' : 'rgba(120,120,128,.32)') + (bio ? '' : ';opacity:.5');
-        var knob = function () { cb.style.boxShadow = 'inset ' + (cb.checked ? '20px' : '0') + ' 0 0 0 transparent'; };
-        cb.style.backgroundImage = 'radial-gradient(circle 13.5px at ' + (pinPref ? '35.5px' : '15.5px') + ' 50%, #fff 96%, transparent 100%)'; knob();
-        cb.addEventListener('change', function () {
-          lsSet('t14.qlpin', cb.checked ? '1' : null);
-          A.ql.off().then(function () { s.close(); lockScreen({ pinOnly: cb.checked }); });
+        var q = x[0], bio = x[1], on = A.ql.on(), pinPref = lsGet('t14.qlpin') === '1' || !bio, bn = A.ql.bioName();
+        swRow('Вход по ' + (bio ? bn + ' или коду' : 'PIN-коду'), on ? 'Включено на этом устройстве' : 'Выключено', on, false, function (v) {
+          // 15.11.2026 ~20:45, Т. В.: «когда я уже на портале — спрашивать ещё раз пароль!?» — включение из профиля (вход уже есть) без пароля
+          if (v) { A.ql.enable(true); s.close(); lockScreen({ enable: true, pinOnly: pinPref, pw: '' }); }
+          else A.ql.off().then(function () { A.ql.enable(false); toast('Вход по ' + (bio ? bn : 'коду') + ' выключен'); qlPaint(); });
         });
-        row.append(t, cb); qf.appendChild(row);
+        if (!on) return q;
+        swRow('Использовать PIN-код', bio ? (pinPref ? 'Вход по PIN-коду вместо ' + bn : 'Выключено — вход по ' + bn) : 'На этом устройстве нет входа по биометрии — только PIN-код', pinPref, !bio, function (v) {
+          lsSet('t14.qlpin', v ? '1' : null);
+          A.ql.off().then(function () { s.close(); lockScreen({ pinOnly: v, pw: '' }); });
+        });
         var lk = el('p', 'ifoot qlx'); lk.textContent = 'Блокировка через 1 минуту, если портал свёрнут или закрыт, и через 10 минут без действий на открытом экране.'; qf.appendChild(lk);
         return q;
       });
     }
     qlPaint();
+    // 15.11.2026, Т. В.: «главную страницу возьми и сделай её тестовой, отдельную ссылку» — тестовая главная (app_build/build_pwa.py → t/home.html)
+    if (p.role === 'admin') {
+      var tf = el('div', 'iform'), ta = el('a', 'igroup');
+      ta.href = 't/home.html'; ta.style.cssText = 'display:block;padding:12px 16px;margin:8px 0 0;color:inherit;text-decoration:none';
+      ta.innerHTML = '<b style="font-weight:500">Тестовая главная — полный экран</b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px">Та же главная, верх под часами прозрачный. Проверка перед выпуском на портал</small>';
+      tf.append(el('p', 'ihdr', 'Тест'), ta); s.body.appendChild(tf);
+    }
     go.addEventListener('click', function () {
       if (np.lastChild.value.length < 8) return msg(f, 'Пароль — не короче 8 знаков.', true);
       var npw = np.lastChild.value; busy(go, true); A.changePw(npw).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(function () { s.close(); toast('Пароль сменён — на других устройствах войдите заново'); lockScreen({ pw: npw }); }); }, function (e) { busy(go, false); msg(f, e.message, true); });
@@ -232,7 +249,9 @@
     var css = el('style', '', '.iph-st{margin:14px 2px 6px}.iph-st b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}.iph-st p{margin:3px 0 0;color:var(--ios-2);font-size:14.5px;line-height:1.4}');
     s.body.appendChild(css);
     step(1, 'Значок на экране «Домой»', 'Откройте портал в Safari → кнопка «Поделиться» → «На экран „Домой“». Портал запускается как приложение: во весь экран, без адресной строки.');
-    step(2, 'Вход по Face ID', 'Первый раз — личный пароль, затем портал включит Face ID (на устройствах без Face ID и Touch ID — код из 4 цифр). Дальше каждый вход на портал — по Face ID или коду; переходы по страницам и перерыв до минуты — без него. Сменить способ: «Ещё» → «Личный вход».');
+    // 15.11.2026 ~20:00, Т. В. (видео 19:43): «двойной Face ID — пароль Face ID и Face ID инструкции, фигня» — Face ID с 15.11 по желанию (выключен);
+    //   здесь только как включить, без второго описания входа
+    step(2, 'Вход по Face ID — по желанию', 'По умолчанию выключен. Включить или выключить: «Профиль» → «Личный вход» → «Вход по Face ID или коду». Пароль при этом не спрашивается — портал сразу предложит Face ID или код из 4 цифр.');
     step(3, 'Уведомления о тревогах', 'Только из значка на экране «Домой» (iOS 16.4 и новее): «Ещё» → «Уведомления» → «Разрешить». Приходит каждая новая «Критично» — один раз, только заголовок, без сумм и клиентов; ночью (22:00–07:00) — утром.');
     step(4, 'Siri', 'Приложение «Команды» → «+» → действие «Открыть URL» → вставьте адрес раздела (кнопка ниже) → назовите команду, например «Фабрика отгрузка». Дальше: «Привет, Siri, Фабрика отгрузка». Откроется в Safari — там тоже один раз войдите по Face ID.');
     var g = el('div', 'igroup'); s.body.appendChild(g);
@@ -262,7 +281,7 @@
   function lact(t) { if (t) lsSet(LKEY, t); return +(lsGet(LKEY) || 0) || (t || 0); }
   function linp(t) { if (t) lsSet(IKEY, t); return +(lsGet(IKEY) || 0) || (t || 0); }
   function signedIn() { var p = A.me(); return !!(p && A.tok() && p.st !== 'pending'); }
-  function lockNeeded() { return signedIn() && (document.documentElement.hasAttribute('data-lock') || lsGet(XKEY) === '1' || Date.now() - lact() > LOCK_MS || Date.now() - linp() > IDLE_MS); }
+  function lockNeeded() { return A.ql.on() && signedIn() && (document.documentElement.hasAttribute('data-lock') || lsGet(XKEY) === '1' || Date.now() - lact() > LOCK_MS || Date.now() - linp() > IDLE_MS); }
   function unlock() {
     locked = false; if (lockEl) { lockEl.remove(); lockEl = null; }
     document.documentElement.removeAttribute('data-lock'); var n = Date.now(); lact(n); linp(n); lsSet(XKEY, null);
@@ -275,7 +294,7 @@
     st.textContent = 'html[data-lock] body{visibility:hidden}html[data-lock] body .ilock{visibility:visible}' +
       'html[data-lock],html[data-lock] body{background:#f2f2f7!important}@media (prefers-color-scheme:dark){html[data-lock]:not([data-theme=light]),html[data-lock]:not([data-theme=light]) body{background:#000!important}}html[data-lock][data-theme=dark],html[data-lock][data-theme=dark] body{background:#000!important}' +
       '.ilock{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:var(--sheet-bg,#f2f2f7);color:var(--ios-label,#1c1c1e);' +
-      'padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + min(env(safe-area-inset-bottom,0px),34px));overflow:auto;font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+      'padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto;font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
       '@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .ilock{background:#000;color:#f2f2f7}}:root[data-theme=dark] .ilock{background:#000;color:#f2f2f7}' +
       '.ilock-in{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}' +
       '.ilock-in h2{margin:6px 0 0;font-weight:600;font-size:22px;line-height:1.25;font-family:inherit}.ilock-in .lsub{margin:0;color:var(--ios-2,#8e8e93);font-size:15px}' +
@@ -304,6 +323,7 @@
     }
     function line(t, bad) { var p = box.querySelector('.lmsg') || box.appendChild(el('p', 'lmsg')); p.textContent = t || ''; p.classList.toggle('bad', !!bad); return p; }
     function b(t, cls) { var x = el('button', cls || 'lbtn'); x.type = 'button'; x.textContent = t; return x; }
+    function cancel() { var x = b('Не включать', 'llink'); x.addEventListener('click', function () { A.ql.off().then(function () { A.ql.enable(false); unlock(); }); }); return x; }   // 15.11.2026: включение быстрого входа можно отменить
     function out() { var x = b('Выйти из личного входа', 'llink'); x.addEventListener('click', function () { A.ql.off().then(A.forget).then(function () { location.reload(); }); }); return x; }
     // 1) пароль (один раз на устройстве, и всегда — как запасной путь)
     function pwStep(then) {
@@ -320,7 +340,7 @@
         A.signIn(me.login, pw).then(function () { me = A.me() || me; then(pw); }, function (e) { go.disabled = false; go.textContent = 'Продолжить'; line(e.message, true); i.select(); });
       }
       go.addEventListener('click', run); i.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
-      box.appendChild(out()); setTimeout(function () { try { i.focus(); } catch (e) { } }, 60);
+      box.appendChild(o.enable ? cancel() : out()); setTimeout(function () { try { i.focus(); } catch (e) { } }, 60);
     }
     // 2) настройка: Face ID / Touch ID, где есть; иначе код из 4 цифр
     function setup(pw) {
@@ -330,13 +350,16 @@
           var go = b('Включить ' + A.ql.bioName()); box.appendChild(go); line('');
           go.addEventListener('click', function () {
             go.disabled = true; go.textContent = 'Подтвердите ' + A.ql.bioName() + '…';
-            A.ql.setBio(me.login, me.name, pw).then(function () { toast(A.ql.bioName() + ' включён'); unlock(); },
+            // 15.11.2026 ~21:10, Т. В.: «спроси 4 цифры на цифровой клавиатуре — если Face ID не опознал, зайду по ним» — после Face ID сразу запасной код
+            A.ql.setBio(me.login, me.name, pw).then(function () { toast(A.ql.bioName() + ' включён'); o.pinOnly = true; o.backup = true; setup(pw); },
               function (e) { go.disabled = false; go.textContent = 'Включить ' + A.ql.bioName(); line(e.message + ' Можно задать код из 4 цифр.', true); alt.hidden = false; });
           });
           var alt = b('PIN-код из 4 цифр вместо ' + A.ql.bioName(), 'llink'); alt.hidden = true; alt.addEventListener('click', function () { o.pinOnly = true; setup(pw); }); box.appendChild(alt);
+          if (o.enable) box.appendChild(cancel());
           return;
         }
         var a = '';
+        if (o.backup) head('Запасной код из 4 цифр', 'Если ' + A.ql.bioName() + ' не сработает — вход по этому коду. Придумайте 4 цифры.'); else
         head('PIN-код для входа', (bio ? '' : 'На этом устройстве нет входа по биометрии. ') + 'Придумайте PIN-код из 4 цифр — он нужен при каждом входе на портал.');
         pad(function (v) {
           if (!a) {
@@ -346,6 +369,8 @@
           if (v !== a) { a = ''; box.querySelector('h2').textContent = 'Код для входа'; return { bad: 'Коды не совпали — ещё раз.' }; }
           return A.ql.setPin(me.login, pw, v).then(function () { toast('Код сохранён'); unlock(); }, function (e) { return { bad: e.message }; });
         });
+        if (o.backup) { var sk = b('Без запасного кода', 'llink'); sk.addEventListener('click', unlock); box.appendChild(sk); }
+        else if (o.enable) box.appendChild(cancel());
       });
     }
     // 3) замок: Face ID и/или код
@@ -395,7 +420,7 @@
       document.addEventListener('keydown', function kd(e) { if (!lockEl) return document.removeEventListener('keydown', kd); if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('⌫'); });
       box.append(dots, grid); line('');
     }
-    if (o.pw) return setup(o.pw);
+    if (o.pw !== undefined) return setup(o.pw);   // '' — включение из профиля: вход уже есть, пароль не спрашиваем
     A.ql.get().then(function (q) { if (q && q.l === me.login) lockStep(q); else pwStep(setup); }, function () { pwStep(setup); });
   }
   function noZoom() {
@@ -416,13 +441,13 @@
     function act() { var n = Date.now(); if (!locked && n - lastW > 5000) { lastW = n; linp(n); } }
     ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (ev) { G.addEventListener(ev, act, { passive: true, capture: true }); });
     setInterval(function () {
-      if (locked || !signedIn()) return;
+      if (locked || !signedIn() || !A.ql.on()) return;
       if (Date.now() - linp() > IDLE_MS) return lockScreen();
       if (document.visibilityState === 'visible') lact(Date.now());
     }, 15000);
     G.addEventListener('storage', function (e) {
       if (e.key !== XKEY || !signedIn()) return;
-      if (e.newValue === '1' && !locked) lockScreen(); else if (!e.newValue && locked) unlock();
+      if (e.newValue === '1' && !locked && A.ql.on()) lockScreen(); else if (!e.newValue && locked) unlock();
     });
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') { if (!locked && signedIn()) lact(Date.now()); }

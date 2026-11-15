@@ -44,9 +44,12 @@
       });
     }
     if (page !== 'razdel.html' && page !== 'library.html' && page !== 'home.html' && page !== 'index.html' && page !== 'plan.html') {
-      var top = document.querySelector('.ptop'); if (top && !top.querySelector('.fav-b')) {
-        var h1 = document.querySelector('main h1, h1'); var b = btn(page + (location.hash || ''), (h1 && h1.textContent) || document.title.replace(/^Фабрика — /, ''), crumb());
-        b.classList.add('fav-top'); b.setAttribute('aria-label', 'Сохранить страницу'); top.appendChild(b);
+      var top = document.querySelector('.ptop'); if (top) {
+        var h1 = document.querySelector('main h1, h1'), ttl = (h1 && h1.textContent) || document.title.replace(/^Фабрика — /, ''), ex = top.querySelector('.fav-b');
+        if (!ex) { var b = btn(page + (location.hash || ''), ttl, crumb()); b.classList.add('fav-top'); b.setAttribute('aria-label', 'Сохранить страницу'); top.appendChild(b); }
+        // 15.11.2026 (F4-03, реестр Рекса): после перехода по разделам страницы (#…) звезда показывала прежний подраздел — адрес, подпись и
+        //   состояние обновляются при каждой навигации
+        else { ex.setAttribute('data-h', key(page + (location.hash || ''))); ex.setAttribute('data-t', ttl); ex.setAttribute('data-f', crumb()); }
       }
     }
     paint();

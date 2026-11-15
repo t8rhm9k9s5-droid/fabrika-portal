@@ -19,13 +19,13 @@
     '.t14pdf .pt small{display:block;font:400 12px/1.3 var(--f-body,inherit);color:var(--ios-2,#8a8a8e)}' +
     '.t14pdf .pa{flex:none;border:0;background:none;color:var(--ios-blue,#007aff);font:400 15px/1 var(--f-body,inherit);padding:8px 6px;cursor:pointer;min-width:44px}' +
     '.t14pdf .ps{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-x pan-y;background:#8e8e93}' +
-    '.t14pdf .pp{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 8px calc(84px + min(env(safe-area-inset-bottom,0px),34px));width:max-content;min-width:100%;box-sizing:border-box}' +
+    '.t14pdf .pp{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 8px calc(84px + env(safe-area-inset-bottom,0px));width:max-content;min-width:100%;box-sizing:border-box}' +
     '.t14pdf .pg{position:relative;flex:none;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}' +
     '.t14pdf .pg canvas{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;width:100%;height:100%;display:block}' +
-    '.t14pdf .pz{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(18px + min(env(safe-area-inset-bottom,0px),34px));display:flex;gap:2px;padding:3px;border-radius:999px;' +
+    '.t14pdf .pz{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;gap:2px;padding:3px;border-radius:999px;' +
     'background:var(--surface-solid,#fff);box-shadow:0 6px 20px rgba(0,0,0,.22)}' +
     '.t14pdf .pz button{width:42px;height:42px;border:0;border-radius:50%;background:none;color:var(--fg,#000);font:500 22px/1 var(--f-body,inherit);cursor:pointer}' +
-    '.t14pdf .pn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(26px + min(env(safe-area-inset-bottom,0px),34px));padding:7px 12px;border-radius:999px;background:rgba(30,30,32,.78);color:#fff;' +
+    '.t14pdf .pn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));padding:7px 12px;border-radius:999px;background:rgba(30,30,32,.78);color:#fff;' +
     'font:500 13px/1 var(--f-body,inherit);font-variant-numeric:tabular-nums;pointer-events:none}' +
     '.t14pdf .pm{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:min(380px,86vw);padding:14px 18px;border-radius:14px;background:var(--surface-solid,#fff);color:var(--fg,#000);' +
     'text-align:center;font:400 15px/1.35 var(--f-body,inherit);box-shadow:0 8px 28px rgba(0,0,0,.25)}' +

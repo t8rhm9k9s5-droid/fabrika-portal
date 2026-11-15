@@ -37,12 +37,12 @@ def finance_day(cid, key, day):
 
 def collect(cid, key, today):
     d0 = today - datetime.timedelta(days=DAYS - 1)
-    D, ty, errs = {}, {}, []
+    D, ty, errs, bad = {}, {}, [], set()
     w0 = d0 - datetime.timedelta(days=1)                  # окно API — сутки UTC; день по Москве начинается в 21:00 UTC накануне
     y = (today - datetime.timedelta(days=1)).isoformat()
     for name, fn in (('fbo', OH.fbo), ('fbs', OH.fbs)):  # заказы по дням + товары только вчерашнего дня (МСК)
         try: fn(cid, key, w0, today, D, ty, top_day=y)
-        except Exception as e: errs.append('%s: %s' % (name, str(e)[:160]))
+        except Exception as e: errs.append('%s: %s' % (name, str(e)[:160])); bad.add(name)
     try: A = OH.analytics(cid, key, d0, today)
     except Exception as e: A = {}; errs.append('аналитика: %s' % str(e)[:160])
     days = []
@@ -63,7 +63,22 @@ def collect(cid, key, today):
         a = A.get(k) or {}
         days.append({'d': k, 'orders': tot, 'fbo': o['fbo'], 'fbs': o['fbs'], 'fin': fin, 'an': {'s': round(a.get('revenue') or 0), 'u': round(a.get('units') or 0)} if a else None})
     top = sorted(({'id': k, 'name': v.get('name'), 'u': v['units'], 's': round(v['sum'])} for k, v in ty.items()), key=lambda r: -r['s'])[:15]
-    return days, top, errs
+    return days, top, errs, bad
+
+
+def keep_old(days, old, bad):
+    """15.11.2026 (F4-07, реестр Рекса): сбой FBO или FBS — не «заказов ноль». По упавшей схеме берём последнее хорошее значение дня из
+    прошлого прогона; если его нет — схема пустая (None) и день помечается miss — портал пишет «данные неполные», а не нули."""
+    for x in days:
+        prev = old.get(x['d']) or {}
+        for sch in bad:
+            x[sch] = prev.get(sch) if isinstance(prev.get(sch), dict) else None
+            if x[sch] is None: x.setdefault('miss', []).append(sch)
+        tot = {'n': 0, 'u': 0, 's': 0, 'cn': 0, 'cs': 0}
+        for sch in ('fbo', 'fbs'):
+            for f in tot: tot[f] += (x.get(sch) or {}).get(f, 0)
+        x['orders'] = tot
+    return days
 
 
 def run(L, log, jload, jsave, publish, iso):
@@ -74,7 +89,8 @@ def run(L, log, jload, jsave, publish, iso):
     cid, key, _ = OZ.creds(L)
     if not cid or not key: return {'state': 'нет ключа Ozon'}
     now = datetime.datetime.now(MSK)
-    days, top, errs = collect(cid, key, now.date())
+    days, top, errs, bad = collect(cid, key, now.date())
+    if bad: days = keep_old(days, {x.get('d'): x for x in (st.get('days') or []) if isinstance(x, dict)}, bad)
     ok = any(x['orders']['n'] or x['fin'] for x in days)
     # 30.10.2026 аудит P15: за прошедшие дни (вчера и раньше) были заказы, а теперь всё нули без ошибок — смена формата или сбой Ozon:
     # прежние данные не затираются (st/ozd.bin не перепубликуется), владельцу — сообщение
@@ -90,12 +106,12 @@ def run(L, log, jload, jsave, publish, iso):
             try: os.replace(go, go + '.done')
             except Exception: pass  # необязательный шаг: сбой не мешает работе робота
         return {k: st.get(k) for k in ('state', 't', 'err', 'warn')}
-    res = {'v': 1, 't': iso(now), 'ts': time.time(), 'state': 'ok' if ok or not errs else 'ошибка', 'err': '; '.join(errs)[:500] or None,
-           'cab': 'ПКС', 'days': days, 'top_y': top}
+    res = {'v': 1, 't': iso(now), 'ts': time.time(), 'state': ('частично (' + ', '.join(sorted(bad)).upper() + ' — прежние данные)') if bad and ok else 'ok' if ok or not errs else 'ошибка',
+           'err': '; '.join(errs)[:500] or None, 'cab': 'ПКС', 'days': days, 'top_y': top}
     jsave('ozon_day.json', res)
     if (ok or not errs) and publish:                     # нет заказов и нет ошибок — тоже показать (нули), с ошибками и без данных — не затирать
         publish('ozd.bin', {'v': 1, 't': res['t'], 'cab': 'ПКС', 'src': 'Ozon Seller API: отправления FBO/FBS, финансы, аналитика — кабинет ООО «ПКС»',
-                            'days': days, 'top_y': top})
+                            'days': days, 'top_y': top, 'miss': sorted(bad) or None})   # F4-07: какие схемы заказов не обновились
     if os.path.exists(go):
         try: os.replace(go, go + '.done')
         except Exception: pass  # необязательный шаг: сбой не мешает работе робота

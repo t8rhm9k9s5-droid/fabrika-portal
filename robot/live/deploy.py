@@ -22,7 +22,8 @@ def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — фай
 # тихие часы (пользователь 27.10.2026, уточнение): ночью всё делается и ставится — молчат только уведомления (их держит Google-скрипт бота до 08:00)
 
 SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|manifest\.webmanifest|'
-                        r'robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess)$')
+                        r'robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess|'
+                        r'menutest/(?:full/)?(?:index\.html|manifest\.webmanifest))$')   # 15.11.2026: тест нижнего меню (Т. В.), без данных портала
 HOST_FILES = re.compile(r'^host/((st|max|wx)/[\w.-]+\.(php|htaccess)|(st|max|wx)/\.htaccess)$')
 CODE_FILES = re.compile(r'^(code/[\w.-]+\.(py|json|txt)|out/plan_\d{4}-\d{2}\.json)$')      # out/plan_… — планы выпуска (27.10); .txt — файлы ключей k_owner/k_cmd (29.10)
 PACK = re.compile(r'^fabrik(?:a|ant)-update-\d{8}-\d{4}\.(?:zip|pkg)$')     # .pkg — the zip encrypted (27.10), .zip — plain (old)

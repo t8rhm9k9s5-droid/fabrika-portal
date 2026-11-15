@@ -163,7 +163,7 @@ body.pback-on a.back,body.pback-on button.back{display:none!important}
 body.pback-on:has(.back){padding-top:0!important}
 
 /* ===================================================================== телефон: плавающая капсула вкладок + круглая кнопка поиска */
-:root{--dock-b:max(12px,calc(min(env(safe-area-inset-bottom,0px),34px) - 10px)); --dock-x:max(16px,calc(50% - 250px)); --tb-top:calc(var(--dock-b) + 62px)}
+:root{--dock-b:max(12px,calc(env(safe-area-inset-bottom,0px) - 10px)); --dock-x:max(16px,calc(50% - 250px)); --tb-top:calc(var(--dock-b) + 62px)}
 html body .tabbar{position:fixed;z-index:60;left:var(--dock-x);right:var(--dock-x);bottom:var(--dock-b);width:auto;transform:none;height:62px;padding:4px;box-sizing:border-box;
   border-radius:31px;display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:2px;isolation:isolate}
 html body .tabbar::before{content:none}
@@ -177,18 +177,23 @@ html body .tabbar>*[aria-current="page"],html body .tabbar>*.on,html body .tabba
 html body .tabbar>* span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* открыт лист — подсвечена только его вкладка */
 html body .tabbar:has(>[aria-expanded="true"])>:is([aria-current="page"],.on):not([aria-expanded="true"]){background:transparent;color:var(--p-fg2);box-shadow:none}
-/* 15.11.2026, Т. В. (видео App Store): одна «линза» переезжает под выбранную вкладку (site.js, lensBar) — у самих вкладок подсветки нет */
-html body .tabbar.has-lens{transition:transform .32s cubic-bezier(.34,1.56,.64,1)}
+html body .tabbar>.dot::after{content:"";position:absolute;top:7px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--brand);border:2px solid var(--p-card)}
+/* 15.11.2026, Т. В. (видео App Store): одна «линза» под вкладками (site.js, lensBar) — переезжает пружиной, в пути светлеет, приподнимается и
+   тянется; у самих вкладок подсветки нет. Только transform — плавно на iPhone. Положение и размер меню не меняются. */
+html body .tabbar.has-lens{transition:transform .34s cubic-bezier(.34,1.56,.64,1)}
 html body .tabbar.has-lens.press,html body .tabbar.has-lens.lensing{transform:scale(1.025)}
 html body .tabbar.has-lens>:is([aria-current="page"],.on,[aria-expanded="true"]){background:transparent;box-shadow:none}
-html body .tabbar.has-lens>*:active{transform:scale(.96)}
 html body .tabbar>.tb-lens{position:absolute;z-index:-1;top:4px;bottom:4px;left:0;width:0;height:auto;min-width:0;padding:0;margin:0;display:block;border-radius:22px;
-  background:var(--p-sel);box-shadow:inset 0 1px 0 var(--p-glass-rim);pointer-events:none;opacity:0;transform-origin:50% 50%;
-  transition:opacity .2s,background .28s,box-shadow .28s;will-change:left,width,transform}
-html body .tabbar>.tb-lens.moving{background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),inset 0 -6px 14px rgba(255,255,255,.35),0 8px 22px rgba(20,30,50,.18)}
-html:root[data-theme="dark"] body .tabbar>.tb-lens.moving{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -6px 14px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.4)}
-@media (prefers-color-scheme:dark){html:root:not([data-theme]) body .tabbar>.tb-lens.moving{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -6px 14px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.4)}}
-html body .tabbar>.dot::after{content:"";position:absolute;top:7px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--brand);border:2px solid var(--p-card)}
+  background:none;box-shadow:none;pointer-events:none;opacity:0;transition:opacity .2s;will-change:transform}
+html body .tabbar>.tb-lens>.tb-glass{position:absolute;inset:0;border-radius:inherit;background:var(--p-sel);box-shadow:inset 0 1px 0 var(--p-glass-rim);
+  transform-origin:50% 50%;transition:background .28s,box-shadow .28s;will-change:transform}
+html body .tabbar>.tb-lens.moving>.tb-glass{background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),inset 0 -6px 14px rgba(255,255,255,.35),0 8px 22px rgba(20,30,50,.18)}
+html:root[data-theme="dark"] body .tabbar>.tb-lens.moving>.tb-glass{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -6px 14px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.4)}
+@media (prefers-color-scheme:dark){html:root:not([data-theme]) body .tabbar>.tb-lens.moving>.tb-glass{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -6px 14px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.4)}}
+html body .tabbar>.tb-pop svg{animation:tbpop .44s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tbpop{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){html body .tabbar.has-lens,html body .tabbar>.tb-lens>.tb-glass{transition:none}html body .tabbar>.tb-pop svg{animation:none}}
+html[data-perf="eco"] body .tabbar>.tb-pop svg{animation:none}
 .psrch{position:fixed;z-index:60;right:var(--dock-x);bottom:var(--dock-b);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:var(--p-fg);cursor:pointer;padding:0;box-sizing:border-box;transition:transform var(--p-dur) cubic-bezier(.34,1.56,.64,1)}
 .psrch svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -458,7 +463,7 @@ html body details.rq,html body details.rep{border-color:var(--p-line)}
 .pchip{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:999px;font:400 12px var(--f-body)}
 .pdlg{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:0}
 .pdlg[hidden]{display:none}
-.pdlg .pin{width:min(760px,100%);max-height:92vh;max-height:92dvh;overflow:auto;box-sizing:border-box;background:var(--p-sheet-s);border:1px solid var(--p-line);border-radius:28px 28px 0 0;padding:18px 18px calc(22px + min(env(safe-area-inset-bottom,0px),34px));color:var(--p-fg)}
+.pdlg .pin{width:min(760px,100%);max-height:92vh;max-height:92dvh;overflow:auto;box-sizing:border-box;background:var(--p-sheet-s);border:1px solid var(--p-line);border-radius:28px 28px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));color:var(--p-fg)}
 .pdlg .phd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .pdlg .phd h3{margin:0 auto 0 0;font:700 22px/1.2 var(--f-display)}
 .pdlg .pcols{display:grid;gap:16px}
@@ -654,11 +659,25 @@ html body #mapInfo .mibl{color:var(--t-red)!important;border-color:var(--t-red)!
    («больше всего нравится меню 3D-карты — расположение, размер; стилистику не трогаем, только размер; поиск — в общей плашке»).
    Мерки 3D (#sheet.tabbar): высота 54 + рамка, скругление 27, поля 0 6 px, от краёв 26 px, снизу 18 px; с 600 px — по центру, 440 + поля;
    кнопки: отступ 4 px сверху и снизу, скругление 22, значок 22 px, подпись 11 px. Кнопка поиска — в капсуле (site.js), круглой отдельной нет. */
-/* 15.11.2026, Т. В. (скрин iPhone: меню уехало вверх на ~80 px): iOS 26 в режиме приложения иногда отдаёт нижний отступ «полоска + строка состояния»
-   (~97 px вместо 34 — WebKit 301994). Сотрудник13 отступ везде берётся не больше 34 px — меню снова в 18 px от края, как было. */
-:root{--dock-b:max(18px,calc(min(env(safe-area-inset-bottom,0px),34px) - 16px)); --dock-x:max(26px,env(safe-area-inset-left,0px)); --tb-top:calc(var(--dock-b) + 56px)}
+:root{--dock-b:max(18px,calc(env(safe-area-inset-bottom,0px) - 16px)); --dock-x:max(26px,env(safe-area-inset-left,0px)); --tb-top:calc(var(--dock-b) + 56px)}
 html body .tabbar{height:56px;padding:0 6px;gap:0;border-radius:27px}
 html body .tabbar>*{height:auto;margin:4px 0;gap:3px;border-radius:22px;font:500 11px/1 var(--f-body);padding:0 2px}
 html body .tabbar>* svg{width:22px;height:22px}
 body.has-srch .tabbar{right:var(--dock-x)}
 @media (min-width:600px){ html body .tabbar{left:0;right:0;margin:0 auto;width:454px;max-width:calc(100% - 24px);transform:none} }
+/* 15.11.2026 проба полный экран (Т. В.: «полный экран — максимальная прозрачность сверху… на портале такой вариант давай попробуем»): на iPhone
+   страница заходит под часы (строка часов black-translucent), шапка прозрачная и без размытия — как тест techfabrikant.ru/menutest/full/.
+   «Откат» — удалить этот блок (RULES.md, menu_rollback_2572). */
+@media (max-width:599px){
+  html[data-plat="ios"] body.has-portal .ptop,html[data-plat="ios"] body.has-portal .ptop.scrolled,
+  html[data-skin="v22"][data-skin][data-skin][data-plat="ios"] body.has-portal .ptop,html[data-skin="v22"][data-skin][data-skin][data-plat="ios"] body.has-portal .ptop.scrolled,
+  html[data-skin="v22"][data-skin][data-skin][data-plat="ios"][data-theme] body.has-portal .ptop,html[data-skin="v22"][data-skin][data-skin][data-plat="ios"][data-theme] body.has-portal .ptop.scrolled,
+  html[data-skin="v22"]:not([data-theme="light"])[data-skin][data-skin][data-plat="ios"] body.has-portal .ptop,html[data-skin="v22"]:not([data-theme="light"])[data-skin][data-skin][data-plat="ios"] body.has-portal .ptop.scrolled{
+    background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}
+}
+
+/* 15.11.2026 ~21:45, Т. В. (видео 21:39): «в разделах начало раздела падает слишком низко — раздел должен начинаться с максимальной верхней точки».
+   Строку с часами уже держит шапка портала (.ptop, отступ safe-area сверху) — у страниц .ios (разделы и др.) второй такой отступ лишний (было 10 px + 68 px). */
+body.has-portal .ios{padding-top:10px!important;padding-block-start:10px!important}
+/* 15.11.2026 ~22:00 (проверка всех разделов): у страниц с обёрткой .app (чертежи и др.) тот же лишний отступ строки часов — шапка уже держит его */
+body.has-portal:not(.pg-plan) > .app{padding-top:18px!important}

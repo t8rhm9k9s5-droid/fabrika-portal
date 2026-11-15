@@ -48,7 +48,7 @@ def call(cid, key, path, body, timeout=25):
         return {'accruals': [], 'last_id': 'p3'}
     raise AssertionError(path)
 OZ.call = call
-days, top, errs = OD.collect('1', 'k', today)
+days, top, errs, bad = OD.collect('1', 'k', today)   # 15.11.2026 (F4-07): collect отдаёт и упавшие схемы
 y = [d for d in days if d['d'] == '2026-10-28'][0]; t = days[0]
 ok = 0
 def check(c, m):
@@ -76,4 +76,10 @@ r = OD.run(d, lambda *a: None, lambda n, dflt: store.get(n, dflt), lambda n, v: 
 check(r['state'] == 'ok' and 'ozd.bin' in pub and pub['ozd.bin']['days'][0]['d'], 'опубликован st/ozd.bin')
 n0 = len(seen); OD.run(d, lambda *a: None, lambda n, dflt: store.get(n, dflt), lambda n, v: store.__setitem__(n, v), lambda n, o: pub.__setitem__(n, o), lambda x: x)
 check(len(seen) == n0, 'повторно раньше чем через 30 минут — без запросов к Ozon')
+# 15.11.2026 (F4-07, реестр Рекса): FBO и FBS упали, финансы есть — не нули: прежние значения дня и пометка miss
+_prev = [{'d': x['d'], 'fbo': {'n': 3, 'u': 4, 's': 5000, 'cn': 0, 'cs': 0}, 'fbs': {'n': 2, 'u': 2, 's': 2000, 'cn': 0, 'cs': 0}} for x in days]
+_kept = OD.keep_old([dict(x) for x in days], {x['d']: x for x in _prev}, {'fbo', 'fbs'})
+check(all(x['orders']['n'] == 5 for x in _kept), 'F4-07: прежние заказы вместо нулей')
+_none = OD.keep_old([dict(x) for x in days], {}, {'fbo'})
+check(all(x['fbo'] is None and 'fbo' in (x.get('miss') or []) for x in _none), 'F4-07: без прежних — схема пустая и помечена')
 print('ALL OK', ok)

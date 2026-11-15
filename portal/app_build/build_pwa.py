@@ -85,7 +85,9 @@ with open(f'{OUT}/manifest.webmanifest', 'w', encoding='utf-8') as _cg1_json_out
 HEAD = ('<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">'
         '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">'
         '<meta name="apple-mobile-web-app-title" content="Фабрика">'   # 24.10.2026 (пользователь: «блюр убирай»): без black-translucent — строка с часами непрозрачная, iOS 26 не размывает верх страницы; iOS читает это при добавлении на экран «Домой»   # the map under the clock too (user, 24.10.2026)
-        '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'   # 26.10.2026 (пользователь): модель на весь экран, как в «Картах» — содержимое под строкой с часами; страницы .ios отступают на safe-area; своего размытия нет, на модели — лёгкая тень сверху
+        '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'   # 15.11.2026 ~17:20, Т. В.: проба «полный экран» (тест menutest/full — меню 18 px); «откат» — default, см. RULES.md
+          # 15.11.2026, Т. В.: «начало сайта должно быть под часами» — окно iOS начинается под строкой часов и доходит до низа экрана (с black-translucent iOS 27 отдавал окно на ~60 pt короче — меню висело над пустой полосой)
+          # 26.10.2026 (пользователь): модель на весь экран, как в «Картах» — содержимое под строкой с часами; страницы .ios отступают на safe-area; своего размытия нет, на модели — лёгкая тень сверху
         '<meta name="theme-color" content="#2f3034">')   # 27.10.2026, портал: графитовая тема по умолчанию
 GF = re.compile(r'<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>')
 shutil.copy(f'{B}/pwa_glue.js', f'{OUT}/assets/pwa.js')
@@ -118,6 +120,27 @@ for page in glob.glob(f'{OUT}/*.html'):
         s = s.replace("'Этот файл хранится в онлайн-версии сайта (в Claude).'", "'Документ ещё не сохранён на телефоне — откройте его один раз при интернете.'")
     with open(page, 'w', encoding='utf-8') as _cg1_output_104:
         _cg1_output_104.write(s)
+
+# 15.11.2026 ~18:10, Т. В.: «главную страницу возьми и сделай её тестовой — отдельную ссылку, я её посмотрю сначала»; «в тестовой странице была
+#   прозрачная сверху — надо на портале так же». t/home.html — ТА ЖЕ главная (тот же файл после сборки; <base href="../"> — все адреса и проверки
+#   «это главная» как у неё). Ссылка — Профиль → «Тест» (администраторам). Только в зашифрованной части (t/home.html и t/tt.js — в карте сайта).
+# 15.11.2026 ~18:50, Т. В. (тест 1: «меню опять улетает», «в тесте меню было офигенно — почему?»; «на экран Домой тестовую главную — прозрачный
+#   верх и меню внизу, как получилось до этого»): тест 2 — настройки страницы теста меню целиком: прокручивается страница и БЕЗ отскока
+#   (overscroll-behavior:none у html и body, html min-height:100%). Без манифеста: «На экран Домой» из Safari ставит отдельную иконку
+#   «Фабрика тест» прямо на эту страницу. ?ob=1 — с отскоком (тест 1), ?sc=body — как сейчас на портале. Замер: как далеко меню уходило от
+#   своего места за время прокрутки (наименьшее и наибольшее расстояние до низа экрана).
+_TTJS = (_rd(f'{B}/tt_test.js', encoding='utf-8').replace('__TITLE__', 'Тест главной · 3').replace('__L_MENU__', 't/home.html')
+         .replace('__L_BOUNCE__', 't/home.html?ob=1').replace('__L_BODY__', 't/home.html?sc=body').replace('__L_FIX__', 't/home.html?sc=body&amp;fix=1')
+         .replace('__EXIT__', '<a href="home.html" style="padding:7px 12px;border-radius:14px;text-decoration:none;background:rgba(120,120,128,.24);color:inherit">Выйти из теста</a>'))   # 15.11 ~19:55: общий файл с демо menutest/
+_th = _rd(f'{OUT}/home.html', encoding='utf-8')
+_MF = '<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">'
+assert _th.count('<html lang="ru"><head><meta charset="utf-8">') == 1 and 'data-tt' not in _th and _th.count(_MF) == 1
+os.makedirs(f'{OUT}/t', exist_ok=True)
+_wr(_TTJS, f'{OUT}/t/tt.js', 'w', encoding='utf-8')
+_wr(_th.replace('<html lang="ru"><head><meta charset="utf-8">', '<html lang="ru"><head><meta charset="utf-8"><base href="../"><script src="t/tt.js"></script>', 1)
+       .replace(_MF, '', 1).replace('<meta name="apple-mobile-web-app-title" content="Фабрика">', '<meta name="apple-mobile-web-app-title" content="Фабрика тест">', 1)
+       .replace('<title>Фабрика</title>', '<title>Фабрика — тест главной</title>', 1),
+    f'{OUT}/t/home.html', 'w', encoding='utf-8')
 
 # service worker: everything except the archive documents is saved on install; documents are saved when opened (or all at once)
 pre = []

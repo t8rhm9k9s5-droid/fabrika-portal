@@ -129,7 +129,7 @@
       '#blindBox .blr{display:flex;gap:4px;margin:8px 0 4px}#blindBox .blr button{padding:3px 8px;font-size:12px}#blindBox .blr button[aria-pressed=true]{background:var(--ink,#1d282e);color:var(--panel,#fff)}' +
       '#blindBox p{margin:6px 2px}#blindBox .bln{font-size:11.5px;color:var(--muted,#5f6d74)}#blindBox details summary{cursor:pointer;font-weight:600;margin:4px 2px}#blindBox .blz{display:flex;flex-direction:column;gap:3px;max-height:30vh;overflow:auto;margin-top:4px}' +
       '#blindBox .blz button{font:inherit;text-align:left;border:0;background:color-mix(in srgb,#d92d20 9%,transparent);color:inherit;border-radius:6px;padding:4px 7px;cursor:pointer}#blindBox .blz b{color:#b42318}' +
-      '#blindBox[hidden]{display:none}@media (max-width:700px){#blindBox{left:max(8px,env(safe-area-inset-left,0px));top:auto;bottom:calc(max(12px,min(env(safe-area-inset-bottom,0px),34px)) + 64px);max-width:calc(100% - 70px)}}';
+      '#blindBox[hidden]{display:none}@media (max-width:700px){#blindBox{left:max(8px,env(safe-area-inset-left,0px));top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 64px);max-width:calc(100% - 70px)}}';
     document.head.appendChild(css);
     box = document.createElement('div'); box.id = 'blindBox';
     box.innerHTML = '<div class="blt"><button type="button" data-bk="cov" title="Что видят уличные камеры с учётом зданий">Фактический обзор</button><button type="button" data-bk="bl" title="Двор, куда не смотрит ни одна уличная камера">Слепые зоны</button></div><div class="bli" hidden></div>';

@@ -90,13 +90,21 @@
     }).then(function (r) { if (!r.ok) throw new Error('Сервер ответил ' + r.status); return r.json(); }, function (e) { throw e && /работает в приложении|Нет связи с сервером/.test(e.message) ? e : new Error('Нет связи с сервером — проверьте интернет.'); })
       .then(function (j) { if (j && j.ok === false && j.error) throw new Error(j.error); return j; });
   }
+  // 15.11.2026: доступ по группам — в k/<id>.bin после 32 байт ключа сайта идут ключи наборов групп (JSON); они ложатся в «sets» устройства
+  function takeKr(raw) {
+    var u = new Uint8Array(raw); if (u.length <= 32) return Promise.resolve(raw);
+    var j = JSON.parse(td.decode(u.slice(32))), ids = Object.keys(j), sets = {};
+    try { G.T14Acct._kr = j; } catch (e) { /* */ }   // 15.11.2026: странице входа — передать Service Worker'у в сообщении (Safari)
+    return Promise.all(ids.map(function (k) { return S.importKey('raw', new Uint8Array(j[k].match(/../g).map(function (h) { return parseInt(h, 16); })), 'AES-GCM', false, ['decrypt']).then(function (ck) { sets[k] = ck; }); }))
+      .then(function () { return kvSet('sets', sets); }).then(function () { return u.slice(0, 32).buffer; });
+  }
   function siteKey(id, Kkey, krB64) {            // the current one on the site, otherwise the server's copy
     return fetch('k/' + id + '.bin', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.arrayBuffer() : null; }, function () { return null; }).then(function (buf) {
       if (buf) return ungcm(Kkey, buf, 'fabrika-kr').catch(function () { return null; });
       return null;
     }).then(function (M) {
-      if (M) return M;
-      if (krB64) return ungcm(Kkey, unb64(krB64), 'fabrika-kr');
+      if (M) return takeKr(M);
+      if (krB64) return ungcm(Kkey, unb64(krB64), 'fabrika-kr').then(takeKr);
       throw new Error('nokey');
     });
   }
@@ -175,7 +183,12 @@
       return S.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then(function (n) { return kvSet('qldk', n).then(function () { return n; }); });
     });
   }
-  function qlGet() { return kvGet('ql').then(function (q) { return q && q.v === 1 && (q.pin || q.bio) ? q : null; }, function () { return null; }); }
+  // 15.11.2026, Т. В.: «убери пока Face ID, оставь на усмотрение пользователя — включить или отключить; по умолчанию его нет».
+  //   Быстрый вход (Face ID / код) и замок портала работают, только если человек включил их в «Пароль приложения» на этом устройстве (t14.qlon).
+  //   Один раз при обновлении (t14.ql2) прежние настройки быстрого входа стираются — у всех по умолчанию выключено.
+  function qlOn() { try { return localStorage.getItem('t14.qlon') === '1'; } catch (e) { return false; } }
+  function qlEnable(on) { try { if (on) localStorage.setItem('t14.qlon', '1'); else { localStorage.removeItem('t14.qlon'); localStorage.removeItem('t14.locked'); } } catch (e) { /* */ } }
+  function qlGet() { if (!qlOn()) return Promise.resolve(null); return kvGet('ql').then(function (q) { return q && q.v === 1 && (q.pin || q.bio) ? q : null; }, function () { return null; }); }
   function qlOff() { try { localStorage.removeItem('t14.qlx'); } catch (e) { /* */ } return kvSet('ql', null).catch(function () { }); }
   // 14.11.2026, Т. В.: «не у всех есть Face ID… у каждого устройства называется по-своему, на компьютере — Windows Hello» — имя по устройству
   function bioName() {
@@ -203,7 +216,7 @@
     if (!/^\d{4,6}$/.test(pin)) return Promise.reject(new Error('Код — от 4 до 6 цифр.'));
     var salt = rnd(16), it = 310000;
     return Promise.all([qlDev(), pbkdf(pin, salt, it)]).then(function (x) { return seal2(x[0], x[1], { l: login, p: pw }, 'ql-pin'); })
-      .then(function (ct) { qlReset(); return qlSave(login, function (q) { q.pin = { s: hex(salt), i: it, c: ct, n: pin.length }; }); });
+      .then(function (ct) { qlReset(); return qlSave(login, function (q) { q.pin = { s: hex(salt), i: it, c: ct, n: pin.length }; q.np = !pw; }); });
   }
   function bioAssert(id, salt) {
     var o = { challenge: rnd(32), allowCredentials: [{ type: 'public-key', id: unb64(id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 };
@@ -233,7 +246,7 @@
       .then(function (prf) {
         return (prf ? prfKey(prf) : Promise.resolve(rnd(32))).then(function (k2) {
           return seal2(dev, k2, { l: login, p: pw }, 'ql-bio').then(function (ct) {
-            return qlSave(login, function (q) { q.bio = { id: cid, s: b64(salt), c: ct, prf: !!prf }; if (!prf) q.bio.k = b64(k2); });
+            return qlSave(login, function (q) { q.bio = { id: cid, s: b64(salt), c: ct, prf: !!prf }; if (!prf) q.bio.k = b64(k2); q.np = !pw; });
           });
         });
       });
@@ -267,9 +280,10 @@
       throw e;
     });
   }
+  try { if (localStorage.getItem('t14.ql2') !== '1') { localStorage.setItem('t14.ql2', '1'); if (!qlOn()) { qlOff(); localStorage.removeItem('t14.locked'); } } } catch (e) { /* без хранилища — быстрого входа и так нет */ }
   G.T14Acct = { cfg: cfg, api: api, me: me, tok: tok, saveMe: saveMe, forget: forget, signIn: signIn, register: register, sharedKey: sharedKey, checkKey: checkKey,
     addUser: addUser, resetPw: resetPw, changePw: changePw,
-    ql: { get: qlGet, off: qlOff, setPin: qlSetPin, setBio: qlSetBio, byPin: qlByPin, byBio: qlByBio, signIn: qlSignIn, bioName: bioName, bioOk: bioOk }, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
+    ql: { on: qlOn, enable: qlEnable, get: qlGet, off: qlOff, setPin: qlSetPin, setBio: qlSetBio, byPin: qlByPin, byBio: qlByBio, signIn: qlSignIn, bioName: bioName, bioOk: bioOk }, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
   // 13.11.2026, Т. В.: «в Людях первоначально происходит загрузка — загрузки быть не должно». Закрытые части «Структуры» (org, kos, ko, sim)
   //   подгружаются фоном на любой странице — только у вошедшего лично, чей доступ уже подтверждён (флаг t14.sec), не чаще раза в 30 мин.
   function secWarm() {

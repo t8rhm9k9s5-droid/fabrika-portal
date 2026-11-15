@@ -66,7 +66,7 @@
     var n = document.getElementById(id);
     if (!n) {
       n = document.createElement('div'); n.id = id; n.setAttribute('role', 'alert');
-      n.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + min(env(safe-area-inset-bottom,0px),34px));z-index:2147483000;max-width:560px;margin:0 auto;padding:12px 14px;' +
+      n.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;max-width:560px;margin:0 auto;padding:12px 14px;' +
         'border-radius:14px;background:rgba(28,28,30,.95);color:#fff;font:14px/1.4 -apple-system,system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.3);gap:8px 10px;align-items:center;flex-wrap:wrap';
       n.addEventListener('click', function (e) {
         var b = e.target && e.target.closest && e.target.closest('button'); if (!b) return;

@@ -67,7 +67,7 @@
     var P = window.T14Plan; if (!P || !P.svg) return false;
     var css = document.createElement('style');
     css.textContent = '.cam{pointer-events:bounding-box}.cam .hit{fill:transparent;stroke:none;pointer-events:all}.cam text{pointer-events:all}' +
-      '#mapInfo{position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(max(12px,min(env(safe-area-inset-bottom,0px),34px)) + 48px);width:min(290px,calc(100% - 90px));background:var(--panel,#fff);color:var(--ink,#1d282e);border:1px solid var(--rule,#d5dbd6);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.12);font:13px/1.35 system-ui,sans-serif;padding:8px 12px}' +
+      '#mapInfo{position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 48px);width:min(290px,calc(100% - 90px));background:var(--panel,#fff);color:var(--ink,#1d282e);border:1px solid var(--rule,#d5dbd6);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.12);font:13px/1.35 system-ui,sans-serif;padding:8px 12px}' +
       '#mapInfo[hidden]{display:none}#mapInfo summary{cursor:pointer;font-weight:600;list-style:none}#mapInfo summary::-webkit-details-marker{display:none}#mapInfo summary::after{content:" ▾";opacity:.6}#mapInfo[open] summary::after{content:" ▴"}' +
       '#mapInfo p{margin:6px 0}#mapInfo .mil{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px}#mapInfo .mil span{display:inline-flex;align-items:center;gap:5px}#mapInfo .mil i{width:12px;height:12px;border-radius:3px;display:inline-block}' +
       '#mapInfo .min{font-size:11.5px;color:var(--muted,#5f6d74)}#mapInfo .mibl{font:inherit;font-weight:600;border:1px solid #d92d20;color:#b42318;background:transparent;border-radius:999px;padding:2px 9px;cursor:pointer}' +

@@ -86,7 +86,7 @@ def main():
         srv = {n: sha(z.read(n)) for n in z.namelist() if n.startswith(('code/', 'host/', 'out/'))}
         st['files'].update(site); st.setdefault('srv', {}).update(srv)
         st['uploaded'] = time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime()) + ' (Google Диск, пакет %s)' % os.path.basename(name)
-        pathlib.Path(ST).write_text(json.dumps(st, indent=0))
+        pathlib.Path(ST + '.tmp').write_text(json.dumps(st, indent=0)); os.replace(ST + '.tmp', ST)   # 15.11.2026 (F4-05): атомарно
         print(json.dumps({'done': os.path.basename(name), 'site': len(site), 'srv': len(srv)}, ensure_ascii=False)); sys.exit()
     # 14.11.2026, Т. В.: «чтобы этих сбоев дурацких не было» и «выкладки не будет, пока код Рексом не проверим» — пакет собирается
     #   только после fabrika/tools/ci/predeploy_check.sh (синтаксис, линтеры, тесты робота с ключами, пульс на живых файлах).
