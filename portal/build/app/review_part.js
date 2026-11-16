@@ -168,6 +168,7 @@ function ctxBuild(){
   const at = (x, y) => gAt(x, y), gr = C.ground;
   const pg = new THREE.PlaneGeometry(gr.x1 - gr.x0, gr.y1 - gr.y0); pg.rotateX(-Math.PI / 2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xdfe2d6})); plane.position.copy(V((gr.x0 + gr.x1) / 2, (gr.y0 + gr.y1) / 2, szzPlaneY() - 0.1)); gCtx.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear && typeof basePlaneClear === 'function') basePlaneClear(plane, true);   // 16.11.2026: прозрачная земля — и эта плоскость (трубы под ней)
   const RM = {asphalt:new THREE.MeshLambertMaterial({color:0x8f9397, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}),
               dirt:new THREE.MeshLambertMaterial({color:0xb7a685, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2})};
   const edge = new THREE.LineBasicMaterial({color:0x6c7075, transparent:true, opacity:.55});

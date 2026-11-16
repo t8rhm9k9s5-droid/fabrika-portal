@@ -349,8 +349,13 @@ moreBtn.addEventListener('click', ()=>toggleMore(moreEl.hidden));
 $('#moreX').addEventListener('click', ()=>toggleMore(false));
 document.addEventListener('pointerdown', e=>{ if (!moreEl.hidden && !moreEl.contains(e.target) && !moreBtn.contains(e.target)) toggleMore(false); });
 let groundClear = false;
+// 16.11.2026 (Т. В.: «почему линии коммуникаций газа, воды и прочее прерываются на 3Д плане»): под рельефом лежит ровная «земля окрестностей»
+// (окрестности и СЗЗ) на 0,4 м ниже самой низкой точки — канализация и водопровод глубже, и сквозь прозрачную землю их закрывала она.
+// Теперь при прозрачной земле прозрачны и эти плоскости.
+function basePlaneClear(o, on){ const m = o && o.material; if (!m) return; m.transparent = on; m.opacity = on ? .18 : 1; m.depthWrite = !on; m.needsUpdate = true; }
 function setGroundClear(on){
-  groundClear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  groundClear = on; terMat.userData.clear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  scene.traverse(o=>{ if (o.userData && o.userData.basePlane) basePlaneClear(o, on); });
   otmMat.transparent = on; otmMat.opacity = on ? .25 : 1; otmMat.depthWrite = !on; otmMat.needsUpdate = true;
   controls.maxPolarAngle = on ? Math.PI*0.8 : Math.PI*0.495;
   gCont.children.forEach(c=>{ c.material.opacity = on ? .15 : .35; });
@@ -636,6 +641,7 @@ function buildSZZ(){
   const bb = szzBbox(), pad = 70, w = bb.x1 - bb.x0 + 2*pad, h = bb.y1 - bb.y0 + 2*pad, cx = (bb.x0 + bb.x1)/2, cy = (bb.y0 + bb.y1)/2;
   const pg = new THREE.PlaneGeometry(w, h); pg.rotateX(-Math.PI/2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xd9dccd})); plane.position.copy(V(cx, cy, szzPlaneY() - 0.02)); gSzz.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear) basePlaneClear(plane, true);   // сквозь прозрачную землю видны трубы под ней
   const B = SZ.boundary.map(p=>p.loc);
   const sh = new THREE.Shape(B.map(([x, y])=>new THREE.Vector2(x - CX, y - CY))), sg = new THREE.ShapeGeometry(sh); sg.rotateX(-Math.PI/2);
   const fill = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({color:0x2f5fd0, transparent:true, opacity:.14, depthWrite:false}));
@@ -757,7 +763,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник15 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -905,7 +911,7 @@ function ndvInfo(u){
        <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
        <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник15 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -1095,14 +1101,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник15 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */

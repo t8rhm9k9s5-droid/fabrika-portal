@@ -62,10 +62,12 @@
     (OBJ[net] || []).forEach(function (x) { if (x.pt === pt) { if (!m[x.kind]) { m[x.kind] = { k: x.kind, n: 0 }; o.push(m[x.kind]); } m[x.kind].n++; } });
     return o.sort(function (a, b) { return b.n - a.n || a.k.localeCompare(b.k, 'ru'); });
   }
-  function isHid(net, k) { return !!(hid[net] && hid[net][k]); }
-  function setHid(net, k, v) { hid[net] = hid[net] || {}; if (v) hid[net][k] = 1; else delete hid[net][k]; }
+  // 16.11 (Рекс, CG-32 п. 1): ключ скрытия — сеть + группа (l: линии / p: точки) + вид — «Оборудование и точки» не гасит линии того же вида
+  function hk(k, pt) { return (pt ? 'p:' : 'l:') + k; }
+  function isHid(net, k, pt) { return !!(hid[net] && hid[net][hk(k, pt)]); }
+  function setHid(net, k, pt, v) { hid[net] = hid[net] || {}; if (v) hid[net][hk(k, pt)] = 1; else delete hid[net][hk(k, pt)]; }
   function apply() {
-    NETS.forEach(function (n) { (OBJ[n[0]] || []).forEach(function (x) { x.el.classList.toggle('lk-off', isHid(n[0], x.kind)); }); });
+    NETS.forEach(function (n) { (OBJ[n[0]] || []).forEach(function (x) { x.el.classList.toggle('lk-off', isHid(n[0], x.kind, x.pt)); }); });
     ss('p2.lk', hid); icon();
   }
   function anyHidden() {
@@ -91,9 +93,9 @@
         h += '<div class="lk-sub' + (on ? '' : ' lk-dim') + '">';
         [[false, n[3]], [true, 'Оборудование и точки']].forEach(function (gp) {
           var ks = kinds(net, gp[0]); if (!ks.length) return;
-          var allOn = ks.every(function (x) { return !isHid(net, x.k); });
+          var allOn = ks.every(function (x) { return !isHid(net, x.k, gp[0]); });
           h += '<div class="lk-row lk-grp"><span class="lk-name">' + gp[1] + '</span><span class="lk-n">' + ks.reduce(function (s, x) { return s + x.n; }, 0) + '</span>' + sw(allOn, 'data-grp="' + net + '|' + (gp[0] ? 1 : 0) + '"', gp[1]) + '</div>';
-          ks.forEach(function (x) { h += '<div class="lk-row lk-kind"><span class="lk-name">' + esc(x.k) + '</span><span class="lk-n">' + x.n + '</span>' + sw(!isHid(net, x.k), 'data-kind="' + net + '|' + esc(x.k) + '"', x.k) + '</div>'; });
+          ks.forEach(function (x) { h += '<div class="lk-row lk-kind"><span class="lk-name">' + esc(x.k) + '</span><span class="lk-n">' + x.n + '</span>' + sw(!isHid(net, x.k, gp[0]), 'data-kind="' + net + '|' + (gp[0] ? 1 : 0) + '|' + esc(x.k) + '"', x.k) + '</div>'; });
         });
         h += '</div>';
       }
@@ -118,7 +120,7 @@
   }
   function all(v) {
     PLAN.concat(ECO).forEach(function (p) { press(p[0], v); });
-    NETS.forEach(function (n) { press(n[2], v); if (v) hid[n[0]] = {}; else (OBJ[n[0]] || []).forEach(function (x) { setHid(n[0], x.kind, false); }); });
+    NETS.forEach(function (n) { press(n[2], v); if (v) hid[n[0]] = {}; else (OBJ[n[0]] || []).forEach(function (x) { setHid(n[0], x.kind, x.pt, false); }); });
     press('tCam', v); press('tFov', v); press('tLab', v);
     var b = B(); if (b && !v) { b.set('cov', false); b.set('bl', false); }
     apply(); render();
@@ -139,9 +141,9 @@
     if (d.more) { open[d.more] = d.more === 'cam' ? open.cam === false : !open[d.more]; return render(); }
     if (d.tog) { var bt = $(d.tog); if (bt) bt.click(); return setTimeout(render, 0); }
     if (d.grp) { var a = d.grp.split('|'), pt = a[1] === '1', ks = kinds(a[0], pt), turnOn = t.getAttribute('aria-checked') !== 'true';
-      ks.forEach(function (x) { setHid(a[0], x.k, !turnOn); }); var nb = NETS.filter(function (n) { return n[0] === a[0]; })[0]; if (turnOn && nb) press(nb[2], true); apply(); return render(); }
-    if (d.kind) { var i = d.kind.indexOf('|'), net = d.kind.slice(0, i), k = d.kind.slice(i + 1), on = t.getAttribute('aria-checked') !== 'true';
-      setHid(net, k, !on); var nn = NETS.filter(function (n) { return n[0] === net; })[0]; if (on && nn) press(nn[2], true); apply(); return render(); }
+      ks.forEach(function (x) { setHid(a[0], x.k, pt, !turnOn); }); var nb = NETS.filter(function (n) { return n[0] === a[0]; })[0]; if (turnOn && nb) press(nb[2], true); apply(); return render(); }
+    if (d.kind) { var i = d.kind.indexOf('|'), net = d.kind.slice(0, i), kpt = d.kind.charAt(i + 1) === '1', k = d.kind.slice(i + 3), on = t.getAttribute('aria-checked') !== 'true';
+      setHid(net, k, kpt, !on); var nn = NETS.filter(function (n) { return n[0] === net; })[0]; if (on && nn) press(nn[2], true); apply(); return render(); }
     if (d.range && b) { b.setRange(+d.range); return render(); }
     if (d.bk && b) { b.set(d.bk, t.getAttribute('aria-checked') !== 'true'); if (t.getAttribute('aria-checked') !== 'true') press('tCam', true); return render(); }
   }
@@ -187,6 +189,7 @@
     svg = $('map'); ctrl = $('zin') && $('zin').closest('div.ctrl'); wrap = ctrl && ctrl.parentNode;   // не SVG-элемент с тем же классом
     if (!svg || !ctrl || document.querySelector('.lk-col')) return;
     hid = st('p2.lk', {}); if (!hid || typeof hid !== 'object') hid = {};
+    Object.keys(hid).forEach(function (n) { var o = hid[n] || {}; Object.keys(o).forEach(function (k) { if (!/^[lp]:/.test(k)) { delete o[k]; o['l:' + k] = 1; o['p:' + k] = 1; } }); });   // старая запись без группы — в обе группы
     NETS.forEach(function (n) { OBJ[n[0]] = collect(n[0]); });
     css();
     col = document.createElement('div'); col.className = 'lk-col';

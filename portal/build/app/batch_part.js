@@ -25,16 +25,16 @@
     if (o.isInstancedMesh || o.isSkinnedMesh || o.isPoints || o.isSprite || !o.geometry || !o.geometry.isBufferGeometry || !o.material || Array.isArray(o.material)) return null;
     const m = o.material, g = o.geometry, pos = g.attributes.position; if (!pos || pos.itemSize !== 3) return null;
     if (m.alphaMap || m.wireframe || m.blending !== THREE.NormalBlending || m.isShaderMaterial || o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return null;
-    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial))) return null;
+    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial))) return null;
     if (g.morphAttributes && Object.keys(g.morphAttributes).length) return null;
-    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial)) return null; if (!g.attributes.normal && m.isMeshLambertMaterial) return null; return 'mesh'; }   // one material: geometry groups do not matter
+    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial)) return null; if (!g.attributes.normal && !m.isMeshBasicMaterial) return null; return 'mesh'; }   // 16.11.2026: и физические (pbr_part)   // one material: geometry groups do not matter
     if (o.isLineSegments || o.isLineLoop || o.isLine){ if (!(m.isLineBasicMaterial || m.isLineDashedMaterial)) return null; if (m.isLineDashedMaterial && !g.attributes.lineDistance) return null; return o.isLineSegments ? 'seg' : o.isLineLoop ? 'loop' : 'strip'; }
     return null;
   }
   function shown(o, top){ for (let q = o; q && q !== top; q = q.parent) if (!q.visible) return false; return true; }
   function matKey(o, kind){
     const m = o.material, op = Math.round((m.transparent ? m.opacity : 1) * 100);
-    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
+    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : m.isMeshStandardMaterial ? 'P' + Math.round(m.roughness * 20) + '/' + Math.round(m.metalness * 20) + '/' + Math.round((m.envMapIntensity || 1) * 10) : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
             m.polygonOffset ? m.polygonOffsetFactor + '/' + m.polygonOffsetUnits : '-', m.flatShading ? 1 : 0, m.fog ? 1 : 0, o.renderOrder || 0,
             m.map ? m.map.uuid : '-', m.isLineDashedMaterial ? 'D' + m.dashSize + '/' + m.gapSize + '/' + m.scale : '-'].join(',');
   }
@@ -60,6 +60,7 @@
     st.items = null;
   }
   function build(top, st, list){
+    if (window.__t14pbrPrep) window.__t14pbrPrep(top);   // 16.11.2026: цвета и материалы слоя — уже физические и линейные, до склейки
     top.updateMatrixWorld(true); mInv.copy(top.matrixWorld).invert();
     const groups = new Map(), items = [];
     for (const it of list){
@@ -77,7 +78,7 @@
       if (gr.list.length < 2) { gr.list.forEach(it => { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); }); continue; }   // one object: nothing to gain
       const mesh = gr.kind === 'mesh', NV = gr.nv;
       const m00 = gr.list[0].o.material, UV = m00.map ? new Float32Array(NV * 2) : null, LD = m00.isLineDashedMaterial ? new Float32Array(NV) : null;
-      const P = new Float32Array(NV * 3), C = new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
+      const HI = !!window.__t14pbr, CK = HI ? 65535 : 255, P = new Float32Array(NV * 3), C = HI ? new Uint16Array(NV * 3) : new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
       const I = NV > 65535 ? new Uint32Array(gr.ni) : new Uint16Array(gr.ni);
       let vo = 0, io = 0;
       for (const it of gr.list){
@@ -88,7 +89,7 @@
         for (let i = 0; i < nv; i++){
           v.fromBufferAttribute(pos, i).applyMatrix4(mRel); const j = (vo + i) * 3; P[j] = v.x; P[j + 1] = v.y; P[j + 2] = v.z;
           let r = cr, gg = cg, bb = cb; if (col){ r *= col.getX(i); gg *= col.getY(i); bb *= col.getZ(i); }
-          C[j] = Math.round(Math.min(1, r) * 255); C[j + 1] = Math.round(Math.min(1, gg) * 255); C[j + 2] = Math.round(Math.min(1, bb) * 255);
+          C[j] = Math.round(Math.min(1, r) * CK); C[j + 1] = Math.round(Math.min(1, gg) * CK); C[j + 2] = Math.round(Math.min(1, bb) * CK);
           if (mesh){
             if (nrm){ v.fromBufferAttribute(nrm, i).applyMatrix3(nMat).normalize(); N[j] = Math.round(v.x * 127); N[j + 1] = Math.round(v.y * 127); N[j + 2] = Math.round(v.z * 127); }
             EM[j] = er; EM[j + 1] = eg; EM[j + 2] = eb;
@@ -117,6 +118,7 @@
       if (m0.map) common.map = m0.map;
       if (!mesh) bm = m0.isLineDashedMaterial ? new THREE.LineDashedMaterial(Object.assign(common, {dashSize: m0.dashSize, gapSize: m0.gapSize, scale: m0.scale})) : new THREE.LineBasicMaterial(common);
       else if (m0.isMeshBasicMaterial) bm = new THREE.MeshBasicMaterial(common);
+      else if (m0.isMeshStandardMaterial){ bm = new THREE.MeshStandardMaterial(Object.assign(common, {roughness: m0.roughness, metalness: m0.metalness, envMapIntensity: m0.envMapIntensity, flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emisP'; }
       else { bm = new THREE.MeshLambertMaterial(Object.assign(common, {flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emis'; }
       const b = mesh ? new THREE.Mesh(bg, bm) : new THREE.LineSegments(bg, bm);
       b.userData.__batch = 1; b.raycast = noRay; b.renderOrder = gr.list[0].o.renderOrder || 0; b.matrixAutoUpdate = false;

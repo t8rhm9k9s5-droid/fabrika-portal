@@ -38,6 +38,7 @@ function mt_load_(q) {
       Object.keys(o.uids || {}).forEach(function (u) { if (S.learn[u]) it.uids[u] = o.uids[u]; }); });
   }
   S.sent = S.sent || {}; S.t = Date.now();
+  S.ver = String(Date.now() % 1e8);   // 16.11 (Рекс, CG-37): версия списка — кнопки без номера реестра после новой загрузки устаревают
   var r = jrmw_(MT_DIR, MT_FILE, null, function () { return S; });
   if (r === false) return { ok: false, error: 'не записалось' };
   mx_log('mt', 'поручения ' + S.day + ': пунктов ' + S.items.length + ', не нашёл в группах: ' + miss.length);
@@ -76,37 +77,58 @@ function mt_reg_(pid, vals) {
     mx_log('mt', 'реестр: нет строки ' + pid); return false;
   } catch (e) { mx_log('mt', 'реестр ' + pid + ': ' + mx_errText(e)); return false; }
 }
-/** Закрыть пункт n словом ответственного uid. → 'done' | 'already' | 'nf' | 'notyours' */
-function mt_close_(n, uid, name) {
+/** 16.11 (Рекс, CG-37 P1): кнопка привязана к пункту стабильно — по номеру реестра (pid), без него — по номеру и версии списка. */
+function mt_key_(S, it) { return it.pid ? 'p' + String(it.pid).replace(/[^\w.\-]/g, '') : 'n' + it.n + '.' + (S.ver || ''); }
+function mt_find_(S, key) {
+  key = String(key || ''); if (!S || !S.items) return null;
+  if (/^\d{1,3}$/.test(key)) return S.ver ? null : S.items.filter(function (x) { return Number(x.n) === Number(key); })[0] || null;   // кнопка старого вида — только пока список не перезагружали
+  if (key.charAt(0) === 'p') return S.items.filter(function (x) { return x.pid && String(x.pid).replace(/[^\w.\-]/g, '') === key.slice(1); })[0] || null;
+  var m = key.match(/^n(\d{1,3})\.(\d*)$/); if (!m || m[2] !== String(S.ver || '')) return null;
+  return S.items.filter(function (x) { return Number(x.n) === Number(m[1]); })[0] || null;
+}
+/** список в группе и реестр после отметки; не прошло — пометка sf, повторное нажатие досинхронизирует */
+function mt_sync_(it, S, kind) {
+  var okPin = mt_redraw_(S, it.cid), okReg = true;
+  if (it.pid) okReg = kind === 'due' ? mt_reg_(it.pid, { G: it.due + ' (назвал ' + it.due_by + ' в MAX)' })
+    : mt_reg_(it.pid, { H: 'Выполнено ✅', I: 'Выполнено — ' + it.by + ', ' + mt_hm_(it.t) + ' (отметка в MAX)', J: 'По слову ответственного (правило Т. В. 16.11)' });
+  var sf = (!okPin || !okReg) ? { pin: !okPin, reg: !okReg, kind: kind } : null;
+  if (!!sf !== !!it.sf) jrmw_(MT_DIR, MT_FILE, null, function (cur) { if (!cur) return null; var x = mt_find_(cur, mt_key_(cur, it)); if (!x) return null; if (sf) x.sf = sf; else delete x.sf; return cur; });
+  if (sf) mx_log('mt', 'пункт ' + (it.pid || it.n) + ': ' + (sf.pin ? 'список в группе не обновился ' : '') + (sf.reg ? 'реестр не записан' : ''));
+  return !sf;
+}
+/** Закрыть пункт key словом ответственного uid. → 'done' | 'already' | 'nf' | 'notyours' | 'err' (запись не прошла — ничего не подтверждаем) */
+function mt_close_(key, uid, name) {
   var res = 'nf', it0 = null;
   var S = jrmw_(MT_DIR, MT_FILE, null, function (S) {
-    if (!S) return null; var it = S.items.filter(function (x) { return Number(x.n) === Number(n); })[0];
+    if (!S) return null; var it = mt_find_(S, key);
     if (!it) { res = 'nf'; return null; }
     if (!it.uids || !it.uids[String(uid)]) { res = 'notyours'; return null; }
     if (it.st === 'done') { res = 'already'; it0 = it; return null; }
     it.st = 'done'; it.by = it.uids[String(uid)] || name; it.t = Date.now(); res = 'done'; it0 = it; return S;
   });
-  if (res !== 'done' || !S) return { res: res, it: it0 };
-  mt_redraw_(S, it0.cid);
-  if (it0.pid) mt_reg_(it0.pid, { H: 'Выполнено ✅', I: 'Выполнено — ' + it0.by + ', ' + mt_hm_(it0.t) + ' (отметка в MAX)', J: 'По слову ответственного (правило Т. В. 16.11)' });
+  if (S === false) { mx_log('mt', 'отметка ' + key + ' не записана (замок/Диск)'); return { res: 'err', it: it0 }; }
+  if (res === 'already' && it0 && it0.sf) mt_sync_(it0, S, it0.sf.kind || 'done');   // прошлая отметка не дошла до списка/реестра — досинхронизировать
+  if (res !== 'done') return { res: res, it: it0 };
+  mt_sync_(it0, S, 'done');
   mx_log('mt', 'пункт ' + it0.pid + ' закрыт: ' + it0.by);
   return { res: 'done', it: it0 };
 }
-function mt_setDue_(n, uid, due) {
+function mt_setDue_(key, uid, due) {
   var it0 = null, res = 'nf';
   var S = jrmw_(MT_DIR, MT_FILE, null, function (S) {
-    if (!S) return null; var it = S.items.filter(function (x) { return Number(x.n) === Number(n); })[0];
+    if (!S) return null; var it = mt_find_(S, key);
     if (!it) return null; if (!it.uids || !it.uids[String(uid)]) { res = 'notyours'; return null; }
     it.due = due; it.due_by = it.uids[String(uid)]; res = 'ok'; it0 = it; return S;
   });
-  if (res !== 'ok' || !S) return { res: res };
-  mt_redraw_(S, it0.cid);
-  if (it0.pid) mt_reg_(it0.pid, { G: due + ' (назвал ' + it0.due_by + ' в MAX)' });
+  if (S === false) { mx_log('mt', 'срок ' + key + ' не записан (замок/Диск)'); return { res: 'err' }; }
+  if (res !== 'ok') return { res: res };
+  mt_sync_(it0, S, 'due');
   return { res: 'ok', it: it0 };
 }
-function mt_kbItems_(items) {
+function mt_kbItems_(items, S) {
   return { attachments: [{ type: 'inline_keyboard', payload: { buttons: items.map(function (it) {
-    return [{ type: 'callback', text: '✅ Сделано · ' + it.k, payload: 'mt:' + it.n + ':d' }, { type: 'callback', text: '📅 Срок · ' + it.k, payload: 'mt:' + it.n + ':s' }, { type: 'callback', text: '❓ · ' + it.k, payload: 'mt:' + it.n + ':q' }];
+    var key = mt_key_(S, it.it);
+    return [{ type: 'callback', text: '✅ Сделано · ' + it.k, payload: 'mt:' + key + ':d' }, { type: 'callback', text: '📅 Срок · ' + it.k, payload: 'mt:' + key + ':s' }, { type: 'callback', text: '❓ · ' + it.k, payload: 'mt:' + key + ':q' }];
   }) } }] };
 }
 /** op mtsend {only?: [uid]} — лично каждому ответственному его пункты (один раз на человека; повтор — только с force). */
@@ -124,7 +146,7 @@ function mt_send_(q) {
     var L = ['📋 <b>' + h_(S.title || 'Поручения совещания') + '</b>', 'Ваши пункты:'];
     its.forEach(function (x) { L.push(x.k + '. ' + h_(mt_short_(x.it, 140)) + ' · <i>' + h_((S.groups[x.it.cid] || {}).title || '') + '</i>'); });
     L.push('', 'Сделали — нажмите «✅ Сделано», пункт закроется сразу. Нужен срок — «📅 Срок». Вопрос — «❓».', 'Можно и в группе: ответьте на закреплённый список словом «сделано».');
-    var r = mx_sendUser(Number(u), L.join('\n'), mt_kbItems_(its));
+    var r = mx_sendUser(Number(u), L.join('\n'), mt_kbItems_(its, S));
     if (ok_(r[0])) { sent.push(by[u][0].uids[u]); S.sent = S.sent || {}; S.sent[u] = Date.now(); } else bad.push(by[u][0].uids[u] + ': MAX ' + r[0]);
   });
   jrmw_(MT_DIR, MT_FILE, null, function (cur) { if (!cur) return null; cur.sent = S.sent; return cur; });
@@ -140,7 +162,7 @@ function mt_dueDate_(code) {
 }
 /** Кнопки mt:<n>:d | mt:<n>:s | mt:<n>:s:<код> | mt:<n>:q */
 function mt_cb_(u) {
-  var cb = u.callback || {}, cbid = String(cb.callback_id || ''), m = String(cb.payload || '').match(/^mt:(\d{1,3}):([dsq])(?::([0-9a-z]{1,3}))?$/);
+  var cb = u.callback || {}, cbid = String(cb.callback_id || ''), m = String(cb.payload || '').match(/^mt:(\d{1,3}|p[\w.\-]{1,40}|n\d{1,3}\.\d*):([dsq])(?::([0-9a-z]{1,3}))?$/);
   if (!m) return mx_answerCb(cbid, 'Кнопка устарела.');
   var user = cb.user || {}, uid = String(Number(user.user_id || 0)), name = mx_name(user).replace(/\s*\(@[^)]*\)$/, '');
   if (m[2] === 'd') {
@@ -148,17 +170,18 @@ function mt_cb_(u) {
     if (r.res === 'done') return mx_answerCb(cbid, 'Отмечено: выполнено ✅ Спасибо!');
     if (r.res === 'already') return mx_answerCb(cbid, 'Этот пункт уже отмечен выполненным.');
     if (r.res === 'notyours') return mx_answerCb(cbid, 'Это поручение другого сотрудника.');
-    return mx_answerCb(cbid, 'Пункт не найден.');
+    if (r.res === 'err') return mx_answerCb(cbid, 'Не получилось записать — нажмите, пожалуйста, ещё раз через минуту.');
+    return mx_answerCb(cbid, 'Кнопка устарела или пункт не найден — список поручений обновился.');
   }
   if (m[2] === 's' && !m[3]) {
     mx_answerCb(cbid, 'Выберите срок');
-    return mx_sendUser(Number(uid), '📅 Срок по пункту: <i>' + h_(mt_short_((mt_get_() || { items: [] }).items.filter(function (x) { return Number(x.n) === Number(m[1]); })[0] || { line: '' }, 90)) + '</i>',
+    return mx_sendUser(Number(uid), '📅 Срок по пункту: <i>' + h_(mt_short_(mt_find_(mt_get_(), m[1]) || { line: '' }, 90)) + '</i>',
       { attachments: [{ type: 'inline_keyboard', payload: { buttons: [MT_DUE.map(function (d) { return { type: 'callback', text: d[0], payload: 'mt:' + m[1] + ':s:' + d[1] }; })] } }] });
   }
   if (m[2] === 's') {
     var due = mt_dueDate_(m[3]), r2 = mt_setDue_(m[1], uid, due);
     if (r2.res === 'ok') return mx_answerCb(cbid, 'Срок записан: ' + due);
-    return mx_answerCb(cbid, r2.res === 'notyours' ? 'Это поручение другого сотрудника.' : 'Пункт не найден.');
+    return mx_answerCb(cbid, r2.res === 'notyours' ? 'Это поручение другого сотрудника.' : r2.res === 'err' ? 'Не получилось записать — нажмите, пожалуйста, ещё раз через минуту.' : 'Кнопка устарела или пункт не найден — список поручений обновился.');
   }
   mx_answerCb(cbid, 'Напишите вопрос');
   return mx_sendUser(Number(uid), '❓ Напишите вопрос по пункту одним сообщением здесь — передам Сотрудник81 Отчество41.');
@@ -192,13 +215,14 @@ function mt_onGroup_(m) {
   if (mine.length === 1) pick = mine[0];
   else if (num) { var k = Number(num[1]); pick = mine[k - 1] || null; }
   if (pick) {
-    var r = mt_close_(pick.n, uid, '');
+    var r = mt_close_(mt_key_(S, pick), uid, '');
     if (r.res === 'done') mx_sendChat(cid, '✅ Отмечено: ' + h_(mt_short_(pick, 80)) + ' — ' + h_(pick.uids[uid].split(' ')[0]) + '. Спасибо!', { link: { type: 'reply', mid: mid } });
+    else if (r.res === 'err') mx_sendChat(cid, 'Не получилось записать отметку — ответьте, пожалуйста, ещё раз через минуту.', { link: { type: 'reply', mid: mid } });
     return true;
   }
   var its = mine.map(function (it, i) { return { n: it.n, k: i + 1, it: it }; });
   var L = ['Какой пункт выполнен?'].concat(its.map(function (x) { return x.k + '. ' + h_(mt_short_(x.it, 70)); }));
-  mx_sendChat(cid, L.join('\n'), { link: { type: 'reply', mid: mid }, attachments: [{ type: 'inline_keyboard', payload: { buttons: its.map(function (x) { return [{ type: 'callback', text: '✅ ' + x.k + '. ' + mt_short_(x.it, 30), payload: 'mt:' + x.n + ':d' }]; }) } }] });
+  mx_sendChat(cid, L.join('\n'), { link: { type: 'reply', mid: mid }, attachments: [{ type: 'inline_keyboard', payload: { buttons: its.map(function (x) { return [{ type: 'callback', text: '✅ ' + x.k + '. ' + mt_short_(x.it, 30), payload: 'mt:' + mt_key_(S, x.it) + ':d' }]; }) } }] });
   return true;
 }
 /** op mtday — для итогов дня Т. В.: что закрыто сегодня и сколько открыто. */

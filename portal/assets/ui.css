@@ -164,7 +164,8 @@ html body .grid > .doc::after{content:"";flex:none;width:7px;height:7px;border-r
 body.pg-plan{padding-bottom:0;height:100%;overflow:hidden}
 /* 16.11.2026, Т. В. (скрин 08:50, 3D): «снизу полоса». body overflow:hidden уходит в окно (корень не прокручивается) — iPhone со значка даёт окно
    короче экрана на строку часов (844 из 912), карта position:fixed кончается выше низа. На телефоне корень — документ (навык iphone-fullscreen-web-app, п. 2). */
-@media (pointer:coarse){html body.pg-plan{height:auto;min-height:100%;overflow:visible;margin:0}}
+@media (pointer:coarse){html body.pg-plan{height:auto;min-height:calc(100vh + 1px);min-height:calc(100lvh + 1px);overflow:visible;margin:0;overscroll-behavior:none}
+  html:has(body.pg-plan){height:auto;min-height:100%;overscroll-behavior:none}}   /* 16.11.2026 15:28, «опять меню уехало»: корень — прокручиваемый документ (на 1 px длиннее), не height:100% */
 body.pg-plan .app{height:100vh;height:100dvh;display:block}
 body.pg-plan .app > header{display:none}
 body.pg-plan main{display:block;height:100%}
