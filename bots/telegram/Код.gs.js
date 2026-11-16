@@ -727,8 +727,8 @@ var GD_SYS = 'Ты готовишь черновик ответа от имен�
 /** 10.11.2026 Т. В.: «по тому же принципу раскладывать письма» — новые письма itm@ в ящике 1c@ (раз в 20 мин, письма за 3 дня без ярлыка «ИТМ»):
  *  ITM_SKIP — как фильтры itm@ (письмо мимо «Входящих» в папку; [папка, прочитано]); ITM_MAP — основная папка отправителя в itm@ (≥ 60 % его писем, от 5 писем) —
  *  ярлык «ИТМ/<папка>», письмо остаётся во «Входящих». Ключ — адрес или @домен. Ничего не удаляется. Полная сверка с itm@ — op mailsort (вечерний цикл). */
-var ITM_SKIP = {"user81@example.org": ["ОнТрейд", 0], "user82@example.org": ["МП", 1], "@vseinstrumenti.ru": ["ВИ.ру", 0], "user3@example.org": ["ОМТС", 1], "@hoff.ru": ["сети", 0], "user83@example.org": ["экономика", 0], "user14@example.org": ["экономика", 0], "user13@example.org": ["экономика", 0], "user84@example.org": ["экономика", 0], "user27@example.org": ["производство", 0]};
-var ITM_MAP = {"user20@example.org": "ОнТрейд", "user85@example.org": "МП", "user23@example.org": "реклама", "user65@example.org": "export_UZ+KZ", "user86@example.org": "МП", "user87@example.org": "сети", "user6@example.org": "авто", "user88@example.org": "разное", "user89@example.org": "проекты", "user90@example.org": "разное", "user91@example.org": "разное", "user92@example.org": "разное", "user93@example.org": "разное", "user94@example.org": "разное", "user95@example.org": "разное", "user19@example.org": "сети", "user96@example.org": "планы", "user97@example.org": "мое", "user9@example.org": "планы", "user98@example.org": "подрядчики", "user36@example.org": "производство", "user72@example.org": "планировки", "user99@example.org": "ВИ.ру", "user100@example.org": "проекты", "user22@example.org": "МП", "user34@example.org": "ВИ.ру", "user101@example.org": "МП", "user32@example.org": "авто", "user102@example.org": "МП", "user39@example.org": "билеты", "user103@example.org": "реклама", "user104@example.org": "реклама", "user105@example.org": "реклама", "@qsrsystem.ru": "ВиТ", "user106@example.org": "подрядчики", "user107@example.org": "подрядчики", "@burgerking.ru": "БК", "user108@example.org": "ch&ch", "user109@example.org": "мое", "user110@example.org": "авто", "user31@example.org": "авто", "user53@example.org": "export_UZ+KZ", "user111@example.org": "авто", "user112@example.org": "export_UZ+KZ", "user113@example.org": "мое", "user114@example.org": "проекты", "user115@example.org": "мое", "user116@example.org": "мое", "user117@example.org": "подрядчики", "@dodobrands.io": "ДоДо", "user118@example.org": "проекты", "user119@example.org": "export_UZ+KZ", "user120@example.org": "export_UZ+KZ", "user121@example.org": "export_UZ+KZ"};
+var ITM_SKIP = {"user81@example.org": ["ОнТрейд", 0], "user82@example.org": ["МП", 1], "@vseinstrumenti.ru": ["ВИ.ру", 0], "user3@example.org": ["ОМТС", 1], "@hoff.ru": ["сети", 0], "user83@example.org": ["экономика", 0], "user15@example.org": ["экономика", 0], "user14@example.org": ["экономика", 0], "user84@example.org": ["экономика", 0], "user28@example.org": ["производство", 0]};
+var ITM_MAP = {"user21@example.org": "ОнТрейд", "user85@example.org": "МП", "user24@example.org": "реклама", "user65@example.org": "export_UZ+KZ", "user86@example.org": "МП", "user87@example.org": "сети", "user6@example.org": "авто", "user88@example.org": "разное", "user89@example.org": "проекты", "user90@example.org": "разное", "user91@example.org": "разное", "user92@example.org": "разное", "user93@example.org": "разное", "user94@example.org": "разное", "user95@example.org": "разное", "user20@example.org": "сети", "user96@example.org": "планы", "user97@example.org": "мое", "user9@example.org": "планы", "user98@example.org": "подрядчики", "user36@example.org": "производство", "user72@example.org": "планировки", "user99@example.org": "ВИ.ру", "user100@example.org": "проекты", "user23@example.org": "МП", "user34@example.org": "ВИ.ру", "user101@example.org": "МП", "user32@example.org": "авто", "user102@example.org": "МП", "user39@example.org": "билеты", "user103@example.org": "реклама", "user104@example.org": "реклама", "user105@example.org": "реклама", "@qsrsystem.ru": "ВиТ", "user106@example.org": "подрядчики", "user107@example.org": "подрядчики", "@burgerking.ru": "БК", "user108@example.org": "ch&ch", "user109@example.org": "мое", "user110@example.org": "авто", "user11@example.org": "авто", "user53@example.org": "export_UZ+KZ", "user111@example.org": "авто", "user112@example.org": "export_UZ+KZ", "user113@example.org": "мое", "user114@example.org": "проекты", "user115@example.org": "мое", "user116@example.org": "мое", "user117@example.org": "подрядчики", "@dodobrands.io": "ДоДо", "user118@example.org": "проекты", "user119@example.org": "export_UZ+KZ", "user120@example.org": "export_UZ+KZ", "user121@example.org": "export_UZ+KZ"};
 function g4_itmSort_() {
   var c = CacheService.getScriptCache(); if (c.get('itmsort')) return; c.put('itmsort', '1', 1200);
   var TH = GmailApp.search('(to:user5@example.org OR cc:user5@example.org) -label:ИТМ -from:user1@example.org newer_than:3d', 0, 50); if (!TH.length) return;
@@ -831,9 +831,13 @@ function g4_gdBtn_(chat, from, data) {
 }
 function h_(s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
 function tgMsg_(chat, text, kb) {
+  // 16.11.2026, Т. В.: «продублируй Сотрудник80 всё то же самое, что и мне» — Mirror.gs (копия ей; повтор того же ей в Telegram за 10 мин не шлём)
+  try { if (typeof mir_isTg_ === 'function' && mir_isTg_(chat) && mir_tgDup_(mir_text_(text))) return { ok: true, dup: true }; } catch (e0) { console.log('mir dup: ' + e0); }
   var p = { chat_id: chat, text: text, parse_mode: 'HTML', disable_web_page_preview: true };
   if (kb) p.reply_markup = { inline_keyboard: kb };
-  return tg_('sendMessage', p);
+  var r = tg_('sendMessage', p);
+  try { if (r && r.ok && typeof mir_copy_ === 'function') mir_copy_(chat, text); } catch (e1) { console.log('mir: ' + e1); }
+  return r;
 }
 function tgName_(f) { return [f.first_name, f.last_name].filter(Boolean).join(' ') + (f.username ? ' (@' + f.username + ')' : ''); }
 // 30.10.2026 аудит G3 (договорённость 12): «нет свойства» и «пустой список» — разные вещи. Нет свойства → восстановление из резервной копии;
@@ -864,6 +868,7 @@ function tgSaveUsers_(u) {
   if (n > 7000) { try { var c = CacheService.getScriptCache(); if (!c.get('tgu_big')) { c.put('tgu_big', '1', 21600);   // 30.10.2026 аудит G3: предупреждение заранее, не чаще раза в 6 ч
     fail_('tg_users', 'список людей бота ' + n + ' байт — близко к пределу свойства 9 КБ', n > 8800 ? 'tg_users_full' : false); } } catch (e) {} }
   props().setProperty('tg_users', s);
+  try { if (typeof mir_syncAppr_ === 'function') mir_syncAppr_(u); } catch (e) { console.log('dm_appr: ' + e); }   // 16.11.2026: кому бот MAX может писать лично
 }
 // 30.10.2026 аудит G25: битое значение не роняет; G7: чтение шага диалога тоже в журнале fx_ — повтор обработки идёт тем же путём (первая попытка
 //   могла уже сбросить шаг перед ошибкой в последнем сообщении — тогда повтор ответил бы «Начнём заново» вместо «Принято»)
@@ -1330,7 +1335,7 @@ var DB_SS = null;
 // перестали открываться («нет доступа»). Таблица людей теперь записана здесь, в коде: сброс свойств её больше не теряет.
 // 03.11.2026 перенос на 1c@: таблица — копия на Диске 1c@ (папка «Фабрика — боты»); id — в свойстве SHEET_ID (ставит importProps), в коде — запасной;
 //   старая таблица на Диске owner@ — архив и источник снимка свойств (props_move)
-var OLD_SS_ID = 'REDACTED_ID_4', NEW_SS_ID = 'REDACTED_ID_2';
+var OLD_SS_ID = 'REDACTED_ID_5', NEW_SS_ID = 'REDACTED_ID_2';
 var ACCT_SS_ID = (function () { try { return PropertiesService.getScriptProperties().getProperty('SHEET_ID') || ''; } catch (e) { return ''; } })() || NEW_SS_ID;
 function db_() {
   if (DB_SS) return DB_SS;
@@ -1588,7 +1593,7 @@ function chatDel_(u, q) {
 }
 
 // ---- помощник: ключ API — в свойствах скрипта AI_KEY (выбран OpenAI, 23.10.2026; ключ «sk-ant-…» — Anthropic), модель — AI_MODEL (по умолчанию gpt-4.1-mini)
-// 28.10.2026 (пользователь: «Берем Gemini и Сотрудник10 в дополнение к ChatGPT в раздел поиска»): ещё два помощника, ключи вписывает только владелец:
+// 28.10.2026 (пользователь: «Берем Gemini и Сотрудник11 в дополнение к ChatGPT в раздел поиска»): ещё два помощника, ключи вписывает только владелец:
 //   GEMINI_KEY (+ GEMINI_MODEL, по умолчанию gemini-flash-latest; при MODE google — G4_GEMINI_DEFAULT, стабильное имя) — Google AI Studio;
 //   YANDEX_KEY + YANDEX_FOLDER (+ YANDEX_MODEL, по умолчанию yandexgpt-lite/latest) — Yandex AI Studio, API-ключ сервисного аккаунта с ролью ai.languageModels.user.
 //   q.prov — кого спросить ('openai' | 'gemini' | 'yandex'); без q.prov — AI_PROVIDER, иначе первый подключённый; не ответил — следующий подключённый.
@@ -1905,7 +1910,7 @@ function b2Wx_() {
     var d = e.data.instant.details, n = e.data.next_1_hours || e.data.next_6_hours || {};
     return [e.time, d.air_temperature, d.cloud_area_fraction, d.wind_speed, d.wind_from_direction, (n.summary || {}).symbol_code || '', n.details ? n.details.precipitation_amount : 0, e.data.next_1_hours ? 1 : 6, d.air_pressure_at_sea_level];
   });
-  try { var Y = b2Yx_(); if (Y) ts = b2YxMerge_(ts, Y); } catch (e) { console.log('yandex merge: ' + e); }   // 26.10.2026: Сотрудник10 поверх MET
+  try { var Y = b2Yx_(); if (Y) ts = b2YxMerge_(ts, Y); } catch (e) { console.log('yandex merge: ' + e); }   // 26.10.2026: Сотрудник11 поверх MET
   c.put('b2wx', JSON.stringify(ts), 1800); return ts;
   } catch (e) { console.log('met.no: ' + e); return null; }
 }
@@ -1946,7 +1951,7 @@ function b2WxAlerts_() {
 }
 function b2WxAlertsLocal_() {
   var now = Date.now(), H = [], ts = b2Wx_() || [], Y = null; try { Y = b2Yx_(); } catch (e) {}
-  ts.forEach(function (x) { var t = Date.parse(x[0]); if (t >= now - 36e5 && t < now + 24 * 36e5) H.push([t, String(x[5] || ''), '', (x[6] || 0) / (x[7] || 1), null]); });   // [t, символ MET, условие Сотрудник10, мм/ч, порыв]
+  ts.forEach(function (x) { var t = Date.parse(x[0]); if (t >= now - 36e5 && t < now + 24 * 36e5) H.push([t, String(x[5] || ''), '', (x[6] || 0) / (x[7] || 1), null]); });   // [t, символ MET, условие Сотрудник11, мм/ч, порыв]
   if (Y && Y.hours) Y.hours.forEach(function (h) { var t = Date.parse(h.time), e = H.filter(function (q) { return Math.abs(q[0] - t) < 30 * 6e4; })[0]; if (e) { e[2] = String(h.condition || ''); if (h.windGust != null) e[4] = Number(h.windGust); } });
   var G = b2Owm_(); if (G) H.forEach(function (q) { if (q[4] != null) return; var b = null; G.forEach(function (g) { if (g[2] != null && Math.abs(g[0] - q[0]) <= 95 * 6e4 && (!b || Math.abs(g[0] - q[0]) < Math.abs(b[0] - q[0]))) b = g; }); if (b) q[4] = b[2]; });
   var A = [], day = function (t) { return b2Msk_(t, 'yyyy-MM-dd'); };
@@ -2006,18 +2011,18 @@ function b2Owm_() {
     c.put('b2owm', JSON.stringify(L), 1800); return L;
   } catch (e) { console.log('owm: ' + e); return null; }
 }
-// REDACTED_B64_9 Сотрудник10 Сотрудник26 (пользователь 26.10.2026: «подключи сюда тоже»)
-// Ключ — свойство скрипта YANDEX_WX_KEY (вносит пользователь). Без ключа или если Сотрудник10 отказал (тестовый ключ живёт 7 дней) —
-// как раньше: прогноз MET Norway, температура сейчас — Gismeteo (если есть GISMETEO_TOKEN) или MET. Ошибка Сотрудник10 не ломает погоду.
+// REDACTED_B64_9 Сотрудник11 Сотрудник26 (пользователь 26.10.2026: «подключи сюда тоже»)
+// Ключ — свойство скрипта YANDEX_WX_KEY (вносит пользователь). Без ключа или если Сотрудник11 отказал (тестовый ключ живёт 7 дней) —
+// как раньше: прогноз MET Norway, температура сейчас — Gismeteo (если есть GISMETEO_TOKEN) или MET. Ошибка Сотрудник11 не ломает погоду.
 // По часам берётся: температура, ветер, давление (мм рт. ст. → гПа) и осадки, если API их отдаёт; символ погоды и облачность — от MET.
 var YX_DIR = { NORTH: 0, NORTH_EAST: 45, EAST: 90, SOUTH_EAST: 135, SOUTH: 180, SOUTH_WEST: 225, WEST: 270, NORTH_WEST: 315 };
 function b2Yx_() {
   var c = CacheService.getScriptCache(), s = c.get('b2yx'); if (s) { try { var o = JSON.parse(s); return o && o.ok ? o : null; } catch (e) {} }
-  // 26.10.2026: сначала — тот же ответ Сотрудник10, что у сайта (wx/f.php на хостинге, кэш 50 мин): один ключ не тратится дважды
+  // 26.10.2026: сначала — тот же ответ Сотрудник11, что у сайта (wx/f.php на хостинге, кэш 50 мин): один ключ не тратится дважды
   try { var fj = g4_on_() ? g4_wxF_() : (function () { var fr = UrlFetchApp.fetch(SITE + 'wx/f.php', { muteHttpExceptions: true }); return fr.getResponseCode() === 200 ? JSON.parse(fr.getContentText()) : null; })();   // 05.11.2026: MODE google — wx_f.json из «Для ботов»
-    if (fj && fj.yandex && fj.raw && fj.raw.hours && fj.raw.hours.length) { var so = { ok: true, t: Date.now(), now: fj.raw.now || {}, hours: fj.raw.hours, via: 'site' }; c.put('b2yx', JSON.stringify(so), 600); return so; } } catch (e) {}   // 10 минут: сайт сам решает, когда спросить Сотрудник10
-  // 28.10.2026 (письмо Сотрудник10 «Доступные сегодня запросы к API потрачены»; пользователь: «распределить время по суткам равномерно, раз в 48 минут»):
-  //   бот к Сотрудник10 напрямую больше не ходит — только сайт (wx/f.php: один запрос в 48-минутное окно, 30 в сутки). Нет данных Сотрудник10 — MET / Gismeteo.
+    if (fj && fj.yandex && fj.raw && fj.raw.hours && fj.raw.hours.length) { var so = { ok: true, t: Date.now(), now: fj.raw.now || {}, hours: fj.raw.hours, via: 'site' }; c.put('b2yx', JSON.stringify(so), 600); return so; } } catch (e) {}   // 10 минут: сайт сам решает, когда спросить Сотрудник11
+  // 28.10.2026 (письмо Сотрудник11 «Доступные сегодня запросы к API потрачены»; пользователь: «распределить время по суткам равномерно, раз в 48 минут»):
+  //   бот к Сотрудник11 напрямую больше не ходит — только сайт (wx/f.php: один запрос в 48-минутное окно, 30 в сутки). Нет данных Сотрудник11 — MET / Gismeteo.
   c.put('b2yx', JSON.stringify({ ok: false, t: Date.now() }), 600);
   return null;
 }
@@ -2034,10 +2039,10 @@ function b2YxMerge_(ts, Y) {
     return y;
   });
 }
-// погода сейчас: Сотрудник10 → Gismeteo → нет (тогда MET Norway)
+// погода сейчас: Сотрудник11 → Gismeteo → нет (тогда MET Norway)
 function b2Cur_() {
   var Y = b2Yx_(), n = Y && Y.now;
-  if (n && typeof n.temperature === 'number') return { t: Y.t, air: n.temperature, feel: typeof n.feelsLike === 'number' ? n.feelsLike : null, desc: '', hum: n.humidity, wind: n.windSpeed, src: 'Сотрудник10 Сотрудник26' };
+  if (n && typeof n.temperature === 'number') return { t: Y.t, air: n.temperature, feel: typeof n.feelsLike === 'number' ? n.feelsLike : null, desc: '', hum: n.humidity, wind: n.windSpeed, src: 'Сотрудник11 Сотрудник26' };
   var g = b2Gm_(); if (g) g.src = 'Gismeteo'; return g;
 }
 // air temperature from Gismeteo (the user 24.10.2026: «температуру воздуха бери с Гисметео») — only with the token GISMETEO_TOKEN
@@ -2058,7 +2063,7 @@ function b2Gm_() {
   } catch (e) { console.log('gismeteo: ' + e); return null; }
 }
 function b2GustAt_(t) { var L = b2Owm_(), b = null; (L || []).forEach(function (g) { if (g[2] != null && Math.abs(g[0] - t) <= 95 * 6e4 && (!b || Math.abs(g[0] - t) < Math.abs(b[0] - t))) b = g; }); return b ? b[2] : null; }
-function b2WxSrc_() { var Y = b2Yx_(), cur = b2Cur_(); return (Y ? 'Сотрудник10 Сотрудник26 (облачность и вид осадков — MET Norway)' : cur ? 'Температура — ' + cur.src + ', прогноз — MET Norway' : 'Прогноз MET Norway') + (b2Owm_() ? ', порывы — OpenWeatherMap' : ''); }
+function b2WxSrc_() { var Y = b2Yx_(), cur = b2Cur_(); return (Y ? 'Сотрудник11 Сотрудник26 (облачность и вид осадков — MET Norway)' : cur ? 'Температура — ' + cur.src + ', прогноз — MET Norway' : 'Прогноз MET Norway') + (b2Owm_() ? ', порывы — OpenWeatherMap' : ''); }
 // public weather for the site (no secrets): official warnings and gusts; the site takes the rest from MET Norway itself
 function b2WxPub_() {
   var G = b2Gmc_(), L = b2Owm_(), now = Date.now(), gm = b2Cur_();
@@ -2844,7 +2849,7 @@ function itmTick_() {
 }
 // 28.10.2026: варианты ответа на письмо itm@ — 3 коротких, разных по смыслу; JSON от помощника (тот же ключ, что у черновиков)
 function itmOpts_(d, R) {
-  var sys = 'Ты помогаешь Сотрудник82 Отчество41 Сотрудник1, коммерческому директору ГК «Фабрикант» (мебельная фабрика), быстро ответить на деловое письмо. ' +
+  var sys = 'Ты помогаешь Сотрудник81 Отчество41 Сотрудник1, коммерческому директору ГК «Фабрикант» (мебельная фабрика), быстро ответить на деловое письмо. ' +
     'Предложи 3 разных по смыслу коротких варианта ответа по 1–3 предложения: например, согласиться или принять в работу; запросить недостающее или уточнить; ' +
     'отказать, перенести или перенаправить — смотря по письму. По-русски, вежливо, на «вы». Не выдумывай фактов, цифр, цен, сроков и обещаний, которых нет в письме. ' +
     'Без подписи и без обращения по имени, если имени нет в письме. Ответ — строго JSON без пояснений: {"o":[{"l":"метка до 16 символов","t":"текст ответа"}]}' +
@@ -3158,8 +3163,8 @@ function evUnans_(chat, from, me, q) {   // бот не нашёл ответа:
   if (rkx && !ok) { rec.d0 = 0; rec.f0 = 1; rec.l0 = now0; }   // первое сообщение ответственному не дошло — evTick_ повторит (EV_D0_TRIES), потом сообщит владельцу
   // 05.11.2026 (ChatGPT 04.11 №2): добавление — под замком с перечитыванием ev_q; итог записи проверяется до ответа человеку
   var saved = !!evLock_(function () { var Q = evQ_(); Q.push(rec); return evQSave_(Q); });
-  var txt = ok ? 'Передал вопрос: ' + h_(R.who) + ' — ответ ' + dtxt + '.' + (saved ? '' : ' Напоминание ответственному не поставлено (сбой записи) — если ответа не будет, напишите Сотрудник82 Отчество41.')
-    : saved ? 'Вопрос записан, ответ — ' + dtxt + '.' : 'Записать вопрос не получилось (сбой хранилища) — повторите, пожалуйста, позже или напишите Сотрудник82 Отчество41 напрямую.';
+  var txt = ok ? 'Передал вопрос: ' + h_(R.who) + ' — ответ ' + dtxt + '.' + (saved ? '' : ' Напоминание ответственному не поставлено (сбой записи) — если ответа не будет, напишите Сотрудник81 Отчество41.')
+    : saved ? 'Вопрос записан, ответ — ' + dtxt + '.' : 'Записать вопрос не получилось (сбой хранилища) — повторите, пожалуйста, позже или напишите Сотрудник81 Отчество41 напрямую.';
   return tgMsg_(chat, 'В данных портала ответа не нашёл. ' + txt);
 }
 function evDone_(chat, from, id) {   // ответственный нажал «Ответил»
@@ -3190,7 +3195,7 @@ function evTick_(U, now, h, day) {   // 04.11.2026 (замечания GPT 06, 0
     var urgent = u.due === 'min', next = u.rem ? (u.last || 0) + (urgent ? 30 * 6e4 : u.due === 'hour' ? 36e5 : 2 * 36e5) : (u.at || u.t || 0);
     if (now < next || !evWorkNow_(now, urgent)) return;
     if (u.rem < 2) {
-      var r = tgMsg_(U[u.rk].chat, (u.rem ? '⏰ <b>Повторно: ответа ещё нет</b>' : '⏰ <b>Срок ответа прошёл</b>') + '\nВопрос от ' + h_(u.who) + ' (' + b2Msk_(u.t, 'dd.MM HH:mm') + '): «' + h_(u.q) + '»\nЕсли уже ответили — нажмите «Ответил».' + (u.rem ? '\n<i>Следующий шаг — сообщу Сотрудник82 Отчество41.</i>' : ''),
+      var r = tgMsg_(U[u.rk].chat, (u.rem ? '⏰ <b>Повторно: ответа ещё нет</b>' : '⏰ <b>Срок ответа прошёл</b>') + '\nВопрос от ' + h_(u.who) + ' (' + b2Msk_(u.t, 'dd.MM HH:mm') + '): «' + h_(u.q) + '»\nЕсли уже ответили — нажмите «Ответил».' + (u.rem ? '\n<i>Следующий шаг — сообщу Сотрудник81 Отчество41.</i>' : ''),
         [[{ text: '✅ Ответил', callback_data: ('ev:done:' + u.id).slice(0, 64) }]]);
       if (r && r.ok) { u.rem = (u.rem || 0) + 1; u.last = now; ch = true; }
       return;
@@ -3260,7 +3265,7 @@ function b2Month_(U) {
   var mt = b2MtReport_(null, true).replace(/<\/?b>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');   // текст без разметки: h_ ниже и письмо
   var text = '📅 Контроль за ' + M + '\n\n🛠 Заявки на ремонт: подано ' + inM.length + ' (срочных ' + inM.filter(function (r) { return r.urg; }).length + '), выполнено ' + done.length + (hrs.length ? ', в среднем за ' + b2Num_(avg, 1) + ' ч' : '') + '; открыто сейчас ' + open.length + (open.length ? ' (старше 7 дней: ' + open.filter(function (r) { return now - r.t > 7 * 864e5; }).length + ')' : '') +
     '\n🎥 Камеры: отмечено неисправных ' + cfM.length + ', сейчас не работает ' + b2CfOpen_().length +
-    '\n\n' + mt + '\n\n🛢 Септики\n' + spRows.join('\n') + '\n\nЕженедельные отчёты по ремонтам (Сотрудник41, Сотрудник72) и ГСМ (Сотрудник9) Claude сводит отдельно — по письмам.';
+    '\n\n' + mt + '\n\n🛢 Септики\n' + spRows.join('\n') + '\n\nЕженедельные отчёты по ремонтам (Сотрудник41, Сотрудник71) и ГСМ (Сотрудник10) Claude сводит отдельно — по письмам.';
   b2Send_(Object.keys(U).filter(function (k) { return U[k].role === 'admin' || U[k].mt || U[k].eng || U[k].sp; }).map(function (k) { return U[k].chat; }), h_(text).replace(/^📅 (.+)$/m, '📅 <b>$1</b>'));
   try { mailFx_({ to: BOT_MAIL, cc: [REPAIR_CC, 'user5@example.org'].join(','), name: 'Фабрика — бот', subject: 'Фабрика: контроль за ' + M, body: text + '\n\nТелеграм-бот «Фабрика»' }); } catch (e) { console.log('month mail: ' + e); }
   try { mailFx_({ to: METER_MAIL.join(','), cc: 'user5@example.org', name: 'Фабрика — бот', subject: 'Счётчики: расход за ' + M, body: mt + '\n\nПоказания с фото — в Telegram-боте «Фабрика» (раздел «Счётчики»).' }); } catch (e) {}
@@ -3448,12 +3453,12 @@ function b2Peek() {
   Object.keys(D).forEach(function (k) { var v = D[k]; console.log(k + ': ' + (Array.isArray(v) ? 'массив ' + v.length + ' ' + JSON.stringify(v.slice(0, 2)).slice(0, 600) : JSON.stringify(v).slice(0, 600))); });
 }
 
-/** Только из редактора: проверка Сотрудник10 Сотрудник26 (26.10.2026) — сбрасывает кэш, запрашивает как бот, пишет итог в журнал (без ключа). */
+/** Только из редактора: проверка Сотрудник11 Сотрудник26 (26.10.2026) — сбрасывает кэш, запрашивает как бот, пишет итог в журнал (без ключа). */
 function wxTest() {
   editorOnly_();
   var c = CacheService.getScriptCache(); c.remove('b2yx');
   var y = b2Yx_(), n = y && y.now;
-  console.log(y ? 'Сотрудник10 OK: сейчас ' + (n && n.temperature) + '°, ощущается ' + (n && n.feelsLike) + '°, ветер ' + (n && n.windSpeed) + ' м/с; часов прогноза ' + (y.hours || []).length : 'Сотрудник10 НЕ ответил: ' + (JSON.parse(c.get('b2yx') || '{}').err || 'нет ключа YANDEX_WX_KEY'));
+  console.log(y ? 'Сотрудник11 OK: сейчас ' + (n && n.temperature) + '°, ощущается ' + (n && n.feelsLike) + '°, ветер ' + (n && n.windSpeed) + ' м/с; часов прогноза ' + (y.hours || []).length : 'Сотрудник11 НЕ ответил: ' + (JSON.parse(c.get('b2yx') || '{}').err || 'нет ключа YANDEX_WX_KEY'));
 }
 
 // ==ZHURNAL== журнал правок (27.10.2026). Пользователь: «все правки, что приходят на почту и в боты, фиксировать журналом»;
@@ -3706,7 +3711,7 @@ function jTick_() {
 // ==VOPROSY== вопросы сотрудников без ответа (28.10.2026, задача №18 пользователя: «собрать список сотрудников и их вопросов за вчера без ответов,
 //   проверив почту, ботов, Макса и Телегу, с ФИО по новой структуре»; «Где мой ответ? На этот запрос в боте?»).
 //   Собирает хостинг (code/unans.py, раз в час 06–23): почта itm@ (письма лично или в копии с вопросом, на которые нет письма с itm@ / owner@)
-//   и группы MAX (обращение к Сотрудник82 Отчество41 с вопросом без его ответа) → st/ua.bin. Бот дописывает открытые заявки и наши вопросы (реестр Claude).
+//   и группы MAX (обращение к Сотрудник81 Отчество41 с вопросом без его ответа) → st/ua.bin. Бот дописывает открытые заявки и наши вопросы (реестр Claude).
 //   Только владельцу: это его рабочий ящик. Сам — по будням в 09:00 за прошлый рабочий день; по команде /bezotveta [сегодня|позавчера|дд.мм] и голосом.
 function uaLoad_() {
   if (g4_on_()) return g4_bin_('ua.bin', 300);        // 05.11.2026: отчёт «без ответа» — копия st/ua.bin в «Для ботов» (собирает проект MAX / робот)
@@ -3902,6 +3907,10 @@ function claudePost_(q) {
       }
       // 14.11.2026, Т. В. (опрос «приложение для iPhone без затрат»: «Telegram Mini App»): кнопка «Портал» слева от поля ввода открывает
       //   портал внутри Telegram (вход — как на сайте: пароль или короткий код). Ставится только на указанный чат (по умолчанию — владельцу).
+      else if (x.do === 'devrep') { var dr = dev_report_(); out.did.push('devrep:' + uaSend_(x.to ? [Number(x.to)] : uaOwnerChats_(), dr)); }   // 16.11.2026: отчёт «Входы на портал»
+      else if (x.do === 'ulist') { var UL = tgUsers_(); out.users = Object.keys(UL).map(function (k) { var u = UL[k] || {}; return { k: k, ch: Number(k) >= MAX_BASE ? 'max' : 'tg', n: String(u.name || '').slice(0, 60), role: u.role || '', st: u.st || '', chat: !!u.chat }; }); out.did.push('ulist:' + out.users.length); }   // 16.11.2026: кто подключил ботов (без чатов и токенов)
+      else if (x.do === 'apprsync') { out.did.push('apprsync:' + mir_syncAppr_(null, true)); }   // 16.11.2026: утверждённые → dm_appr бота MAX
+      else if (x.do === 'mir') { out.mir = mir_op_(x); out.did.push('mir'); }   // 16.11.2026: копия Сотрудник28 — состояние, утренний отчёт, права, кнопка «Портал»
       else if (x.do === 'menubtn') {
         var mchats = x.chat ? [Number(x.chat)] : uaOwnerChats_(), mok = 0;
         mchats.forEach(function (c) {
@@ -4058,10 +4067,10 @@ function vcSttRaw_(blob, mime) {
         { method: 'post', muteHttpExceptions: true, contentType: 'audio/ogg', headers: { Authorization: 'Api-Key ' + p.getProperty('YANDEX_KEY') }, payload: bytes });
       var j3 = JSON.parse(r3.getContentText() || '{}');
       if (r3.getResponseCode() === 200 && j3.result) return { ok: true, text: String(j3.result), prov: 'Yandex SpeechKit' };
-      errs.push('Сотрудник10 ' + r3.getResponseCode() + (j3.error_message ? ': ' + String(j3.error_message).slice(0, 90) : ''));
-    } catch (e) { errs.push('Сотрудник10: ' + String(e).slice(0, 90)); }
+      errs.push('Сотрудник11 ' + r3.getResponseCode() + (j3.error_message ? ': ' + String(j3.error_message).slice(0, 90) : ''));
+    } catch (e) { errs.push('Сотрудник11: ' + String(e).slice(0, 90)); }
   }
-  return { ok: false, error: errs.length ? errs.join('; ') : 'нет подключённого сервиса расшифровки (ключ ChatGPT, Gemini или Сотрудник10 — вписывает владелец)' };
+  return { ok: false, error: errs.length ? errs.join('; ') : 'нет подключённого сервиса расшифровки (ключ ChatGPT, Gemini или Сотрудник11 — вписывает владелец)' };
 }
 
 // ---- словарь: лист «golos» — k (фраза), c (команда), st (ok — запомнено, try — GPT понял, ждём повтора), src, n, t, by
@@ -4142,76 +4151,76 @@ function vcRun_(chat, from, me, msg, text, prov) {
 // Запреты владельца (MAIL_BANS) соблюдаются — такое письмо не уходит, бот пишет почему. Больше 5 адресатов — кнопка «Отправить» (рассылка).
 // Только владелец (tgOwner_: Telegram ITM_TO и MAX tg_owner_max). Справочник — push/mail/make_mail_dir.py (bot_rules.json + ko_staff.json).
 var MAIL_DIR = [   // почта, ФИО, должность, отдел, руководители для копии — из bot_rules.json (оргструктура 28.10.2026), push/mail/make_mail_dir.py
-  ["user39@example.org", "Сотрудник28 Сотрудник81 Отчество34", "Председатель совета директоров", "Руководство", ""],
+  ["user39@example.org", "Сотрудник28 Сотрудник80 Отчество34", "Председатель совета директоров", "Руководство", ""],
   ["user7@example.org", "Сотрудник27 Имя13 Отчество29", "Генеральный директор", "Руководство", ""],
-  ["user35@example.org", "Сотрудник12 Сотрудник15 Отчество28", "Финансовый директор", "Руководство", ""],
+  ["user35@example.org", "Сотрудник13 Сотрудник16 Отчество28", "Финансовый директор", "Руководство", ""],
   ["user36@example.org", "Сотрудник32 Сотрудник33 Отчество1", "Директор по производству", "Руководство", ""],
-  ["user6@example.org", "Сотрудник75 Сотрудник49 Отчество24", "Инспектор отдела кадров", "Руководство / Приёмная", "user39@example.org,user7@example.org,user35@example.org,user36@example.org"],
-  ["user15@example.org", "Сотрудник25 Сотрудник45 Отчество11", "Начальник отдела продаж", "Коммерческий отдел", ""],
-  ["user16@example.org", "Сотрудник22 Сотрудник30 Отчество10", "Директор по развитию", "Коммерческий отдел", ""],
-  ["user22@example.org", "Сотрудник1 Сотрудник51 Отчество26", "Руководитель направления e-commerce", "Коммерческий отдел", ""],
-  ["user18@example.org", "Сотрудник46 Имя15 Отчество12", "Офис-менеджер", "Коммерческий отдел", "user15@example.org,user16@example.org"],
-  ["user19@example.org", "Сотрудник23 Имя18 Отчество14", "Офис-менеджер", "Коммерческий отдел", "user15@example.org,user16@example.org"],
-  ["user20@example.org", "Сотрудник24 Имя9 Отчество5", "Офис-менеджер", "Коммерческий отдел", "user15@example.org,user16@example.org"],
-  ["user47@example.org", "Сотрудник18 Сотрудник48 Отчество23", "Руководитель офиса продаж", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user44@example.org", "Сотрудник47 Имя7 Отчество6", "Офис-менеджер (осн.), менеджер (вн. совм.)", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user43@example.org", "Сотрудник16 Имя6 Отчество22", "Руководитель офиса продаж", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user45@example.org", "Сотрудник19 Сотрудник49 Отчество24", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user49@example.org", "Сотрудник50 Имя16 Отчество5", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user50@example.org", "Сотрудник17 Сотрудник3 Отчество25", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user51@example.org", "Сотрудник20 Сотрудник39 Отчество22", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
-  ["user23@example.org", "Сотрудник1 Сотрудник39 Отчество8", "Маркетолог", "Отдел маркетинга", ""],
-  ["user24@example.org", "Сотрудник40 Имя11 Отчество9", "Маркетолог", "Отдел маркетинга", ""],
+  ["user6@example.org", "Сотрудник74 Сотрудник48 Отчество24", "Инспектор отдела кадров", "Руководство / Приёмная", "user39@example.org,user7@example.org,user35@example.org,user36@example.org"],
+  ["user16@example.org", "Сотрудник25 Сотрудник44 Отчество11", "Начальник отдела продаж", "Коммерческий отдел", ""],
+  ["user17@example.org", "Сотрудник7 Сотрудник30 Отчество10", "Директор по развитию", "Коммерческий отдел", ""],
+  ["user23@example.org", "Сотрудник1 Сотрудник50 Отчество26", "Руководитель направления e-commerce", "Коммерческий отдел", ""],
+  ["user19@example.org", "Сотрудник45 Имя15 Отчество12", "Офис-менеджер", "Коммерческий отдел", "user16@example.org,user17@example.org"],
+  ["user20@example.org", "Сотрудник23 Имя18 Отчество14", "Офис-менеджер", "Коммерческий отдел", "user16@example.org,user17@example.org"],
+  ["user21@example.org", "Сотрудник24 Имя9 Отчество5", "Офис-менеджер", "Коммерческий отдел", "user16@example.org,user17@example.org"],
+  ["user47@example.org", "Сотрудник19 Сотрудник47 Отчество23", "Руководитель офиса продаж", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user44@example.org", "Сотрудник46 Имя7 Отчество6", "Офис-менеджер (осн.), менеджер (вн. совм.)", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user43@example.org", "Сотрудник17 Имя6 Отчество22", "Руководитель офиса продаж", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user45@example.org", "Сотрудник20 Сотрудник48 Отчество24", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user49@example.org", "Сотрудник49 Имя16 Отчество5", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user50@example.org", "Сотрудник18 Сотрудник3 Отчество25", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user51@example.org", "Сотрудник21 Сотрудник39 Отчество22", "Менеджер", "Коммерческий отдел / Филиалы", "user9@example.org"],
+  ["user24@example.org", "Сотрудник1 Сотрудник39 Отчество8", "Маркетолог", "Отдел маркетинга", ""],
+  ["user25@example.org", "Сотрудник40 Имя11 Отчество9", "Маркетолог", "Отдел маркетинга", ""],
   ["user38@example.org", "Сотрудник6 Имя12 Отчество37", "Руководитель ОМТС", "ОМТС", ""],
-  ["user71@example.org", "Сотрудник68 Имя10 Отчество24", "Менеджер ОМТС", "ОМТС", "user38@example.org"],
-  ["user25@example.org", "Сотрудник11 Имя16 Отчество6", "Менеджер ОМТС", "ОМТС", "user38@example.org"],
-  ["user32@example.org", "Сотрудник9 Имя10 Отчество6", "Менеджер-логист", "ОМТС", "user38@example.org"],
-  ["user31@example.org", "Сотрудник41 Имя12 Отчество1", "Заведующий автотранспортом", "АТП", ""],
-  ["user13@example.org", "Сотрудник57 Имя7 Отчество30", "Начальник ПЭО", "Планово-экономический отдел", ""],
-  ["user14@example.org", "Сотрудник58 Имя21 Отчество31", "Экономист", "Планово-экономический отдел", "user13@example.org"],
-  ["user27@example.org", "Сотрудник53 Сотрудник48 Отчество4", "ПДО", "Производство", ""],
-  ["user73@example.org", "Сотрудник67 Имя23 Отчество24", "Кладовщик материального склада", "Производство", ""],
-  ["user67@example.org", "Сотрудник60 Сотрудник51 Отчество32", "Директор по производству ООО «ФТС»", "ООО «ФТС»", ""],
-  ["user70@example.org", "Сотрудник61 Имя6 Отчество13", "Кладовщик ООО «ФТС», ООО «ПКС»", "ООО «ФТС»", "user67@example.org"],
-  ["user72@example.org", "Сотрудник35 Сотрудник51 Отчество38", "Главный инженер", "Служба главного инженера", ""],
-  ["user68@example.org", "Сотрудник72 Имя25 Отчество16", "Главный механик", "Служба главного инженера", ""],
-  ["user64@example.org", "Сотрудник71 Сотрудник3 Отчество39", "Главный энергетик", "Служба главного инженера", ""],
-  ["user28@example.org", "Сотрудник54 Имя19 Отчество29", "Руководитель ПТО", "Технологический отдел", ""],
-  ["user75@example.org", "Сотрудник62 Имя18 Отчество13", "ОТК", "Технологический отдел", ""],
+  ["user71@example.org", "Сотрудник67 Имя10 Отчество24", "Менеджер ОМТС", "ОМТС", "user38@example.org"],
+  ["user26@example.org", "Сотрудник12 Имя16 Отчество6", "Менеджер ОМТС", "ОМТС", "user38@example.org"],
+  ["user32@example.org", "Сотрудник10 Имя10 Отчество6", "Менеджер-логист", "ОМТС", "user38@example.org"],
+  ["user11@example.org", "Сотрудник41 Имя12 Отчество1", "Заведующий автотранспортом", "АТП", ""],
+  ["user14@example.org", "Сотрудник56 Имя7 Отчество30", "Начальник ПЭО", "Планово-экономический отдел", ""],
+  ["user15@example.org", "Сотрудник57 Имя21 Отчество31", "Экономист", "Планово-экономический отдел", "user14@example.org"],
+  ["user28@example.org", "Сотрудник52 Сотрудник47 Отчество4", "ПДО", "Производство", ""],
+  ["user73@example.org", "Сотрудник66 Имя23 Отчество24", "Кладовщик материального склада", "Производство", ""],
+  ["user67@example.org", "Сотрудник59 Сотрудник50 Отчество32", "Директор по производству ООО «ФТС»", "ООО «ФТС»", ""],
+  ["user70@example.org", "Сотрудник60 Имя6 Отчество13", "Кладовщик ООО «ФТС», ООО «ПКС»", "ООО «ФТС»", "user67@example.org"],
+  ["user72@example.org", "Сотрудник35 Сотрудник50 Отчество38", "Главный инженер", "Служба главного инженера", ""],
+  ["user68@example.org", "Сотрудник71 Имя25 Отчество16", "Главный механик", "Служба главного инженера", ""],
+  ["user64@example.org", "Сотрудник70 Сотрудник3 Отчество39", "Главный энергетик", "Служба главного инженера", ""],
+  ["user29@example.org", "Сотрудник53 Имя19 Отчество29", "Руководитель ПТО", "Технологический отдел", ""],
+  ["user75@example.org", "Сотрудник61 Имя18 Отчество13", "ОТК", "Технологический отдел", ""],
   ["user77@example.org", "Сотрудник32 Имя17 Отчество29", "Технолог", "Технологический отдел", ""],
-  ["user74@example.org", "Сотрудник56 Сотрудник45 Отчество27", "Технолог", "Технологический отдел", ""],
+  ["user74@example.org", "Сотрудник55 Сотрудник44 Отчество27", "Технолог", "Технологический отдел", ""],
   ["user78@example.org", "Сотрудник27 Имя30 Отчество20", "Технолог", "Технологический отдел", ""],
-  ["user11@example.org", "Сотрудник31 Сотрудник51 Отчество33", "ОТК / менеджер по рекламациям", "Технологический отдел", ""],
-  ["user76@example.org", "Сотрудник55 Имя20 Отчество1", "Технолог", "Технологический отдел", ""],
-  ["user26@example.org", "Сотрудник73 Имя26 Отчество24", "Начальник отдела кадров", "Отдел кадров", ""],
-  ["user69@example.org", "Сотрудник74 Имя27 Отчество13", "Специалист отдела кадров", "Отдел кадров", ""],
+  ["user12@example.org", "Сотрудник31 Сотрудник50 Отчество33", "ОТК / менеджер по рекламациям", "Технологический отдел", ""],
+  ["user76@example.org", "Сотрудник54 Имя20 Отчество1", "Технолог", "Технологический отдел", ""],
+  ["user27@example.org", "Сотрудник72 Имя26 Отчество24", "Начальник отдела кадров", "Отдел кадров", ""],
+  ["user69@example.org", "Сотрудник73 Имя27 Отчество13", "Специалист отдела кадров", "Отдел кадров", ""],
   ["user65@example.org", "Ватропина Имя9 Отчество44", "Главный бухгалтер", "Бухгалтерия", ""],
-  ["user63@example.org", "Сотрудник76 Сотрудник49 Отчество24", "Заместитель главного бухгалтера", "Бухгалтерия", "user65@example.org"],
-  ["user62@example.org", "Сотрудник77 Сотрудник49 Отчество13", "Заместитель главного бухгалтера", "Бухгалтерия", "user65@example.org"],
-  ["user59@example.org", "Сотрудник89 Имя16 Отчество22", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
-  ["user56@example.org", "Сотрудник87 Сотрудник49 Отчество5", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
-  ["user61@example.org", "Сотрудник90 Имя18 Отчество45", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
-  ["user58@example.org", "Сотрудник88 Имя31 Отчество34", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
-  ["user57@example.org", "Сотрудник78 Сотрудник48 Отчество5", "Бухгалтер-кассир", "Бухгалтерия", "user65@example.org"],
-  ["user66@example.org", "Сотрудник79 Имя18 Отчество40", "Специалист финансового отдела", "Бухгалтерия", "user65@example.org"],
-  ["user34@example.org", "Сотрудник9 Имя9 Отчество21", "Инженер-программист", "1С-программисты", "user29@example.org"],   // 03.11.2026, Т. В.: Сотрудник52 М. И. — куратор Сотрудник9, всегда в копии
-  ["user29@example.org", "Сотрудник52 Имя10 Отчество27", "Инженер-программист", "1С-программисты", ""],
-  ["user79@example.org", "Сотрудник80 Имя1 Отчество1", "Системный администратор", "Системные администраторы", ""],
+  ["user63@example.org", "Сотрудник75 Сотрудник48 Отчество24", "Заместитель главного бухгалтера", "Бухгалтерия", "user65@example.org"],
+  ["user62@example.org", "Сотрудник76 Сотрудник48 Отчество13", "Заместитель главного бухгалтера", "Бухгалтерия", "user65@example.org"],
+  ["user59@example.org", "Сотрудник88 Имя16 Отчество22", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
+  ["user56@example.org", "Сотрудник86 Сотрудник48 Отчество5", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
+  ["user61@example.org", "Сотрудник89 Имя18 Отчество45", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
+  ["user58@example.org", "Сотрудник87 Имя31 Отчество34", "Бухгалтер", "Бухгалтерия", "user65@example.org"],
+  ["user57@example.org", "Сотрудник77 Сотрудник47 Отчество5", "Бухгалтер-кассир", "Бухгалтерия", "user65@example.org"],
+  ["user66@example.org", "Сотрудник78 Имя18 Отчество40", "Специалист финансового отдела", "Бухгалтерия", "user65@example.org"],
+  ["user34@example.org", "Сотрудник10 Имя9 Отчество21", "Инженер-программист", "1С-программисты", "user30@example.org"],   // 03.11.2026, Т. В.: Сотрудник51 М. И. — куратор Сотрудник10, всегда в копии
+  ["user30@example.org", "Сотрудник51 Имя10 Отчество27", "Инженер-программист", "1С-программисты", ""],
+  ["user79@example.org", "Сотрудник79 Имя1 Отчество1", "Системный администратор", "Системные администраторы", ""],
   ["user2@example.org", "Сотрудник1 Сотрудник3 Отчество1", "Системный администратор", "Системные администраторы", ""],
-  ["user12@example.org", "Сотрудник34 Сотрудник49 Ярославна", "Юрист", "Юрист", ""],
+  ["user13@example.org", "Сотрудник34 Сотрудник48 Ярославна", "Юрист", "Юрист", ""],
   ["user10@example.org", "Сотрудник41 Имя12 Отчество1", "Начальник сторожевой службы", "Сторожевая служба", ""],
-  ["user53@example.org", "Сотрудник44 Имя14", "Менеджер", "Fabrikant UZ", ""],
+  ["user53@example.org", "Сотрудник43 Имя14", "Менеджер", "Fabrikant UZ", ""],
   ["user60@example.org", "Фируза", "Бухгалтер", "Fabrikant UZ", ""],
-  ["user21@example.org", "Сотрудник21 Имя7 Отчество4", "Менеджер по ключевым клиентам (стажёр)", "Коммерческий отдел / ОП Рязань", "user15@example.org,user16@example.org"],
-  ["user17@example.org", "Сотрудник37 Имя6 Отчество3", "Менеджер по проектам", "Коммерческий отдел / ОП Рязань", "user15@example.org,user16@example.org"],
-  ["user9@example.org", "Сотрудник7 Сотрудник15 Отчество7", "Руководитель сети офисов продаж", "Коммерческий отдел / Сеть офисов продаж", ""]
+  ["user22@example.org", "Сотрудник22 Имя7 Отчество4", "Менеджер по ключевым клиентам (стажёр)", "Коммерческий отдел / ОП Рязань", "user16@example.org,user17@example.org"],
+  ["user18@example.org", "Сотрудник37 Имя6 Отчество3", "Менеджер по проектам", "Коммерческий отдел / ОП Рязань", "user16@example.org,user17@example.org"],
+  ["user9@example.org", "Сотрудник8 Сотрудник16 Отчество7", "Руководитель сети офисов продаж", "Коммерческий отдел / Сеть офисов продаж", ""]
 ];
 var MAIL_BANS = [   // [почта, до (вкл.), почему, тема-исключение] — правила владельца (fabrika/RULES.md, bot_rules.json bans)
-  ['user26@example.org', '2026-11-02', 'Сотрудник73 А. А. до 02.11 не писать и не напоминать', null],
-  ['user27@example.org', '', 'Сотрудник53 И. М. запросов не писать', null],
-  ['user28@example.org', '', 'Сотрудник54 О. А. запросов не писать', null],
-  ['user55@example.org', '', 'Сотрудник54 О. А. (общий ящик tech@) запросов не писать', null],
-  ['user29@example.org', '', 'Сотрудник52 М. И. по выгрузкам 1С не писать — формат уточняется', /1\s?[сc]|выгрузк|отч[её]т/i]
+  ['user27@example.org', '2026-11-02', 'Сотрудник72 А. А. до 02.11 не писать и не напоминать', null],
+  ['user28@example.org', '', 'Сотрудник52 И. М. запросов не писать', null],
+  ['user29@example.org', '', 'Сотрудник53 О. А. запросов не писать', null],
+  ['user55@example.org', '', 'Сотрудник53 О. А. (общий ящик tech@) запросов не писать', null],
+  ['user30@example.org', '', 'Сотрудник51 М. И. по выгрузкам 1С не писать — формат уточняется', /1\s?[сc]|выгрузк|отч[её]т/i]
 ];
 var MAIL_MARK = 'Сотрудник4 Сотрудник2 Отчество2 Сотрудник1 через ИИ-ассистента.';
 var MAIL_MASS = 5;   // 30.10.2026: копии на itm@ больше нет (MAIL_CC убран) — см. mailParse_
@@ -4260,12 +4269,12 @@ function mailJson_(a) {
 /** Команда владельца → {ok, to:[почта], names:[ФИО], cc:[почта], subject, body} или {ok:false, error}. */
 function mailParse_(text) {
   var lines = MAIL_DIR.map(function (d, i) { return i + ' | ' + d[1] + ' | ' + d[2] + ' | ' + d[3] + ' | ' + d[0]; }).join('\n');
-  var sys = 'Ты помогаешь Сотрудник82 Отчество41 Сотрудник1, коммерческому директору ГК «Фабрикант», отправлять рабочие письма сотрудникам. ' +
+  var sys = 'Ты помогаешь Сотрудник81 Отчество41 Сотрудник1, коммерческому директору ГК «Фабрикант», отправлять рабочие письма сотрудникам. ' +
     'Его команда может быть расшифровкой голоса с ошибками. Найди адресатов в справочнике и составь письмо от его имени. ' +
     'Ответь только JSON без пояснений: {"to":[номера строк справочника],"ext":["адрес e-mail, только если он прямо написан в команде"],"subject":"…","body":"…","unclear":""}.\n' +
     'Правила: адресат — только тот, кого явно назвали (фамилия, имя и отчество, должность или отдел целиком); если неясно, кому, или подходят несколько разных людей — to пустой, ' +
     'а в unclear по-русски: что неясно и какие есть варианты (ФИО). Не добавляй адресатов от себя.\n' +
-    'body — вежливое деловое письмо на «Вы»: обращение по имени и отчеству («Добрый день, Сотрудник45 Отчество11!»; нескольким — «Добрый день, коллеги!»), ' +
+    'body — вежливое деловое письмо на «Вы»: обращение по имени и отчеству («Добрый день, Сотрудник44 Отчество11!»; нескольким — «Добрый день, коллеги!»), ' +
     'суть команды своими словами, без выдумок: сроки, суммы, номера, названия — только те, что названы; без подписи и без «С уважением». ' +
     'subject — коротко по сути (до 80 символов). Если это не просьба написать письмо — unclear = "это не письмо".\n' +
     'Справочник (номер | ФИО | должность | отдел | почта):\n' + lines;
@@ -4545,7 +4554,7 @@ function glTgAsk_(chat, from) {
   var rid = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
   c.put('glq_' + rid, JSON.stringify({ k: 't', id: String(from.id), name: cleanName_(tgName_(from), 60) }), 21600);
   var sent = glAskOwner_(chats, '🔐 <b>' + h_(tgName_(from)) + '</b> (' + (mx ? 'MAX' : 'Telegram') + ') просит доступ к «Транспорт (ГЛОНАСС)» в боте: /transport — где машины, пробег, стоянки.\nУбрать доступ потом — /transport_dostup.', rid);
-  if (!sent) return tgMsg_(chat, '🚚 Не удалось отправить запрос Сотрудник82 Отчество41 — попробуйте через минуту.');
+  if (!sent) return tgMsg_(chat, '🚚 Не удалось отправить запрос Сотрудник81 Отчество41 — попробуйте через минуту.');
   c.put(tk, rid, 21600); log_(tgName_(from), 'транспорт: запрос доступа в боте');
   return tgMsg_(chat, '🚚 Транспорт (ГЛОНАСС) открывает Сотрудник2 Отчество1 — запрос ему отправлен. Бот напишет, когда доступ откроют.\nНа портале — раздел «Транспорт» (' + SITE + 'transport.html): там свой запрос, кнопка «Сотрудник4 доступ».');
 }
@@ -5306,7 +5315,7 @@ function forgetProps() {
 // ---- 01.11.2026, пользователь: «проверь, отправив всем, у кого подписка, „привет, тест связи“, и попроси ответ; собери отправленные сообщения и ответы».
 //   Только из редактора: pingDry() — кому уйдёт (в журнал), pingAll() — отправить (Telegram и MAX, кнопка «✅ Получил»), pingReport() — что отправлено и кто ответил.
 //   Ответ на тест (кнопка или любое сообщение, кроме команды) в течение 3 дней записывается в свойство ping_ans, человеку — «Спасибо, связь есть ✅», дальше в меню не идёт.
-var PING_SKIP = /кочуров|попов|джанов|макаров|макаршин/i;   // временные запреты владельца: Сотрудник73 — до 02.11; Имя28 и Джанова — MAX; Сотрудник53 и Сотрудник54 — без запросов
+var PING_SKIP = /кочуров|попов|джанов|макаров|макаршин/i;   // временные запреты владельца: Сотрудник72 — до 02.11; Имя28 и Джанова — MAX; Сотрудник52 и Сотрудник53 — без запросов
 function pingList_() {
   var U = tgUsers_(), L = [];
   Object.keys(U).forEach(function (k) { var u = U[k]; if (!u || !u.chat) return; L.push({ k: k, n: String(u.name || '').slice(0, 60), ch: Number(k) >= MAX_BASE ? 'MAX' : 'TG', chat: u.chat, skip: PING_SKIP.test(u.name || '') }); });
@@ -5807,7 +5816,7 @@ function g4_pushCmd_(chat, from, me, text, kind) {
   var ok = g4_cp_({ src: 'tg', who: tgName_(from) + ' (id ' + from.id + (me && me.role ? ', ' + me.role : '') + ')', chat: String(chat), id: id,
     text: (kind || 'команда') + ': ' + text.slice(0, 4000) + '\nОтвет человеку — op claude say --to ' + chat }, vip);
   if (!ok) return false;
-  tgMsg_(chat, 'Принял, передал — ответ придёт сюда.' + (vip ? '' : ' Если срочно — напишите Сотрудник82 Отчество41 напрямую.'));
+  tgMsg_(chat, 'Принял, передал — ответ придёт сюда.' + (vip ? '' : ' Если срочно — напишите Сотрудник81 Отчество41 напрямую.'));
   return true;
 }
 
@@ -5916,7 +5925,7 @@ function g4_ask_(chat, from, me, q, D, ql) {
       props().setProperty('g4_au_' + id.replace(/[^\w.-]/g, '_').slice(0, 40), JSON.stringify({ chat: String(chat), who: tgName_(from), q: q.slice(0, 300), t: Date.now() }));
       var kb = (msg.buttons || []).map(function (b) { return [{ text: String(b.label).slice(0, 60), callback_data: String(b.data).slice(0, 64) }]; });
       b2Send_(chats, '💰 <b>Сотрудник4 цены/скидки</b> — ' + h_(tgName_(from)) + ':\n«' + h_(q.slice(0, 500)) + '»\n\n' + h_(String(msg.text).slice(0, 2500)), kb.length ? kb : null);
-      return tgMsg_(chat, 'Передал запрос Сотрудник82 Отчество41 Сотрудник1 — ответ придёт сюда.');
+      return tgMsg_(chat, 'Передал запрос Сотрудник81 Отчество41 Сотрудник1 — ответ придёт сюда.');
     }
     if (det.kind === 'recl' && typeof au_reclReply === 'function') {
       var rt = au_reclReply(ctx); if (!rt) return null;
@@ -6276,13 +6285,13 @@ function g4_unknownCmd_(chat, from, me, text) {
     var count = b2Send_(uaOwnerChats_(), '📋 <b>Требуется решение Сотрудник2 Отчество2</b>\nОт: ' + h_(g4_cmdMask_(String(me.name || 'сотрудник'))) +
       '\nИсточник: ' + (Number(from.id) >= MAX_BASE ? 'MAX' : 'Telegram') + '\nСотрудник4: ' + h_(safe) + '\nБот действий не выполнял.');
     if (!count) throw new Error('cmd_owner_delivery_failed');
-    return g4_cmdReply_(id, chat, from.id, 'Передал Сотрудник82 Отчество41. Сам это действие не выполняю.');
+    return g4_cmdReply_(id, chat, from.id, 'Передал Сотрудник81 Отчество41. Сам это действие не выполняю.');
   }
   var r = ask_({ id: 'tg' + from.id, name: 'сотрудник' }, { q: safe, ctx: g4_cmdMask_(b2Ctx_(b2Live_(), safe.toLowerCase())),
     page: 'Фабрика', prov: 'openai', readOnly: true });
   var answer = r && r.ok ? String(r.a || '').trim() : '';
   return g4_cmdReply_(id, chat, from.id, answer && !g4_dontKnow_(answer) ? h_(answer.slice(0, 3500)) :
-    'Пока не могу ответить по имеющимся данным. Уточните вопрос или обратитесь к Сотрудник82 Отчество41.');
+    'Пока не могу ответить по имеющимся данным. Уточните вопрос или обратитесь к Сотрудник81 Отчество41.');
 }
 // Claim only ready jobs. Errors move to a later time, then to dead after 3 tries.
 // Dead jobs retain their content, are logged, and never starve the remaining queue.

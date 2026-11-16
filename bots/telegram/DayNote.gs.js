@@ -60,6 +60,16 @@ function dn_build(now) {
     q.slice(-2).forEach(function (m) { d.push('❓ ' + dn_e_(dn_cut_(m.name, 16)) + ': ' + dn_e_(dn_cut_(m.text, 70))); });
     det.push(d.join('\n'));
   });
+  // --- поручения совещания (бот MAX, MeetTasks.gs; 16.11.2026, Т. В.: закрытие — строкой в итогах дня)
+  try {
+    var mt = g4_maxCmd_({ op: 'mtday' });
+    if (mt && mt.ok && !mt.none) {
+      top.push('📋 <b>Поручения совещания</b>: выполнено сегодня ' + (mt.done || []).length + ', открыто ' + mt.open + ' из ' + mt.total);
+      var md = (mt.done || []).slice(0, 8).map(function (x) { return '✅ ' + dn_e_(x.pid || '') + ' ' + dn_e_(dn_cut_(x.x, 50)) + ' — ' + dn_e_(String(x.by || '').split(' ')[0]) + ' ' + dn_e_(x.t || ''); });
+      (mt.dues || []).slice(0, 5).forEach(function (x) { md.push('📅 ' + dn_e_(x.pid || '') + ' ' + dn_e_(dn_cut_(x.x, 45)) + ' — срок ' + dn_e_(x.due) + ' (' + dn_e_(String(x.by || '').split(' ')[0]) + ')'); });
+      if (md.length) det.push('<b>Поручения совещания</b>\n' + md.join('\n'));
+    }
+  } catch (emt) { /* без строки */ }
   // --- почта
   var mq = g4_bin_('mq.bin', 300) || {}, notes = (mq.notes || []).filter(function (n) { return String(n && n.t || '').slice(0, 10) === day; });
   var mine = notes.filter(function (n) { return n.d && n.q; });
@@ -114,7 +124,7 @@ function dn_tick() {
 
 /* 12.11.2026 Т. В.: «Отправляй ей вечерние отчеты такие же как мне — я получаю в Telegram, она в MAX»; «Она такой же абсолютный админ как и я» (права — кнопкой Т. В.).
    DN_ALSO — кому копия итогов дня лично в бот MAX (ключ — id в боте = MAX_BASE + id в MAX). Текст тот же; «вам» → «Т. В.» (это вопросы к нему). */
-var DN_ALSO = { 'REDACTED_HEX_2': 'Сотрудник80 Сотрудник17' };
+var DN_ALSO = {};   // 16.11.2026: Сотрудник28 теперь копия ВСЕГО, что получает Т. В. (Mirror.gs), — отдельная копия итогов дня дублировала бы
 var DN_HELLO = 'REDACTED_HEX_2';                       // одноразово: пояснение перед первой копией (права администратора даёт только Т. В. — кнопкой в /users и на портале)
 
 /** Текст для MAX: без сворачиваемой цитаты Telegram, обращения к Т. В. — по имени. */
