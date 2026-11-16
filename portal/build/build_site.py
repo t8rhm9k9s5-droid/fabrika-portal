@@ -236,7 +236,10 @@ try:
         _f = _it.get('file', ''); _web = 'library/' + _f.replace('raw/', '', 1)
         _stem = _re_di.sub(r'\.(pdf|docx?|xlsx?|ods)$', '', _f)
         if not _f.lower().endswith('.pdf') and any(_x.get('file') == _stem + '.pdf' for _x in _LJ2['items']): continue   # Word/Excel с готовым PDF — показываем PDF
-        _pdf = _web if _f.lower().endswith('.pdf') else (_web + '.pdf' if os.path.exists('/home/claude/library/' + _f + '.pdf') else '')
+        # 16.11.2026 (R5-10 Рекса): копия <файл>.pdf старше самого файла (конвертация нового Word/Excel не удалась) — превью не показываем,
+        #   иначе под карточкой нового файла открылся бы старый текст; остаётся открытие самого файла
+        _src = '/home/claude/library/' + _f
+        _pdf = _web if _f.lower().endswith('.pdf') else (_web + '.pdf' if os.path.exists(_src + '.pdf') and (not os.path.exists(_src) or os.path.getmtime(_src + '.pdf') >= os.path.getmtime(_src)) else '')
         _DI.setdefault(_it.get('cat', 'other'), []).append([_re_di.sub(r'\s*\((PDF|Word|Excel)[^)]*\)\s*$', '', _it.get('title', '')), _NUM2.get(_stem, ''), _web, _pdf, str(_it.get('date') or '')[:10]])
     for _k in _DI: _DI[_k].sort(key=lambda r: r[4], reverse=True)
 except Exception as _e: _DI = {}; print('docidx', _e)
@@ -677,6 +680,14 @@ try:
     except Exception:
         # намеренно: если дата gen недоступна, сохраняем исходный stock из копии _PU.
         pass
+    # 16.11.2026, Т. В. («на портале 42,65, а должно быть ~45,4 — почему?»): дневные рассылки 1С — снимок за вчера на 10:00, проведённое позже
+    #   туда не попадает. Накопительный итог месяца — из отчёта «Выполнение плана» (build/sales_plan_mgr/<ГГГГ-ММ>.json): metrics.js берёт
+    #   его факт на дату отчёта + дневные рассылки после этой даты, если так больше (pmgr).
+    try:
+        _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
+        _pmx = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else {}
+        _SNAP['pmgr'] = {'ym': os.path.basename(_pmf[-1])[:7], 'asof': _pmx.get('asof'), 'fact': (_pmx.get('total') or {}).get('fact')} if _pmf and (_pmx.get('total') or {}).get('fact') else None
+    except Exception as _e9: print('pmgr:', _e9); _SNAP['pmgr'] = None
     _MJS = _cg1_read_file('/home/claude/build/app/metrics_core.js', encoding='utf-8')
     assert _MJS.count('__SNAP__') == 1
     with open(os.path.join(SITE, 'assets', 'metrics.js'), 'w', encoding='utf-8') as _cg1_output_file:
@@ -724,8 +735,15 @@ try:
 except Exception: pass  # необязательный шаг: сбой не мешает сборке
 for _c in (_lib.get('cats') or []) + (_lib.get('int') or []):
     _S.append({'t': _c.get('t'), 'x': _c.get('x') or 'Документы', 'u': 'library.html#' + _c.get('k'), 'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)'})
+# 16.11.2026 (R5-07 Рекса): номер ФАБ в поиске (ФАБ-0079, ФАБ0079, «фаб 79») и переход сразу к документу (library.html#open=<файл>), а не в общий раздел
+import urllib.parse as _uq
 for _it in _lib.get('items') or []:
-    _S.append({'t': _it.get('title'), 'x': 'Документы', 'u': 'library.html#' + (_it.get('cat') or ''), 'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)'})
+    _no = _it.get('number') or ''; _kn = ''
+    if _no:
+        _d = re.sub(r'\D', '', _no); _kn = ' '.join([_no, _no.replace('-', ''), 'фаб ' + _d, 'фаб ' + str(int(_d)) if _d else '', _d])
+    _S.append({'t': _it.get('title'), 'x': (_no + ' · Документы') if _no else 'Документы',
+               'u': ('library.html#open=' + _uq.quote(_it['file'], safe='/')) if _it.get('file') else 'library.html#' + (_it.get('cat') or ''),
+               'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)', **({'k': _kn} if _kn else {})})
 for _d in (_lib.get('pub') or {}).get('docs') or []:
     if not _d.get('replaced') and not _d.get('same'): _S.append({'t': _d.get('title'), 'x': 'Документы с fabrikant.su', 'u': 'library.html', 'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)'})   # 30.10: копия внутреннего — в поиске один раз
 # 02.11.2026, ночное задание пользователя «убрать все дубли документов»: одна форма договора у трёх юрлиц — в поиске одной строкой (юрлица — в подписи)

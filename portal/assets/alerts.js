@@ -30,7 +30,10 @@
   function forHere(a) {
     // 15.11.2026 ~21:45, Т. В. (видео 21:39): «алерты, не относящиеся к данному разделу, в разделе не печатать» — критичные тоже только на главной и в своём разделе
     if (page === 'home.html') return true;
-    return (a.secs || []).indexOf(secOf()) >= 0 || String(a.href || '').split('#')[0] === page;
+    // 16.11.2026 (R5-06 Рекса): у общей страницы разделов (razdel.html) раздел — в #хвосте; совпадение одного имени файла не значит «этот раздел»
+    //   (раньше тревога продаж из razdel.html#sales показывалась и в #recl, #online, #peo, #struct)
+    var hp = String(a.href || '').split('#'), here = hp[0] === page && (page !== 'razdel.html' || decodeURIComponent(hp[1] || '') === secOf());
+    return (a.secs || []).indexOf(secOf()) >= 0 || here;
   }
   // ---------- карточка-уведомление ----------
   function card(a) {

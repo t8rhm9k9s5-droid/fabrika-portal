@@ -253,7 +253,7 @@
     e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
   });
   function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
-  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
+  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) window.T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
@@ -404,7 +404,7 @@
 
   // ---------- общий поиск: разделы, объекты карты, участки, документы, изделия (assets/search.json из сборки) ----------
   var SIDX = null;
-  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е'); }
+  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[\u2010-\u2015\u2212]/g, '-'); }   // 16.11 R5-07: «ФАБ‑0079» с любым дефисом = «фаб-0079»
   // 04.11.2026, замечание Т. В. («Структура» → «Ничего не нашлось», хотя оргструктура есть): поиск по основе слова (структура, структуру,
   //   структурой → «структур» — находит и «Оргструктура»), без учёта регистра и «ё», с синонимами; ищутся разделы, вкладки разделов, люди, отделы, документы
   var ENDS = ['иями', 'ения', 'ение', 'ений', 'ании', 'ания', 'ание', 'аний', 'ость', 'ости', 'ями', 'ами', 'иях', 'ого', 'его', 'ому', 'ему', 'ыми', 'ими', 'ией',

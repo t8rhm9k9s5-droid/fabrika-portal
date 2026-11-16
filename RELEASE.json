@@ -1,0 +1,27 @@
+{
+ "portal_version": "2.5.96",
+ "exported_utc": "2026-11-16T08:41Z",
+ "files_sha": "429590d7057aae24",
+ "files": [
+  "ci/predeploy_check.sh",
+  "portal/app_build/build_enc.py",
+  "portal/app_build/build_pwa.py",
+  "portal/app_build/drive_pack.py",
+  "portal/app_build/host_pack.py",
+  "portal/assets/acct.js",
+  "portal/assets/alerts.js",
+  "portal/assets/layers.js",
+  "portal/assets/pdfview.js",
+  "portal/assets/site.js",
+  "portal/build/app/metrics_core.js",
+  "portal/build/assort_frag.html",
+  "portal/build/build_site.py",
+  "portal/build/gen_salescap.py",
+  "portal/build/home_frag.html",
+  "portal/build/salescap_frag.html",
+  "robot/live/deploy.py",
+  "robot/live/exp_1c.py",
+  "robot/live/live.py"
+ ],
+ "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
+}

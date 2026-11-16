@@ -1157,7 +1157,9 @@ def ver_ping():
         rq = urllib.request.Request(url, data=json.dumps({'op': 'claude', 't': t, 'body': body, 'sig': sig}).encode('utf-8'),
                                     headers={'Content-Type': 'text/plain;charset=utf-8'})
         with urllib.request.urlopen(rq, timeout=60) as r: ans = r.read().decode('utf-8', 'replace')[:200]
-        if '"vernow"' in ans: jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time())}); return 'пуш: ' + ans[:60]
+        # 16.11.2026 (R5-08 Рекса): ответ бота — «команда принята», а не «пуш отправлен» (тихие часы и «раз в день» решает бот) — так и пишем
+        if '"vernow"' in ans: jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time()), 'state': 'принято ботом; отправку решает бот'}); return 'принято: ' + ans[:60]
+        if 'vernow:' in ans: return 'бот занят — повтор на следующем прогоне: ' + ans[:60]
         return 'ответ: ' + ans[:80]
     except Exception as e:
         log('  ! пуш о версии:', e.__class__.__name__, str(e)[:120]); return 'ошибка: %s' % (str(e)[:80] or e.__class__.__name__)
