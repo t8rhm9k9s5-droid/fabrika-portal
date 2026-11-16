@@ -78,11 +78,14 @@ function mt_reg_(pid, vals) {
   } catch (e) { mx_log('mt', 'реестр ' + pid + ': ' + mx_errText(e)); return false; }
 }
 /** 16.11 (Рекс, CG-37 P1): кнопка привязана к пункту стабильно — по номеру реестра (pid), без него — по номеру и версии списка. */
-function mt_key_(S, it) { return it.pid ? 'p' + String(it.pid).replace(/[^\w.\-]/g, '') : 'n' + it.n + '.' + (S.ver || ''); }
+function mt_h_(s) { var h = 5381; s = String(s); for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); }
+// номер реестра как есть, если он короткий и из простых символов; иначе — его хеш (без обрезки символов — без совпадений ключей у разных пунктов)
+function mt_key_(S, it) { var p = String(it.pid || ''); return p ? (/^[\w.\-]{1,40}$/.test(p) ? 'p' + p : 'h' + mt_h_(p)) : 'n' + it.n + '.' + (S.ver || ''); }
 function mt_find_(S, key) {
   key = String(key || ''); if (!S || !S.items) return null;
   if (/^\d{1,3}$/.test(key)) return S.ver ? null : S.items.filter(function (x) { return Number(x.n) === Number(key); })[0] || null;   // кнопка старого вида — только пока список не перезагружали
-  if (key.charAt(0) === 'p') return S.items.filter(function (x) { return x.pid && String(x.pid).replace(/[^\w.\-]/g, '') === key.slice(1); })[0] || null;
+  if (key.charAt(0) === 'p') return S.items.filter(function (x) { return x.pid && String(x.pid) === key.slice(1); })[0] || null;
+  if (key.charAt(0) === 'h') { var hs = S.items.filter(function (x) { return x.pid && mt_h_(x.pid) === key.slice(1); }); return hs.length === 1 ? hs[0] : null; }
   var m = key.match(/^n(\d{1,3})\.(\d*)$/); if (!m || m[2] !== String(S.ver || '')) return null;
   return S.items.filter(function (x) { return Number(x.n) === Number(m[1]); })[0] || null;
 }
@@ -162,7 +165,7 @@ function mt_dueDate_(code) {
 }
 /** Кнопки mt:<n>:d | mt:<n>:s | mt:<n>:s:<код> | mt:<n>:q */
 function mt_cb_(u) {
-  var cb = u.callback || {}, cbid = String(cb.callback_id || ''), m = String(cb.payload || '').match(/^mt:(\d{1,3}|p[\w.\-]{1,40}|n\d{1,3}\.\d*):([dsq])(?::([0-9a-z]{1,3}))?$/);
+  var cb = u.callback || {}, cbid = String(cb.callback_id || ''), m = String(cb.payload || '').match(/^mt:(\d{1,3}|p[\w.\-]{1,40}|h[0-9a-z]{1,8}|n\d{1,3}\.\d*):([dsq])(?::([0-9a-z]{1,3}))?$/);
   if (!m) return mx_answerCb(cbid, 'Кнопка устарела.');
   var user = cb.user || {}, uid = String(Number(user.user_id || 0)), name = mx_name(user).replace(/\s*\(@[^)]*\)$/, '');
   if (m[2] === 'd') {
