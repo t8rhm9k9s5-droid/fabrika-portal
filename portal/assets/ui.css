@@ -162,6 +162,9 @@ html body .grid > .doc::after{content:"";flex:none;width:7px;height:7px;border-r
 
 /* ---- the plan: the map on the whole screen, like the model ---- */
 body.pg-plan{padding-bottom:0;height:100%;overflow:hidden}
+/* 16.11.2026, Т. В. (скрин 08:50, 3D): «снизу полоса». body overflow:hidden уходит в окно (корень не прокручивается) — iPhone со значка даёт окно
+   короче экрана на строку часов (844 из 912), карта position:fixed кончается выше низа. На телефоне корень — документ (навык iphone-fullscreen-web-app, п. 2). */
+@media (pointer:coarse){html body.pg-plan{height:auto;min-height:100%;overflow:visible;margin:0}}
 body.pg-plan .app{height:100vh;height:100dvh;display:block}
 body.pg-plan .app > header{display:none}
 body.pg-plan main{display:block;height:100%}
@@ -223,3 +226,5 @@ html.no-flexgap .kpis > * + *{margin-left:10px}
 /* 15.11.2026 ~20:15, Т. В. («Ставь на портал»): на сенсорных экранах прокручивается вся страница — без отскока у края (как тест меню, где меню не улетало
    и под часами видно содержимое). «Откат» — fabrika/work/menu_rollback_2577 (RULES.md). */
 @media (pointer:coarse){html{min-height:100%;overscroll-behavior:none}body{overscroll-behavior:none}}
+/* 16.11.2026: просмотрщики PDF и архива на телефоне больше не закрывают прокрутку корня (окно iPhone укорачивалось) — фон не уезжает за счёт этого */
+@media (pointer:coarse){.t14pdf,.t14pdf *,#vw,#vw *{overscroll-behavior:contain}}

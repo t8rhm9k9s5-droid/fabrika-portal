@@ -75,7 +75,7 @@
     // 28.10.2026: исходник Word/Excel показан своей PDF-копией — кнопка справа отдаёт исходный файл («Word» / «Excel»), иначе — «Файл»
     $('.pa').textContent = d.orig ? (/\.xlsx?$/i.test(d.orig) ? 'Excel' : /\.pptx?$/i.test(d.orig) ? 'PowerPoint' : 'Word') : 'Файл';
     $('.pa').setAttribute('aria-label', d.orig ? 'Скачать исходный файл' : 'Файл: сохранить или отправить');
-    root.hidden = false; document.documentElement.style.overflow = 'hidden';
+    root.hidden = false; document.documentElement.style.overflow = (window.matchMedia && matchMedia('(pointer:coarse)').matches ? '' : 'hidden');   // 16.11: на телефоне корень не закрывать — окно iPhone укорачивается (полоса снизу)
     if (!V.pushed){ try { history.pushState({ t14pdf: 1 }, ''); V.pushed = true; } catch (e) {} }
     msg('Загружаю' + (d.bytes ? ' · ' + size(d.bytes) : ''), 0);
     lib().then(function(L){
