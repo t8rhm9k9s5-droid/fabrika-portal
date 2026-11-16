@@ -80,6 +80,10 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 <script src="assets/edits.js"></script>
 <script src="assets/site.js"></script>
 <script>
+// 16.11.2026, Т. В.: «карта не кликабельная — тап по карте территории в любой точке, кроме кнопок, должен открывать 2D»
+(function () { var c = document.querySelector('.fh-map'); if (!c) return; c.style.cursor = 'pointer';
+  c.addEventListener('click', function (e) { if (e.defaultPrevented || (e.target.closest && e.target.closest('a,button,input,select,textarea,summary,[role=button]'))) return;
+    if (window.getSelection && String(window.getSelection())) return; location.href = 'plan.html'; }); })();
 /* «Пульс фабрики» (28.10.2026): снимок сборки → сразу; свежие данные хостинга (assets/live.js) → по мере загрузки. Счётчики «требует
    внимания» уходят в боковую панель (T14Site.badges) и запоминаются в браузере для остальных страниц. */
 (function () {

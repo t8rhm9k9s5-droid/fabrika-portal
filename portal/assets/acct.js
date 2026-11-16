@@ -71,7 +71,7 @@
   function me() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function tok() { try { return localStorage.getItem('t14.tok') || ''; } catch (e) { return ''; } }
   function saveMe(p, t) { try { localStorage.setItem('t14.me', JSON.stringify(p)); if (t) localStorage.setItem('t14.tok', t); } catch (e) { /* private mode */ } }
-  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
+  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); localStorage.removeItem('t14.glc');   /* 16.11: кэш транспорта — при выходе (проверка GPT, PR №2) */ ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
 
   // ---- the server (the «Фабрика» Google Apps Script)
   var CFG = G.T14_ACCT_CFG || null, cfgP = null;
@@ -471,13 +471,7 @@
       });
     }
     qlPaint();
-    // 15.11.2026, Т. В.: «главную страницу возьми и сделай её тестовой, отдельную ссылку» — тестовая главная (app_build/build_pwa.py → t/home.html)
-    if (p.role === 'admin') {
-      var tf = el('div', 'iform'), ta = el('a', 'igroup');
-      ta.href = 't/home.html'; ta.style.cssText = 'display:block;padding:12px 16px;margin:8px 0 0;color:inherit;text-decoration:none';
-      ta.innerHTML = '<b style="font-weight:500">Тестовая главная — полный экран</b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px">Та же главная, верх под часами прозрачный. Проверка перед выпуском на портал</small>';
-      tf.append(el('p', 'ihdr', 'Тест'), ta); s.body.appendChild(tf);
-    }
+    // 15.11.2026 ~22:45, Т. В.: «что это за тест на меню?» — строка «Тест → Тестовая главная» убрана: портал уже в этом режиме (2.5.77); страница t/home.html осталась по ссылке
     go.addEventListener('click', function () {
       if (np.lastChild.value.length < 8) return msg(f, 'Пароль — не короче 8 знаков.', true);
       var npw = np.lastChild.value; busy(go, true); A.changePw(npw).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(function () { s.close(); toast('Пароль сменён — на других устройствах войдите заново'); lockScreen({ pw: npw }); }); }, function (e) { busy(go, false); msg(f, e.message, true); });

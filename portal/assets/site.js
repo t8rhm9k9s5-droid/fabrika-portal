@@ -253,7 +253,7 @@
     e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
   });
   function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
-  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
+  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) window.T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
@@ -404,7 +404,7 @@
 
   // ---------- общий поиск: разделы, объекты карты, участки, документы, изделия (assets/search.json из сборки) ----------
   var SIDX = null;
-  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е'); }
+  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[\u2010-\u2015\u2212]/g, '-'); }   // 16.11 R5-07: «ФАБ‑0079» с любым дефисом = «фаб-0079»
   // 04.11.2026, замечание Т. В. («Структура» → «Ничего не нашлось», хотя оргструктура есть): поиск по основе слова (структура, структуру,
   //   структурой → «структур» — находит и «Оргструктура»), без учёта регистра и «ё», с синонимами; ищутся разделы, вкладки разделов, люди, отделы, документы
   var ENDS = ['иями', 'ения', 'ение', 'ений', 'ании', 'ания', 'ание', 'аний', 'ость', 'ости', 'ями', 'ами', 'иях', 'ого', 'его', 'ому', 'ему', 'ыми', 'ими', 'ией',
@@ -815,11 +815,14 @@
     if (APK) { var apn = el('a', 'pnav pbot', '<span class="pi" style="--c:var(--ic-calls)">' + ICON.s_apk + '</span><span class="pt">Приложение (APK)</span>'); apn.href = APK; apn.setAttribute('download', 'Фабрика.apk'); side.appendChild(apn); }
     var foot = el('div', 'pfoot'); side.appendChild(foot);
     var pf = trigger('profile', 'pnav', 'sliders', 'Профиль и настройки'); pf.innerHTML = '<span class="pi" style="--c:var(--ic-grey)">' + ICON.s_person + '</span><span class="pt">Профиль и настройки</span>'; foot.appendChild(pf);
+    // 16.11.2026, проверка Рекса (PR №2, п. 1): в узкой панели подписи .pt скрыты (display:none) — у ссылок нет имени для VoiceOver.
+    //   Постоянное имя — aria-label из подписи (со счётчиком «требует внимания», см. paintBadges).
+    [].forEach.call(side.querySelectorAll('.pnav, .pfab'), function (a) { var t = a.querySelector('.pt'); t = t ? t.textContent.trim() : ''; if (t) { a.dataset.nm = t; if (!a.getAttribute('aria-label')) a.setAttribute('aria-label', t); } });
     // счётчики «требует внимания» у разделов: главная считает их по отчётам (T14Site.badges) и запоминает на сутки
     function paintBadges() {
       var B = null; try { B = JSON.parse(localStorage.getItem('t14.badges') || 'null'); } catch (e) { B = null; }
       var v = B && B.v && Date.now() - (B.t || 0) < 864e5 ? B.v : {};
-      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''; });
+      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';  if (a.dataset.nm) a.setAttribute('aria-label', a.dataset.nm + (x ? ', требует внимания: ' + x : '')); });
     }
     paintBadges(); BADGE_PAINT = paintBadges;
     // 14.11.2026, Т. В. (компьютер, узкая левая панель V22): «вожу мышкой — иконки: машинка, складик, менюшка — что это значит? Подпись от нижнего
@@ -828,7 +831,7 @@
       if (!window.matchMedia || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
       var DESC = {}; PORTAL.forEach(function (p) { DESC[p[0]] = p[4] || ''; });
       DESC['admin.html'] = 'Пользователи, права, журналы'; DESC['razdel.html#saved'] = 'Отмеченные звёздочкой документы и отчёты'; DESC['home.html'] = DESC['home.html'] || 'Пульс компании';
-      var tip = el('div', 'ptip', '<b></b><span></span>'); tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+      var tip = el('div', 'ptip', '<b></b><span></span>'); tip.setAttribute('role', 'tooltip'); tip.id = 'ptip'; document.body.appendChild(tip);
       var curEl = null, tmr = 0;
       function info(a) {
         var t = (a.querySelector('.pt') || {}).textContent || a.getAttribute('aria-label') || '', h = a.dataset.p || a.getAttribute('href') || '';
@@ -838,16 +841,31 @@
         if (/Профиль/.test(t)) d = 'Личный вход, вид, тема, уведомления';
         return [t.trim(), d];
       }
-      function place(e) { var x = e.clientX + 14, y = e.clientY + 18, w = tip.offsetWidth, h = tip.offsetHeight; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = e.clientY - h - 10; tip.style.left = Math.round(x) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      // 15.11.2026, Т. В. (видео «Glassy SideBar»): плашка — у значка, выезжает из панели (не у курсора)
+      function place(a) { var s = side.getBoundingClientRect(), r = a.getBoundingClientRect(), h = tip.offsetHeight, y = r.top + r.height / 2 - h / 2;
+        y = Math.max(8, Math.min(innerHeight - h - 8, y)); tip.style.left = Math.round(s.right + 12) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      function railOn() { var t = side.querySelector('.pnavs .pt'); return !!t && getComputedStyle(t).display === 'none'; }   // названия скрыты — узкая панель
       side.addEventListener('mousemove', function (e) {
         var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab');
         if (!a || !side.contains(a)) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); return; }
-        if (getComputedStyle(a.querySelector('.pt') || a).display !== 'none' && !document.documentElement.hasAttribute('data-skin')) { tip.classList.remove('on'); return; }   // подписи и так видны
-        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); tmr = setTimeout(function () { tip.classList.add('on'); }, 250); }
-        place(e);
+        if (!railOn()) { curEl = null; tip.classList.remove('on'); return; }   // панель раскрыта или широкая — подписи и так видны
+        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); place(a); tmr = setTimeout(function () { place(a); tip.classList.add('on'); }, 180); }
       });
       side.addEventListener('mouseleave', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      // 16.11.2026, проверка Рекса (PR №2, P3): подсказка и с клавиатуры — Tab по значкам; Esc и уход фокуса прячут
+      side.addEventListener('focusin', function (e) { var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab'); if (!a || !railOn()) return;
+        curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; clearTimeout(tmr); place(a); tip.classList.add('on'); a.setAttribute('aria-describedby', 'ptip'); });   // VoiceOver читает и подсказку (проверка GPT)
+      side.addEventListener('focusout', function (e) { if (e.target && e.target.removeAttribute) e.target.removeAttribute('aria-describedby'); if (e.relatedTarget && side.contains(e.relatedTarget)) return; curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });   // Tab внутри панели — без мигания
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tip.classList.contains('on')) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); } });
       side.addEventListener('click', function () { tip.classList.remove('on'); });
+      // 15.11.2026, Т. В.: «стрелочка — нажимаешь, и всё меню выезжает вправо с надписями». Только там, где панель узкая (компьютер, V22 или 701–1279 px).
+      var de = document.documentElement, exp = el('button', 'pexp', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'); exp.type = 'button'; document.body.appendChild(exp);
+      function expSync() { var open = de.getAttribute('data-side') === 'open', can = matchMedia('(min-width:701px)').matches && (open || railOn());
+        exp.classList.toggle('on', can); exp.setAttribute('aria-expanded', open ? 'true' : 'false'); exp.setAttribute('aria-label', open ? 'Свернуть меню' : 'Развернуть меню с названиями'); exp.title = ''; }
+      exp.addEventListener('click', function () { var open = de.getAttribute('data-side') !== 'open'; tip.classList.remove('on'); curEl = null;
+        de.classList.add('side-anim'); if (open) de.setAttribute('data-side', 'open'); else de.removeAttribute('data-side'); try { localStorage.setItem('t14.side', open ? 'open' : '') } catch (e) { }
+        setTimeout(function () { de.classList.remove('side-anim'); }, 320); expSync(); });
+      expSync(); setTimeout(expSync, 0); addEventListener('load', expSync); addEventListener('resize', expSync); window.T14SideSync = expSync;   // панель ещё не в документе — проверить после вставки
     })();
 
     // --- шапка раздела ---
@@ -1207,4 +1225,52 @@
   function sxStart() { try { var k = 0; (function go() { if (!window.T14Acct && ++k < 30) return setTimeout(go, 100); sxPart(here()); })(); } catch (e) { } }   // 13.11: без задержки 1,2 с — есть сохранённое — сразу, нет — сразу запрос
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sxStart); else sxStart();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountNav); else mountNav();
+})();
+// 15.11.2026 ~22:45, Т. В.: «данные на портале в фоне не обновляются… зачем мне загружать данные по машинам, когда я зашёл» — тихая подкачка
+//   «Транспорта» с любой страницы портала: у кого есть доступ (флаг t14.gl своего входа), раз в 30 мин, через 4 с после открытия; ответ — в t14.glc
+//   (transport.html показывает его сразу). Хостинг обновляет ГЛОНАСС сам (днём 15 мин, ночью час).
+(function glPrefetch() {
+  try {
+    if (/transport\.html$/.test(location.pathname)) return;
+    var A = window.T14Acct, me = A && A.me && A.me(), f = JSON.parse(localStorage.getItem('t14.gl') || 'null');
+    if (!A || !A.tok || !A.tok() || !me || !f || f.id !== me.id) return;
+    var c = JSON.parse(localStorage.getItem('t14.glc') || 'null');
+    if (c && c.id === me.id && Date.now() - c.t < 30 * 6e4) return;
+    // 15.11.2026 (проверка PR №2): за 4 с и пока идёт запрос могли выйти/войти другим — сохраняем только если вход тот же
+    function same() { var m = A.me && A.me(); return !!(m && m.id === me.id && A.tok && A.tok()); }
+    setTimeout(function () {
+      if (!same()) return;
+      A.api('gl', { tok: A.tok(), fresh: 0 }).then(function (r) { if (r && r.gl && same()) try { localStorage.setItem('t14.glc', JSON.stringify({ id: me.id, t: Date.now(), r: r })); } catch (e) { } }, function () { });
+    }, 4000);
+  } catch (e) { /* без подкачки */ }
+})();
+// 15.11.2026 ~22:50, Т. В. (видео 22:25): «при поиске улетает строка поиска вверх, невозможно сдвинуть до конца, посмотреть, что набрал» —
+//   с 2.5.77 прокручивается вся страница, и iPhone при клавиатуре сдвигает видимую область, а лист меню (position:fixed) остаётся по старому окну
+//   и уходит верхом за экран. Пока открыта клавиатура — лист ставится в видимую часть экрана над клавиатурой (visualViewport), строка поиска
+//   прилипает к верху листа (portal.css .tabpanel .psearch sticky).
+(function kbSheet() {
+  var vv = window.visualViewport; if (!vv) return;
+  var raf = 0;
+  function fit() {
+    raf = 0;
+    var p = document.querySelector('.tabpanel'), de = document.documentElement;
+    if (!p) return;
+    // 16.11.2026, проверка Рекса (PR №2, P2): при увеличении двумя пальцами visualViewport тоже сжимается — это не клавиатура.
+    //   Клавиатура = фокус в текстовом поле листа, масштаб 1 и видимая часть ниже окна больше чем на 120 px.
+    var ae = document.activeElement, typing = !!ae && p.contains(ae) && ((ae.tagName === 'TEXTAREA') || ae.isContentEditable ||
+      (ae.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color|image|hidden)$/i.test(ae.type || '')));
+    var kb = typing && (vv.scale || 1) < 1.01 && window.innerHeight - vv.height > 120;
+    if (kb && !p.hidden && p.getClientRects().length) {   // не offsetParent: у position:fixed он всегда null (проверка PR №2)
+      var top = Math.round(vv.offsetTop + 8), h = Math.round(vv.height - 16);
+      p.style.setProperty('top', top + 'px', 'important'); p.style.setProperty('bottom', 'auto', 'important');
+      p.style.setProperty('max-height', h + 'px', 'important'); de.classList.add('kb-open');
+    } else if (de.classList.contains('kb-open')) {
+      p.style.removeProperty('top'); p.style.removeProperty('bottom'); p.style.removeProperty('max-height'); de.classList.remove('kb-open');
+    }
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(fit); }
+  vv.addEventListener('resize', kick); vv.addEventListener('scroll', kick);
+  document.addEventListener('focusin', function () { setTimeout(kick, 60); setTimeout(kick, 400); });
+  document.addEventListener('focusout', function () { setTimeout(kick, 120); });
+  addEventListener('pageshow', kick);   // возврат из фона — сбросить временную геометрию (Рекс, №23)
 })();

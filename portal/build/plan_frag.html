@@ -720,7 +720,8 @@ for(const key of window.T14Edits.ids('n:')){const r=window.T14Edits.get(key), L0
   const x=r.x-L0[0], y=L0[1]-r.y, aa=DATA.geo.ll, mm=DATA.geo.ms;
   cams.push({id:key,num:null,title:r.name||'Камера',tag:null,orig:'',ip:'',x,y,a:(r.az||0)-90,host:null,mk:null,floor:null,approx:false,isNew:true,mtxt:(r.mount&&r.mount.txt)||'',
     lat:aa[0][0]*x+aa[0][1]*y+aa[0][2],lon:aa[1][0]*x+aa[1][1]*y+aa[1][2],X:mm[0][0]*x+mm[0][1]*y+mm[0][2],Y:mm[1][0]*x+mm[1][1]*y+mm[1][2],dup:false});}
-const FOV_R=13, FOV_A=56;
+// 16.11.2026, Т. В.: секторы обзора всех камер — на выбранную дальность 15 / 25 / 40 м (окно «Слои», assets/layers.js; та же, что у слепых зон)
+let FOV_R=(()=>{try{const r=JSON.parse(localStorage.getItem('t14.blind.r'));return [15,25,40].includes(r)?r:25}catch(e){return 25}})(); const FOV_A=56;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
@@ -1144,7 +1145,7 @@ const ED=id=>PREV&&PREV.id===id?PREV.e:E.get(id);
 function bTf(k){if(B[k]&&B[k].parent&&bC[B[k].parent])return bTf(B[k].parent);const e=ED('b:'+k),c=bC[k];if(!e||!c||(!e.dx&&!e.dy&&!e.rot))return '';return `translate(${e.dx||0} ${-(e.dy||0)}) rotate(${e.rot||0} ${c[0]} ${c[1]})`}
 function bMap(k){if(B[k]&&B[k].parent&&bC[B[k].parent])return bMap(B[k].parent);const e=ED('b:'+k),c=bC[k];if(!e||!c)return null;const r=(e.rot||0)*Math.PI/180,cs=Math.cos(r),sn=Math.sin(r);return ([x,y])=>{const X=x-c[0],Y=y-c[1];return [c[0]+X*cs-Y*sn+(e.dx||0),c[1]+X*sn+Y*cs-(e.dy||0)]}}
 function drawCam(c){
-  const o=camEls[c.id]; if(!o) return;
+  const o=camEls[c.id]; if(!o) return; o.cur=c;
   if(o.fov&&c.a!==null){const a1=(c.a-(c.fv||FOV_A)/2)*Math.PI/180,a2=(c.a+(c.fv||FOV_A)/2)*Math.PI/180;
     o.fov.setAttribute('d',`M${c.x} ${c.y} L${(c.x+FOV_R*Math.cos(a1)).toFixed(2)} ${(c.y+FOV_R*Math.sin(a1)).toFixed(2)} A${FOV_R} ${FOV_R} 0 0 1 ${(c.x+FOV_R*Math.cos(a2)).toFixed(2)} ${(c.y+FOV_R*Math.sin(a2)).toFixed(2)} Z`)}
   if(o.lens&&c.a!==null){o.lens.setAttribute('x2',(8*Math.cos(c.a*Math.PI/180)).toFixed(2));o.lens.setAttribute('y2',(8*Math.sin(c.a*Math.PI/180)).toFixed(2))}
@@ -1302,6 +1303,7 @@ if(north){north.removeAttribute('aria-hidden');north.setAttribute('role','button
     (function step(now){const q=Math.min(1,(now-T0)/340), e=1-Math.pow(1-q,3); theta=t0*(1-e); at(); if(q<1){preview();requestAnimationFrame(step)} else {theta=0;at();apply()}})(T0);
   });}
 window.T14PlanHome=fitHome;
+window.T14FovR=r=>{if(![15,25,40].includes(r)||r===FOV_R)return;FOV_R=r;for(const id in camEls){const o=camEls[id],c=o&&(o.cur||o.c);if(c&&c.id)drawCam(c)}};
 
 renderIntro(); renderList(''); fitHome();
 requestAnimationFrame(()=>{fitHome()});

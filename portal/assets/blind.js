@@ -11,7 +11,7 @@
    Камеры внутри зданий не учитываются: интерьеров на плане нет. Проектные здания (швейный цех, склад №2) — не препятствия.
    План в единицах = метрах (МСК-62). Данные — window.T14Plan (plan.html, после правок камер с модели). */
 (function () {
-  var NS = 'http://www.w3.org/2000/svg', RANGES = [15, 25, 40], P = null, R = 25, ON = { cov: false, bl: false }, CACHE = null;
+  var NS = 'http://www.w3.org/2000/svg', RANGES = [15, 25, 40], P = null, R = 25, ON = { cov: false, bl: false }, CACHE = null, FORCE = false;   // FORCE — панель открыта кнопкой «Камеры» (16.11)
   var OUT_MT = { wall: 1, mast: 1, pole: 1 }, SKIP_SRC = { proj: 1, proj2: 1 };
   function st(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
   function ss(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -92,12 +92,17 @@
   var gCov, gBl, defs, info, box, btns = [];
   function draw() {
     btns.forEach(function (b) { b.setAttribute('aria-pressed', !!ON[b.getAttribute('data-bk')]); });
-    if (box) box.hidden = !(ON.cov || ON.bl);   // 15.11.2026, Т. В.: на чистом плане кнопок нет — панель только при включённом обзоре или слепых зонах
-    if (!ON.cov && !ON.bl) { gCov.innerHTML = ''; gBl.innerHTML = ''; info.hidden = true; return; }
+    if (box) box.hidden = !(ON.cov || ON.bl || FORCE);   // 15.11.2026, Т. В.: на чистом плане кнопок нет — панель при обзоре, слепых зонах или по кнопке «Камеры» (16.11)
+    if (P && P.svg) P.svg.classList.toggle('t14cov', !!ON.cov);   // 16.11.2026, Т. В.: при фактическом обзоре секторы — только контуром (assets/layers.js)
+    if (!ON.cov && !ON.bl) { gCov.innerHTML = ''; gBl.innerHTML = '';
+      if (FORCE) { info.hidden = false; info.innerHTML = rangesHtml() + '<p class="bln">Дальность — и для секторов обзора камер. «Фактический обзор» — что видят уличные камеры с учётом зданий, «Слепые зоны» — двор без обзора.</p>'; }
+      else info.hidden = true;
+      return chg(); }
     if (!CACHE || CACHE.R !== R) CACHE = compute();
     var C = CACHE; info.hidden = false; if (!C) { info.innerHTML = 'Не нашёл ограждение участка на плане.'; return; }
     gCov.innerHTML = ''; gBl.innerHTML = '';
-    if (ON.cov) { var gg = mk('g', { opacity: '.32' }, gCov); C.polys.forEach(function (o) { var p = mk('path', { d: pd(o.p), fill: '#1f9d55' }, gg); mk('title', {}, p).textContent = (o.c.num || '') + ' ' + (o.c.title || '') + ' — обзор до ' + R + ' м'; }); }
+    if (ON.cov) { var oc = document.getElementById('covClip'); if (oc) oc.remove(); var cp = mk('clipPath', { id: 'covClip', clipPathUnits: 'userSpaceOnUse' }, defs); mk('path', { d: pd(C.T) }, cp);   // 16.11.2026, Т. В.: зелёное — только внутри ограждения
+      var gg = mk('g', { opacity: '.32', 'clip-path': 'url(#covClip)' }, gCov); C.polys.forEach(function (o) { var p = mk('path', { d: pd(o.p), fill: '#1f9d55' }, gg); mk('title', {}, p).textContent = (o.c.num || '') + ' ' + (o.c.title || '') + ' — обзор до ' + R + ' м'; }); }
     if (ON.bl) {
       var old = document.getElementById('blindMask'); if (old) old.remove();
       var m = mk('mask', { id: 'blindMask', maskUnits: 'userSpaceOnUse', x: -50, y: -50, width: 600, height: 450 }, defs);
@@ -110,11 +115,15 @@
       C.zones.slice(0, 12).forEach(function (z, i) { var t = mk('text', { x: z.cx.toFixed(1), y: z.cy.toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '5', 'font-weight': '700', fill: '#b42318', stroke: '#fff', 'stroke-width': '.9', 'paint-order': 'stroke', 'pointer-events': 'none' }, gBl); t.textContent = i + 1; });
     }
     var pc = C.yard ? C.blind / C.yard * 100 : 0;
-    info.innerHTML = '<div class="blr">' + RANGES.map(function (r) { return '<button type="button" data-blr="' + r + '" aria-pressed="' + (r === R) + '">до ' + r + ' м</button>'; }).join('') + '</div>' +
+    info.innerHTML = rangesHtml() +
       '<p><b style="color:#b42318">Слепые зоны — ' + nfmt(C.blind) + ' м² (' + Math.round(pc) + '% двора)</b><br>двор без зданий ' + nfmt(C.yard) + ' м² · уличных камер ' + C.cams.length + '</p>' +
       (C.zones.length ? '<details><summary>Где слепые зоны · ' + C.zones.length + ' квадратов 20×20 м</summary><div class="blz">' + C.zones.slice(0, 12).map(function (z, i) { return '<button type="button" data-blz="' + i + '" title="Показать на плане"><b>' + (i + 1) + '</b> ' + nfmt(z.a) + ' из 400 м² · у «' + String(z.near).replace(/[<&]/g, '') + '»</button>'; }).join('') + '</div></details>' : '') +
       '<p class="bln">Зелёное — что видят уличные камеры (луч останавливается на здании). Камеры внутри зданий (' + C.inside + ') не считаются' + (C.skipped ? ', ещё ' + C.skipped + ' без места или направления' : '') + '. Деревья, заборы и ночное освещение не учтены. 25 м — уверенно видно человека, 40 м — только движение.</p>';
+    chg();
   }
+  function rangesHtml() { return '<div class="blr">' + RANGES.map(function (r) { return '<button type="button" data-blr="' + r + '" aria-pressed="' + (r === R) + '">до ' + r + ' м</button>'; }).join('') + '</div>'; }
+  function chg() { try { window.dispatchEvent(new Event('t14blindchg')); } catch (e) { } }
+  function setR(r) { if (RANGES.indexOf(r) < 0) return; R = r; ss('t14.blind.r', R); CACHE = null; if (window.T14FovR) window.T14FovR(R); draw(); }   // 16.11: секторы камер — на ту же дальность
   function setOn(k, v) { ON[k] = v; ss('t14.blind.' + k, v); draw(); }
   function init() {
     P = window.T14Plan; var svg = P.svg, fovs = document.getElementById('fovs');
@@ -132,25 +141,28 @@
       '#blindBox[hidden]{display:none}@media (max-width:700px){#blindBox{left:max(8px,env(safe-area-inset-left,0px));top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 64px);max-width:calc(100% - 70px)}}';
     document.head.appendChild(css);
     box = document.createElement('div'); box.id = 'blindBox';
-    box.innerHTML = '<div class="blt"><button type="button" data-bk="cov" title="Что видят уличные камеры с учётом зданий">Фактический обзор</button><button type="button" data-bk="bl" title="Двор, куда не смотрит ни одна уличная камера">Слепые зоны</button></div><div class="bli" hidden></div>';
+    box.innerHTML = '<div class="blt"><button type="button" data-bk="cov" title="Что видят уличные камеры с учётом зданий">Фактический обзор</button><button type="button" data-bk="bl" title="Двор, куда не смотрит ни одна уличная камера">Слепые зоны</button><button type="button" data-blist="1" title="Все камеры списком">Список камер</button></div><div class="bli" hidden></div>';
     var host = svg.parentNode; host.appendChild(box); info = box.querySelector('.bli');
     btns = [].slice.call(box.querySelectorAll('[data-bk]'));
     var togs = document.querySelector('.togs');                        // те же переключатели — во вкладке «Слои»
     var aft = document.getElementById('tLab');                          // 15.11.2026: в группе «Видеонаблюдение», после «Номера камер»
     if (togs) ['bl', 'cov'].forEach(function (k) { var b = document.createElement('button'); b.className = 'tog'; b.type = 'button'; b.setAttribute('data-bk', k); b.textContent = k === 'bl' ? 'Слепые зоны' : 'Фактический обзор'; togs.insertBefore(b, aft && aft.parentNode === togs ? aft.nextSibling : togs.firstChild); btns.push(b); });
     btns.forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-bk'); setOn(k, !ON[k]); }); });
-    R = st('t14.blind.r', 25); if (RANGES.indexOf(R) < 0) R = 25;
+    R = st('t14.blind.r', 25); if (RANGES.indexOf(R) < 0) R = 25; if (window.T14FovR) window.T14FovR(R);
     ON.cov = !!st('t14.blind.cov', false); ON.bl = !!st('t14.blind.bl', false);
     if (location.hash === '#blind') ON.bl = true;
     box.addEventListener('click', function (e) {
       var r = e.target.closest('[data-blr]'), z = e.target.closest('[data-blz]');
-      if (r) { R = +r.getAttribute('data-blr'); ss('t14.blind.r', R); CACHE = null; draw(); }
+      if (r) setR(+r.getAttribute('data-blr'));
+      if (e.target.closest('[data-blist]') && window.T14Site && window.T14Site.open) window.T14Site.open('find');
       if (z && CACHE && P.fit) { var Z = CACHE.zones[+z.getAttribute('data-blz')]; if (Z) { var pad = 15, w = Math.max(40, Z.box[2] + pad * 2), h = Math.max(30, Z.box[3] + pad * 2); P.fit(Z.cx - w / 2, Z.cy - h / 2, w, h); } }
     });
     window.addEventListener('t14edits', function () { CACHE = null; draw(); });
     draw();
     // 02.11.2026, Т. В.: сводка карты (assets/mapinfo.js) — слепые зоны той же дальности, что выбрана здесь
-    window.T14Blind = { calc: function () { if (!CACHE || CACHE.R !== R) CACHE = compute(); return CACHE; }, show: function () { setOn('bl', !ON.bl); }, on: function () { return ON.bl; } };
+    window.T14Blind = { calc: function () { if (!CACHE || CACHE.R !== R) CACHE = compute(); return CACHE; }, show: function () { setOn('bl', !ON.bl); }, on: function () { return ON.bl; },
+      get: function (k) { return !!ON[k]; }, set: function (k, v) { if (k in ON) setOn(k, !!v); }, range: function () { return R; }, setRange: setR,   // 16.11: окно «Слои» (assets/layers.js)
+      panel: function (v) { FORCE = !!v; draw(); } };
     try { window.dispatchEvent(new Event('t14blind')); } catch (e) { }
   }
   (function wait(n) { if (window.T14Plan && window.T14Plan.svg) init(); else if (n < 200) setTimeout(function () { wait(n + 1); }, 100); })(0);

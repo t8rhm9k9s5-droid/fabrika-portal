@@ -80,28 +80,42 @@ if [ -n "$T" ]; then
   cp app_build/drive_pack.py "$T/py/drive_pack.py" || bad 'копирование drive_pack.py'
   # 14.11.2026 (ревью Рекса CG-11, test_poll_remind): справочник людей робота — тот, что уходит пакетом; без него в макете поиск людей пустой (25 из 29 FAIL)
   cp app_build/host/live/unans_org.json "$T/py/live/" || bad 'копирование unans_org.json'
+  # 16.11.2026 (R5-02 Рекса): тесты — из того же исходника, что и код (app_build/host/live/test), а не только старый макет fix/work/py;
+  #   справочник руководителей leaders.json уходит пакетом вместе с кодом — без него 4 теста получателей падают на макете.
+  cp app_build/host/live/leaders.json "$T/py/live/" || bad 'копирование leaders.json'
+  cp -r app_build/host/live/test/. "$T/py/live/test/" || bad 'копирование текущих тестов робота'
   NT=$(ls "$T/py/live/test/"test_*.py 2>/dev/null | wc -l)
-  [ "$NT" -ge 20 ] || bad "тестов робота найдено $NT (ожидается не меньше 20)"
+  [ "$NT" -ge 45 ] || bad "тестов робота найдено $NT (ожидается не меньше 45)"
+  RUNLOG="$H/fabrika/work/ci/predeploy_tests_last.txt"; mkdir -p "$(dirname "$RUNLOG")"
+  { echo "# прогон $(date -u +%FT%TZ) · код+тесты sha $(cat app_build/host/live/*.py app_build/host/live/test/*.py 2>/dev/null | sha256sum | cut -c1-16)"; } > "$RUNLOG"
   # устаревшие (ждут прежних умолчаний: SMTP, 9 участков, даты, справочники) — «имя|мин. ✓|начало сообщения AssertionError»
   STALE="$T/stale.txt"
   cat > "$STALE" <<'EOS'
-test_audit_deploy|10|пакет со сломанным live.py — откат из копии
-test_audit_mail|8|явный отказ сервера (554)
-test_glonass_stages|13|в 08:35 — одно письмо: 2 трекера
-test_mail_gas|21|st/in.php: верная подпись
-test_mail_q|2|дубль не ставится
+test_audit_deploy|10|AssertionError: пакет со сломанным live.py — откат из копии
+test_mail_gas|21|AssertionError: st/in.php: верная подпись
+test_mail_q|22|AssertionError: нет файла — как раньше (smtp, imap)
+test_check_x|2|AssertionError: вторник: 5 строк, без «Покупных товаров»
+test_eco|10|AssertionError: первый прогон: все 9 участков
+test_morning_q|6|AssertionError: настройки: опрос 09:00 МСК
+test_mx_survey|0|FAILED: 2
+test_sales_day|6|KeyError: '2026-10-29'
+test_soft_start|1|AssertionError: 02.11 09:01 — утренний опрос
 EOS
+  # 16.11.2026 (R5-02): 6 последних строк — тесты, которые раньше в прогон не попадали вовсе (устаревшие даты/фикстуры). Это открытая часть R5-02:
+  #   обновить фикстуры и убрать строки. Новое падение или другое сообщение — выкладка запрещена.
   if cd "$T/py/live"; then
     for t in test/test_*.py; do
       n=$(basename "$t" .py); o=$(timeout 120 unshare -n python3 -W ignore "$t" 2>&1); rc=$?; k=$(echo "$o" | grep -c '✓')
-      if [ $rc = 0 ] && echo "$o" | tail -1 | grep -q '^ALL OK'; then echo "✓ $n"; continue; fi
+      # 16.11.2026 (R5-02): успех — код 0 (новые тесты пишут «OK N», «ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ», а не только «ALL OK»); каждый прогон — в журнал
+      if [ $rc = 0 ] && ! echo "$o" | grep -qE '^(FAIL|FAILED|Traceback)'; then echo "✓ $n"; echo "ok $n" >> "$RUNLOG"; continue; fi
       line=$(grep "^$n|" "$STALE")
       if [ $rc = 1 ] && [ -n "$line" ]; then
         mk=$(echo "$line" | cut -d'|' -f2); msg=$(echo "$line" | cut -d'|' -f3)
-        last=$(echo "$o" | grep '^AssertionError: ' | tail -1)
-        if [ "$k" -ge "$mk" ] && case "$last" in "AssertionError: $msg"*) true;; *) false;; esac; then
-          echo "· $n (устаревший: то же падение, проверок $k из $mk)"; continue; fi
+        last=$(echo "$o" | grep -E '^[A-Za-z]+(Error|Exception)?: |^FAILED' | tail -1)
+        if [ "$k" -ge "$mk" ] && case "$last" in "$msg"*) true;; *) false;; esac; then
+          echo "· $n (устаревший: то же падение, проверок $k из $mk)"; echo "stale $n" >> "$RUNLOG"; continue; fi
       fi
+      echo "fail $n" >> "$RUNLOG"
       # test_poll_remind: число FAIL не определяет, какие проверки сломаны.
       # До обновления устаревшего теста любой его ненулевой код блокирует выкладку.
       echo "✗ $n (код $rc, проверок $k): $(echo "$o" | tail -2 | tr '\n' ' ' | cut -c1-160)"; echo FAIL >> "$T/fail"

@@ -77,7 +77,14 @@
     var A = agg('types') || agg('cap'); if (!A) return null;
     var got = ks.reduce(function (a, x) { var g = sdGot(D[x]); return g > a ? g : a; }, S(((SD.months || {})[ym] || {}).got));
     var MM = (SD.months || {})[ym], whole = !!(MM && MM.to && got.slice(0, 10) > ym + '-' + String(mend(ym)).padStart(2, '0'));
-    return { ym: ym, v: A.s, q: A.q, to: ks[ks.length - 1], asof: got, whole: whole, n: ks.length };
+    // 16.11.2026, Т. В. (42,65 на портале против ~45,4 в 1С): дневные рассылки не видят проведённое задним числом. Есть накопительный отчёт
+    //   «Выполнение плана» (SNAP.pmgr: факт с 1-го числа на дату) — берём его + дни после его даты, если так больше.
+    var P = SNAP.pmgr, mix = null;
+    if (P && P.ym === ym && P.fact && P.asof) {
+      var after = 0; ks.forEach(function (x) { if (x > S(P.asof)) { var R = (D[x] || {}).types || (D[x] || {}).cap; if (R && R.tot) after += R.tot[1] || 0; } });
+      if (P.fact + after > A.s) mix = { v: P.fact + after, asof: P.asof };
+    }
+    return { ym: ym, v: mix ? mix.v : A.s, q: A.q, to: ks[ks.length - 1], asof: got, whole: whole, n: ks.length, daily: A.s, pm: mix };
   }
   function sales() {
     var SD = sday(), R = SNAP.rev || null, bars = {}, ag = {};
@@ -95,7 +102,7 @@
     var when = A.asof && A.to && S(A.asof).slice(0, 10) > S(A.to).slice(0, 10) ? 'по ' + dd(A.to) + ' (рассылка ' + dd(A.asof) + ' ' + S(A.asof).slice(11, 16) + ')' : A.asof ? 'на ' + dd(A.asof) + ' ' + S(A.asof).slice(11, 16) : (A.to ? 'по ' + dd(A.to) : '');
     return { k: 'sales', v: A.v, ym: cur, m: m, to: A.to, asof: A.asof, whole: A.whole, date: A.to, when: when, live: live,
       prev: pv ? { ym: pv, m: +pv.slice(5), v: bars[pv] } : null, bars: keys.slice(-6).map(function (k) { return [+k.slice(5), bars[k]]; }),
-      src: live ? 'рассылки 1С «Продажи» (робот хостинга)' : 'отчёт 1С «Продажи» по дням (снимок сборки)',
+      src: (A.pm ? 'отчёт «Выполнение плана» на ' + dd(A.pm.asof) + ' + ' : '') + (live ? 'рассылки 1С «Продажи» (робот хостинга)' : 'отчёт 1С «Продажи» по дням (снимок сборки)'),
       card: mln2(A.v) + ' млн ₽ · ' + MN[m - 1] + ' ' + (A.whole ? 'весь месяц' : 'по ' + dd(A.to)) };
   }
 
@@ -215,8 +222,14 @@
     var K = {}; (D.kinds || []).forEach(function (x) { K[x.k] = x; });
     var z = K.zps && K.zps.total, f = K.fts && K.fts.total;
     if (z == null && f == null) return { k: 'omts', none: true };
-    var tot = (z || 0) + (f || 0), t = (K.zps && K.zps.t) || (K.fts && K.fts.t);
-    return { k: 'omts', v: tot, z: z, f: f, t: t, date: t, live: true, src: 'рассылки 1С о просрочке (робот хостинга)', card: n(tot) + ' ' + pl(tot, 'позиция', 'позиции', 'позиций') + ' в просрочке' + (t ? ' · на ' + dd(t) : '') };
+    // 16.11.2026 (R5-11 Рекса): общий итог — только когда есть обе рассылки за один день; иначе «частично» и каждая компания со своей датой
+    //   (раньше ЖПС на 15.11 + ФТС на 10.11 складывались в одно число «на 15.11», а одна ЖПС выглядела полной картиной)
+    var tot = (z || 0) + (f || 0), tz = K.zps && K.zps.t, tf = K.fts && K.fts.t;
+    var same = z != null && f != null && S(tz).slice(0, 10) === S(tf).slice(0, 10), t = same ? tz : [tz, tf].filter(Boolean).sort()[0];
+    var part = function (nm, v, d) { return v == null ? nm + ' — нет данных' : nm + ' ' + n(v) + (d ? ' на ' + dd(d) : ''); };
+    return { k: 'omts', v: tot, z: z, f: f, t: t, date: t, live: true, partial: !same, src: 'рассылки 1С о просрочке (робот хостинга)',
+      card: same ? n(tot) + ' ' + pl(tot, 'позиция', 'позиции', 'позиций') + ' в просрочке' + (t ? ' · на ' + dd(t) : '')
+        : 'частично: ' + part('ЖПС', z, tz) + ' · ' + part('ФТС', f, tf) };
   }
 
   // ---------- качество: незакрытые рекламации (1С «Закрыта = Нет»; recl.bin робота, если не старше снимка) ----------
