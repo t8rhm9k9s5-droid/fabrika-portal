@@ -849,6 +849,11 @@
         if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); place(a); tmr = setTimeout(function () { place(a); tip.classList.add('on'); }, 180); }
       });
       side.addEventListener('mouseleave', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      // 16.11.2026, проверка Рекса (PR №2, P3): подсказка и с клавиатуры — Tab по значкам; Esc и уход фокуса прячут
+      side.addEventListener('focusin', function (e) { var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab'); if (!a || !railOn()) return;
+        curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; clearTimeout(tmr); place(a); tip.classList.add('on'); });
+      side.addEventListener('focusout', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tip.classList.contains('on')) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); } });
       side.addEventListener('click', function () { tip.classList.remove('on'); });
       // 15.11.2026, Т. В.: «стрелочка — нажимаешь, и всё меню выезжает вправо с надписями». Только там, где панель узкая (компьютер, V22 или 701–1279 px).
       var de = document.documentElement, exp = el('button', 'pexp', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'); exp.type = 'button'; document.body.appendChild(exp);
@@ -1247,7 +1252,11 @@
     raf = 0;
     var p = document.querySelector('.tabpanel'), de = document.documentElement;
     if (!p) return;
-    var kb = window.innerHeight - vv.height > 120;              // клавиатура (или другая панель снизу) открыта
+    // 16.11.2026, проверка Рекса (PR №2, P2): при увеличении двумя пальцами visualViewport тоже сжимается — это не клавиатура.
+    //   Клавиатура = фокус в текстовом поле листа, масштаб 1 и видимая часть ниже окна больше чем на 120 px.
+    var ae = document.activeElement, typing = !!ae && p.contains(ae) && ((ae.tagName === 'TEXTAREA') || ae.isContentEditable ||
+      (ae.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color|image|hidden)$/i.test(ae.type || '')));
+    var kb = typing && (vv.scale || 1) < 1.01 && window.innerHeight - vv.height > 120;
     if (kb && !p.hidden && p.getClientRects().length) {   // не offsetParent: у position:fixed он всегда null (проверка PR №2)
       var top = Math.round(vv.offsetTop + 8), h = Math.round(vv.height - 16);
       p.style.setProperty('top', top + 'px', 'important'); p.style.setProperty('bottom', 'auto', 'important');
@@ -1260,4 +1269,5 @@
   vv.addEventListener('resize', kick); vv.addEventListener('scroll', kick);
   document.addEventListener('focusin', function () { setTimeout(kick, 60); setTimeout(kick, 400); });
   document.addEventListener('focusout', function () { setTimeout(kick, 120); });
+  addEventListener('pageshow', kick);   // возврат из фона — сбросить временную геометрию (Рекс, №23)
 })();
