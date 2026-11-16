@@ -160,7 +160,7 @@
     if (V.task){ try { V.task.destroy(); } catch (e) {} V.task = null; }
     if (V.pdf){ try { V.pdf.destroy(); } catch (e) {} V.pdf = null; }
   }
-  function t14NoBgScroll(box){ return function (e) { var n = e.target; while (n && n !== box) { if (n.scrollHeight > n.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(n).overflowY)) return; n = n.parentNode; } if (e.cancelable) e.preventDefault(); }; }
+  function t14NoBgScroll(box){ return function (e) { var n = e.target; while (n && n !== box) { var cs = getComputedStyle(n); if ((n.scrollHeight > n.clientHeight + 1 && /auto|scroll/.test(cs.overflowY)) || (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(cs.overflowX))) return;   /* 16.11 Рекс: обе оси (широкий короткий PDF) */ n = n.parentNode; } if (e.cancelable) e.preventDefault(); }; }
   function close(fromHistory){
     if (!root || root.hidden) return;
     reset(); if (root) { msg(null); root.hidden = true; } document.documentElement.style.overflow = '';

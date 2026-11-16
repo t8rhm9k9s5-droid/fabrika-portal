@@ -815,11 +815,14 @@
     if (APK) { var apn = el('a', 'pnav pbot', '<span class="pi" style="--c:var(--ic-calls)">' + ICON.s_apk + '</span><span class="pt">Приложение (APK)</span>'); apn.href = APK; apn.setAttribute('download', 'Фабрика.apk'); side.appendChild(apn); }
     var foot = el('div', 'pfoot'); side.appendChild(foot);
     var pf = trigger('profile', 'pnav', 'sliders', 'Профиль и настройки'); pf.innerHTML = '<span class="pi" style="--c:var(--ic-grey)">' + ICON.s_person + '</span><span class="pt">Профиль и настройки</span>'; foot.appendChild(pf);
+    // 16.11.2026, проверка Рекса (PR №2, п. 1): в узкой панели подписи .pt скрыты (display:none) — у ссылок нет имени для VoiceOver.
+    //   Постоянное имя — aria-label из подписи (со счётчиком «требует внимания», см. paintBadges).
+    [].forEach.call(side.querySelectorAll('.pnav, .pfab'), function (a) { var t = a.querySelector('.pt'); t = t ? t.textContent.trim() : ''; if (t) { a.dataset.nm = t; if (!a.getAttribute('aria-label')) a.setAttribute('aria-label', t); } });
     // счётчики «требует внимания» у разделов: главная считает их по отчётам (T14Site.badges) и запоминает на сутки
     function paintBadges() {
       var B = null; try { B = JSON.parse(localStorage.getItem('t14.badges') || 'null'); } catch (e) { B = null; }
       var v = B && B.v && Date.now() - (B.t || 0) < 864e5 ? B.v : {};
-      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''; });
+      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';  if (a.dataset.nm) a.setAttribute('aria-label', a.dataset.nm + (x ? ', требует внимания: ' + x : '')); });
     }
     paintBadges(); BADGE_PAINT = paintBadges;
     // 14.11.2026, Т. В. (компьютер, узкая левая панель V22): «вожу мышкой — иконки: машинка, складик, менюшка — что это значит? Подпись от нижнего

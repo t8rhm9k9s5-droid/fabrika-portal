@@ -154,6 +154,7 @@ function poll() {
   var p0 = props(), lt = Number(p0.getProperty('poll_t') || 0);
   if (Date.now() - lt < 240000) return;              // расписание — раз в 10 минут; чаще — не от расписания (google.script.run)
   p0.setProperty('poll_t', String(Date.now()));
+  try { subClearOnce_(); } catch (e) { try { log_('claude', 'subclear: ' + e); } catch (e2) { /* */ } }   // 15.11.2026 ~21:35, Т. В.: «выбей все мои устройства до нуля»
   propsAuto_();                                       // 30.10.2026 аудит, договорённость 9: пропавшие свойства — из резервной копии
   // 28.10.2026 (пользователь: «Почему так долго ответы формируются !?»): раньше poll держал замок все 2–3 минуты, и сообщения из Telegram и MAX
   //   ждали его конца, а иногда и следующего запуска (до 10 минут). Теперь замок — на каждый шаг отдельно, после шага — разбор очереди сообщений;
@@ -2997,6 +2998,7 @@ function bot2Tick_() {
   // urgent requests nobody took within 2 hours — once more to everyone in repairs
   b2RqOpen_().forEach(function (r) { if (r.urg && r.st === 'new' && now - r.t > 2 * 36e5 && !r.rem) { r.rem = now; b2Set_('rq_' + r.n, r); b2Send_(b2To_(U, 'eng'), '🔥 <b>Срочная заявка №' + r.n + ' ещё не в работе</b> (' + b2Num_((now - r.t) / 36e5, 1) + ' ч)\n' + h_(r.where.label) + ' — ' + h_(r.text.split('\n')[0]), b2RqKb_(r.n, 'new')); } });
   if (h < 9) return;
+  b2VypWait_(U, p, h, day);   // 16.11.2026: отчёт о выпуске пришёл позже утренней сводки — отдельным сообщением
   // 9:00 — morning summary (weekdays), septic and meter reminders, the month report
   if (p.getProperty('b2_morning') !== day && h < 12) {        // only in the morning: not at the first run late in the day
     p.setProperty('b2_morning', day);
@@ -3214,15 +3216,33 @@ function evTick_(U, now, h, day) {   // 04.11.2026 (замечания GPT 06, 0
     tgMsg_(U[ITM_TO].chat, L.join('\n'));
   }
 }
+function b2Dm_(d) { return String(d).split('-').reverse().slice(0, 2).join('.'); }
+function b2PrevWork_(t) { var d = t - 864e5; for (var i = 0; i < 14 && !evWorkDay_(d); i++) d -= 864e5; return b2Msk_(d, 'yyyy-MM-dd'); }   // прошлый рабочий день (EV_HOL)
+// 16.11.2026: ждём отчёт о выпуске после утреннего предупреждения — пришёл → сообщение подписчикам утра; к 12:00 нет — ещё одно предупреждение
+function b2VypWait_(U, p, h, day) {
+  var vw = p.getProperty('b2_vyp_wait'); if (!vw) return;
+  var to = Object.keys(U).filter(function (k) { return b2Sub_(U[k], 'm'); }).map(function (k) { return U[k].chat; });
+  try {
+    var D = b2Live_(), V = D.vyp, O = D.output, last = (V && V.date) || (O && O.date) || '', t = '';
+    if (V && V.date >= vw && V.rows && V.rows.length) t = b2Vyp_(D); else if (O && O.date >= vw) t = b2OutAgg_(O);
+    if (t) { p.deleteProperty('b2_vyp_wait'); b2Send_(to, '📥 <b>Пришёл отчёт о выпуске</b>\n' + t); return; }
+    if (h >= 12 && p.getProperty('b2_vyp_late') !== day) { p.setProperty('b2_vyp_late', day); b2Send_(to, '⚠️ <b>Отчёт о выпуске за ' + h_(b2Dm_(vw)) + ' так и не пришёл</b> к 12:00' + (last ? ' — последний за ' + h_(b2Dm_(last)) : '') + '. Отчёт присылает ПДО (imm@) в itm@, папка «производство».'); }
+  } catch (e) { console.log('vyp wait: ' + e); }
+}
 function b2Morning_() {
   var D = b2Live_(), L = [], now = Date.now();
   var dn = ['', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'][Number(b2Msk_(now, 'u'))];
   L.push('☀️ <b>Доброе утро! ' + dn.charAt(0).toUpperCase() + dn.slice(1) + ', ' + b2Msk_(now, 'dd.MM') + '</b>');
   L.push('🌤 ' + h_(b2WxNow_()) + (b2WxDay_() ? '; ' + h_(b2WxDay_()) : ''));
   var S = b2Stock_(D); if (S) L.push('📦 Склад на ' + h_(S.dt) + ': <b>' + b2Num_(S.qty) + '</b> шт (за день ' + b2Sgn_(S.d_day) + ', с 1-го числа ' + b2Sgn_(S.d_month) + ') — /sklad');
-  var V = D.vyp; if (V && V.rows && V.rows.length) L.push(b2Vyp_(D)); else { var O = D.output; if (O && O.areas) { var dp = 0, df = 0, low = [];
-    O.areas.forEach(function (a) { dp += a.dp; df += a.df; if (a.dp > 0 && a.df / a.dp < 0.8) low.push('№' + a.n + ' — ' + b2Num_(a.df / a.dp * 100) + ' %'); });
-    if (dp) L.push('🏭 Выпуск за ' + h_(O.date.split('-').reverse().slice(0, 2).join('.')) + ': план ' + b2Num_(dp) + ', факт ' + b2Num_(df) + ' (' + b2Num_(df / dp * 100) + ' %)' + (low.length ? '; отстают: ' + low.slice(0, 5).join(', ') : '')); } }
+  // 16.11.2026, Т. В. (утро пн: «Выпуск за 12.11», а отчёт за пт 13.11 пришёл в 09:13): «либо alert, что нет данных, либо должен быть отчёт;
+  //   выходной — отчёт за последний рабочий день». Нужен отчёт за прошлый рабочий день (производственный календарь); нет — предупреждение,
+  //   а сам выпуск придёт отдельным сообщением, как только робот хостинга возьмёт отчёт ПДО (b2VypWait_ в часовом цикле).
+  var want = b2PrevWork_(now), V = D.vyp, have = (V && V.date) || (D.output && D.output.date) || '';
+  var ot = '';
+  if (V && V.date >= want && V.rows && V.rows.length) ot = b2Vyp_(D); else if (D.output && D.output.date >= want) ot = b2OutAgg_(D.output);
+  if (ot) { L.push(ot); props().deleteProperty('b2_vyp_wait'); }   // >= (а не ===): отчёт за сегодня до 9:00 не бывает; старое ожидание снимаем
+  else { L.push('⚠️ <b>Выпуска за ' + h_(b2Dm_(want)) + ' ещё нет</b>' + (have ? ' — последний отчёт ПДО за ' + h_(b2Dm_(have)) : ' — данных о выпуске нет') + '. Пришлю, как только придёт.'); props().setProperty('b2_vyp_wait', want); }
   var rq = b2RqOpen_(); if (rq.length) L.push('🛠 Заявки на ремонт: открыто ' + rq.length + ' (новых ' + rq.filter(function (r) { return r.st === 'new'; }).length + ', в работе ' + rq.filter(function (r) { return r.st === 'work'; }).length + ')' + (rq.some(function (r) { return r.urg; }) ? ', есть срочные 🔥' : ''));
   var cf = b2CfOpen_(); if (cf.length) L.push('🎥 Камеры не работают: ' + cf.length + ' — ' + cf.slice(0, 4).map(function (c) { return h_(c.cam.label.replace(/^Камера /, '')); }).join(', '));
   var sp = b2SpList_().map(function (s) { var d = b2SpDue_(s); return d && d.left <= 3 ? h_(s.n) + (d.left < 0 ? ' — просрочено' : ' — через ' + d.left + ' дн.') : ''; }).filter(Boolean); if (sp.length) L.push('🛢 Септики: ' + sp.join('; '));
@@ -3292,6 +3312,11 @@ function b2LiveAlert_() {
 }
 
 // the output report in Makarova's form: every line — day shift · night shift · total for the day; the day plan and % where there is one
+function b2OutAgg_(O) {   // сводка выпуска по участкам (если построчного D.vyp нет)
+  if (!O || !O.areas) return ''; var dp = 0, df = 0, low = [];
+  O.areas.forEach(function (a) { dp += a.dp; df += a.df; if (a.dp > 0 && a.df / a.dp < 0.8) low.push('№' + a.n + ' — ' + b2Num_(a.df / a.dp * 100) + ' %'); });
+  return dp ? '🏭 Выпуск за ' + h_(b2Dm_(O.date)) + ': план ' + b2Num_(dp) + ', факт ' + b2Num_(df) + ' (' + b2Num_(df / dp * 100) + ' %)' + (low.length ? '; отстают: ' + low.slice(0, 5).join(', ') : '') : '';
+}
 function b2Vyp_(D) {
   var V = D.vyp, L = [], tp = 0, tf = 0;
   L.push('🏭 <b>Выпуск за ' + h_(String(V.date).split('-').reverse().join('.')) + '</b> (день · ночь · итого за сутки; план, %)');
@@ -3885,6 +3910,9 @@ function claudePost_(q) {
         });
         out.did.push('menubtn:' + mok + '/' + mchats.length);
       }
+      // 15.11.2026 ~21:35, Т. В. («слишком много устройств на один вход» — «выбей все мои устройства до нуля»): снять ВСЕ подписки на уведомления
+      //   одного человека (x.who — id входа или x.login — логин); дальше он заново включает уведомления на нужных устройствах. Только по подписи Claude.
+      else if (x.do === 'subclear') { out.did.push('subclear:' + subClear_(x.who, x.login)); }
       else out.did.push('?' + x.do);
     } catch (e) { out.did.push('err:' + e); }
   });
@@ -6303,4 +6331,19 @@ function g4_cmdFlush_() {
     }
   });
   return done;
+}
+
+// 15.11.2026 ~21:35, Т. В.: «слишком много устройств на один вход. Выбей все мои устройства до нуля» — подписки на уведомления (s_*) одного входа.
+function subClear_(who, login) {
+  var m = users_().map, u = null;
+  for (var k in m) { if ((who && k === who) || (login && m[k].login === login)) { u = m[k]; u._id = k; break; } }
+  if (!u) return 'нет такого';
+  var p = props(), all = p.getProperties(), n = 0, id = u.id || u._id;
+  for (var sk in all) if (sk.indexOf('s_') === 0) { var so = pj_(all[sk], null); if (so && (so.who === id || so.who === u._id)) { p.deleteProperty(sk); n++; } }
+  log_(String(u.login || id), 'уведомления: сняты все устройства (' + n + ')');
+  return n;
+}
+function subClearOnce_() {                            // один раз (по таймеру poll, без смены веб-приложения): владелец, 15.11
+  var p = props(); if (p.getProperty('subclear_1511')) return;
+  p.setProperty('subclear_1511', String(subClear_('REDACTED_HEX_1', null)));
 }

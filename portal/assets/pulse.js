@@ -44,11 +44,14 @@
   }
   function glData() {
     if (!glOk()) return null;
-    if (GLC === undefined) { GLC = null; try { GLC = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); } catch (e) { } }
+    // 16.11.2026, проверка Рекса (PR №2, п. 2 / №24): сводка «Транспорта» — только своего входа; ответ, пришедший после выхода или смены входа, не пишется
+    var uid = (T14Acct.me() || {}).id, tk = T14Acct.tok();
+    if (GLC === undefined || (GLC && GLC.u !== uid)) { GLC = null; try { var c = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); if (c && c.u === uid) GLC = c; } catch (e) { } }
     if (!GLQ) {
       GLQ = true;
-      T14Acct.api('gl', { tok: T14Acct.tok(), fresh: 0 }).then(function (r) {
-        if (!r || !r.gl) return; GLC = glSum(r.gl); try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
+      T14Acct.api('gl', { tok: tk, fresh: 0 }).then(function (r) {   // один запрос на загрузку страницы (again() перерисовывает — повторного запроса нет)
+        if (!r || !r.gl || T14Acct.tok() !== tk || (T14Acct.me() || {}).id !== uid) return;
+        GLC = glSum(r.gl); GLC.u = uid; try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
       }, function () { });
     }
     return GLC;
