@@ -3,6 +3,7 @@
      Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
      Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. -->
 <title>Фабрика — продажи</title>
+<script>/* 16.11.2026: «Структура» переехала на struct.html — старые адреса (закладки, «Сохранённое») ведут туда до загрузки данных продаж */if (/^#(struct|sec-|ko$)/.test(location.hash)) location.replace('struct.html' + (location.hash === '#struct' ? '' : location.hash));</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="assets/site.css">
 <style>
@@ -121,7 +122,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 .kop[open]>summary .ichev{transform:rotate(90deg)}
 .kob{padding:4px 16px 14px;font-size:15px;line-height:1.45}.kob p{margin:8px 0 4px}.kob ol,.kob ul{margin:4px 0 6px;padding-left:20px}.kob li{margin:3px 0}
 .kost{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--p-soft,#eee);font-size:12px;font-weight:500;vertical-align:2px}
-/* 30.10.2026: «Офисы продаж — октябрь 2026» (письмо М. И. Сотрудник7, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
+/* 30.10.2026: «Офисы продаж — октябрь 2026» (письмо М. И. Сотрудник8, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
 .opm .mtx tr.opt td{font-weight:600}
 .opm .mtx .hl{background:var(--p-soft,rgba(120,120,128,.12))}
 .opm .mtx th.hl{color:var(--p-fg,inherit);font-weight:600}
@@ -194,7 +195,6 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 <script id="oz-data" type="application/json">__OZON__</script>
 <script id="ozrev-data" type="application/json">__OZREV__</script>
 <script id="virev-data" type="application/json">__VIREV__</script>
-<script id="spb-data" type="application/json">__SPB__</script>
 <script id="ko-data" type="application/json">__KO__</script>
 <script id="tz1c-data" type="application/json">__TZ1C__</script>
 <script id="salesop-data" type="application/json">__SALES_OP__</script>
@@ -207,8 +207,8 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 (function () {
   var D = JSON.parse(document.getElementById('sales-data').textContent || '{}'), V = document.getElementById('view'), STOCK = null, TZ = null, CALC = null, DOCS = null;
   var MON = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'], WD = ['вс','пн','вт','ср','чт','пт','сб'];
-  var SHORT = { ekb: 'Екатеринбург', sam: 'Самара', nn: 'Н. Имя3', krd: 'Краснодар', sim: 'Симферополь', msk: 'Москва', net: 'Сотрудник7 М. И.' };
-  var WH = { ekb: 'ОП Екатеринбург', sam: 'ОП Самара', nn: 'ОП Сотрудник13 Имя3', krd: 'ОП Краснодар', sim: 'ОП Симферополь', msk: 'ОП Москва' };
+  var SHORT = { ekb: 'Екатеринбург', sam: 'Самара', nn: 'Н. Имя3', krd: 'Краснодар', sim: 'Симферополь', msk: 'Москва', net: 'Сотрудник8 М. И.' };
+  var WH = { ekb: 'ОП Екатеринбург', sam: 'ОП Самара', nn: 'ОП Сотрудник14 Имя3', krd: 'ОП Краснодар', sim: 'ОП Симферополь', msk: 'ОП Москва' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n(v) { return v == null ? '—' : String(Math.round(v)).replace('-', '−').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function dd(s) { if (!s) return '—'; var p = s.slice(0, 10).split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; }
@@ -257,7 +257,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       var _thr = ONLINE.thr || 0.1, _low = (ONLINE.prices || []).filter(function (p) { return p.p && p.r && p.p / p.r - 1 < -_thr; }).length, _ns = {}; (ONLINE.prices || []).forEach(function (p) { _ns[p.s] = 1; });
       h += '<p class="ihdr" id="onlh">Онлайн-продажи</p><div class="igroup"><a class="irow" href="#online"><span class="ic"><span class="ibody"><span class="ititle">Онлайн-продажи: ' + rub(_ot) + ' за ' + esc((ONLINE.months || []).join('–')) + '</span><span class="isub">' + Object.keys(_oc).map(function (k) { return esc(k.replace(' — наш магазин ООО «ПКС»', ' (наш)')) + ' ' + rub(_oc[k]); }).join(' · ') + ' · продавцов ' + Object.keys(_ns).length + ', ниже РРЦ ' + _low + (ONLINE.comp ? ' · конкуренты ' + ONLINE.comp.length : '') + '</span></span><span class="ichev"></span></span></a></div>'; }
     h += dayBlock();                                                      // 30.10.2026: продажи за день — ежедневные рассылки 1С
-    h += opmBlock();                                                      // 30.10.2026: офисы продаж — октябрь 2026 (данные М. И. Сотрудник7)
+    h += opmBlock();                                                      // 30.10.2026: офисы продаж — октябрь 2026 (данные М. И. Сотрудник8)
     if (CALC && CALC.lines && Object.keys(CALC.lines).length) h += linesBlock();
     if (T1 && T1.n) {                                                     // 28.10.2026: «ТЗ в работе» из 1С — этап, сколько стоит, срок актуальности
       h += '<p class="ihdr" id="tz1">ТЗ в работе · 1С</p><div class="igroup">' +
@@ -302,7 +302,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     h += '<p class="ihdr">Особый контроль</p><div class="igroup"><a class="irow" href="#leads"><span class="ic"><span class="ibody"><span class="ititle">Лиды выставок: ход работы по офисам</span><span class="isub" id="leadsSub">' + (LEADS && LEADS.tot ? 'отмечено ' + LEADS.tot.done + ' из ' + LEADS.tot.rows + (LEADS.tot.today ? ', сегодня +' + LEADS.tot.today : '') + ' · сверка 20.11, итог 27.11' : '1074 контакта, 11 таблиц; сверка 20.11, итог 27.11') + '</span></span><span class="ichev"></span></span></a></div>';
     h += '<p class="ihdr">Менеджеры и офисы продаж</p><div class="igroup"><a class="irow" href="#mgrop"><span class="ic"><span class="ibody"><span class="ititle">Продажи по менеджерам и ОП (базис поставки)</span><span class="isub">отгрузки месяца, ФТС и ПКС отдельно, накопленным итогом по дням</span></span><span class="ichev"></span></span></a></div>';
     h += '<p class="ihdr">График отгрузки</p><div class="igroup"><a class="irow" href="#ship"><span class="ic"><span class="ibody"><span class="ititle">График отгрузки — октябрь по неделям</span><span class="isub">отгрузки → перемещения на ОП → продажи из ОП → остаток ОП; сравнение «переместили / продали» по офисам</span></span><span class="ichev"></span></span></a></div>';
-    h += '<p class="ihdr">Сотрудник8</p><div class="igroup"><a class="irow" href="#cls"><span class="ic"><span class="ibody"><span class="ititle">Классификация клиентов</span><span class="isub">тип (9 каналов), класс ABC по выручке, статус активности — утверждено 29.10.2026</span></span><span class="ichev"></span></span></a></div>';
+    h += '<p class="ihdr">Сотрудник9</p><div class="igroup"><a class="irow" href="#cls"><span class="ic"><span class="ibody"><span class="ititle">Классификация клиентов</span><span class="isub">тип (9 каналов), класс ABC по выручке, статус активности — утверждено 29.10.2026</span></span><span class="ichev"></span></span></a></div>';
     var RO = ROPEN;
     h += '<p class="ihdr" id="reclh">Рекламации</p><div class="igroup">' + (RO && RO.n ? '<a class="irow" href="#recl"><span class="ic"><span class="ibody"><span class="ititle">Незакрытые рекламации · ' + n(RO.n) + '</span><span class="isub">старше 30 дней — ' + RO.old30 + ' · маркетплейсы ' + rmp(true).length + ', клиенты ' + rmp(false).length + ' · 1С на ' + dd(RO.asof) + '</span></span><span class="ival' + (RO.old30 ? ' bad' : '') + '">' + RO.old30 + '</span><span class="ichev"></span></span></a>' : '') + '<a class="irow" href="#recl"><span class="ic"><span class="ibody"><span class="ititle">Рекламации: контрольные точки и форма отчёта</span><span class="isub">7 точек по Р-КО-01 со сроками, форма реестра' + (DOCS && DOCS.recl && DOCS.recl.cnt ? ' · писем: ' + DOCS.recl.cnt : '') + '</span></span><span class="ichev"></span></span></a></div>';
     h += reportsTable(day, tiso);
@@ -323,8 +323,9 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       }).join('') + '</tbody></table></div></div>';
   }
   function reportsPage(date) {
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) date = '';   // 16.11.2026 (CodeQL js/xss): дата из адреса — только ГГГГ-ММ-ДД
     var today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-    var days = D.days || [], caption = 'Вечерние отчёты офисов' + (date ? ' · ' + dd(date) + ' ' + date.slice(0, 4) : '');
+    var days = D.days || [], caption = 'Вечерние отчёты офисов' + (date ? ' · ' + dd(date) + ' ' + esc(date.slice(0, 4)) : '');
     V.innerHTML = '<a class="back" href="#">Продажи</a><h1>' + caption + '</h1>' +
       reportsTable(date ? [date] : days, today) + (date ? '<p><a href="#s-days">Все дни</a></p>' : '');
   }
@@ -394,7 +395,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     h += rtab2('Виновные — участок', A.by_g.slice(0, 14), null, [['docs', 'док.'], ['q', 'шт'], ['sum', 'ущерб']]);
     h += rtab2('Требование клиента', A.by_req, null, [['docs', 'док.'], ['q', 'шт']]);
     h += rtab2('Решение комиссии', A.by_vid, 'Совпадение требования клиента и решения комиссии — ' + A.match + ' из ' + A.match_of + ' позиций.', [['docs', 'док.'], ['q', 'шт']]);
-    h += rtab2('Сотрудник8', A.by_cl.slice(0, 12), null, [['n', 'док.'], ['q', 'шт'], ['sum', 'ущерб'], ['closed', 'закрыто']]);
+    h += rtab2('Сотрудник9', A.by_cl.slice(0, 12), null, [['n', 'док.'], ['q', 'шт'], ['sum', 'ущерб'], ['closed', 'закрыто']]);
     h += rtab2('Изделия', A.by_n.slice(0, 15), 'Модель без исполнения (ткань, цвет, механизм).', [['docs', 'док.'], ['q', 'шт'], ['sum', 'ущерб']]);
     if (A.open_old && A.open_old.length) h += '<p class="ihdr">В работе дольше всех · ' + A.open_old.length + '</p><div class="igroup"><div class="mtx"><table style="min-width:0"><thead><tr><th>документ</th><th>клиент</th><th>дней</th><th>этап</th><th>шт</th></tr></thead><tbody>' +
       A.open_old.slice(0, 20).map(function (d) { return '<tr><td>№ ' + esc(d.no) + ' от ' + dd(d.d) + '</td><td style="white-space:normal">' + esc(d.cl) + '</td><td class="' + (d.age > 30 ? 'no' : '') + '">' + d.age + '</td><td>' + esc(A.stages[d.stage] || '') + '</td><td>' + n(d.q) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
@@ -422,7 +423,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     h += rtab('Причина брака', agg(function (d) { return uniq(d, function (x) { return x.why; }, 'не указана'); }), 'Документ с несколькими позициями учитывается по каждой своей причине.');
     h += rtab('Виновные — участок', agg(function (d) { return uniq(d, function (x) { return x.g; }, 'не указаны'); }).slice(0, 14));
     h += rtab('Вид рекламации', agg(function (d) { return uniq(d, function (x) { return x.vid; }, 'не указан'); }));
-    h += rtab('Сотрудник8 — больше всего рекламаций', agg(function (d) { return [d.cl || '—']; }).slice(0, 12));
+    h += rtab('Сотрудник9 — больше всего рекламаций', agg(function (d) { return [d.cl || '—']; }).slice(0, 12));
     h += '<p class="ihdr">Документы · ' + F.length + ' — сначала старые</p><div class="igroup">' + (F.length ? F.map(function (d) {
       return '<details class="rep tzr"><summary><b>№ ' + esc(d.no) + ' от ' + dd(d.d) + (d.d && d.d.slice(0, 4) !== R.asof.slice(0, 4) ? ' ' + d.d.slice(0, 4) : '') + ' · ' + esc(d.cl || '—') + '</b><i class="cpb' + ((d.age || 0) > 30 ? ' late' : '') + '">' + (d.age != null ? d.age + ' дн.' : '—') + '</i>' +
         '<span>' + esc(d.l.map(function (x) { return x.n + ' × ' + n(x.q); }).join('; ')) + ' · ' + esc(d.m) + '</span></summary>' +
@@ -480,7 +481,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     ['Дилер / оптовик', 'перепродаёт нашу продукцию в регионе', 'тип цен «дилер» или «опт», объём и регулярность'],
     ['Проект / тендер', 'объекты: ВиТ, «Вкусно — и точка», ДОДО, медцентры, банки', 'через ТЗ и расчёт ПЭО, график отгрузок по объектам'],
     ['Корпоративный клиент', 'покупает для себя: офис, школа, кафе', 'прайс, разовые или повторные закупки'],
-    ['Маркетплейс', 'Ozon, Сотрудник10 Имя4 (ПКС), Wildberries', 'свои остатки FBS/FBO, свои цены и комиссии'],
+    ['Маркетплейс', 'Ozon, Сотрудник11 Имя4 (ПКС), Wildberries', 'свои остатки FBS/FBO, свои цены и комиссии'],
     ['Розница', 'физлица, выставочный зал', 'розничный прайс'],
     ['Экспорт', 'Казахстан', 'валюта, НДС и логистика другой страны'],
     ['Внутри группы', 'ЖПС, ФТС, ПКС', 'не считается в продажах клиентам']];
@@ -736,10 +737,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       '<p class="ifoot" style="margin:6px 0 0">Столбик — заказано за день, ₽ (наведите — сумма и штуки). Оранжевая линия — средний день за последние 28 дней: ' + rub(S.r28) + '.</p>';
   }
   // 29.10.2026 00:00, пользователь: «Заведи документ «График отгрузки» и заведи весь октябрь в него по неделям, и привяжи учёт отгрузок и перемещений
-  // товара на ОП, потом продажи из ОП и сравнение перемещения и продажи — документы запроси у Сотрудник25 и Сотрудник7». Пока из 1С нет выгрузок —
+  // товара на ОП, потом продажи из ОП и сравнение перемещения и продажи — документы запроси у Сотрудник25 и Сотрудник8». Пока из 1С нет выгрузок —
   // заполнено тем, что есть: Ozon по неделям (аналитика кабинета ПКС) и остатки ОП (снимок fabrikant.su/stock); остальное — «запрошено».
   var SHIP = (function () { try { return JSON.parse(document.getElementById('ship-data').textContent || 'null'); } catch (e) { return null; } })();
-  // 11.11.2026, Сотрудник22 К. В.: «загрузи данный формат отчёта в раздел ПРОДАЖИ, чтобы отслеживать ежедневное выполнение плана по менеджерам»
+  // 11.11.2026, Сотрудник7 К. В.: «загрузи данный формат отчёта в раздел ПРОДАЖИ, чтобы отслеживать ежедневное выполнение плана по менеджерам»
   var PLANM = (function () { try { return JSON.parse(document.getElementById('planm-data').textContent || 'null'); } catch (e) { return null; } })();
   function planm() {
     var P = PLANM, h = '<a class="back" href="#">Продажи</a><h1>Выполнение плана по менеджерам</h1>';
@@ -785,7 +786,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 11.11.2026, Т. В.: менеджер × базис поставки (ОП), ФТС и ПКС отдельно, накопленным итогом. Данные — build/sales_mgr_op/<месяц>.json
-  // (будет: ежедневная рассылка 1С; пока — итог по менеджерам от Сотрудник22, разбивка запрошена).
+  // (будет: ежедневная рассылка 1С; пока — итог по менеджерам от Сотрудник7, разбивка запрошена).
   var MGROP = (function () { try { return JSON.parse(document.getElementById('mgrop-data').textContent || 'null'); } catch (e) { return null; } })();
   function mgrop() {
     var D = MGROP, h = '<a class="back" href="#">Продажи</a><h1>Продажи по менеджерам и ОП</h1>';
@@ -794,7 +795,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     var orgs = D.orgs || ['ФТС', 'ПКС'], ops = D.ops || [];
     var used = ops.filter(function (o) { return D.rows.some(function (r) { return r.by && r.by[o]; }); });
     h += '<p class="lead">' + MN[+D.month.slice(5, 7) - 1] + ' ' + D.month.slice(0, 4) + ', отгружено с 1-го числа по ' + dm(D.asof) + '. Источник: ' + esc(D.src || '') + '.</p>';
-    if (D.answers && D.answers.length) h += '<div class="igroup"><p class="ifoot" style="margin:10px 16px"><b>Как считается (ответы отдела продаж):</b><br>' + D.answers.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';   // 13.11.2026: ответы Сотрудник7
+    if (D.answers && D.answers.length) h += '<div class="igroup"><p class="ifoot" style="margin:10px 16px"><b>Как считается (ответы отдела продаж):</b><br>' + D.answers.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</p></div>';   // 13.11.2026: ответы Сотрудник8
     if (D.missing && D.missing.length) h += '<div class="igroup"><p class="ifoot" style="margin:10px 16px"><b>Чего не хватает (запрошено' + (D.asked ? ' ' + dm(D.asked) : '') + '):</b><br>' + D.missing.map(esc).join('<br>') + '</p></div>';
     var cell = function (r, o, g) { var x = r.by && r.by[o]; return x && x[g] ? n(x[g]) : '—'; };
     var orgSum = function (r, g) { var t = 0, any = false; for (var o in (r.by || {})) { if (r.by[o][g]) { t += r.by[o][g]; any = true; } } return any ? t : null; };
@@ -821,7 +822,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = h;
   }
   // 12.11.2026, Т. В.: раздел ФТС — план/факт по месяцам, приход денег по клиентам за каждый месяц, отгрузка по клиентам, прогноз.
-  // Данные — build/fts/fts_year.json (отчёты Сотрудник22 К. В. «План» и «План-ФАКТ» ФТС из папки «Планы» itm@, разово 12.11.2026).
+  // Данные — build/fts/fts_year.json (отчёты Сотрудник7 К. В. «План» и «План-ФАКТ» ФТС из папки «Планы» itm@, разово 12.11.2026).
   var FTSY = (function () { try { return JSON.parse(document.getElementById('fts-data').textContent || 'null'); } catch (e) { return null; } })();
   function ftsView() {
     var D = FTSY, h = '<a class="back" href="#">Продажи</a><h1>ООО «ФТС»</h1>';
@@ -890,7 +891,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       REC.push(['r', 'Ниже РРЦ больше чем на ' + Math.round(thr0 * 100) + ' %: ' + lowP.length + ' цен у ' + Object.keys(sl).length + ' продавцов', 'Чаще всего: ' + tops.map(function (t) { return t + ' (' + sl[t] + ')'; }).join(', ') + '. Утвердить МОЦ и написать продавцам; партнёрам — напомнить условия договора.']); }
     if (RN0 && RN0.sites) { var shp = RN0.sites.filter(function (x) { return x[1] === 'магазин'; }).sort(function (a, b) { return b[4] - a[4]; }).slice(0, 5);
       var nsh = (RN0.sites_by_type || {})['магазин'] || 0, CC = RN0.check;
-      // 14.11.2026, Т. В.: сверка с базой 1С — Google Таблица у К. В. Сотрудник22; без соцсетей, площадок и поддоменов клиентов
+      // 14.11.2026, Т. В.: сверка с базой 1С — Google Таблица у К. В. Сотрудник7; без соцсетей, площадок и поддоменов клиентов
       if (CC && CC.shops != null) REC.push(['o', CC.shops + ' ' + plr(CC.shops, 'магазин продаёт', 'магазина продают', 'магазинов продают') + ' наши модели — сверяем с базой 1С',
         (CC.hint ? CC.hint + ' ' + plr(CC.hint, 'похож', 'похожи', 'похожи') + ' на наших клиентов под другим юрлицом: ' + CC.hint_top.map(function (x) { return x[0] + ' — ' + x[1]; }).join(', ') + '. ' : '') +
         (CC.confirmed ? 'Подтверждено отделом продаж: ' + CC.confirmed + '. ' : '') + 'Ещё ' + (CC.noise + CC.aggr) + ' ' + plr(CC.noise + CC.aggr, 'сайт', 'сайта', 'сайтов') + ' из поиска — не магазины, ' + CC.sub + ' — поддомены наших клиентов. Юрлицо с сайта найдено у ' + CC.ent + '.',
@@ -928,7 +929,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       var nf = (RN.models || []).filter(function (m) { return !m[1]; });
       h += '<p class="ihdr" id="runet">Весь Рунет по номенклатуре 1С · ' + esc((RN.t || '').slice(8, 10) + '.' + (RN.t || '').slice(5, 7)) + '</p><div class="igroup">' +
         '<div class="hst" style="padding:12px 16px"><div><span>предложений</span><b>' + n(RN.offers) + '</b></div><div><span>сайтов</span><b>' + n(RN.sites_n) + '</b></div><div><span>моделей найдено</span><b>' + n(RN.models_found) + ' из ' + n(RN.models_n) + '</b></div><div><span>штрихкодов найдено</span><b>' + n(RN.bc_found) + ' из ' + n(RN.bc) + '</b></div></div>' +
-        '<details class="rep"><summary><b>Как искали</b> · Google и Сотрудник10</summary><p class="ifoot" style="margin:4px 16px 10px">' + (RN.by_src ? 'Google — ' + n(RN.by_src.google || 0) + ' предложений, Сотрудник10 добавил ' + n(RN.by_src.yandex || 0) + ' и ' + n(RN.y_only_sites || 0) + ' сайтов, которых нет в Google. ' : '') + 'Наши клиенты — ' + n(TY['наш клиент'] || 0) + ' сайтов (' + n(BY['наш клиент'] || 0) + ' предложений), маркетплейсы — ' + n(TY['маркетплейс'] || 0) + ' (' + n(BY['маркетплейс'] || 0) + '), <b>магазины, которые не наши клиенты, — ' + n(TY['магазин'] || 0) + '</b> (' + n(BY['магазин'] || 0) + ' предложений: товар идёт через посредников). ' + esc(RN.src || '') + ' ' + esc(RN.note || '') + '</p></details>' +
+        '<details class="rep"><summary><b>Как искали</b> · Google и Сотрудник11</summary><p class="ifoot" style="margin:4px 16px 10px">' + (RN.by_src ? 'Google — ' + n(RN.by_src.google || 0) + ' предложений, Сотрудник11 добавил ' + n(RN.by_src.yandex || 0) + ' и ' + n(RN.y_only_sites || 0) + ' сайтов, которых нет в Google. ' : '') + 'Наши клиенты — ' + n(TY['наш клиент'] || 0) + ' сайтов (' + n(BY['наш клиент'] || 0) + ' предложений), маркетплейсы — ' + n(TY['маркетплейс'] || 0) + ' (' + n(BY['маркетплейс'] || 0) + '), <b>магазины, которые не наши клиенты, — ' + n(TY['магазин'] || 0) + '</b> (' + n(BY['магазин'] || 0) + ' предложений: товар идёт через посредников). ' + esc(RN.src || '') + ' ' + esc(RN.note || '') + '</p></details>' +
         '<details class="rep"><summary><b>Магазины — не наши клиенты</b> · ' + grp('магазин').length + '</summary>' + rt(SH, grp('магазин').map(srow)) + '</details>' +
         '<details class="rep"><summary><b>Маркетплейсы</b> · ' + grp('маркетплейс').length + '</summary>' + rt(SH, grp('маркетплейс').map(srow)) + '</details>' +
         '<details class="rep"><summary><b>Наши клиенты и их витрины</b> · ' + (grp('наш клиент').length + grp('витрина клиента').length) + '</summary>' + rt(SH, grp('наш клиент').concat(grp('витрина клиента')).map(srow)) + '</details>' +
@@ -944,7 +945,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
             var by = {}; A.o.forEach(function (o) { (by[o[0]] = by[o[0]] || []).push(o); });
             var out = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; }).map(function (mi) {
               return '<details class="rep"><summary><b>' + esc(A.m[mi]) + '</b> · ' + by[mi].length + '</summary>' + rt(['сайт', 'цена', 'как найдено'], by[mi].map(function (o) {
-                return rr(['<a href="' + esc(o[4]) + '" target="_blank" rel="noopener">' + esc(A.s[o[1]]) + '</a>', o[2] ? n(o[2]) : '—', (o[3] ? 'штрихкод' : 'название') + (o[5] ? ' · Сотрудник10' : ' · Google')]); })) + '</details>';
+                return rr(['<a href="' + esc(o[4]) + '" target="_blank" rel="noopener">' + esc(A.s[o[1]]) + '</a>', o[2] ? n(o[2]) : '—', (o[3] ? 'штрихкод' : 'название') + (o[5] ? ' · Сотрудник11' : ' · Google')]); })) + '</details>';
             }).join('');
             document.getElementById('rn-all-box').innerHTML = out;
           }, function () { document.getElementById('rn-all-box').innerHTML = '<p class="ifoot" style="margin:10px 16px">Не загрузилось — откройте ещё раз при связи.</p>'; d._ok = 0; });
@@ -995,13 +996,13 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
         '<details class="rep"><summary><b>Спрос на площадках</b></summary>' + tbl(['площадка', 'товар', 'сигнал'], (O.demand || []).map(function (d) { return td([esc(d.w), esc(d.m), esc(d.x)]); })) + '</details>' +
         '<details class="rep"><summary><b>Методика (международная практика)</b></summary>' + tbl(['метрика', 'как считаем'], (O.method || []).map(function (d) { return td([esc(d.k), esc(d.x)]); })) + '</details></div>';
     }
-    h += '<p class="ifoot">Источник: ' + esc(O.src || '') + '.' + (O.sheet ? ' <a href="' + esc(O.sheet) + '" target="_blank" rel="noopener">Google Таблица</a> (доступ — аккаунт 1c@ и Сотрудник22 К. В.).' : '') + '</p>';
+    h += '<p class="ifoot">Источник: ' + esc(O.src || '') + '.' + (O.sheet ? ' <a href="' + esc(O.sheet) + '" target="_blank" rel="noopener">Google Таблица</a> (доступ — аккаунт 1c@ и Сотрудник7 К. В.).' : '') + '</p>';
     V.innerHTML = h;
   }
   function ship() {
     var S = SHIP || {}, W = S.weeks || [], OP = S.op || [];
     var h = '<a class="back" href="#">Продажи</a><h1>График отгрузки</h1><p class="lead">' + (S.plan ? 'Сверху — план отгрузки на неделю из 1С (присылает Ю. А. Сотрудник25), по дням и клиентам. ' : '') + 'Ниже — октябрь по неделям: отгрузки с фабрики → перемещения на офисы продаж → продажи из ОП → остаток ОП. ' +
-      'Отгрузки, перемещения и продажи из ОП — из 1С; данные запрошены у Ю. А. Сотрудник25 и М. И. Сотрудник7 (письмо 29.10), документ заполняется по мере поступления.</p>';
+      'Отгрузки, перемещения и продажи из ОП — из 1С; данные запрошены у Ю. А. Сотрудник25 и М. И. Сотрудник8 (письмо 29.10), документ заполняется по мере поступления.</p>';
     // 11.11.2026: план отгрузки на неделю из 1С (Сотрудник25 Ю. А.) — по дням, внутри — контрагенты и заказы
     var PL = S.plan;
     if (PL && PL.days && PL.days.length) {
@@ -1044,7 +1045,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       OP.map(function (o) { return '<tr><td>' + esc(o.t) + '</td><td>' + n(o.stock) + '</td><td class="muted">запрошено</td><td class="muted">запрошено</td><td class="muted">—</td></tr>'; }).join('') +
       '</tbody></table></div><p class="ifoot" style="margin:8px 16px 12px">Отклонение = перемещено − продано − изменение остатка: расхождение показывает, что ушло мимо учёта или зависло на складе офиса.</p></div>';
     h += '<p class="ihdr">Что запрошено</p><div class="igroup"><div class="cpl"><div><b>1.</b> План продаж каждого офиса и менеджера в разрезе групп производства × средняя цена (если нет — составить).</div><div><b>2.</b> Отгрузки за октябрь по неделям: дата, клиент/ОП, номенклатура, количество, сумма.</div><div><b>3.</b> Перемещения товара на ОП за октябрь.</div><div><b>4.</b> Продажи из ОП за октябрь — для сравнения с перемещениями.</div></div>' +
-      '<p class="ifoot" style="margin:8px 16px 12px">Ответственные: Ю. А. Сотрудник25 (отдел продаж), М. И. Сотрудник7 (сеть офисов продаж). Письма — 29.10 после подтверждения Т. В. Сотрудник1.</p></div>';
+      '<p class="ifoot" style="margin:8px 16px 12px">Ответственные: Ю. А. Сотрудник25 (отдел продаж), М. И. Сотрудник8 (сеть офисов продаж). Письма — 29.10 после подтверждения Т. В. Сотрудник1.</p></div>';
     V.innerHTML = h;
   }
   // 30.10.2026: «Офисы продаж — октябрь 2026» — выгрузки 1С по офисам продаж на 30.10 (build/sales_op/2026-10.json → #salesop-data, подставляет build_site.py):
@@ -1135,7 +1136,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
           '<p class="ifoot">Продано против выпуска и плана по тем же линиям — <a href="staff.html#salescap">«Производство» → «Продажи, выпуск и план по линиям»</a>.</p>';
       }
     }
-    // 12.11.2026, команда бота №10 (Сотрудник22 К. В., 11.11 22:35): «Добавить в раздел «ПРОДАЖИ» средние цены по типам товаров и мощностям
+    // 12.11.2026, команда бота №10 (Сотрудник7 К. В., 11.11 22:35): «Добавить в раздел «ПРОДАЖИ» средние цены по типам товаров и мощностям
     //   по отношению к прошлому месяцу с указанием процента роста средней цены». Средняя цена = сумма ÷ количество (те же отчёты 1С, «Стоимость»);
     //   выбранный месяц (на дату) против предыдущего месяца целиком; рост — (новая ÷ прежняя − 1) × 100.
     var ymPrev = yms[yms.indexOf(ym) + 1];
@@ -1223,282 +1224,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   // ---------- 29.10.2026, пользователь: «нужен на портале функционал и инструкции людей в коммерческом отделе и проверка штатного расписания раз в неделю,
   //   если человек уволен или вышел новый — куда ушёл функционал и у нового какой функционал». Данные — build/data/ko_staff.json (make_ko_staff.py),
   //   изменения штата — st/staff.bin (хостинг, staff_watch.py, раз в неделю).
-  var KO = null, KOW = null;   // 11.11.2026, Т. В.: «доступны только мне и брату» — данные КО больше не встроены в страницу, их отдаёт бот (op 'sec')
-  // ---------- 11.11.2026: закрытые разделы (владелец и брат). Как «Транспорт»: личный вход → скрипт бота проверяет владельца (вход «owner» + «Да, это я»
-  //   в Telegram) или список «Пустить» владельца (sec_acl) и отдаёт st/sec_<часть>.bin (ключ владельца). Без личного входа — ничего не видно.
-  var SEC = {}, SECR = {};
-  function secMe() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
-  function secLogged() { var p = secMe(); return !!(p && p.st !== 'pending' && window.T14Acct && T14Acct.tok && T14Acct.tok()); }
-  // 13.11.2026, Т. В.: «почему этот раздел не прогружен сразу, а загружается при открытии» — последний ответ бота хранится на устройстве
-  //   (только у вошедшего лично, привязан к его id, 24 ч): раздел открывается сразу, свежие данные бот догружает фоном.
-  var SEC_TTL = 7 * 24 * 3600e3;   // показ — из сохранённого до 7 дней; свежее бот догружает фоном (здесь и на любой странице — acct.js secWarm)
-  function secCacheGet(part) { try { var p = secMe(), c = JSON.parse(localStorage.getItem('t14.secc.' + part) || 'null'); return c && p && c.id === p.id && Date.now() - c.t < SEC_TTL ? c.data : null; } catch (e) { return null; } }
-  function secCachePut(part, data) { try { var p = secMe(); if (p) localStorage.setItem('t14.secc.' + part, JSON.stringify({ id: p.id, t: Date.now(), data: data })); } catch (e) {} }
-  function secCacheDrop() { ['org', 'kos', 'ko', 'sim'].forEach(function (k) { try { localStorage.removeItem('t14.secc.' + k); } catch (e) {} }); }
-  var SEC_HYD = false;
-  function secHydrate() { if (SEC_HYD || !secLogged()) return; SEC_HYD = true; ['org', 'kos', 'ko', 'sim'].forEach(function (k) { var d = !SEC[k] && secCacheGet(k); if (d) { SEC[k] = d; if (k === 'ko') KO = d; } }); }
-  function secLoad(part, ask) {
-    if (!secLogged()) { SECR[part] = { err: 'login' }; return route(); }
-    if (SECR[part] && SECR[part].busy) return;
-    SECR[part] = { busy: true }; route();
-    T14Acct.api('sec', { tok: T14Acct.tok(), part: part, ask: ask ? 1 : 0 }).then(function (r) {
-      SECR[part] = r || {};
-      if (r && r.data) { SEC[part] = r.data; secCachePut(part, r.data); try { var p = secMe(); if (p) localStorage.setItem('t14.sec', JSON.stringify({ id: p.id, t: Date.now() })); } catch (e) {} if (part === 'ko') KO = r.data; }
-      else if (r && r.access === false) { secCacheDrop(); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { delete SEC[k]; }); KO = null; try { localStorage.removeItem('t14.sec'); } catch (e) {} }
-      route();
-    }, function (e) { SECR[part] = { err: String(e && e.message || e || 'ошибка') }; route(); });
-  }
-  function secGate(part, title) {     // → HTML-заглушка, пока данных нет; null — данные есть
-    secHydrate();
-    if (SEC[part]) { if (!SECR[part]) setTimeout(function () { secLoad(part, false); }, 0); return null; }
-    var R = SECR[part], h = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1>', p = secMe();
-    var note = function (t) { return '<div class="igroup"><div class="cpl"><div>' + t + '</div></div></div>'; };
-    if (!p || p.st === 'pending' || !secLogged()) return h + note('Закрытый раздел — только для Т. В. и А. В. Сотрудник1. Войдите личным входом («Профиль» → «Войти»), затем откройте раздел снова.');
-    if (!R) { setTimeout(function () { secLoad(part, false); }, 0); return h + note('Проверяю доступ…'); }
-    if (R.busy) return h + note('Проверяю доступ…');
-    if (R.err) return h + note(R.err === 'login' ? 'Войдите личным входом.' : 'Не получилось: ' + esc(R.err) + ' <a href="#" onclick="return false" data-secre="' + part + '">Повторить</a>');
-    if (R.pin === 'wait') return h + note((R.sent ? '<b>Подтвердите в Telegram.</b> Бот «Фабрика» прислал вам кнопку «Да, это я» — нажмите её, затем ' : (esc(R.why || 'Нужно подтверждение в Telegram.') + ' Затем ')) + '<a href="#" data-secre="' + part + '">Проверить</a>.');
-    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник82 Отчество41 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
-      R.req === 'again' ? 'Сотрудник4 уже у Сотрудник2 Отчество2. После его ответа — <a href="#" data-secre="' + part + '">Проверить</a>.' : esc(R.why || 'Доступа нет.'));
-    if (R.none) return h + note(esc(R.why || 'Раздел ещё не выложен.'));
-    return h + note('Нет данных. <a href="#" data-secre="' + part + '">Повторить</a>');
-  }
-  document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-secre]'); if (!a) return; e.preventDefault(); var pt = a.getAttribute('data-secre'); SECR[pt] = null; secLoad(pt, true); });
-  function struct() {                 // 12.11.2026, Т. В.: «раздел «Структура» должен выглядеть в едином стиле с остальными» — как вход раздела (hub.js): плитки-показатели и подразделы
-    secHydrate(); var IC = window.T14_ICONS || {}, ic = function (k) { return IC[k] || IC.s_grid || ''; }, C = 'var(--ic-docs)', on = secLogged();
-    if (on) (SEC.org ? ['org', 'kos', 'ko', 'sim'] : ['org']).forEach(function (k) { if (!SECR[k]) setTimeout(function () { secLoad(k, false); }, 0); });   // 13.11: с сохранёнными данными — все части сразу и параллельно (фоновое обновление)   // сначала org (подтверждение в Telegram — одно), потом остальные
-    var O = (SEC.org || {}).org, K = (SEC.kos || {}).ko, P = SEC.ko || null, M = SEC.sim || null;
-    var st = function (k) { var R = SECR[k] || {}; return !on ? 'нужен личный вход' : SEC[k] ? '' : R.busy || !SECR[k] ? 'загружаю…' : R.access === false ? 'ждёт доступа в Telegram' : R.pin === 'wait' ? 'подтвердите в Telegram' : 'нет данных'; };
-    var nSim = M ? (M.sheets || []).reduce(function (a, sh) { return a + (sh.rows || []).length; }, 0) : null;
-    var nKO = K ? (K.groups || []).reduce(function (a, g) { return a + (g.people || []).length; }, 0) : null;
-    var kp = [
-      { t: 'Сотрудники', ic: 's_org', href: '#sec-org', v: O ? ogCount(O) : null, s: O ? 'отделов ' + (O.departments || []).length + ' · участков ' + (O.areas || []).length + ' · ночная смена' : st('org') },
-      { t: 'Коммерческий отдел', ic: 's_sales', href: '#sec-kos', v: nKO, s: K ? 'групп ' + (K.groups || []).length + ' · редакция ' + (K.edition || '—') : st('kos') },
-      { t: 'Зоны ответственности', ic: 's_grid', href: '#ko', v: P ? (P.zones || []).length : null, s: P ? 'людей ' + (P.people || []).length + ' · кто за что отвечает' : st('ko') },
-      { t: 'СИМ-карты МТС', ic: 's_phone', href: '#sec-sim', v: nSim, s: M ? 'разделов ' + (M.sheets || []).length + ' · на проверке' : st('sim') }];
-    var tiles = [['#sec-org', 'Оргструктура компании', 'отделы, участки, руководители, телефоны', 's_org'], ['#sec-kos', 'Коммерческий отдел: функционал', 'блок-схема, обязанности, графики ОП, подрядчики', 's_sales'],
-      ['#ko', 'Коммерческий отдел: люди и зоны', 'кто за что отвечает, инструкции, изменения штата', 's_person'], ['#sec-sim', 'СИМ-карты МТС', 'сотрудники, устройства, счётчики', 's_phone']];
-    var h = '<a class="back" href="home.html">Главная</a><h1>Структура</h1><p class="lead">Оргструктура, коммерческий отдел и СИМ-карты — только Т. В. и А. В. Сотрудник1; данные отдаёт бот по личному входу.</p>';
-    if (!on) h += '<div class="igroup"><div class="cpl"><div>Войдите личным входом («Профиль» → «Войти») — бот пришлёт в Telegram кнопку «Да, это я».</div></div></div>';
-    h += '<section class="fhome hub"><div class="hub-main"><div class="fh-cap"><h2>Контрольные точки раздела</h2></div><ul class="pk-grid hub-k" data-n="4" style="grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))">' + kp.map(function (k) {
-      return '<li><a class="pk" href="' + k.href + '" style="--c:' + C + '" data-tone="n"><span class="pk-t">' + ic(k.ic) + esc(k.t) + '</span><span class="pk-v">' + (k.v != null ? esc(k.v) : '—') + '</span><span class="pk-s">' + esc(k.s) + '</span></a></li>';
-    }).join('') + '</ul>' +
-      '<section><div class="fh-cap"><h2>Подразделы</h2></div><ul class="fh-secs hub-t">' + tiles.map(function (t) {
-        return '<li><a class="fs" href="' + t[0] + '" style="--c:' + C + '"><span class="fs-i">' + ic(t[3]) + '</span><b>' + esc(t[1]) + '</b><small>' + esc(t[2]) + '</small></a></li>';
-      }).join('') + '</ul></section></div></section>';
-    V.innerHTML = h;
-  }
-
-  // 12.11.2026, Т. В.: «всё должно быть как на сайте по оформлению» — оргструктура и функционал КО рисуются самим порталом из данных пакета «Структура»
-  // (orgstruktura.json, kommercheskiy_otdel.json), без встроенной чужой страницы; на компьютере — карточки во всю ширину
-  function ogTel(x) { return 'tel:' + String(x).replace(/[^\d+]/g, ''); }
-  function ogWire(box) {                // поиск по людям и переходы к блокам страницы (без смены адреса)
-    var inp = box.querySelector('.og-search');
-    if (inp) inp.oninput = function () {
-      var v = inp.value.trim().toLowerCase();
-      box.querySelectorAll('.who').forEach(function (w) { w.style.display = !v || (w.getAttribute('data-q') || '').indexOf(v) >= 0 ? '' : 'none'; });
-      box.querySelectorAll('details.og-fold').forEach(function (d) { if (v) d.open = !!d.querySelector('.who:not([style*="none"])'); });
-      box.querySelectorAll('.og-card').forEach(function (c) { var any = !v || Array.prototype.some.call(c.querySelectorAll('.who'), function (w) { return w.style.display !== 'none'; }); c.style.display = any ? '' : 'none'; });
-    };
-    box.querySelectorAll('[data-og]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = document.getElementById(a.getAttribute('data-og')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
-  }
-  function ogCount(O) { var n = 0; (O.departments || []).forEach(function (d) { n += Number(d.count) || 0; }); return n; }
-  // ================= 12.11.2026, Т. В.: «внутри тоже всё по-разному в каждом разделе… по СИМ-картам тоже — в виде блок-схемы».
-  // Единый вид всех подразделов «Структуры»: шапка → контрольные точки (плитки как у входа раздела) → кнопки разделов и поиск →
-  // блоки: схема (верхний узел → линия → карточки ниже) или сетка карточек. Таблиц нет — каждая строка таблицы стала карточкой.
-  function sxKpis(L) {
-    return '<div class="fhome hub sx-k"><ul class="pk-grid hub-k" data-n="' + L.length + '" style="grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))">' + L.map(function (k) {
-      return '<li><' + (k.href ? 'a href="' + k.href + '"' : 'div') + ' class="pk" style="--c:var(--ic-docs)" data-tone="' + (k.tone || 'n') + '"' + (k.go ? ' data-og="' + k.go + '"' : '') + '><span class="pk-t">' + esc(k.t) + '</span><span class="pk-v">' + (k.v != null ? esc(k.v) : '—') + '</span><span class="pk-s">' + esc(k.s || '') + '</span></' + (k.href ? 'a' : 'div') + '></li>';
-    }).join('') + '</ul></div>';
-  }
-  function sxHead(title, lead, kpis, chips, ph) {
-    return '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1>' + (lead ? '<p class="lead">' + esc(lead) + '</p>' : '') + sxKpis(kpis) +
-      '<div class="og-tools">' + chips.map(function (c) { return '<a href="#" data-og="' + c[0] + '">' + esc(c[1]) + '</a>'; }).join('') + '<input class="og-search" type="search" placeholder="' + esc(ph || 'Поиск: ФИО, должность, телефон, почта') + '"></div>';
-  }
-  function sxSec(id, title, inner) { return '<p class="ihdr" id="' + id + '">' + esc(title) + '</p>' + inner; }
-  function sxScheme(roots, kids) { return '<div class="og-scheme"><div class="og-root">' + roots.join('') + '</div><div class="og-grid og-kids">' + kids.join('') + '</div></div>'; }
-  function sxGrid(cards) { return '<div class="og-grid">' + cards.join('') + '</div>'; }
-  // строка карточки: n — имя, r — должность/суть, x — мелкая строка, chips — [[текст, ссылка|'' , 'tel'|'mail'|'tag'|'warn']], li — пункты, det — скрытое «подробнее»
-  function sxRow(o) {
-    var q = [o.n, o.r, o.x].concat((o.chips || []).map(function (c) { return c[0]; }), o.li || [], o.q || '').join(' ').toLowerCase();
-    var ch = (o.chips || []).filter(function (c) { return c && c[0]; }).map(function (c) {
-      return c[1] ? '<a class="' + (c[2] === 'mail' ? 'ml' : c[2] === 'warn' ? 'wn' : '') + '" href="' + esc(c[1]) + '">' + esc(c[0]) + '</a>' : '<span class="' + (c[2] === 'warn' ? 'wn' : 'tg') + '">' + esc(c[0]) + '</span>';
-    }).join('');
-    return '<div class="who' + (o.hd ? ' hd' : '') + (o.off ? ' off' : '') + '" data-q="' + esc(q) + '"><div class="wn">' + esc(o.n || '') + '</div>' + (o.r ? '<div class="wr">' + esc(o.r) + '</div>' : '') +
-      (o.x ? '<div class="wx">' + esc(o.x) + '</div>' : '') + (ch ? '<div class="acts">' + ch + '</div>' : '') +
-      ((o.li || []).length ? '<ul class="og-fn">' + o.li.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
-      (o.det ? '<details class="og-more"><summary>Подробнее</summary><div class="og-body">' + o.det + '</div></details>' : '') + '</div>';
-  }
-  function sxCard(title, right, meta, rows, cls) { return '<div class="igroup og-card' + (cls ? ' ' + cls : '') + '"><div class="og-h"><b>' + esc(title) + '</b>' + (right ? '<span>' + esc(right) + '</span>' : '') + '</div>' + (meta ? '<div class="og-m">' + meta + '</div>' : '') + rows.join('') + '</div>'; }
-  function sxFold(title, right, meta, head, rows) {      // карточка: руководители видны, остальные — по нажатию (как в исходной схеме: «нажмите на отдел…»)
-    return '<div class="igroup og-card"><div class="og-h"><b>' + esc(title) + '</b>' + (right ? '<span>' + esc(right) + '</span>' : '') + '</div>' + (meta ? '<div class="og-m">' + meta + '</div>' : '') + head.join('') +
-      (rows.length ? '<details class="og-fold"><summary>Сотрудники · ' + rows.length + '</summary>' + rows.join('') + '</details>' : '') + '</div>';
-  }
-  function sxP(p, hd) {                                  // человек из пакета «Структура»: телефоны и почта — нажатием
-    if (!p) return '';
-    return sxRow({ n: p.name, r: p.role, x: p.extra || (p.notes || []).join(' · '), hd: hd,
-      chips: (p.phones || []).map(function (x) { return [x, ogTel(x), 'tel']; }).concat((p.emails || []).map(function (x) { return [x, 'mailto:' + x, 'mail']; })) });
-  }
-  function sxDone(h) { V.innerHTML = h; ogWire(V); }
-
-  function orgView() {
-    var g = secGate('org', 'Оргструктура компании'); if (g != null) { V.innerHTML = g; return; }
-    var D = SEC.org || {}, O = D.org;
-    if (!O) return secHtml('org', 'Оргструктура компании');
-    var A = O.areas || [], DP = O.departments || [], seen = {};
-    (O.leadership || []).forEach(function (p) { seen[p.name] = 1; });
-    var dirs = (O.directors || []).filter(function (p) { return !seen[p.name]; }), pd = O.production_director || dirs[0];
-    var aStaff = A.reduce(function (s, a) { return s + (Number(a.staff) || 0); }, 0), heads = DP.reduce(function (s, d) { return s + (d.heads || []).length; }, 0);
-    var h = sxHead('Оргструктура компании', (O.company || '') + ' · данные пакета «Структура» ' + String(O.generated || '').slice(0, 10) + ' · на проверке',
-      [{ t: 'Сотрудники в отделах', v: ogCount(O), s: 'по спискам отделов', go: 'og-d' }, { t: 'Отделы', v: DP.length, s: 'руководителей ' + heads, go: 'og-d' },
-       { t: 'Производственные участки', v: A.length, s: '≈ ' + aStaff + ' человек · ночная смена', go: 'og-a' }, { t: 'Руководство', v: (O.leadership || []).length + dirs.length, s: 'высшее и директора направлений', go: 'og-l' }],
-      [['og-l', 'Руководство'], ['og-a', 'Участки']].concat(O.tech_director ? [['og-t', 'Техническая служба']] : []).concat([['og-d', 'Отделы']]));
-    h += sxSec('og-l', 'Руководство', sxScheme((O.leadership || []).map(function (p) { return sxCard(p.role ? p.role.split(' · ')[0] : 'Руководство', '', '', [sxP(p, true)], 'og-node'); }),
-      dirs.map(function (p) { return sxCard('Директор направления', '', '', [sxP(p, true)]); }).concat(O.reception ? [sxCard('Приёмная', '', '', [sxP(O.reception)])] : [])));
-    var AA = A.slice(); if (O.night_shift) AA.push(O.night_shift);
-    h += sxSec('og-a', 'Производственные участки · ' + A.length, sxScheme([sxCard('Директор по производству', '≈ ' + aStaff + ' чел.', '', [sxP(pd, true)], 'og-node')],
-      AA.map(function (a) {
-        return sxCard((a.n ? 'Уч. ' + a.n + ' · ' : 'Ночная смена · ') + a.title, a.staff ? a.staff + ' чел.' : '', [(a.blocks || []).join(', '), a.note].filter(Boolean).map(esc).join(' · '),
-          [sxP(a.who, true)].concat((a.team || []).map(function (p) { return sxP(p); })));
-      })));
-    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник72 и вся его служба, системный администратор и 1С-программисты»
-    var td = O.tech_director, TD = DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; });
-    if (td && TD.length) h += sxSec('og-t', 'Техническая служба · ' + TD.length, sxScheme([sxCard('Технический директор', TD.reduce(function (s, d) { return s + (Number(d.count) || 0); }, 0) + ' чел.', '', [sxP(td, true)], 'og-node')],
-      TD.map(function (d) { return sxCard(d.title, d.count ? d.count + ' чел.' : '', d.note && !/^Подчиняется техническому/.test(d.note) ? esc(d.note) : (/уточняется/.test(d.note || '') ? 'состав службы уточняется' : ''), (d.heads || []).map(function (p) { return sxP(p, true); }).concat((d.staff || []).map(function (p) { return sxP(p); }))); })));
-    h += sxSec('og-d', 'Отделы · ' + DP.length, sxGrid(DP.map(function (d, i) {
-      var meta = [d.floor ? esc(d.floor) : '', d.email ? '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>' : '', d.note ? esc(d.note) : ''].filter(Boolean).join(' · ');
-      var rows = (d.staff || []).map(function (p) { return sxP(p); });
-      (d.subgroups || []).forEach(function (sg) { rows.push('<div class="og-sub">' + esc(sg.title) + '</div>'); rows.push(sxP(sg.head, true)); (sg.staff || []).forEach(function (p) { rows.push(sxP(p)); }); });
-      return sxFold(('0' + (i + 1)).slice(-2) + ' · ' + d.title, d.count ? d.count + ' чел.' : '', meta, (d.heads || []).map(function (p) { return sxP(p, true); }), rows);
-    })));
-    sxDone(h + '<p class="ifoot">Руководители — с цветной полосой. Нажмите на телефон — позвонить, на почту — написать.</p>');
-  }
-
-  function kosView() {
-    var g = secGate('kos', 'Коммерческий отдел: функционал и блок-схема'); if (g != null) { V.innerHTML = g; return; }
-    var D = SEC.kos || {}, K = D.ko;
-    if (!K) return secHtml('kos', 'Коммерческий отдел: функционал и блок-схема');
-    var S = K.scheme || {}, G = K.groups || [], T = K.tables || {}, nP = G.reduce(function (a, x) { return a + (x.people || []).length; }, 0);
-    var top = Object.keys(S).filter(function (nm) { return /коммерческий директор/i.test((S[nm] || {}).role || ''); })[0];
-    var tk = Object.keys(T), rowsOf = function (k) { return ((T[k] || {}).rows || []).length; };
-    var h = sxHead('Коммерческий отдел: функционал', 'Редакция ' + (K.edition || '—') + ' · блок-схема, обязанности, графики офисов продаж, подрядчики · на проверке',
-      [{ t: 'Сотрудники', v: nP, s: 'в ' + G.length + ' группах', go: 'ok-s' }, { t: 'Графики работы ОП', v: rowsOf('Графики работы ОП'), s: 'строк по офисам', go: 'ok-t0' },
-       { t: 'Ответы по зонам', v: rowsOf('Зоны ответственности'), s: 'вопросов и ответов', go: 'ok-t1' }, { t: 'Подрядчики ОП', v: rowsOf('Подрядчики ОП'), s: 'договоров и контактов', go: 'ok-t2' }],
-      [['ok-s', 'Блок-схема']].concat(tk.map(function (t, i) { return ['ok-t' + i, t]; })), 'Поиск: ФИО, должность, обязанность');
-    h += sxSec('ok-s', 'Блок-схема и функционал', sxScheme(top ? [sxCard('Коммерческий директор', '', '', [sxRow({ n: top, r: (S[top] || {}).role, hd: true })], 'og-node')] : [],
-      G.map(function (gr) {
-        return sxCard(gr.title, (gr.people || []).length + ' чел.', '', (gr.people || []).map(function (p) {
-          var det = (p.status && p.status.length ? '<p>' + p.status.map(function (x) { return '<span class="og-chip">' + esc(x) + '</span>'; }).join('') + '</p>' : '') +
-            (p.purpose ? '<p>' + esc(p.purpose) + '</p>' : '') + (p.boss ? '<p><b>Подчиняется:</b> ' + esc(p.boss) + '</p>' : '') +
-            ((p.duties || []).length ? '<ul class="og-fn" style="color:inherit">' + p.duties.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
-            (p.paragraphs || []).map(function (x) { return '<p><b>' + esc(x[0]) + ':</b> ' + esc(x[1]) + '</p>'; }).join('');
-          return sxRow({ n: p.name, r: p.role, hd: p.head, x: (p.notes || []).join(' · '), li: (S[p.name] || {}).fn || [], det: det, q: (p.duties || []).join(' '),
-            chips: (p.phones || []).map(function (x) { return [x, ogTel(x), 'tel']; }).concat((p.emails || []).map(function (x) { return [x, 'mailto:' + x, 'mail']; })) });
-        }));
-      })));
-    tk.forEach(function (t, i) {                            // таблицы пакета → карточки (первый столбец — заголовок карточки)
-      var X = T[t] || {}, C = X.columns || [];
-      h += sxSec('ok-t' + i, t + ' · ' + (X.rows || []).length, sxGrid((X.rows || []).map(function (r) {
-        return sxCard(String(r[0] || '').split('\n')[0], '', '', C.slice(1).map(function (c, k) {
-          var v = String(r[k + 1] == null ? '' : r[k + 1]); return v ? sxRow({ n: c, r: v.replace(/\n/g, ' · ') }) : '';
-        }));
-      })));
-    });
-    sxDone(h + '<p class="ifoot">Данные пакета «Структура»: ' + esc(K.generated || '') + '.</p>');
-  }
-
-  function ko() {
-    var g0 = secGate('ko', 'Коммерческий отдел'); if (g0 != null) { V.innerHTML = g0; return; }
-    var K = KO || { zones: [], people: [], check: [] }, W = KOW, Z = K.zones || [];
-    var two = function (z) { return /\//.test(z.lead || '') || !z.lead; }, nTwo = Z.filter(two).length;
-    var G = {}, GO = []; (K.people || []).forEach(function (p) { if (!G[p.group]) { G[p.group] = []; GO.push(p.group); } G[p.group].push(p); });
-    var dir = (K.people || []).filter(function (p) { return /коммерческий директор/i.test(p.role || ''); })[0];
-    var h = sxHead('Коммерческий отдел: люди и зоны', 'Кто за что отвечает, функционал и замещение каждого сотрудника · утверждено Т. В. Сотрудник1 02.11.2026',
-      [{ t: 'Сотрудники', v: (K.people || []).length, s: 'в ' + GO.length + ' группах', go: 'ko-p' }, { t: 'Зоны ответственности', v: Z.length, s: 'кто отвечает и кто участвует', go: 'ko-z' },
-       { t: 'Без одного ответственного', v: nTwo, s: nTwo ? 'запрошено одно ФИО' : 'везде один ответственный', tone: nTwo ? 'warn' : 'ok', go: 'ko-z' },
-       { t: 'Изменения штата', v: W && W.changes ? W.changes.length : 0, s: W ? 'проверка ' + dd(String(W.t || '').slice(0, 10)) : 'проверка по понедельникам', tone: W && W.changes && W.changes.length ? 'warn' : 'n', go: 'ko-c' }],
-      [['ko-z', 'Зоны'], ['ko-p', 'Люди'], ['ko-c', 'Изменения']]);
-    h += sxSec('ko-z', 'Зоны ответственности · ' + Z.length, sxScheme(dir ? [sxCard('Коммерческий директор', '', '', [sxRow({ n: dir.name, r: 'решает спорное и скидки больше 5 %', hd: true })], 'og-node')] : [],
-      Z.map(function (z) {
-        return sxCard(z.n + '. ' + z.t, '', z.note ? esc(z.note) : '', [sxRow({ n: z.lead || 'не назначен', r: 'отвечает', hd: true, chips: two(z) ? [['нужен один ответственный', '', 'warn']] : [] }),
-          z.part ? sxRow({ n: z.part, r: 'участвуют' }) : '', z.dec ? sxRow({ n: z.dec, r: 'решает спорное' }) : ''], two(z) ? 'og-warn' : '');
-      })));
-    h += sxSec('ko-p', 'Люди · ' + (K.people || []).length, sxGrid(GO.map(function (gname) {
-      return sxCard(gname, G[gname].length + ' чел.', '', G[gname].map(function (p) {
-        var zl = (p.zones || []).map(function (n) { var X = Z.filter(function (x) { return x.n === n; })[0]; return X ? [n + '. ' + X.t + ((p.zones_lead || []).indexOf(n) >= 0 ? ' — отвечает' : ''), '', 'tag'] : null; }).filter(Boolean);
-        var gone = p.status === 'уволен';
-        var det = gone ? '<p><b>Куда передан функционал:</b> ' + esc(p.purpose || 'не названо — вопрос руководителю') + '</p>' :
-          (p.purpose ? '<p>' + esc(p.purpose) + '</p>' : '') + (p.reports_to ? '<p><b>Подчиняется:</b> ' + esc(p.reports_to) + '</p>' : '') +
-          ((p.duties || []).length ? '<ul class="og-fn" style="color:inherit">' + p.duties.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>' : '<p class="muted">Функционал не описан — запросить у руководителя.</p>') +
-          '<p><b>Замещает:</b> ' + (p.subst ? esc(p.subst) : 'не закреплено') + '</p>' + (p.kpi ? '<p><b>Показатели:</b> ' + esc(p.kpi) + '</p>' : '') +
-          ((p.instr || []).length ? '<p><b>Инструкции:</b> ' + p.instr.map(function (i) { return '<a href="library.html#regs">' + esc(i.title) + '</a>'; }).join(', ') + '</p>' : '');
-        return sxRow({ n: p.name, r: p.role + (p.extra ? ' · ' + p.extra : ''), off: gone, x: gone ? 'уволен(а)' : (p.status && p.status !== 'работает' ? p.status : ''), det: det + (p.note ? '<p class="muted">' + esc(p.note) + '</p>' : ''),
-          chips: (p.emails || []).map(function (e) { return [e, 'mailto:' + e, 'mail']; }).concat(zl) });
-      }));
-    })));
-    var ch = [];
-    if (W && W.changes && W.changes.length) W.changes.forEach(function (c) {
-      ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Сотрудник5 сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
-        [sxRow({ n: c.name, r: c.what || '', x: c.ask ? 'Вопрос' + (c.to ? ' (' + c.to + ')' : '') + ': ' + c.ask : '', chips: [[c.answer ? 'ответ: ' + c.answer : 'ответа нет', '', c.answer ? 'tag' : 'warn']] })], 'og-warn'));
-    });
-    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник19 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник7 напрямую' })]));
-    if (SPB && SPB.list && SPB.list.length) ch.push(sxCard('ОП Санкт-Петербург закрыт с ' + dd(SPB.closed), SPB.list.length + ' клиентов', '', SPB.by.map(function (x) { return sxRow({ n: x[0], r: 'клиентов передано: ' + n(x[1]) }); }).concat(
-      ['<details class="og-fold"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary>' + SPB.list.map(function (x) { return sxRow({ n: x[0], r: 'передан: ' + x[1] }); }).join('') + '</details>'])));
-    if ((K.check || []).length) ch.push(sxCard('Что проверить', K.check.length + '', '', K.check.map(function (c, i) { return sxRow({ n: (i + 1) + '.', r: c }); })));
-    h += sxSec('ko-c', 'Изменения штата и сеть офисов', sxGrid(ch));
-    sxDone(h + '<p class="ifoot">Проверка штата — раз в неделю (понедельник): кто уволен — какие зоны остались без человека и кому переданы; кто принят — какой у него функционал.</p>');
-  }
-
-  function secSim() {
-    var g = secGate('sim', 'СИМ-карты МТС'); if (g != null) { V.innerHTML = g; return; }
-    if (!SEC.org && !SECR.org && secLogged()) setTimeout(function () { secLoad('org', false); }, 0);   // отделы — из оргструктуры
-    var D = SEC.sim || {}, C = D.cols || [], O = (SEC.org || {}).org, SH = D.sheets || [];
-    var ci = function (rx) { for (var i = 0; i < C.length; i++) if (rx.test(C[i])) return i; return -1; };
-    var iF = ci(/ФИО/i), iN = ci(/Номер/i), iU = ci(/Кто пользуется/i), iT = ci(/Тариф/i), iR = ci(/₽/), iB = ci(/Блок/i), iP = ci(/Портал/i), iM = ci(/Комментарий/i);
-    var key = function (s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\(.*?\)/g, ' ').replace(/\s+-\s+.*$/, '').replace(/[^а-яa-z ]/g, ' ').split(/\s+/).filter(Boolean).slice(0, 2).join(' '); };
-    var dep = {};                                          // ФИО → отдел (по оргструктуре)
-    if (O) {
-      var put = function (p, d) { if (p && p.name) dep[key(p.name)] = d; };
-      (O.leadership || []).concat(O.directors || []).forEach(function (p) { put(p, 'Руководство'); }); put(O.reception, 'Приёмная');
-      (O.departments || []).forEach(function (d) { (d.heads || []).concat(d.staff || []).forEach(function (p) { put(p, d.title); }); (d.subgroups || []).forEach(function (sg) { put(sg.head, d.title); (sg.staff || []).forEach(function (p) { put(p, d.title); }); }); });
-      (O.areas || []).forEach(function (a) { put(a.who, 'Производственные участки'); (a.team || []).forEach(function (p) { put(p, 'Производственные участки'); }); });
-    }
-    var rub = function (r) { var v = String(r[iR] == null ? '' : r[iR]).trim(); return /^\d+([.,]\d+)?$/.test(v) ? Number(v.replace(',', '.')) : 0; };   // «~25 000 – 75 000» (ВАТС) — не число, в сумму не идёт
-    var fmt = function (x) { var s = String(x || '').replace(/\D/g, ''); return s.length === 11 ? '+' + s[0] + ' ' + s.slice(1, 4) + ' ' + s.slice(4, 7) + '-' + s.slice(7, 9) + '-' + s.slice(9) : String(x || ''); };
-    var row = function (r) {
-      var who = String(r[iU] || r[iF] || ''), free = /свобод/i.test(who + ' ' + r[iF]), bl = String(r[iB] == null ? '' : r[iB]);
-      var rv = String(r[iR] == null ? '' : r[iR]).trim();
-      return sxRow({ n: who.replace(/\s+-\s+свобод.*$/i, '') || '—', r: [r[iT], rub(r) ? rub(r) + ' ₽/мес' : rv ? rv + ' ₽/мес' : ''].filter(Boolean).join(' · '), x: [iF >= 0 && key(r[iF]) !== key(who) ? 'оформлено на ' + r[iF] : '', iM >= 0 ? r[iM] : '', iP >= 0 ? r[iP] : ''].filter(Boolean).join(' · '),
-        chips: [[fmt(r[iN]), ogTel(r[iN]), 'tel']].concat(free ? [['свободен', '', 'warn']] : []).concat(/^да$/i.test(bl) ? [['блокировка', '', 'warn']] : []), q: String(r[iN] || '') });
-    };
-    var all = [], money = 0, free = 0;
-    SH.forEach(function (sh) { (sh.rows || []).forEach(function (r) { all.push(r); money += rub(r); if (/свобод/i.test(String(r[iU]) + ' ' + String(r[iF]))) free++; }); });
-    var emp = SH.filter(function (sh) { return /сотрудник/i.test(sh.name); })[0], rest = SH.filter(function (sh) { return sh !== emp; });
-    var gone = SH.filter(function (sh) { return /уволен/i.test(sh.name); })[0];
-    var by = {}, order = [];
-    ((emp || {}).rows || []).forEach(function (r) {
-      var d = dep[key(r[iU])] || dep[key(r[iF])] || (/свобод/i.test(String(r[iU]) + ' ' + String(r[iF])) ? 'Свободные номера' : O ? 'Нет в оргструктуре' : 'Сотрудники');
-      if (!by[d]) { by[d] = []; order.push(d); } by[d].push(r);
-    });
-    order.sort(function (a, b) { var w = function (x) { return x === 'Руководство' ? 0 : x === 'Свободные номера' ? 3 : x === 'Нет в оргструктуре' ? 2 : 1; }; return w(a) - w(b) || by[b].length - by[a].length; });
-    var h = sxHead('СИМ-карты МТС', String(D.src || '').split(';')[0] + ' · на проверке у Т. В. и А. В.',
-      [{ t: 'Номера', v: all.length, s: 'всего в списке МТС', go: 'sm-s' }, { t: 'В месяц', v: n(money) + ' ₽', s: 'по тарифам из списка, без ВАТС и сервисов «от … до»', go: 'sm-s' },
-       { t: 'Свободные', v: free, s: free ? 'можно отдать или закрыть' : 'нет', tone: free ? 'warn' : 'n', go: 'sm-s' }, { t: 'Уволенные', v: gone ? (gone.rows || []).length : 0, s: 'в блокировке или с переадресацией', go: 'sm-o' }],
-      [['sm-s', 'По отделам'], ['sm-o', 'Устройства, руководство, уволенные']], 'Поиск: ФИО, номер, тариф');
-    var sumOf = function (L) { return n(L.reduce(function (a, r) { return a + rub(r); }, 0)) + ' ₽/мес'; };
-    h += sxSec('sm-s', 'Номера сотрудников по отделам · ' + ((emp || {}).rows || []).length, sxScheme([sxCard('МТС · корпоративный договор', all.length + ' номеров', '', [sxRow({ n: 'ГК «Фабрикант»', r: n(money) + ' ₽ в месяц всего', hd: true })], 'og-node')],
-      order.map(function (d) { return sxCard(d, by[d].length + ' · ' + sumOf(by[d]), '', by[d].map(row), d === 'Свободные номера' || d === 'Нет в оргструктуре' ? 'og-warn' : ''); })));
-    h += sxSec('sm-o', 'Устройства, руководство, уволенные', sxGrid(rest.map(function (sh) { return sxCard(sh.name, (sh.rows || []).length + ' · ' + sumOf(sh.rows || []), '', (sh.rows || []).map(row), /уволен/i.test(sh.name) ? 'og-warn' : ''); })));
-    sxDone(h + '<p class="ifoot">' + esc(D.note || '') + (O ? ' Отдел определён по оргструктуре (ФИО пользователя номера).' : ' Отделы появятся, когда загрузится оргструктура.') + '</p>');
-  }
-  function secHtml(part, title) {      // целая страница из пакета «Структура» — во встроенном окне без скриптов сайта
-    var g = secGate(part, title); if (g != null) { V.innerHTML = g; return; }
-    var D = SEC[part] || {};
-    V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1><p class="lead">' + esc(D.src || '') + '</p><iframe id="secfr" sandbox="allow-scripts" style="width:100%;height:80vh;border:0;border-radius:12px;background:#fff"></iframe>';
-    document.getElementById('secfr').srcdoc = String(D.html || '');
-  }
-  // 03.11.2026: ответ М. И. Сотрудник7 02.11 — ОП Самара без руководителя (в поиске, Сотрудник19 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
-  var SPB = (function () { try { return JSON.parse(document.getElementById('spb-data').textContent || 'null'); } catch (e) { return null; } })();
+  // 16.11.2026: «Структура» (оргструктура, коммерческий отдел, СИМ-карты) переехала на свою страницу struct.html (раздел «Люди»).
   // 02.11.2026, пользователь: «лови отзывы» — отзывы покупателей Ozon из выгрузки кабинета (Excel → ozon_report/make_rev.py → ozrev-data).
   //   API отзывов Ozon закрыт без подписки Premium Plus; когда откроется — хостинг (ozon.py) отдаст их сам, а здесь останется выгрузка.
   var OZR = (function () { try { return JSON.parse(document.getElementById('ozrev-data').textContent || 'null'); } catch (e) { return null; } })();
@@ -1636,10 +1362,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       top.map(function (a) { return '<tr><td style="white-space:normal;min-width:260px">' + esc(a.name || a.sku) + '<br><small style="opacity:.6">SKU ' + esc(a.sku) + '</small></td>' + MK.map(function (k) { return '<td>' + (a.m[k] ? rub(a.m[k]) + '<br><small style="opacity:.6">' + n(a.u[k]) + ' шт</small>' : '·') + '</td>'; }).join('') + '<td>' + (ctot ? Math.round((a.m[ck] || 0) / ctot * 100) + '%' : '') + '</td></tr>'; }).join('') +
       '</tbody></table></div><p class="ifoot" style="margin:8px 16px 12px">20 товаров с наибольшими заказами в ' + MNP[+ck.slice(5) - 1] + '. Полный список по SKU и прогноз по каждому — в ежедневном отчёте Ozon (Excel).</p></div>';
     h += '<p class="ifoot" style="margin:14px 4px">Как читать: «заказано» — сумма заказов покупателей по ценам продажи на Ozon. Это не выручка компании: отмены, возвраты и комиссии Ozon здесь не вычтены. ' +
-      'Кабинет ООО «ПКС» (Seller ID 53022) продаёт и со складов Ozon (FBO), и со своего склада (FBS — отгрузка в пункт приёма Ozon в Рязани). Wildberries и Сотрудник10 Имя4 на портал пока не подключены — здесь только Ozon.</p>';
+      'Кабинет ООО «ПКС» (Seller ID 53022) продаёт и со складов Ozon (FBO), и со своего склада (FBS — отгрузка в пункт приёма Ozon в Рязани). Wildberries и Сотрудник11 Имя4 на портал пока не подключены — здесь только Ozon.</p>';
     V.innerHTML = h;
   }
-  function route() { try { document.body.classList.toggle('wide', /^#(struct|sec-|ko$)/.test(location.hash)); } catch (eW) {} var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#struct') struct(); else if (location.hash === '#ko') ko(); else if (location.hash === '#sec-org') orgView(); else if (location.hash === '#sec-kos') kosView(); else if (location.hash === '#sec-sim') secSim(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf' || location.hash === '#s-buf') buf();
+  function route() { if (/^#(struct|sec-|ko$)/.test(location.hash)) { location.replace('struct.html' + (location.hash === '#struct' ? '' : location.hash)); return; } var m = /^#op-(\w+)$/.exec(location.hash), t = /^#tzlist(?:-(\d))?$/.exec(location.hash), t1 = /^#tz1c(?:-(.+))?$/.exec(location.hash); if (m) op(m[1]); else if (t1) tz1c(t1[1] ? decodeURIComponent(t1[1]) : null); else if (t) tzlist(t[1] != null ? +t[1] : null); else if (location.hash === '#recl') recl(); else if (location.hash === '#mp') mp(); else if (location.hash === '#rev') rev(); else if (location.hash === '#ship') ship(); else if (location.hash === '#planm') planm(); else if (location.hash === '#mgrop') mgrop(); else if (location.hash === '#leads') leads(); else if (location.hash === '#fts') ftsView(); else if (location.hash === '#online') online(); else if (location.hash === '#cp') cpv(); else if (location.hash === '#buf' || location.hash === '#s-buf') buf();
     else if ((m = /^#s-days(?:-(\d{4}-\d{2}-\d{2}))?$/.exec(location.hash))) reportsPage(m[1]);
     else if ((m = /^#lines(?:-([sqp]))?$/.exec(location.hash))) linesPage(m[1]); else if (location.hash === '#cls') cls(); else if (location.hash === '#prod') prod(); else if (location.hash === '#peo') peo(); else if (location.hash === '#prom') prom();
     // 15.11.2026 (F4-02, реестр Рекса): «Весь Рунет» — раздел внутри «Онлайн-продаж»: остаёмся в них и прокручиваем к разделу, а не уходим на главную продаж
@@ -1666,7 +1392,6 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       if (S && S.ops && String(S.t || '') >= String(D.t || '')) { D = S; route(); } else if (hs) route(); });
     T14Live.load().then(function (L) { if (L && L.stock && L.stock.allwh) { STOCK = L.stock; route(); } });
     watchReport('docs.bin', function (Z) { if (Z && (Z.buffer || Z.kinds)) { DOCS = {}; (Z.kinds || []).forEach(function (k) { DOCS[k.k] = k; }); DOCS._buffer = Z.buffer || null; if (location.hash === '#recl' || location.hash === '#buf' || location.hash === '#s-buf') route(); else if (!location.hash) main(); } });
-    if (T14Live.bin) T14Live.bin('staff.bin').then(function (Z) { if (Z && Z.changes) { KOW = Z; if (location.hash === '#ko') route(); else if (!location.hash) main(); } });
     if (T14Live.bin) T14Live.bin('leads.bin').then(function (Z) { if (Z && Z.offices) { LEADS = Z; leadsSub(); } else LEADS_FAIL = true; if (location.hash === '#leads') leads(); }, function () { LEADS_FAIL = true; if (location.hash === '#leads') leads(); });
     setTimeout(function () { if (!LEADS) { LEADS_FAIL = true; if (location.hash === '#leads') leads(); } }, 8000);   // 13.11.2026: лиды выставок
     if (T14Live.bin) T14Live.bin('mps.bin').then(function (Z) { if (Z && (Z.ours || Z.comp)) { MPS = Z; if (location.hash === '#mp') route(); } });   // 13.11.2026: MPStats
