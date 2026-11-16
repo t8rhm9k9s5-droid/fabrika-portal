@@ -108,7 +108,7 @@ html[data-skin="v22"][data-skin][data-skin][data-fx="lite"] :not(svg):not(svg *)
   html[data-skin="v22"][data-skin][data-skin] .pside .pnav{width:44px;min-height:44px!important;padding:0!important;justify-content:center;border-radius:50%!important;background:transparent!important;box-shadow:none!important}
   html[data-skin="v22"][data-skin][data-skin] .pside .pnav .pi svg{width:21px;height:21px}
   html[data-skin="v22"][data-skin][data-skin] .pside .pnav:hover{background:rgba(120,120,128,.1)!important}
-  html[data-skin="v22"][data-skin][data-skin] .pside .pnav[aria-current="page"]{background:rgba(120,120,128,.18)!important}
+  html[data-skin="v22"][data-skin][data-skin] .pside .pnav[aria-current="page"],html[data-skin="v22"][data-skin][data-skin] .pside .pnav[data-cur]{background:rgba(120,120,128,.18)!important}
   html[data-skin="v22"][data-skin][data-skin] .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px var(--v-card)}
 }
 /* 14.11.2026, Т. В. (iPhone): «нет симметрий по вертикали; дата сверху не переключает — что было вчера?!; граница верхнего меню — нет всех плюсов iOS» */

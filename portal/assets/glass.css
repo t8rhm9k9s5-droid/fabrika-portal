@@ -266,7 +266,7 @@ html.t14-intro .pz-hb .tr b,html.t14-intro .pz-k .bar b,html.t14-intro .fb-m .fb
   .pside .pnav{width:44px;min-height:44px!important;padding:0!important;justify-content:center;border-radius:14px!important;color:#ebebf5!important}
   .pside .pnav .pi svg{width:22px;height:22px}
   .pside .pnav:hover{background:rgba(255,255,255,.1)!important}
-  .pside .pnav[aria-current="page"]{background:rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important}
+  .pside .pnav[aria-current="page"],.pside .pnav[data-cur]{background:rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important}
   .pside .pfoot{justify-items:center}
   .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px rgba(28,30,34,.9)}
 }

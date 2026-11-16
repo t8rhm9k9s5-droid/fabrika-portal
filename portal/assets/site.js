@@ -826,7 +826,7 @@
     var foot = el('div', 'pfoot'); side.appendChild(foot);
     var fv = navItem('razdel.html#saved', 's_star', 'var(--ic-stock)', 'Сохранённое'); if (cur === 'razdel.html' && location.hash === '#saved') fv.setAttribute('aria-current', 'page'); foot.appendChild(fv);
     var pf = trigger('profile', 'pnav', 'sliders', 'Профиль и настройки'); pf.innerHTML = '<span class="pi" style="--c:var(--ic-grey)">' + ICON.s_person + '</span><span class="pt">Профиль и настройки</span>'; foot.appendChild(pf);
-    if (cur === 'admin.html') pf.setAttribute('aria-current', 'page');
+    if (cur === 'admin.html') pf.dataset.cur = '1';   // 16.11 GPT-проверка P2: aria-current — только у ссылок; кнопка профиля лишь подсвечена (CSS [data-cur])
     // 16.11.2026, проверка Рекса (PR №2, п. 1): в узкой панели подписи .pt скрыты (display:none) — у ссылок нет имени для VoiceOver.
     //   Постоянное имя — aria-label из подписи (со счётчиком «требует внимания», см. paintBadges).
     [].forEach.call(side.querySelectorAll('.pnav, .pfab'), function (a) { var t = a.querySelector('.pt'); t = t ? t.textContent.trim() : ''; if (t) { a.dataset.nm = t; if (!a.getAttribute('aria-label')) a.setAttribute('aria-label', t); } });
