@@ -71,7 +71,7 @@
   function me() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function tok() { try { return localStorage.getItem('t14.tok') || ''; } catch (e) { return ''; } }
   function saveMe(p, t) { try { localStorage.setItem('t14.me', JSON.stringify(p)); if (t) localStorage.setItem('t14.tok', t); } catch (e) { /* private mode */ } }
-  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
+  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); localStorage.removeItem('t14.glc');   /* 16.11: кэш транспорта — при выходе (проверка GPT, PR №2) */ ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
 
   // ---- the server (the «Фабрика» Google Apps Script)
   var CFG = G.T14_ACCT_CFG || null, cfgP = null;

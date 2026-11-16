@@ -852,7 +852,7 @@
       // 16.11.2026, проверка Рекса (PR №2, P3): подсказка и с клавиатуры — Tab по значкам; Esc и уход фокуса прячут
       side.addEventListener('focusin', function (e) { var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab'); if (!a || !railOn()) return;
         curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; clearTimeout(tmr); place(a); tip.classList.add('on'); });
-      side.addEventListener('focusout', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      side.addEventListener('focusout', function (e) { if (e.relatedTarget && side.contains(e.relatedTarget)) return; curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });   // Tab внутри панели — без мигания
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tip.classList.contains('on')) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); } });
       side.addEventListener('click', function () { tip.classList.remove('on'); });
       // 15.11.2026, Т. В.: «стрелочка — нажимаешь, и всё меню выезжает вправо с надписями». Только там, где панель узкая (компьютер, V22 или 701–1279 px).
