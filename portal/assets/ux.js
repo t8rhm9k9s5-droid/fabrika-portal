@@ -7,7 +7,7 @@
    t14.uxd), вход — первые 8 знаков id. Никаких введённых текстов, содержимого страниц, адресов почты и телефонов. */
 (function () {
   'use strict';
-  if (!navigator.sendBeacon || /^file:/.test(location.protocol) || window.T14UX) return;
+  if (!navigator.sendBeacon || /^file:/.test(location.protocol) || window.T14UX || navigator.webdriver) return;   // 16.11.2026 (разбор 15.11, Т. В. «да»): автотесты (Playwright/WebDriver) в сводку не пишем — давали «ярость» summary/#pdlgX
   var URL_ = 'st/ux.php', EV = [], MV = new Map(), nEv = 0, nMv = 0;
   function rnd(n) { var s = '', a = 'abcdefghijkmnpqrstuvwxyz23456789'; for (var i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
   var dev = ''; try { dev = localStorage.getItem('t14.uxd') || ''; if (!/^[a-z0-9]{12}$/.test(dev)) { dev = rnd(12); localStorage.setItem('t14.uxd', dev); } } catch (e) { dev = rnd(12); }
@@ -65,6 +65,7 @@
   }, { passive: true });
   // ---------- ошибки и время загрузки ----------
   window.addEventListener('error', function (e) {
+    if (/^Script error\.?$/.test(String(e.message || '')) && !e.filename) return;   // 16.11.2026: ошибка чужого скрипта без подробностей (браузер скрывает) — ничего не показывает, не копим
     try { push(['e', now(), pg(), String(e.message || 'ошибка').slice(0, 160), String(e.filename || '').split('/').pop().slice(0, 40) + ':' + (e.lineno || 0)]); } catch (e2) { }
   });
   window.addEventListener('unhandledrejection', function (e) { try { push(['e', now(), pg(), ('promise: ' + String((e.reason && e.reason.message) || e.reason || '')).slice(0, 160), '']); } catch (e2) { } });

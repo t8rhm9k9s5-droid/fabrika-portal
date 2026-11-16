@@ -1,0 +1,21 @@
+{
+ "portal_version": "2.6.4",
+ "exported_utc": "2026-11-16T18:44Z",
+ "files_sha": "0e5d74a3cb4de69e",
+ "files": [
+  "bots/max/DailyCheck.gs.js",
+  "bots/max/DmGate.gs.js",
+  "bots/max/MaxSubRep.gs.js",
+  "bots/max/MeetTasks.gs.js",
+  "bots/telegram/DayNote.gs.js",
+  "bots/telegram/DevRep.gs.js",
+  "bots/telegram/Mirror.gs.js",
+  "ci/test_layers_groups.js",
+  "ci/test_pulse_glq.js",
+  "portal/assets/layers.js",
+  "portal/assets/ux.js",
+  "portal/build/app/pbr_part.js",
+  "portal/build/struct_frag.html"
+ ],
+ "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
+}
