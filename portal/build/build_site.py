@@ -85,6 +85,7 @@ assert frags['plan.html'].count(_tf) == 1
 frags['plan.html'] = frags['plan.html'].replace(_tf, "window.T14Plan={cams,camEls,B,svg,el,store,DATA,select,clearSel,dragged:()=>moved,fit:(x,y,w,h)=>{const m=rootOf(x+w/2,y+h/2);view={x:m.x-w/2,y:m.y-h/2,w,h};apply()}};" + _tf, 1)
 frags['plan.html'] += '\n<script src="assets/blind.js"></script>\n'
 frags['plan.html'] += '<script src="assets/mapinfo.js"></script>\n'   # 02.11.2026: сводка карты в свободной области
+frags['plan.html'] += '<script src="assets/layers.js"></script>\n'   # 16.11.2026, Т. В.: таблетка «Слои / + / −», «Камеры» и окно слоёв (образец — сайт «Дом»)
 
 if os.path.exists('/home/claude/build/wx/wx.json'): shutil.copy('/home/claude/build/wx/wx.json', os.path.join(SITE, 'assets', 'wx.json'))   # the forecast for pages that cannot reach api.met.no
 # PDF inside the site with a fixed «‹ Назад» (23.10.2026): the library opens its files here
