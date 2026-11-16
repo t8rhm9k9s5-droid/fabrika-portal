@@ -159,8 +159,18 @@ ver = hashlib.sha1(''.join(hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexd
 #   или первая сборка после 18:00 (сводка дня); не больше 5 в день. Решение — в release_state.json (его читает bot/bot_live.py для новостей бота).
 import datetime as _dtr
 _RS = f'{B}/release_state.json'
-try: _st = _cg1_load_json(_RS, encoding='utf-8')
-except Exception: _st = {}
+# 16.11.2026 (R5-05 Рекса): чтение-изменение-запись под блокировкой; повреждённый файл — копия .bak, иначе остановка
+#   (раньше «не прочитался» = пустое состояние = ложный «первый выпуск» и рассылка всем).
+import fcntl as _fcntl, shutil as _sh
+_rs_lock = open(_RS + '.lock', 'w'); _fcntl.flock(_rs_lock, _fcntl.LOCK_EX)
+def _rs_load():
+    for _p in (_RS, _RS + '.bak'):
+        if os.path.exists(_p):
+            try: return _cg1_load_json(_p, encoding='utf-8')
+            except Exception: continue
+    if os.path.exists(_RS): sys.exit('release_state.json повреждён (и .bak) — сборку не продолжаю, чтобы не объявить ложный первый выпуск')
+    return {}
+_st = _rs_load()
 _cur = {p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in pre}
 if not _st.get('pub'):
     try: _st['pub'] = re.search(r"const VERSION = '[^']*-([0-9a-f]{10})'", _cg1_read_file(f'{OUT}/sw.js', encoding='utf-8')).group(1)
@@ -178,9 +188,10 @@ if _public:
     if _digest: _st['digest_day'] = _day
 _st['last'] = {'t': _now.strftime('%Y-%m-%dT%H:%M'), 'public': bool(_public), 'changed': _changed, 'ver': ver}
 _st['days'] = {k: v for k, v in sorted(_days.items())[-10:]}
-_cg1_json_value_143 = _st
-with open(_RS, 'w', encoding='utf-8') as _cg1_json_output_143:
-    json.dump(_cg1_json_value_143, _cg1_json_output_143, ensure_ascii=False, indent=1)
+if os.path.exists(_RS): _sh.copy2(_RS, _RS + '.bak')
+with open(_RS + '.tmp', 'w', encoding='utf-8') as _cg1_json_output_143:
+    json.dump(_st, _cg1_json_output_143, ensure_ascii=False, indent=1)
+os.replace(_RS + '.tmp', _RS)
 print('уведомления:', 'всем (%s)' % _st.get('why') if _public else 'только данные, без рассылки всем (изменено файлов %d, рассылок сегодня %d)' % (_changed, _n))
 sw = _cg1_read_file(f'{B}/pwa_sw.js', encoding='utf-8')
 sw = sw.replace('__VERSION__', STAMP + '-' + _st['pub']).replace('__PRECACHE__', json.dumps(pre)).replace('__DOCS__', json.dumps({p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in DOC_FILES}))

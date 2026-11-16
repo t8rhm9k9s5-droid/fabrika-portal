@@ -1026,7 +1026,7 @@ function buildWorkshop(){
   const cInfo={sys:'каркас',title:'Стойка торцевого фахверка С1/С2',rows:[['Сечение','труба 120×4'],['Место','торец по оси 1 — в 2,48 и 5,6 м от оси А; торец по оси 10 — в 5,6 м (КР, разрез 4-4, фундаменты Ф2)']],src:SRC.kr};
   wbox(g.ws_frame,-.06,.06,2.42,2.54,0,ztc(2.48),st,cInfo);
   [0,49.5].forEach(s=>wbox(g.ws_frame,s-.06,s+.06,5.54,5.66,0,ztc(5.6),st,cInfo));
-  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник13 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
+  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник14 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
   const posts=[0,1.203,3.987,5.379,6.771,9.555,W], zig=[[.12,'t'],[1.203,'b'],[2.6,'t'],[3.987,'b'],[5.379,'t'],[6.771,'b'],[8.16,'t'],[9.555,'b'],[11.08,'t']];
   AX.forEach(s=>{
     wbeam(g.ws_frame,P(s,0,ZBC),P(s,W,ZBC),.1,.08,st,fI);wbeam(g.ws_frame,P(s,0,ztc(0)),P(s,W,ztc(W)),.12,.08,st,fI);
@@ -1081,7 +1081,7 @@ function buildWorkshop(){
   fence.add(new THREE.LineSegments(new THREE.EdgesGeometry(fence.geometry),new THREE.LineBasicMaterial({color:0x4f6f4f})));
   // ---------- electrical ----------
   const pw=S.proj.power;
-  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник15 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
+  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник16 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
   wbox(g.ws_el,.1,.5,7.55,8.35,0,2.0,0xd0d4d8,vruI);wbox(g.ws_el,.48,.52,7.6,8.3,1.75,1.9,0xe0a400,vruI);
   [['ЩР','Щит силовой ЩР',[['Установленная / расчётная','34,0 / 23,8 кВт'],['Нагрузка','розетки швейных машин 0,4 кВт, 220/380 В']],6.85,7.4],
    ['ЩВ','Щит ЩВ — вентиляция и тепловые завесы',[['Установленная / расчётная','24,08 / 9,65 кВт'],['Нагрузка','завесы КЭВ-9П3011Е 2 × 9 кВт и КЭВ-6П2211Е 6 кВт, вытяжные вентиляторы санузлов']],6.25,6.75],
@@ -1706,6 +1706,7 @@ function ctxBuild(){
   const at = (x, y) => gAt(x, y), gr = C.ground;
   const pg = new THREE.PlaneGeometry(gr.x1 - gr.x0, gr.y1 - gr.y0); pg.rotateX(-Math.PI / 2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xdfe2d6})); plane.position.copy(V((gr.x0 + gr.x1) / 2, (gr.y0 + gr.y1) / 2, szzPlaneY() - 0.1)); gCtx.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear && typeof basePlaneClear === 'function') basePlaneClear(plane, true);   // 16.11.2026: прозрачная земля — и эта плоскость (трубы под ней)
   const RM = {asphalt:new THREE.MeshLambertMaterial({color:0x8f9397, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}),
               dirt:new THREE.MeshLambertMaterial({color:0xb7a685, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2})};
   const edge = new THREE.LineBasicMaterial({color:0x6c7075, transparent:true, opacity:.55});
@@ -2122,8 +2123,13 @@ moreBtn.addEventListener('click', ()=>toggleMore(moreEl.hidden));
 $('#moreX').addEventListener('click', ()=>toggleMore(false));
 document.addEventListener('pointerdown', e=>{ if (!moreEl.hidden && !moreEl.contains(e.target) && !moreBtn.contains(e.target)) toggleMore(false); });
 let groundClear = false;
+// 16.11.2026 (Т. В.: «почему линии коммуникаций газа, воды и прочее прерываются на 3Д плане»): под рельефом лежит ровная «земля окрестностей»
+// (окрестности и СЗЗ) на 0,4 м ниже самой низкой точки — канализация и водопровод глубже, и сквозь прозрачную землю их закрывала она.
+// Теперь при прозрачной земле прозрачны и эти плоскости.
+function basePlaneClear(o, on){ const m = o && o.material; if (!m) return; m.transparent = on; m.opacity = on ? .18 : 1; m.depthWrite = !on; m.needsUpdate = true; }
 function setGroundClear(on){
-  groundClear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  groundClear = on; terMat.userData.clear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  scene.traverse(o=>{ if (o.userData && o.userData.basePlane) basePlaneClear(o, on); });
   otmMat.transparent = on; otmMat.opacity = on ? .25 : 1; otmMat.depthWrite = !on; otmMat.needsUpdate = true;
   controls.maxPolarAngle = on ? Math.PI*0.8 : Math.PI*0.495;
   gCont.children.forEach(c=>{ c.material.opacity = on ? .15 : .35; });
@@ -2412,6 +2418,7 @@ function buildSZZ(){
   const bb = szzBbox(), pad = 70, w = bb.x1 - bb.x0 + 2*pad, h = bb.y1 - bb.y0 + 2*pad, cx = (bb.x0 + bb.x1)/2, cy = (bb.y0 + bb.y1)/2;
   const pg = new THREE.PlaneGeometry(w, h); pg.rotateX(-Math.PI/2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xd9dccd})); plane.position.copy(V(cx, cy, szzPlaneY() - 0.02)); gSzz.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear) basePlaneClear(plane, true);   // сквозь прозрачную землю видны трубы под ней
   const B = SZ.boundary.map(p=>p.loc);
   const sh = new THREE.Shape(B.map(([x, y])=>new THREE.Vector2(x - CX, y - CY))), sg = new THREE.ShapeGeometry(sh); sg.rotateX(-Math.PI/2);
   const fill = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({color:0x2f5fd0, transparent:true, opacity:.14, depthWrite:false}));
@@ -2533,7 +2540,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник15 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -2681,7 +2688,7 @@ function ndvInfo(u){
        <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
        <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник15 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -2932,14 +2939,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник15 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */
@@ -5694,7 +5701,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
    Сотрудник26 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник10 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   На techfabrikant.ru — Сотрудник11 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -5758,7 +5765,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   }
   // 26.10.2026 (пользователь): предупреждения — ТОЛЬКО гроза, сильный снегопад (снег/снегопад ≥ 7 мм за 12 ч), шторм (порывы ≥ 20 м/с),
   // ураган (порывы ≥ 33 м/с) в ближайшие 24 часа. Обычно их считает сервер (wx/f.php → alerts) — тогда сайт и боты пишут одно и то же;
-  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник10]
+  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник11]
   function dmhm(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
   function span(t0, t1){ return dmhm(t0) + ' с ' + hm(new Date(t0)) + ' до ' + (dmhm(t1 + 36e5) !== dmhm(t0) ? dmhm(t1 + 36e5) + ' ' : '') + hm(new Date(t1 + 36e5)) + ' МСК'; }
   function alerts(rows){
@@ -5829,9 +5836,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник10 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник10 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник11 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник11 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
-    // Теперь: Сотрудник10 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
+    // Теперь: Сотрудник11 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
       clearTimeout(to); var ctl2 = window.AbortController ? new AbortController() : null, to2 = setTimeout(function(){ if (ctl2) ctl2.abort(); }, 20000);
       var good = function(w){ wx = w; wxGot = Date.now(); wxErr = ''; ls(K_WX, JSON.stringify({ w: w, got: wxGot })); };
@@ -6147,16 +6154,16 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     if (o.isInstancedMesh || o.isSkinnedMesh || o.isPoints || o.isSprite || !o.geometry || !o.geometry.isBufferGeometry || !o.material || Array.isArray(o.material)) return null;
     const m = o.material, g = o.geometry, pos = g.attributes.position; if (!pos || pos.itemSize !== 3) return null;
     if (m.alphaMap || m.wireframe || m.blending !== THREE.NormalBlending || m.isShaderMaterial || o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return null;
-    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial))) return null;
+    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial))) return null;
     if (g.morphAttributes && Object.keys(g.morphAttributes).length) return null;
-    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial)) return null; if (!g.attributes.normal && m.isMeshLambertMaterial) return null; return 'mesh'; }   // one material: geometry groups do not matter
+    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial)) return null; if (!g.attributes.normal && !m.isMeshBasicMaterial) return null; return 'mesh'; }   // 16.11.2026: и физические (pbr_part)   // one material: geometry groups do not matter
     if (o.isLineSegments || o.isLineLoop || o.isLine){ if (!(m.isLineBasicMaterial || m.isLineDashedMaterial)) return null; if (m.isLineDashedMaterial && !g.attributes.lineDistance) return null; return o.isLineSegments ? 'seg' : o.isLineLoop ? 'loop' : 'strip'; }
     return null;
   }
   function shown(o, top){ for (let q = o; q && q !== top; q = q.parent) if (!q.visible) return false; return true; }
   function matKey(o, kind){
     const m = o.material, op = Math.round((m.transparent ? m.opacity : 1) * 100);
-    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
+    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : m.isMeshStandardMaterial ? 'P' + Math.round(m.roughness * 20) + '/' + Math.round(m.metalness * 20) + '/' + Math.round((m.envMapIntensity || 1) * 10) : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
             m.polygonOffset ? m.polygonOffsetFactor + '/' + m.polygonOffsetUnits : '-', m.flatShading ? 1 : 0, m.fog ? 1 : 0, o.renderOrder || 0,
             m.map ? m.map.uuid : '-', m.isLineDashedMaterial ? 'D' + m.dashSize + '/' + m.gapSize + '/' + m.scale : '-'].join(',');
   }
@@ -6182,6 +6189,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     st.items = null;
   }
   function build(top, st, list){
+    if (window.__t14pbrPrep) window.__t14pbrPrep(top);   // 16.11.2026: цвета и материалы слоя — уже физические и линейные, до склейки
     top.updateMatrixWorld(true); mInv.copy(top.matrixWorld).invert();
     const groups = new Map(), items = [];
     for (const it of list){
@@ -6199,7 +6207,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
       if (gr.list.length < 2) { gr.list.forEach(it => { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); }); continue; }   // one object: nothing to gain
       const mesh = gr.kind === 'mesh', NV = gr.nv;
       const m00 = gr.list[0].o.material, UV = m00.map ? new Float32Array(NV * 2) : null, LD = m00.isLineDashedMaterial ? new Float32Array(NV) : null;
-      const P = new Float32Array(NV * 3), C = new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
+      const HI = !!window.__t14pbr, CK = HI ? 65535 : 255, P = new Float32Array(NV * 3), C = HI ? new Uint16Array(NV * 3) : new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
       const I = NV > 65535 ? new Uint32Array(gr.ni) : new Uint16Array(gr.ni);
       let vo = 0, io = 0;
       for (const it of gr.list){
@@ -6210,7 +6218,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
         for (let i = 0; i < nv; i++){
           v.fromBufferAttribute(pos, i).applyMatrix4(mRel); const j = (vo + i) * 3; P[j] = v.x; P[j + 1] = v.y; P[j + 2] = v.z;
           let r = cr, gg = cg, bb = cb; if (col){ r *= col.getX(i); gg *= col.getY(i); bb *= col.getZ(i); }
-          C[j] = Math.round(Math.min(1, r) * 255); C[j + 1] = Math.round(Math.min(1, gg) * 255); C[j + 2] = Math.round(Math.min(1, bb) * 255);
+          C[j] = Math.round(Math.min(1, r) * CK); C[j + 1] = Math.round(Math.min(1, gg) * CK); C[j + 2] = Math.round(Math.min(1, bb) * CK);
           if (mesh){
             if (nrm){ v.fromBufferAttribute(nrm, i).applyMatrix3(nMat).normalize(); N[j] = Math.round(v.x * 127); N[j + 1] = Math.round(v.y * 127); N[j + 2] = Math.round(v.z * 127); }
             EM[j] = er; EM[j + 1] = eg; EM[j + 2] = eb;
@@ -6239,6 +6247,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
       if (m0.map) common.map = m0.map;
       if (!mesh) bm = m0.isLineDashedMaterial ? new THREE.LineDashedMaterial(Object.assign(common, {dashSize: m0.dashSize, gapSize: m0.gapSize, scale: m0.scale})) : new THREE.LineBasicMaterial(common);
       else if (m0.isMeshBasicMaterial) bm = new THREE.MeshBasicMaterial(common);
+      else if (m0.isMeshStandardMaterial){ bm = new THREE.MeshStandardMaterial(Object.assign(common, {roughness: m0.roughness, metalness: m0.metalness, envMapIntensity: m0.envMapIntensity, flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emisP'; }
       else { bm = new THREE.MeshLambertMaterial(Object.assign(common, {flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emis'; }
       const b = mesh ? new THREE.Mesh(bg, bm) : new THREE.LineSegments(bg, bm);
       b.userData.__batch = 1; b.raycast = noRay; b.renderOrder = gr.list[0].o.renderOrder || 0; b.matrixAutoUpdate = false;
@@ -6289,6 +6298,173 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     if (avg > 19 && pr > prMin + .01){ pr = Math.max(prMin, pr - .25); renderer.setPixelRatio(pr); resize(); okRun = 0; }
     else if (avg < 15.5 && pr < prMax - .01){ if (++okRun >= 3){ pr = Math.min(prMax, pr + .25); renderer.setPixelRatio(pr); resize(); okRun = 0; } }
     else okRun = 0;
+  };
+})();
+
+/* ---- 3D: свет и материалы как в жизни (16.11.2026, Т. В.: «подними уровень детализации 3D-карты до того же уровня, что и в модели дома,
+   можно даже немножко лучше, чтобы все нюансы было видно») — этап 1 из 4.
+   • цвет как у фотоаппарата: свет считается в линейных единицах → плёночная кривая ACES → sRGB (все цвета модели переводятся из sRGB один раз);
+   • физические материалы (MeshStandardMaterial) вместо матовых Ламберта: шероховатость, блики, стекло;
+   • освещение от неба: карта окружения (PMREM) из цвета неба и земли, обновляется вместе со временем суток и погодой;
+   • резкие тени у камеры: теневая камера солнца — вокруг точки, куда смотрим (чем ближе, тем резче), а не на всю площадку.
+   Только на качестве «Высокое» (T14Perf); на слабых устройствах модель — как раньше. */
+;(function(){
+  // 16.11.2026, Т. В.: «давай на портал сразу» — включено у всех (только «Высокое» качество); ?pbr=0 в адресе — выключить на этом устройстве, ?pbr=1 — включить.
+  let on = false;
+  try {
+    const q = new URLSearchParams(location.search).get('pbr'); if (q === '1' || q === '0') localStorage.setItem('t14.pbr', q);
+    const st = localStorage.getItem('t14.pbr');
+    on = st !== '0';   // 16.11.2026, Т. В.: «давай на портал сразу» — у всех на «Высоком» качестве; ?pbr=0 — выключить на устройстве
+  } catch (e) { }
+  if (!on) return;
+  const PF = window.T14Perf; if (PF && PF.level && PF.level() !== 'high') return;
+  if (!THREE.PMREMGenerator || !THREE.MeshStandardMaterial || !THREE.sRGBEncoding) return;
+  const hemi = scene.children.find(o => o.isHemisphereLight), sunL = scene.children.find(o => o.isDirectionalLight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = .8;
+  window.__t14pbr = true;
+
+  // ---------- цвета: sRGB → линейные, один раз на каждый объект ----------
+  const doneM = new WeakSet(), doneA = new WeakSet(), doneT = new WeakSet();
+  const lin = c => { if (c && c.isColor) c.convertSRGBToLinear(); };
+  function texIn(t){ if (t && t.isTexture && !doneT.has(t)) { doneT.add(t); t.encoding = THREE.sRGBEncoding; t.needsUpdate = true; } }
+  // 16.11.2026 (Т. В.: «почему линии коммуникаций… прерываются»): прежний код и после замены материалов меняет их сам —
+  // прозрачная земля, стены цеха, подсветка выбранного, «рельеф цветом». Всё это переносится сюда каждый кадр (watch ниже).
+  const syncs = [], crec = [], vrec = [];
+  function vconv(a){
+    const arr = a.array, n = arr.length, k = a.normalized || arr instanceof Uint8Array ? 255 : 1;
+    for (let i = 0; i < n; i++) { const v = arr[i] / k; const l = v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); arr[i] = k === 1 ? l : Math.round(l * k); }
+    a.needsUpdate = true;
+  }
+  function vcolIn(g){
+    const a = g && g.attributes && g.attributes.color; if (!a || doneA.has(a)) return; doneA.add(a);
+    vconv(a); vrec.push({ a, ver: a.version });
+  }
+  function remember(m){ const r = { m, c: m.color && m.color.isColor ? m.color.clone() : null, e: m.emissive && m.emissive.isColor ? m.emissive.clone() : null }; m.__t14c = r; crec.push(r); }
+  const GLASS = m => m.transparent && m.opacity < .7;
+  function upgrade(m){
+    if (m.isMeshLambertMaterial || m.isMeshPhongMaterial) {
+      const s = new THREE.MeshStandardMaterial({ color: m.color, map: m.map || null, vertexColors: m.vertexColors, transparent: m.transparent, opacity: m.opacity,
+        side: m.side, depthWrite: m.depthWrite, depthTest: m.depthTest, alphaTest: m.alphaTest, polygonOffset: m.polygonOffset, polygonOffsetFactor: m.polygonOffsetFactor,
+        polygonOffsetUnits: m.polygonOffsetUnits, emissive: m.emissive || new THREE.Color(0), emissiveMap: m.emissiveMap || null, visible: m.visible, fog: m.fog });
+      s.name = m.name; s.userData = m.userData;
+      if (GLASS(m)) { s.roughness = .12; s.metalness = 0; s.envMapIntensity = 1; }       // стекло, прозрачные кровли — блик неба
+      else { s.roughness = .82; s.metalness = 0; s.envMapIntensity = .45; }                  // стены, кровли, асфальт — матовые
+      return s;
+    }
+    return m;
+  }
+  function prep(o, terr){
+    if (!o.material) return;
+    if (o.userData && o.userData.__batch) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && doneM.add(m)); if (o.geometry && o.geometry.attributes.color) doneA.add(o.geometry.attributes.color); return; }   // склейка (batch_part): цвета уже линейные
+    const many = Array.isArray(o.material), list = many ? o.material : [o.material];
+    let out = list;
+    if (o.isMesh) out = list.map(m => { if (!m || doneM.has(m)) return m; const u = upgrade(m); if (terr && u.isMeshStandardMaterial) { u.roughness = 1; u.envMapIntensity = .3; } return u; });
+    out.forEach(m => { if (!m || doneM.has(m)) return; doneM.add(m); lin(m.color); lin(m.emissive); texIn(m.map); texIn(m.emissiveMap); m.needsUpdate = true; remember(m); });
+    if (o.isMesh || o.isLine || o.isPoints) vcolIn(o.geometry);
+    if (o.isMesh && out !== list) o.material = many ? out : out[0];
+  }
+  // общий материал разделяют сотни сеток: новый — один на старый
+  const swap = new Map(), upgrade0 = upgrade;
+  upgrade = function (m) { if (swap.has(m)) return swap.get(m); const u = upgrade0(m); swap.set(m, u);
+    if (u !== m) syncs.push({ o: m, n: u, op: m.opacity, tr: m.transparent, dw: m.depthWrite, dt: m.depthTest, vis: m.visible, side: m.side, ver: m.version,
+      c: m.color ? m.color.getHex() : -1, e: m.emissive ? m.emissive.getHex() : -1 });
+    return u; };
+  let lastN = -1, scanT = 0;
+  window.__t14pbrPrep = function (top) { const ter = scene.getObjectByName('terrain'), terSet = new Set(); if (ter) ter.traverse(o => terSet.add(o)); top.traverse(o => prep(o, terSet.has(o))); };
+  function scan(now){
+    if (now - scanT < 900) return; scanT = now;
+    let n = 0; scene.traverse(() => { n++; }); if (n === lastN) return; lastN = n;
+    const ter = scene.getObjectByName('terrain'), terSet = new Set(); if (ter) ter.traverse(o => terSet.add(o));
+    scene.traverse(o => prep(o, terSet.has(o)));
+    // что ушло из сцены при перестройке — больше не отслеживаем
+    const usedM = new Set(), usedA = new Set();
+    scene.traverse(o => { const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => x && usedM.add(x)); const a = o.geometry && o.geometry.attributes && o.geometry.attributes.color; if (a) usedA.add(a); });
+    const keep = (arr, f) => { let j = 0; for (let i = 0; i < arr.length; i++) if (f(arr[i])) arr[j++] = arr[i]; arr.length = j; };
+    keep(syncs, s => usedM.has(s.n)); keep(crec, r => usedM.has(r.m)); keep(vrec, r => usedA.has(r.a));
+    swap.forEach((u, m) => { if (!usedM.has(u)) swap.delete(m); });
+    renderer.shadowMap.needsUpdate = true;
+  }
+  // перенос изменений: прежний материал → физический; цвет, заданный кодом в sRGB, → в линейный
+  function watch(){
+    for (let i = 0; i < syncs.length; i++) { const s = syncs[i], o = s.o, n = s.n;
+      if (o.opacity !== s.op) { s.op = o.opacity; n.opacity = o.opacity; }
+      if (o.transparent !== s.tr) { s.tr = o.transparent; n.transparent = o.transparent; n.needsUpdate = true; }
+      if (o.depthWrite !== s.dw) { s.dw = o.depthWrite; n.depthWrite = o.depthWrite; }
+      if (o.depthTest !== s.dt) { s.dt = o.depthTest; n.depthTest = o.depthTest; }
+      if (o.visible !== s.vis) { s.vis = o.visible; n.visible = o.visible; }
+      if (o.side !== s.side) { s.side = o.side; n.side = o.side; n.needsUpdate = true; }
+      if (o.version !== s.ver) { s.ver = o.version; n.needsUpdate = true; }
+      if (o.color && o.color.getHex() !== s.c) { s.c = o.color.getHex(); n.color.copy(o.color).convertSRGBToLinear(); if (n.__t14c && n.__t14c.c) n.__t14c.c.copy(n.color); }
+      if (o.emissive && n.emissive && o.emissive.getHex() !== s.e) { s.e = o.emissive.getHex(); n.emissive.copy(o.emissive).convertSRGBToLinear(); if (n.__t14c && n.__t14c.e) n.__t14c.e.copy(n.emissive); }
+    }
+    for (let i = 0; i < crec.length; i++) { const r = crec[i], m = r.m;
+      if (r.c && !m.color.equals(r.c)) { m.color.convertSRGBToLinear(); r.c.copy(m.color); }
+      if (r.e && m.emissive && !m.emissive.equals(r.e)) { m.emissive.convertSRGBToLinear(); r.e.copy(m.emissive); }
+    }
+    for (let i = 0; i < vrec.length; i++) { const r = vrec[i]; if (r.a.version !== r.ver) { vconv(r.a); r.ver = r.a.version; } }   // «рельеф цветом», слои: цвета земли записаны заново
+  }
+
+  // ---------- свет неба: цвета, которые меняет время суток (sky_part), — в линейные, когда они сменились ----------
+  const seen = new Map();   // объект Color → последнее записанное нами линейное значение
+  function liveColor(c){ if (!c || !c.isColor) return; const s = seen.get(c); if (s && s.equals(c)) return; c.convertSRGBToLinear(); seen.set(c, c.clone()); }
+  let hiSet = -1;
+  function liveLights(){
+    if (hemi) { liveColor(hemi.color); liveColor(hemi.groundColor); if (hemi.intensity !== hiSet) { hemi.intensity *= .55; hiSet = hemi.intensity; } }   // небо светит картой окружения — заливка слабее
+    if (sunL) liveColor(sunL.color);
+    if (scene.background && scene.background.isColor) liveColor(scene.background);
+    if (scene.fog && scene.fog.color) liveColor(scene.fog.color);
+  }
+
+  // ---------- окружение: полусфера «небо — горизонт — земля» в карту отражений (PMREM) ----------
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envGeo = new THREE.SphereGeometry(100, 32, 16), envCol = new Float32Array(envGeo.attributes.position.count * 3);
+  envGeo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
+  const envMesh = new THREE.Mesh(envGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false }));
+  const envScene = new THREE.Scene(); envScene.add(envMesh);
+  let envRT = null, envSig = '', envT = 0;
+  function envUpdate(now){
+    if (now - envT < 4000) return; envT = now;
+    const top = scene.background && scene.background.isColor ? scene.background : new THREE.Color(.6, .7, .8);
+    const gnd = hemi ? hemi.groundColor : new THREE.Color(.2, .2, .18), sky = hemi ? hemi.color : top;
+    const sig = top.getHexString() + gnd.getHexString() + sky.getHexString(); if (sig === envSig) return; envSig = sig;
+    const p = envGeo.attributes.position, c = new THREE.Color(), hz = top.clone().lerp(new THREE.Color(1, 1, 1), .25);
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i) / 100;
+      if (y >= 0) c.copy(hz).lerp(sky.clone().lerp(top, .5), Math.pow(y, .6)); else c.copy(hz).lerp(gnd, Math.min(1, -y * 3));
+      envCol[i * 3] = c.r; envCol[i * 3 + 1] = c.g; envCol[i * 3 + 2] = c.b;
+    }
+    envGeo.attributes.color.needsUpdate = true;
+    const rt = pmrem.fromScene(envScene, .04);
+    scene.environment = rt.texture; if (envRT) envRT.dispose(); envRT = rt;
+  }
+
+  // ---------- тени у камеры: теневая камера солнца — вокруг точки, куда смотрим ----------
+  const R0 = (function () { try { const hx = (S.extent.x1 - S.extent.x0) / 2, hy = (S.extent.y1 - S.extent.y0) / 2; return Math.hypot(hx, hy) + 40; } catch (e) { return 600; } })();
+  let sunDir = sunL ? sunL.position.clone().normalize() : null, lastPos = null, fitR = 0, fitC = new THREE.Vector3(1e9, 0, 0);
+  if (sunL) { scene.add(sunL.target); }
+  function shadowFit(){
+    if (!sunL || !sunL.castShadow || !renderer.shadowMap.enabled) return;
+    if (!lastPos || !lastPos.equals(sunL.position)) sunDir = sunL.position.clone().normalize();   // солнце передвинул sky_part — новое направление
+    const tg = controls.target, d = camera.position.distanceTo(tg), R = Math.min(R0, Math.max(45, d * .95 + 25));
+    const moved = fitC.distanceTo(tg) > R * .12 || Math.abs(R - fitR) > fitR * .15;
+    if (moved) {
+      fitR = R; fitC.copy(tg);
+      const sc = sunL.shadow.camera; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = 3000; sc.updateProjectionMatrix();
+      const tex = 2 * R / (sunL.shadow.mapSize.x || 2048);
+      sunL.shadow.bias = -0.0004; if ('normalBias' in sunL.shadow) sunL.shadow.normalBias = Math.max(.02, tex * 1.6);
+      renderer.shadowMap.needsUpdate = true;
+    }
+    sunL.target.position.copy(fitC); sunL.target.updateMatrixWorld();
+    sunL.position.copy(fitC).addScaledVector(sunDir, 1200); lastPos = sunL.position.clone();
+  }
+
+  // ---------- перед каждым кадром ----------
+  const _render = renderer.render.bind(renderer);
+  renderer.render = function (sc, cam) {
+    if (sc === scene) { const now = performance.now(); try { scan(now); watch(); liveLights(); envUpdate(now); shadowFit(); } catch (e) { console.warn('pbr', e); } }
+    return _render(sc, cam);
   };
 })();
 

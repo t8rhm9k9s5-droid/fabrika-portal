@@ -44,12 +44,19 @@
   }
   function glData() {
     if (!glOk()) return null;
-    if (GLC === undefined) { GLC = null; try { GLC = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); } catch (e) { } }
-    if (!GLQ) {
-      GLQ = true;
-      T14Acct.api('gl', { tok: T14Acct.tok(), fresh: 0 }).then(function (r) {
-        if (!r || !r.gl) return; GLC = glSum(r.gl); try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
-      }, function () { });
+    // 16.11.2026, проверка Рекса (PR №2, п. 2 / №24): сводка «Транспорта» — только своего входа; ответ, пришедший после выхода или смены входа, не пишется
+    var uid = (T14Acct.me() || {}).id, tk = T14Acct.tok();
+    if (GLC === undefined || (GLC && GLC.u !== uid)) { GLC = null; try { var c = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); if (c && c.u === uid) GLC = c; } catch (e) { } }
+    // 16.11 (Рекс, CG-32 п. 2): GLQ — ключ входа (id + tok): новый вход делает свой запрос; сбой или пустой ответ — повтор не раньше чем через 60 с
+    var qk = uid + '|' + tk;
+    if (GLQ !== qk && !(GLQ && GLQ.err === qk && Date.now() - GLQ.t < 60e3)) {
+      GLQ = qk;
+      var fail = function () { if (GLQ === qk) GLQ = { err: qk, t: Date.now() }; };
+      T14Acct.api('gl', { tok: tk, fresh: 0 }).then(function (r) {   // один запрос на вход (again() перерисовывает — повторного запроса нет)
+        if (T14Acct.tok() !== tk || (T14Acct.me() || {}).id !== uid) return;   // ответ чужого (прошлого) входа не пишем
+        if (!r || !r.gl) return fail();
+        GLC = glSum(r.gl); GLC.u = uid; try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
+      }, fail);
     }
     return GLC;
   }

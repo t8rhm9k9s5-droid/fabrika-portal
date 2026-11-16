@@ -143,7 +143,14 @@ def main():
             if cur_g and size + sum(os.path.getsize(t[1]) for t in tail) > lim: groups.append(cur_g); cur_g = []
             cur_g += tail
         if cur_g: groups.append(cur_g)
-    for g in groups: write_pkg(g)
+    # 16.11.2026 (R5-01 Рекса): общая опись выпуска в каждой части — code/release_part.json {rid, i, n}; хостинг (deploy.py release_part)
+    #   не ставит часть после проваленной и не переключает версию (последняя часть: m.bin, sw.js), пока не встали все предыдущие.
+    import tempfile, uuid
+    rid = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%Y%m%d%H%M') + '-' + uuid.uuid4().hex[:8]
+    for i, g in enumerate(groups, 1):
+        tf = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8')
+        json.dump({'rid': rid, 'i': i, 'n': len(groups)}, tf); tf.close()
+        write_pkg(g + [('code/release_part.json', tf.name)])
 
 
 def write_pkg(items):
