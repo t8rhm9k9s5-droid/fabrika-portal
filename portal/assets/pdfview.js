@@ -76,7 +76,7 @@
     $('.pa').textContent = d.orig ? (/\.xlsx?$/i.test(d.orig) ? 'Excel' : /\.pptx?$/i.test(d.orig) ? 'PowerPoint' : 'Word') : 'Файл';
     $('.pa').setAttribute('aria-label', d.orig ? 'Скачать исходный файл' : 'Файл: сохранить или отправить');
     root.hidden = false; document.documentElement.style.overflow = (navigator.standalone === true ? '' : 'hidden');   // 16.11: в приложении со значка iPhone корень не закрывать — окно укорачивается (полоса снизу); фон держит касание ниже
-    if (navigator.standalone === true && !root._tm) { root._tm = t14NoBgScroll(root); root.addEventListener('touchmove', root._tm, { passive: false }); }
+    if (navigator.standalone === true && !root._tm) { root._tm = t14NoBgScroll(root); root.addEventListener('touchmove', root._tm, { passive: false }); root.addEventListener('wheel', root._tm, { passive: false }); }   // iPad с трекпадом — тоже
     if (!V.pushed){ try { history.pushState({ t14pdf: 1 }, ''); V.pushed = true; } catch (e) {} }
     msg('Загружаю' + (d.bytes ? ' · ' + size(d.bytes) : ''), 0);
     lib().then(function(L){

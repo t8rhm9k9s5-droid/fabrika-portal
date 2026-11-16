@@ -1303,7 +1303,7 @@ if(north){north.removeAttribute('aria-hidden');north.setAttribute('role','button
     (function step(now){const q=Math.min(1,(now-T0)/340), e=1-Math.pow(1-q,3); theta=t0*(1-e); at(); if(q<1){preview();requestAnimationFrame(step)} else {theta=0;at();apply()}})(T0);
   });}
 window.T14PlanHome=fitHome;
-window.T14FovR=r=>{if(![15,25,40].includes(r)||r===FOV_R)return;FOV_R=r;for(const id in camEls){const o=camEls[id];drawCam(o.cur||o.c)}};
+window.T14FovR=r=>{if(![15,25,40].includes(r)||r===FOV_R)return;FOV_R=r;for(const id in camEls){const o=camEls[id],c=o&&(o.cur||o.c);if(c&&c.id)drawCam(c)}};
 
 renderIntro(); renderList(''); fitHome();
 requestAnimationFrame(()=>{fitHome()});
