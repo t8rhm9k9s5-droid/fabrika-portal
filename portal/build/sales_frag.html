@@ -323,10 +323,9 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       }).join('') + '</tbody></table></div></div>';
   }
   function reportsPage(date) {
-    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) date = '';   // 16.11.2026 (CodeQL js/xss): дата из адреса — только ГГГГ-ММ-ДД
     var today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-    var days = D.days || [], caption = 'Вечерние отчёты офисов' + (date ? ' · ' + dd(date) + ' ' + esc(date.slice(0, 4)) : '');
-    V.innerHTML = '<a class="back" href="#">Продажи</a><h1>' + caption + '</h1>' +
+    var days = D.days || [], caption = 'Вечерние отчёты офисов' + (date ? ' · ' + dd(date) + ' ' + date.slice(0, 4) : '');
+    V.innerHTML = '<a class="back" href="#">Продажи</a><h1>' + esc(caption) + '</h1>' +   // 16.11.2026: CodeQL js/xss — дата из адреса, экранируем
       reportsTable(date ? [date] : days, today) + (date ? '<p><a href="#s-days">Все дни</a></p>' : '');
   }
   function op(k) {

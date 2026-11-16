@@ -1,8 +1,9 @@
 {
  "portal_version": "2.6.4",
  "exported_utc": "2026-11-16T18:45Z",
- "files_sha": "66bbbf293bd8be63",
+ "files_sha": "8f132ebe96be1930",
  "files": [
+  "portal/assets/ux.js",
   "portal/build/sales_frag.html"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
