@@ -74,13 +74,13 @@ REPORTS = [
 CHECK_AT = CFG.get('check_at') or '10:35'
 # 04.11.2026: Gmail считает «11_Гальваника» одним словом — «Гальваника» в запросе такое письмо не находит; перечисляем «01_…12_Гальваника».
 GALV_Q = '(Гальваника OR ' + ' OR '.join('%02d_Гальваника' % m for m in range(1, 13)) + ')'
-QUERY = ('(((from:user27@example.org subject:Отчет) OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')'
+QUERY = ('(((from:user28@example.org subject:Отчет) OR ((from:user16@example.org OR from:user15@example.org) ' + GALV_Q + ')'
          ' OR (from:user3@example.org (subject:"Складские остатки" OR subject:"Жилпромсервис отчеты" OR subject:"ПКС свободные остатки"))'
          ' OR ((from:user5@example.org OR from:user4@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
-         ' OR (from:user29@example.org filename:zip)'
-         ' OR ((from:user22@example.org OR from:user33@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
-         ' OR ((from:user14@example.org OR from:user13@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
-GALV_FROM = ('user14@example.org', 'user13@example.org')
+         ' OR (from:user30@example.org filename:zip)'
+         ' OR ((from:user6@example.org OR from:user33@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
+         ' OR ((from:user16@example.org OR from:user15@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
+GALV_FROM = ('user16@example.org', 'user15@example.org')
 GALV_DATE = re.compile(r'за\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}|\d{2}))?(?!\d)', re.I)
 GALV_NO = re.compile(r'отсутству\w*|\bнет\b|не\s+внес[её]н\w*|не\s+провед[её]н\w*|не\s+заведен\w*|не\s+заведён\w*', re.I)
 GALV_WHAT = re.compile(r'выпуск\w*|данн\w*|1\s*[СC]\b', re.I)
@@ -90,7 +90,7 @@ GALV_SINCE = re.compile(r'(?<![А-Яа-яЁёA-Za-z])(?:начиная\s+)?[сc]
 def galv_none(frm, subj, text, sent, has_pdf):
     """03.11.2026 (Т. В.: робот должен отличать «отчёт не пришёл» от «ПЭО сообщила, что выпуска в 1С нет»): письмо ПЭО с темой «…Гальваника…»
     без PDF, где сказано, что выпуск за дату в 1С отсутствует / нет / не внесён / не проведён → дата 'ГГГГ-ММ-ДД' (за неё отчёт считается пришедшим,
-    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник57 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
+    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник60 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
     за 02.11.2026 в 1С отсутствуют»."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return None
     t = re.sub(r'\s+', ' ', text or '')
@@ -108,7 +108,7 @@ def galv_none(frm, subj, text, sent, has_pdf):
 
 
 def galv_none_since(frm, subj, text, sent, has_pdf):
-    """05.11.2026 (сверка 15:05: письмо Сотрудник57 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
+    """05.11.2026 (сверка 15:05: письмо Сотрудник60 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
     из-за этого ушло ложное «гальваника за 03.11 не пришла»): «выпуска в 1С нет с ДД.ММ» → все даты от ДД.ММ по день до письма
     (за них отчёт считается пришедшим, выпуска нет); иначе []. Те же условия, что у galv_none: ПЭО, тема «…Гальваника…», без PDF."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return []
@@ -478,7 +478,7 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'sday:' + rec['kind'], 'date': rec['date'], 'file': fn})
                     continue
-                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник9) — все дни + сумма месяца
+                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) — все дни + сумма месяца
                 if mr:
                     sdj = jload('sales_day.json', {})
                     SDY.merge_month(sdj, mr, iso(sent), fn[:80])
@@ -490,9 +490,9 @@ def ingest_message(raw, recv):
                     continue
             except Exception as e: log('  ! продажи за день:', fn, e.__class__.__name__, e); last_e = e
         if low.endswith('.xlsx') and re.search(r'запас\w*\s*гп|товары\s+на\s+складах', fn + ' ' + subj, re.I):
-            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник12, используй его как базу… движение по складу в разрезе филиалов… склады брака
+            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник13, используй его как базу… движение по складу в разрезе филиалов… склады брака
             #   внутри отчета… на главной — общее количество согласно того отчета»): 1С «Товары на складах» («Запасы ГП», ежедневно на 1c@ —
-            #   запрошено у В. В. Сотрудник9 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
+            #   запрошено у В. В. Сотрудник10 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
             try:
                 import stock_mv as SMV
                 rd = SMV.ingest(fn, data, iso(sent), jload, jsave, log)
@@ -723,7 +723,7 @@ REPORTS_X = [
     ('omts:zps', '1С «Жилпромсервис Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:fts', '1С «ФТС Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:pok', '1С «Покупные товары»', '08:30', 'same', 'mwf'),
-    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник9 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
+    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник10 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
 ]
 
 
@@ -1157,7 +1157,9 @@ def ver_ping():
         rq = urllib.request.Request(url, data=json.dumps({'op': 'claude', 't': t, 'body': body, 'sig': sig}).encode('utf-8'),
                                     headers={'Content-Type': 'text/plain;charset=utf-8'})
         with urllib.request.urlopen(rq, timeout=60) as r: ans = r.read().decode('utf-8', 'replace')[:200]
-        if '"vernow"' in ans: jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time())}); return 'пуш: ' + ans[:60]
+        # 16.11.2026 (R5-08 Рекса): ответ бота — «команда принята», а не «пуш отправлен» (тихие часы и «раз в день» решает бот) — так и пишем
+        if '"vernow"' in ans: jsave('ver_ping.json', {'v': m.group(1), 't': int(time.time()), 'state': 'принято ботом; отправку решает бот'}); return 'принято: ' + ans[:60]
+        if 'vernow:' in ans: return 'бот занят — повтор на следующем прогоне: ' + ans[:60]
         return 'ответ: ' + ans[:80]
     except Exception as e:
         log('  ! пуш о версии:', e.__class__.__name__, str(e)[:120]); return 'ошибка: %s' % (str(e)[:80] or e.__class__.__name__)
@@ -1245,7 +1247,7 @@ def sales_day_backfill():
     mk = jload('sales_day_bf.json', {}) or {}
     pos, size = int(mk.get('pos') or 0), os.path.getsize(idx)
     if pos > size or mk.get('v') != BF_V: pos = 0                       # 30.10.2026 ~18:50: v2 — отчёт «за месяц» (parse_month): архив перечитать один раз —
-                                                                          # письмо Сотрудник9 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
+                                                                          # письмо Сотрудник10 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
     if pos == size: return {'state': 'ok', 'n': 0}
     sdj, n = None, 0
     with open(idx, 'rb') as f:
@@ -1287,7 +1289,7 @@ def sales_day_backfill():
 
 
 REP_BF_V = 1
-REP_BF_FROM = ('user3@example.org', 'user34@example.org', 'user29@example.org')
+REP_BF_FROM = ('user3@example.org', 'user34@example.org', 'user30@example.org')
 
 
 def rep_1c_backfill(budget=40):
@@ -1804,6 +1806,13 @@ def lane_docs():
         except Exception as e:
             status['reklama'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
             log('  ! папка «реклама» itm@:', e.__class__.__name__, e)
+    else:                                                  # 17.11.2026: itm@ отключён (16.11) — «Выпуск и план-факт» (pf.bin) считается из отчётов 1c@ (OUTD/raw)
+        try:
+            import itm_ytd as IY
+            status['ytd'] = IY.summary_only(L, BO, OUTD, log, jload, jsave, publish)
+        except Exception as e:
+            status['ytd'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
+            log('  ! выпуск и план-факт из 1c@:', e.__class__.__name__, e)
     try:                                                   # 12.11.2026, Т. В.: «разбери почту за 2 недели на 1c@… файлы максимум 2–3 дня» — выгрузка 1c@ для Claude по команде (exp_1c.py)
         import exp_1c as EX1
         status['exp_1c'] = EX1.run(L, SITE, CFG, log, jload, jsave, publish)

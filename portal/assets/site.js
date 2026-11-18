@@ -253,11 +253,11 @@
     e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
   });
   function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
-  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
+  function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) window.T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
-  // «Авто / Сотрудник15 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
+  // «Авто / Сотрудник16 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
   function theme() { var t = getPref('t14.theme', 'auto'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function applyLook() {
     var de = document.documentElement, t = theme();
@@ -276,7 +276,7 @@
   // Уровни на <html data-perf>: max — стекло с размытием, тени, движение; mid — размытие слабее, движение короче; eco — без размытия
   // (непрозрачный фон), без теней и анимаций (data-fx="lite"). Выученный уровень устройства — localStorage «t14.dev» (на 30 дней, свой для браузера).
   var FX = (function () {
-    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник15', eco: 'Экономно', mid: 'Среднее' };
+    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник16', eco: 'Экономно', mid: 'Среднее' };
     function rdJ(k) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
     var mem = rdJ('t14.dev'); if (!mem || mem.ua !== ua) mem = { ua: ua };
     function save() { mem.ua = ua; mem.t = Date.now(); try { localStorage.setItem('t14.dev', JSON.stringify(mem)); } catch (e) { } }
@@ -295,7 +295,7 @@
       if (rm) return ['mid', 'в системе включено «Уменьшение движения»'];
       if ((screen.width || 0) * (screen.height || 0) * dpr * dpr > 8.3e6 && dm && dm <= 4) return ['mid', 'большой экран при небольшой памяти'];
       // 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра — iOS всегда
-      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник15» — вручную
+      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник16» — вручную
       if (de.getAttribute('data-plat') === 'ios' && !dm) return ['mid', 'iPhone/iPad: размытие стекла только на малых поверхностях'];
       return ['max', ''];
     }
@@ -350,7 +350,7 @@
       subs.forEach(function (f) { try { f(); } catch (e) { } });
       return L;
     }
-    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник15» → высокое, «Авто» — по замеру
+    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник16» → высокое, «Авто» — по замеру
     function set(c) {
       if (c !== 'auto' && c !== 'max' && c !== 'eco') return;
       setPref('t14.power', c);
@@ -404,7 +404,7 @@
 
   // ---------- общий поиск: разделы, объекты карты, участки, документы, изделия (assets/search.json из сборки) ----------
   var SIDX = null;
-  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е'); }
+  function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[\u2010-\u2015\u2212]/g, '-'); }   // 16.11 R5-07: «ФАБ‑0079» с любым дефисом = «фаб-0079»
   // 04.11.2026, замечание Т. В. («Структура» → «Ничего не нашлось», хотя оргструктура есть): поиск по основе слова (структура, структуру,
   //   структурой → «структур» — находит и «Оргструктура»), без учёта регистра и «ё», с синонимами; ищутся разделы, вкладки разделов, люди, отделы, документы
   var ENDS = ['иями', 'ения', 'ение', 'ений', 'ании', 'ания', 'ание', 'аний', 'ость', 'ости', 'ями', 'ами', 'иях', 'ого', 'его', 'ому', 'ему', 'ыми', 'ими', 'ией',
@@ -459,11 +459,11 @@
   }
   window.T14Search = { rank: rank, stem: stem, terms: terms, index: function () { return loadIndex(); } };
   var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
-      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
+      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'struct.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
   function sectionFor(route) {
     var page = route.split('#')[0];
     var sections = { 'sales.html#recl': 'quality', 'sales.html#rev': 'online', 'sales.html#mp': 'online',
-      'sales.html#ko': 'people', 'sales.html#struct': 'people', 'sales.html#peo': 'fin' };
+      'struct.html': 'people', 'sales.html#peo': 'fin' };
     var key = sections[route] || DOMOF[page];
     return PORTAL.find(function (entry) { return entry[0] === route || entry[0] === 'razdel.html#' + key; });
   }
@@ -489,10 +489,10 @@
   var TABS = [['staff.html#pf', 'Выпуск: план и факт', 'выпуск план факт пдо отчеты выпуска производства мощность гальваника'], ['staff.html#masters', 'Участки с мастерами и ответственными', 'участки мастера ответственные ночная смена'],
     ['staff.html#headcount', 'Численность по участкам', 'численность штат люди сколько человек сотрудники'], ['staff.html#salescap', 'Продажи, выпуск и план по линиям', 'мощность линии продажи выпуск'],
     ['sales.html#s1c', 'Продажи 1С — по типам товаров и мощностям', 'сумма продаж выручка 1с месяц день'], ['sales.html#recl', 'Рекламации', 'рекламации брак качество претензии возврат'],
-    ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['sales.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
+    ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['struct.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
     ['sales.html#mp', 'Маркетплейсы', 'маркетплейсы ozon озон wildberries вайлдберриз яндекс маркет'], ['sales.html#ship', 'График отгрузки', 'отгрузки график объекты'], ['sales.html#cp', 'Контрольные точки', 'контрольные точки сроки'],
     ['sales.html#prom', 'Обещанные визиты и звонки', 'визиты звонки обещания'], ['sales.html#buf', 'Буфер заказов', 'буфер заказы'], ['sales.html#prod', 'Заказы на производство', 'заказы производство'],
-    ['sales.html#cls', 'Сотрудник8', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
+    ['sales.html#cls', 'Сотрудник9', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
     ['sales.html#tz1c', 'ТЗ в работе · 1С', 'тз 1с в работе'], ['stock.html#move', 'Все склады и филиалы — движение за месяц', 'все склады филиалы товары на складах движение приход расход'],
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
@@ -562,11 +562,10 @@
     if (document.getElementById('tabbar')) { document.documentElement.classList.remove('t14-wait'); return; }
     var cur = here(); if (!/\.html$/.test(cur)) cur = 'home.html';
     var sec = PARENT[cur] || cur, isPlan = cur === 'plan.html';
-    if (cur === 'sales.html' && /^#(struct|sec-|ko$)/.test(location.hash)) sec = 'sales.html#struct';   // 12.11.2026: «Структура» живёт на странице продаж
     // 13.11.2026: новая структура — пункт меню раздела «горит» и на его странице раздела, и на страницах его отчётов
     function onSec(u) {
       if (u === sec) return true;
-      var d = cur === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : sec === 'sales.html#struct' ? 'people' : DOMOF[cur];
+      var d = cur === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[cur];
       return !!d && u === 'razdel.html#' + d;
     }
     var conf = PAGE_TABS[cur] || { tabs: [] };
@@ -617,7 +616,7 @@
       var g2 = el('div', 'igroup'); s.appendChild(g2);
       var fvr = irow('a', ICON.s_star, 'var(--ic-stock)', 'Сохранённое', ''); fvr.href = 'razdel.html#saved'; g2.appendChild(fvr);
       SUBS.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], p[0] === cur ? 'сейчас' : ''); a.href = p[0]; if (p[0] === cur) a.setAttribute('aria-current', 'page'); g2.appendChild(a); });
-      if (isAdmin()) { var ad = irow('a', ICON.gear, 'var(--ic-grey)', 'Управление', cur === 'admin.html' ? 'сейчас' : ''); ad.href = 'admin.html'; g2.appendChild(ad); }
+      // 16.11.2026, Т. В. (опрос): «Управление» — не раздел, а настройки портала → «Профиль и настройки»
       s.appendChild(h4('Боты и приложение'));   // 28.10.2026, пользователь: «где ссылки на чат-боты»; 23:05: «меню «Скачать APK» пропало — исправь»
       var gb = el('div', 'igroup'); s.appendChild(gb);
       BOTS.forEach(function (x) { var a = irow('a', ICON[x[1]], x[2], x[3], ''); a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; gb.appendChild(a); });
@@ -653,8 +652,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник10 (пользователь: «Берем Gemini и Сотрудник10 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник10 из поиска и ИИ-интеграций портала» (Сотрудник10 Имя4 и Сотрудник10 Сотрудник26 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник11 (пользователь: «Берем Gemini и Сотрудник11 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник11 из поиска и ИИ-интеграций портала» (Сотрудник11 Имя4 и Сотрудник11 Сотрудник26 не трогаем)
         // 15.11.2026 ~20:00, Т. В.: «Gemini выключай, если он не работает» — не работает: модели Gemini 2.5 закрыты для ключа (404), 3.x — 429 без
         //   оплаченной квоты (проверка 12.11, SnabGpt). Кнопка убрана; сохранённый выбор gemini сбрасывается на «Авто» (проверка ниже).
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT']], prov = '';
@@ -693,7 +692,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник10' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник11' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '', my = (go.n = (go.n || 0) + 1);
           // 15.11.2026 ~20:00, Т. В. (видео 19:43): «ChatGPT вообще никакого поиска не делает» — «Помощник думает…» висел без конца: у запроса не было
@@ -736,8 +735,13 @@
       var ac = irow('button', ICON.person, 'var(--ic-items)', 'Личный вход', ''); ac.type = 'button'; ac.addEventListener('click', function () { close(); if (window.T14UI) T14UI.account(); }); g0.appendChild(ac);
       var acSync = function () { var p = null; try { p = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { } ac.querySelector('.ival').textContent = p ? (p.st === 'pending' ? 'ждёт' : String(p.name).split(' ')[0]) : 'войти'; };
       acSync(); window.addEventListener('t14acct', acSync);
+      if (isAdmin()) {   // 16.11.2026, Т. В. (опрос «Управление → в настройки»): люди, доступ, боты — здесь, а не среди разделов
+        s.appendChild(h4('Администрирование'));
+        var ga = el('div', 'igroup'); s.appendChild(ga);
+        var adm = irow('a', ICON.gear, 'var(--ic-grey)', 'Управление', cur === 'admin.html' ? 'сейчас' : 'люди, доступ, боты'); adm.href = 'admin.html'; if (cur === 'admin.html') adm.setAttribute('aria-current', 'page'); ga.appendChild(adm);
+      }
       s.appendChild(h4('Оформление'));
-      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник15 / Экономно»; по умолчанию — «Авто» и «Авто»
+      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник16 / Экономно»; по умолчанию — «Авто» и «Авто»
       function seg(label, get, opts, put) {
         s.appendChild(el('p', 'psub', label));
         var w = el('div', 'pseg'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', label); s.appendChild(w);
@@ -748,9 +752,9 @@
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
       // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
       seg('Вид', function () { return skinNow(); }, [['v22', 'Сотрудник5'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
-      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник15'], ['eco', 'Экономно']], function (v) { FX.set(v); });
+      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник16'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
-      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник15» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
+      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник16» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
       pfs(); FX.on(pfs);
       s.appendChild(h4('Сервис'));
       var g3 = el('div', 'igroup'); s.appendChild(g3);
@@ -793,6 +797,14 @@
         (btns.profile || []).forEach(function (b) { b.classList.toggle('dot', !!s2.dirty); });
       });
     });
+    // 16.11.2026, Т. В. (опрос «Меню короче»): «Спросить у портала», боты и приложение — одной строкой меню, внутри — этот лист
+    addSec('helper', 'Помощник и боты', function (s, close) {
+      s.dataset.keep = '1';
+      var g = el('div', 'igroup'); s.appendChild(g);
+      var q = irow('button', ICON.spark, 'var(--ic-ai)', 'Спросить у портала', ''); q.type = 'button'; q.addEventListener('click', function () { show('search', q); }); g.appendChild(q);
+      BOTS.forEach(function (x) { var a = irow('a', ICON[x[1]], x[2], x[3], ''); a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; g.appendChild(a); });
+      if (APK) { var ap = irow('a', ICON.s_apk, 'var(--ic-calls)', 'Приложение (APK)', 'Android'); ap.href = APK; ap.setAttribute('download', 'Фабрика.apk'); g.appendChild(ap); }
+    });
     conf.tabs.forEach(function (t) { addSec(t[0], t[1], t[3]); });
 
     // --- боковая панель (планшет и компьютер; на Android — навигационная панель Material 3) — 28.10.2026, макеты IPad27_Home и Android17_Tablet ---
@@ -804,22 +816,25 @@
       var a = el('a', 'pnav', '<span class="pi" style="--c:' + color + '">' + ICON[icon] + '</span><span class="pt"></span><span class="pbadge"></span>');
       a.href = href; a.querySelector('.pt').textContent = title; a.dataset.p = href; return a;
     }
-    PORTAL.forEach(function (p) { var a = navItem(p[0], p[2], p[3], p[1]); if (onSec(p[0])) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
-    if (isAdmin()) { var ad = navItem('admin.html', 'gear', 'var(--ic-grey)', 'Управление'); if (cur === 'admin.html') ad.setAttribute('aria-current', 'page'); nav.appendChild(ad); }
-    // 13.11.2026, Т. В. (опрос по «Dashboard V22»): «Сохранённое» — звёздочки у документов и отчётов (assets/fav.js)
-    var fv = navItem('razdel.html#saved', 's_star', 'var(--ic-stock)', 'Сохранённое'); if (cur === 'razdel.html' && location.hash === '#saved') fv.setAttribute('aria-current', 'page'); nav.appendChild(fv);
-    side.appendChild(el('div', 'pcap pai-cap', 'Помощник'));
-    var ask = trigger('search', 'pnav pask', 'spark', 'Спросить у портала'); ask.innerHTML = '<span class="pi" style="--c:var(--ic-ai)">' + ICON.spark + '</span><span class="pt">Спросить у портала</span>'; side.appendChild(ask);
-    BOTS.forEach(function (x) {   // 28.10.2026: ссылки на чат-боты — всегда на виду
-      var a = el('a', 'pnav pbot', '<span class="pi" style="--c:' + x[2] + '">' + ICON[x[1]] + '</span><span class="pt"></span>'); a.querySelector('.pt').textContent = x[3]; a.href = x[0]; a.target = '_blank'; a.rel = 'noopener'; side.appendChild(a); });
-    if (APK) { var apn = el('a', 'pnav pbot', '<span class="pi" style="--c:var(--ic-calls)">' + ICON.s_apk + '</span><span class="pt">Приложение (APK)</span>'); apn.href = APK; apn.setAttribute('download', 'Фабрика.apk'); side.appendChild(apn); }
+    // 16.11.2026, Т. В. (опрос «Меню короче»): разделы — двумя группами «Работа» и «Справочник»; служебное («Сохранённое», профиль и настройки
+    //   с «Управлением») — внизу отдельно; помощник, боты и приложение — одной строкой (лист «helper»)
+    PORTAL.forEach(function (p) {
+      if (p[0] === 'razdel.html#sales') nav.appendChild(el('div', 'pcap pgrp', 'Работа'));
+      if (p[0] === 'razdel.html#items') nav.appendChild(el('div', 'pcap pgrp', 'Справочник'));
+      var a = navItem(p[0], p[2], p[3], p[1]); if (onSec(p[0])) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
+    var hp = trigger('helper', 'pnav phelp', 'spark', 'Помощник и боты'); hp.innerHTML = '<span class="pi" style="--c:var(--ic-ai)">' + ICON.spark + '</span><span class="pt">Помощник и боты</span>'; side.appendChild(hp);
     var foot = el('div', 'pfoot'); side.appendChild(foot);
+    var fv = navItem('razdel.html#saved', 's_star', 'var(--ic-stock)', 'Сохранённое'); if (cur === 'razdel.html' && location.hash === '#saved') fv.setAttribute('aria-current', 'page'); foot.appendChild(fv);
     var pf = trigger('profile', 'pnav', 'sliders', 'Профиль и настройки'); pf.innerHTML = '<span class="pi" style="--c:var(--ic-grey)">' + ICON.s_person + '</span><span class="pt">Профиль и настройки</span>'; foot.appendChild(pf);
+    if (cur === 'admin.html') pf.dataset.cur = '1';   // 16.11 GPT-проверка P2: aria-current — только у ссылок; кнопка профиля лишь подсвечена (CSS [data-cur])
+    // 16.11.2026, проверка Рекса (PR №2, п. 1): в узкой панели подписи .pt скрыты (display:none) — у ссылок нет имени для VoiceOver.
+    //   Постоянное имя — aria-label из подписи (со счётчиком «требует внимания», см. paintBadges).
+    [].forEach.call(side.querySelectorAll('.pnav, .pfab'), function (a) { var t = a.querySelector('.pt'); t = t ? t.textContent.trim() : ''; if (t) { a.dataset.nm = t; if (!a.getAttribute('aria-label')) a.setAttribute('aria-label', t); } });
     // счётчики «требует внимания» у разделов: главная считает их по отчётам (T14Site.badges) и запоминает на сутки
     function paintBadges() {
       var B = null; try { B = JSON.parse(localStorage.getItem('t14.badges') || 'null'); } catch (e) { B = null; }
       var v = B && B.v && Date.now() - (B.t || 0) < 864e5 ? B.v : {};
-      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''; });
+      [].forEach.call(nav.querySelectorAll('.pnav'), function (a) { var x = v[a.dataset.p]; a.querySelector('.pbadge').textContent = x ? String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';  if (a.dataset.nm) a.setAttribute('aria-label', a.dataset.nm + (x ? ', требует внимания: ' + x : '')); });
     }
     paintBadges(); BADGE_PAINT = paintBadges;
     // 14.11.2026, Т. В. (компьютер, узкая левая панель V22): «вожу мышкой — иконки: машинка, складик, менюшка — что это значит? Подпись от нижнего
@@ -828,26 +843,42 @@
       if (!window.matchMedia || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
       var DESC = {}; PORTAL.forEach(function (p) { DESC[p[0]] = p[4] || ''; });
       DESC['admin.html'] = 'Пользователи, права, журналы'; DESC['razdel.html#saved'] = 'Отмеченные звёздочкой документы и отчёты'; DESC['home.html'] = DESC['home.html'] || 'Пульс компании';
-      var tip = el('div', 'ptip', '<b></b><span></span>'); tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+      var tip = el('div', 'ptip', '<b></b><span></span>'); tip.setAttribute('role', 'tooltip'); tip.id = 'ptip'; document.body.appendChild(tip);
       var curEl = null, tmr = 0;
       function info(a) {
         var t = (a.querySelector('.pt') || {}).textContent || a.getAttribute('aria-label') || '', h = a.dataset.p || a.getAttribute('href') || '';
         var d = DESC[h] || (a.classList.contains('pbot') ? (/t\.me/.test(h) ? 'Уведомления и вопросы — в Telegram' : /max\.ru/.test(h) ? 'Уведомления и поручения — в MAX' : 'Скачать на телефон') : '');
         if (a.classList.contains('plogo')) { t = 'Главная'; d = DESC['home.html']; }
         if (a.classList.contains('pask') || a.classList.contains('pfab')) d = 'Ответ по данным портала на ваш вопрос';
-        if (/Профиль/.test(t)) d = 'Личный вход, вид, тема, уведомления';
+        if (a.classList.contains('phelp')) d = 'Спросить у портала, боты Telegram и MAX, приложение';
+        if (/Профиль/.test(t)) d = 'Личный вход, вид, тема' + (isAdmin() ? ', управление порталом' : '');
         return [t.trim(), d];
       }
-      function place(e) { var x = e.clientX + 14, y = e.clientY + 18, w = tip.offsetWidth, h = tip.offsetHeight; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = e.clientY - h - 10; tip.style.left = Math.round(x) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      // 15.11.2026, Т. В. (видео «Glassy SideBar»): плашка — у значка, выезжает из панели (не у курсора)
+      function place(a) { var s = side.getBoundingClientRect(), r = a.getBoundingClientRect(), h = tip.offsetHeight, y = r.top + r.height / 2 - h / 2;
+        y = Math.max(8, Math.min(innerHeight - h - 8, y)); tip.style.left = Math.round(s.right + 12) + 'px'; tip.style.top = Math.round(y) + 'px'; }
+      function railOn() { var t = side.querySelector('.pnavs .pt'); return !!t && getComputedStyle(t).display === 'none'; }   // названия скрыты — узкая панель
       side.addEventListener('mousemove', function (e) {
         var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab');
         if (!a || !side.contains(a)) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); return; }
-        if (getComputedStyle(a.querySelector('.pt') || a).display !== 'none' && !document.documentElement.hasAttribute('data-skin')) { tip.classList.remove('on'); return; }   // подписи и так видны
-        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); tmr = setTimeout(function () { tip.classList.add('on'); }, 250); }
-        place(e);
+        if (!railOn()) { curEl = null; tip.classList.remove('on'); return; }   // панель раскрыта или широкая — подписи и так видны
+        if (a !== curEl) { curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; tip.classList.remove('on'); clearTimeout(tmr); place(a); tmr = setTimeout(function () { place(a); tip.classList.add('on'); }, 180); }
       });
       side.addEventListener('mouseleave', function () { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });
+      // 16.11.2026, проверка Рекса (PR №2, P3): подсказка и с клавиатуры — Tab по значкам; Esc и уход фокуса прячут
+      side.addEventListener('focusin', function (e) { var a = e.target.closest && e.target.closest('.pnav, .plogo, .pfab'); if (!a || !railOn()) return;
+        curEl = a; var I = info(a); tip.firstChild.textContent = I[0]; tip.lastChild.textContent = I[1]; tip.lastChild.hidden = !I[1]; clearTimeout(tmr); place(a); tip.classList.add('on'); a.setAttribute('aria-describedby', 'ptip'); });   // VoiceOver читает и подсказку (проверка GPT)
+      side.addEventListener('focusout', function (e) { if (e.target && e.target.removeAttribute) e.target.removeAttribute('aria-describedby'); if (e.relatedTarget && side.contains(e.relatedTarget)) return; curEl = null; clearTimeout(tmr); tip.classList.remove('on'); });   // Tab внутри панели — без мигания
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tip.classList.contains('on')) { curEl = null; clearTimeout(tmr); tip.classList.remove('on'); } });
       side.addEventListener('click', function () { tip.classList.remove('on'); });
+      // 15.11.2026, Т. В.: «стрелочка — нажимаешь, и всё меню выезжает вправо с надписями». Только там, где панель узкая (компьютер, V22 или 701–1279 px).
+      var de = document.documentElement, exp = el('button', 'pexp', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'); exp.type = 'button'; document.body.appendChild(exp);
+      function expSync() { var open = de.getAttribute('data-side') === 'open', can = matchMedia('(min-width:701px)').matches && (open || railOn());
+        exp.classList.toggle('on', can); exp.setAttribute('aria-expanded', open ? 'true' : 'false'); exp.setAttribute('aria-label', open ? 'Свернуть меню' : 'Развернуть меню с названиями'); exp.title = ''; }
+      exp.addEventListener('click', function () { var open = de.getAttribute('data-side') !== 'open'; tip.classList.remove('on'); curEl = null;
+        de.classList.add('side-anim'); if (open) de.setAttribute('data-side', 'open'); else de.removeAttribute('data-side'); try { localStorage.setItem('t14.side', open ? 'open' : '') } catch (e) { }
+        setTimeout(function () { de.classList.remove('side-anim'); }, 320); expSync(); });
+      expSync(); setTimeout(expSync, 0); addEventListener('load', expSync); addEventListener('resize', expSync); window.T14SideSync = expSync;   // панель ещё не в документе — проверить после вставки
     })();
 
     // --- шапка раздела ---
@@ -1128,11 +1159,9 @@
   // REDACTED_B64_9 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
-  var SXP = { 'staff.html': { deps: ['Производство', 'Технологический отдел', 'Служба главного инженера', 'Служба главного механика'], areas: true, pd: true },
-    'stock.html': { deps: [], areas: /склад|отгрузк/i }, 'omts.html': { deps: ['ОМТС'] }, 'transport.html': { deps: ['АТП'] },
-    'sales.html': { deps: ['Коммерческий отдел', 'Отдел маркетинга', 'Fabrikant UZ', 'ООО «ФТС»'], fn: true }, 'products.html': { deps: ['Технологический отдел'] },
-    'plan.html': { deps: ['Служба главного инженера', 'Сторожевая служба'] }, 'library.html': { deps: ['Отдел кадров', 'Юрист'] },
-    'admin.html': { deps: ['Бухгалтерия', 'Планово-экономический отдел', '1С-программисты', 'Системные администраторы'] } };
+  // 16.11.2026, Т. В.: «структура должна лежать в структуре и больше нигде не нужна» — только раздел «Структура», «Люди» и Главная;
+  //   блок «Структура отдела» внизу разделов (было с 12.11: производство, склад, ОМТС, АТП, продажи, продукция, площадка, документы, управление) убран.
+  var SXP = {};
   function sxE(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // 13.11.2026, Т. В.: «блок Структура выводится с задержкой» — сначала сохранённый на устройстве ответ бота (t14.secc.*, acct.js secWarm), без ожидания сети
   function sxCached(part) { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), c = JSON.parse(localStorage.getItem('t14.secc.' + part) || 'null'); return c && p && c.id === p.id && Date.now() - c.t < 7 * 864e5 ? c.data : null; } catch (e) { return null; } }
@@ -1173,7 +1202,7 @@
         var box = document.getElementById('sx-part'); if (box) box.remove();
         box = document.createElement('section'); box.id = 'sx-part'; box.className = 'ios sx-part';   // рядом с main, вне корня hub.js — блок не уходит в подраздел
         box.innerHTML = '<p class="ihdr">Структура отдела' + (cfg.fn ? ' · функционал' : '') + '</p><div class="og-grid">' + cards.join('') + '</div>' +
-          '<p class="ifoot">Из раздела «Структура» (видят Т. В. и А. В.): <a href="sales.html#struct">вся структура</a>' + (cfg.fn ? ' · <a href="sales.html#sec-kos">функционал коммерческого отдела</a>' : '') + '.</p>';
+          '<p class="ifoot">Из раздела «Структура» (видят Т. В. и А. В.): <a href="struct.html">вся структура</a>' + (cfg.fn ? ' · <a href="struct.html#sec-kos">функционал коммерческого отдела</a>' : '') + '.</p>';
         main.parentNode.insertBefore(box, main.nextSibling);
         var vis = function () { var h = location.hash; box.hidden = !!(h && h !== '#'); };
         vis(); window.addEventListener('hashchange', vis);
@@ -1193,13 +1222,13 @@
       var row = function (href, ic, t, s, v) { return '<a class="irow" href="' + href + '"><span class="itile" style="--c:var(--ic-docs)">' + (I[ic] || I.s_org || '') + '</span><span class="ic"><span class="ibody"><span class="ititle">' + sxE(t) + '</span><span class="isub">' + sxE(s) + '</span></span><span class="ival">' + sxE(v) + '</span><span class="ichev"></span></span></a>'; };
       var el = document.createElement('section'); el.id = 'sx-home'; el.className = 'sx-home';   // 13.11.2026, Т. В.: «карта — высотой в одну левую карточку» — «Структура» отдельной строкой во всю ширину под «Требует внимания» и картой, в две колонки
       el.innerHTML = '<div class="fh-cap"><h2>Структура</h2></div><div class="igroup">' +
-        row('sales.html#sec-org', 's_org', 'Руководство', lead.map(function (p) { return sh(p.name); }).join(' · '), lead.length) +
-        (pd ? row('sales.html#sec-org', 's_prod', 'Производство: ' + sh(pd.name), 'участков ' + A.length + ' · ≈ ' + aS + ' человек · ночная смена', A.length) : '') +
-        (O.tech_director ? row('sales.html#sec-org', 's_grid', 'Технический директор: ' + sh(O.tech_director.name), DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; }).map(function (d) { return d.title; }).join(' · '), '') : '') +
-        row('sales.html#sec-org', 's_grid', 'Отделы', nP + ' сотрудников · руководителей ' + DP.reduce(function (s, d) { return s + (d.heads || []).length; }, 0), DP.length) +
-        (ko ? row('sales.html#sec-kos', 's_sales', 'Коммерческий отдел', 'функционал, блок-схема, графики офисов продаж', ko.count || '') : '') +
-        row('sales.html#ko', 's_person', 'Зоны ответственности', 'кто за что отвечает в продажах', '') +
-        row('sales.html#sec-sim', 's_phone', 'СИМ-карты МТС', 'номера по отделам, устройства, машины', '') + '</div>';
+        row('struct.html#sec-org', 's_org', 'Руководство', lead.map(function (p) { return sh(p.name); }).join(' · '), lead.length) +
+        (pd ? row('struct.html#sec-org', 's_prod', 'Производство: ' + sh(pd.name), 'участков ' + A.length + ' · ≈ ' + aS + ' человек · ночная смена', A.length) : '') +
+        (O.tech_director ? row('struct.html#sec-org', 's_grid', 'Технический директор: ' + sh(O.tech_director.name), DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; }).map(function (d) { return d.title; }).join(' · '), '') : '') +
+        row('struct.html#sec-org', 's_grid', 'Отделы', nP + ' сотрудников · руководителей ' + DP.reduce(function (s, d) { return s + (d.heads || []).length; }, 0), DP.length) +
+        (ko ? row('struct.html#sec-kos', 's_sales', 'Коммерческий отдел', 'функционал, блок-схема, графики офисов продаж', ko.count || '') : '') +
+        row('struct.html#ko', 's_person', 'Зоны ответственности', 'кто за что отвечает в продажах', '') +
+        row('struct.html#sec-sim', 's_phone', 'СИМ-карты МТС', 'номера по отделам, устройства, машины', '') + '</div>';
       var cols = at.closest('.fh-cols'); if (cols && cols.parentNode) cols.parentNode.insertBefore(el, cols.nextSibling); else at.appendChild(el);
     })();
   }
@@ -1207,4 +1236,69 @@
   function sxStart() { try { var k = 0; (function go() { if (!window.T14Acct && ++k < 30) return setTimeout(go, 100); sxPart(here()); })(); } catch (e) { } }   // 13.11: без задержки 1,2 с — есть сохранённое — сразу, нет — сразу запрос
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sxStart); else sxStart();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountNav); else mountNav();
+})();
+// 15.11.2026 ~22:45, Т. В.: «данные на портале в фоне не обновляются… зачем мне загружать данные по машинам, когда я зашёл» — тихая подкачка
+//   «Транспорта» с любой страницы портала: у кого есть доступ (флаг t14.gl своего входа), раз в 30 мин, через 4 с после открытия; ответ — в t14.glc
+//   (transport.html показывает его сразу). Хостинг обновляет ГЛОНАСС сам (днём 15 мин, ночью час).
+(function glPrefetch() {
+  try {
+    if (/transport\.html$/.test(location.pathname)) return;
+    var A = window.T14Acct, me = A && A.me && A.me(), f = JSON.parse(localStorage.getItem('t14.gl') || 'null');
+    if (!A || !A.tok || !A.tok() || !me || !f || f.id !== me.id) return;
+    var c = JSON.parse(localStorage.getItem('t14.glc') || 'null');
+    if (c && c.id === me.id && Date.now() - c.t < 30 * 6e4) return;
+    // 15.11.2026 (проверка PR №2): за 4 с и пока идёт запрос могли выйти/войти другим — сохраняем только если вход тот же
+    function same() { var m = A.me && A.me(); return !!(m && m.id === me.id && A.tok && A.tok()); }
+    setTimeout(function () {
+      if (!same()) return;
+      A.api('gl', { tok: A.tok(), fresh: 0 }).then(function (r) { if (r && r.gl && same()) try { localStorage.setItem('t14.glc', JSON.stringify({ id: me.id, t: Date.now(), r: r })); } catch (e) { } }, function () { });
+    }, 4000);
+  } catch (e) { /* без подкачки */ }
+})();
+// 15.11.2026 ~22:50, Т. В. (видео 22:25): «при поиске улетает строка поиска вверх, невозможно сдвинуть до конца, посмотреть, что набрал» —
+//   с 2.5.77 прокручивается вся страница, и iPhone при клавиатуре сдвигает видимую область, а лист меню (position:fixed) остаётся по старому окну
+//   и уходит верхом за экран. Пока открыта клавиатура — лист ставится в видимую часть экрана над клавиатурой (visualViewport), строка поиска
+//   прилипает к верху листа (portal.css .tabpanel .psearch sticky).
+(function kbSheet() {
+  var vv = window.visualViewport; if (!vv) return;
+  var raf = 0;
+  function fit() {
+    raf = 0;
+    var p = document.querySelector('.tabpanel'), de = document.documentElement;
+    if (!p) return;
+    // 16.11.2026, проверка Рекса (PR №2, P2): при увеличении двумя пальцами visualViewport тоже сжимается — это не клавиатура.
+    //   Клавиатура = фокус в текстовом поле листа, масштаб 1 и видимая часть ниже окна больше чем на 120 px.
+    var ae = document.activeElement, typing = !!ae && p.contains(ae) && ((ae.tagName === 'TEXTAREA') || ae.isContentEditable ||
+      (ae.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color|image|hidden)$/i.test(ae.type || '')));
+    var kb = typing && (vv.scale || 1) < 1.01 && window.innerHeight - vv.height > 120;
+    if (kb && !p.hidden && p.getClientRects().length) {   // не offsetParent: у position:fixed он всегда null (проверка PR №2)
+      var top = Math.round(vv.offsetTop + 8), h = Math.round(vv.height - 16);
+      p.style.setProperty('top', top + 'px', 'important'); p.style.setProperty('bottom', 'auto', 'important');
+      p.style.setProperty('max-height', h + 'px', 'important'); de.classList.add('kb-open');
+    } else if (de.classList.contains('kb-open')) {
+      p.style.removeProperty('top'); p.style.removeProperty('bottom'); p.style.removeProperty('max-height'); de.classList.remove('kb-open');
+    }
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(fit); }
+  vv.addEventListener('resize', kick); vv.addEventListener('scroll', kick);
+  document.addEventListener('focusin', function () { setTimeout(kick, 60); setTimeout(kick, 400); });
+  document.addEventListener('focusout', function () { setTimeout(kick, 120); });
+  addEventListener('pageshow', kick);   // возврат из фона — сбросить временную геометрию (Рекс, №23)
+})();
+
+// 16.11.2026, Т. В.: «приложение должно имитировать приложение для iPhone — точка входа всегда одна и та же, как будто вышел и зашёл
+//   обратно; это не книжка, чтобы возвращаться к той же странице». Установленное приложение, вернувшееся из фона после паузы больше 5 минут,
+//   открывается на «Главной» (start_url home.html). Короткое переключение (ответить в мессенджере и вернуться) страницу не сбрасывает.
+(function () {
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (!standalone) return;
+  var K = 't14.hiddenAt', LIM = 5 * 60e3;
+  function isHome() { return /(^|\/)(home\.html)?$/.test(location.pathname) && !location.hash.replace('#', ''); }
+  document.addEventListener('visibilitychange', function () {
+    try {
+      if (document.visibilityState === 'hidden') { sessionStorage.setItem(K, String(Date.now())); return; }
+      var t = +sessionStorage.getItem(K) || 0; sessionStorage.removeItem(K);
+      if (t && Date.now() - t > LIM && !isHome()) location.replace('home.html');
+    } catch (e) { /* без сброса */ }
+  });
 })();

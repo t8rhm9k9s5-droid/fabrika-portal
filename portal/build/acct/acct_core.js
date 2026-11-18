@@ -71,7 +71,7 @@
   function me() { try { return JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { return null; } }
   function tok() { try { return localStorage.getItem('t14.tok') || ''; } catch (e) { return ''; } }
   function saveMe(p, t) { try { localStorage.setItem('t14.me', JSON.stringify(p)); if (t) localStorage.setItem('t14.tok', t); } catch (e) { /* private mode */ } }
-  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
+  function forget() { try { localStorage.removeItem('t14.me'); localStorage.removeItem('t14.tok'); localStorage.removeItem('t14.glsum'); localStorage.removeItem('t14.glc'); localStorage.removeItem('t14.admc');   /* 16.11: кэш транспорта — при выходе (проверка GPT, PR №2) */ ['org', 'kos', 'ko', 'sim'].forEach(function (k) { localStorage.removeItem('t14.secc.' + k); }); } catch (e) { /* */ } return kvSet('uk', null).then(function () { return kvSet('uid', null); }); }
 
   // ---- the server (the «Фабрика» Google Apps Script)
   var CFG = G.T14_ACCT_CFG || null, cfgP = null;
@@ -286,13 +286,26 @@
     ql: { on: qlOn, enable: qlEnable, get: qlGet, off: qlOff, setPin: qlSetPin, setBio: qlSetBio, byPin: qlByPin, byBio: qlByBio, signIn: qlSignIn, bioName: bioName, bioOk: bioOk }, genPw: genPw, inApp: inApp, uid: uid, kvGet: kvGet, kvSet: kvSet, aes: aes, _t: { hex: hex, b64: b64, unb64: unb64, gcm: gcm, ungcm: ungcm, makeCreds: makeCreds, fromPassword: fromPassword, sealTo: sealTo } };
   // 13.11.2026, Т. В.: «в Людях первоначально происходит загрузка — загрузки быть не должно». Закрытые части «Структуры» (org, kos, ko, sim)
   //   подгружаются фоном на любой странице — только у вошедшего лично, чей доступ уже подтверждён (флаг t14.sec), не чаще раза в 30 мин.
+  // 16.11.2026, Т. В. (скрины «Проверяю доступ…», «Загружаю…»): «данные должны быть загружены при загрузке веб-приложения; у меня и
+  //   администраторов — всё сразу и везде». Теперь: у администратора (role admin) — без флага t14.sec и не только в установленном
+  //   приложении; старт сразу после загрузки (не через 2,5 с); плюс список людей «Управления» (t14.admc) — страница открывается из него мгновенно.
   function secWarm() {
     try {
       var p = JSON.parse(localStorage.getItem('t14.me') || 'null'), f = JSON.parse(localStorage.getItem('t14.sec') || 'null');
-      if (!p || p.st === 'pending' || !f || f.id !== p.id || !tok() || !inApp()) return;
+      if (!p || p.st === 'pending' || !tok()) return;
+      var adm = p.role === 'admin';
+      if (adm) {
+        var ac = null; try { ac = JSON.parse(localStorage.getItem('t14.admc') || 'null'); } catch (e) { ac = null; }
+        if (!(ac && ac.id === p.id && Date.now() - ac.t < 10 * 60e3)) setTimeout(function () {
+          api('users', { tok: tok() }).then(function (r) {
+            try { if (r && r.users) localStorage.setItem('t14.admc', JSON.stringify({ id: p.id, t: Date.now(), data: r })); } catch (e) { /* без кэша */ }
+          }, function () { /* нет связи — в следующий раз */ });
+        }, 150);
+      }
+      if (!adm && (!f || f.id !== p.id || !inApp())) return;
       ['org', 'kos', 'ko', 'sim'].forEach(function (k, i) {
         var c = null; try { c = JSON.parse(localStorage.getItem('t14.secc.' + k) || 'null'); } catch (e) { c = null; }
-        if (c && c.id === p.id && Date.now() - c.t < 30 * 60e3) return;
+        if (c && c.id === p.id && Date.now() - c.t < 10 * 60e3) return;
         setTimeout(function () {
           api('sec', { tok: tok(), part: k, ask: 0 }).then(function (r) {
             try {
@@ -300,7 +313,7 @@
               else if (r && r.access === false) { ['org', 'kos', 'ko', 'sim'].forEach(function (x) { localStorage.removeItem('t14.secc.' + x); }); localStorage.removeItem('t14.sec'); }
             } catch (e) { /* место в памяти — без кэша */ }
           }, function () { /* нет связи — в следующий раз */ });
-        }, 2500 + i * 700);
+        }, 300 + i * 400);
       });
     } catch (e) { /* без фоновой загрузки */ }
   }

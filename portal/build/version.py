@@ -2,7 +2,7 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-"""«Фабрика»: номер версии и список изменений (CHANGELOG.txt — главный файл, новые версии сверху).
+"""«Фабрика»: номер версии и список изменений (CHANGELOG.txt — Имя2 файл, новые версии сверху).
    С 28.10.2026 — как принято у программистов (Semantic Versioning, пользователь: «кодировку версии сделай общепринятой»):
    МАЖОР.МИНОР.ПАТЧ — МАЖОР: крупная переделка (дизайн, структура портала и ботов); МИНОР: новые возможности (раздел, отчёт,
    команда бота); ПАТЧ: исправления, обновления данных, мелкие правки. Номер даётся каждому выпуску на хостинг сразу —
@@ -14,7 +14,9 @@
      python3 version.py release                      — выпустить всё из «Готовится» (перед build_site.py)
      python3 version.py bump patch|minor|major "строка" … — выпустить сейчас (старые c|x|d тоже понимаются)
      python3 version.py js FILE                      — assets/version.js для сайта
-     python3 version.py news                         — короткий текст для уведомления о новой версии"""
+     python3 version.py news                         — короткий текст для уведомления о новой версии
+     python3 version.py full assets/versions_full.js  — реестр всех версий (МАЖОР → МИНОР → ПАТЧ с итогами) + build/РЕЕСТР_ВЕРСИЙ.txt
+     python3 version.py summary 2.7 "итог"           — итог МИНОР (или МАЖОР: summary 3 "пункт | пункт") в versions_summary.json"""
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 import re, sys, json, datetime
 LOG = '/home/claude/build/CHANGELOG.txt'
@@ -122,13 +124,83 @@ def js(path):
                                              json.dumps(data, ensure_ascii=False).replace('<', '\\u003c') + ';\n')
 
 
+SUMMARY = '/home/claude/build/versions_summary.json'
+
+
+def tree():
+    """Реестр версий (17.11.2026, Т. В.): МАЖОР → МИНОР → ПАТЧ, у МАЖОР и МИНОР — итог (versions_summary.json; итог МИНОР без ручного
+       текста — первая строка её x.y.0). Тестовые версии до 1.0.0 — отдельно."""
+    try: S = _cg1_read_json(SUMMARY, encoding='utf-8')
+    except Exception: S = {'major': {}, 'minor': {}}
+    majors = {}
+    for e in releases():
+        M, m, _ = e['v'].split('.'); mm = M + '.' + m
+        J = majors.setdefault(M, {'v': M, 'minors': {}})
+        J['minors'].setdefault(mm, {'v': mm, 'rel': []})['rel'].append({'v': e['v'], 'date': e['date'], 'items': e['items']})
+    out = []
+    for M in sorted(majors, key=int, reverse=True):
+        info = (S.get('major') or {}).get(M) or {}
+        mins = []
+        for mm in sorted(majors[M]['minors'], key=lambda x: int(x.split('.')[1]), reverse=True):
+            R = majors[M]['minors'][mm]['rel']                      # новые сверху
+            first = R[-1]
+            sm = (S.get('minor') or {}).get(mm) or (first['items'][0] if first['items'] else '')
+            mins.append({'v': mm, 'summary': sm, 'from': first['date'], 'to': R[0]['date'], 'rel': R})
+        out.append({'v': M, 'title': info.get('title') or ('Версия ' + M), 'dates': info.get('dates') or (mins[-1]['from'] + ' – ' + mins[0]['to']),
+                    'summary': info.get('summary') or [], 'minors': mins})
+    tests = [{'v': e['v'], 'date': e['date'], 'items': e['items']} for e in parse() if e.get('test')]
+    return {'v': current(), 'rule': S.get('_rule', ''), 'majors': out, 'tests': tests}
+
+
+def full_js(path):
+    """assets/versions_full.js — весь реестр для окна «Версия» (грузится только при открытии окна)"""
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write('/* «Фабрика»: реестр всех версий (build/CHANGELOG.txt + versions_summary.json, version.py) */\nwindow.T14_REESTR = ' +
+                json.dumps(tree(), ensure_ascii=False).replace('<', '\\u003c') + ';\n')
+
+
+def reestr_txt(path):
+    """Тот же реестр текстом: МАЖОР (итог) → МИНОР (итог) → ПАТЧ (что изменилось)"""
+    T = tree(); L = ['Фабрика — реестр версий (текущая ' + T['v'] + ')', '', T['rule'], '']
+    for J in T['majors']:
+        L += ['=' * 78, J['title'] + ' · ' + J['dates'], '=' * 78] + ['  • ' + s for s in J['summary']] + ['']
+        for mn in J['minors']:
+            L += ['  ' + mn['v'] + ' · ' + mn['from'] + (' – ' + mn['to'] if mn['to'] != mn['from'] else ''), '    Итог: ' + mn['summary']]
+            for r in mn['rel']:
+                L.append('    ' + r['v'] + ' · ' + r['date'])
+                L += ['      - ' + i for i in r['items']]
+            L.append('')
+    L += ['=' * 78, 'До 1.0.0 — тестовые версии', '=' * 78]
+    for r in T['tests']: L += ['  тест ' + r['v'] + ' · ' + r['date']] + ['    - ' + i for i in r['items']]
+    with open(path, 'w', encoding='utf-8') as f: f.write('\n'.join(L) + '\n')
+
+
+def set_summary(key, text):
+    try: S = _cg1_read_json(SUMMARY, encoding='utf-8')
+    except Exception: S = {'major': {}, 'minor': {}}
+    if '.' in key: S.setdefault('minor', {})[key] = text
+    else: S.setdefault('major', {}).setdefault(key, {})['summary'] = [t.strip() for t in text.split(' | ') if t.strip()]
+    with open(SUMMARY, 'w', encoding='utf-8') as f: json.dump(S, f, ensure_ascii=False, indent=1)
+    return key + ': итог записан'
+
+
 if __name__ == '__main__':
     a = sys.argv[1:]
     if not a: print(current())
+    elif a[0] == 'full': full_js(a[1]); reestr_txt('/home/claude/build/РЕЕСТР_ВЕРСИЙ.txt'); print('reestr', current())
+    elif a[0] == 'txt': reestr_txt(a[1]); print('ok')
+    elif a[0] == 'summary': print(set_summary(a[1], ' '.join(a[2:])))
     elif a[0] == 'bump': print(bump(a[1], a[2:]))
     elif a[0] == 'add': print(add(a[1], ' '.join(a[2:])))
     elif a[0] in ('feat', 'major'): print(add(a[1], ' '.join(a[2:]), 'minor' if a[0] == 'feat' else 'major'))
-    elif a[0] == 'release': print(release())
+    elif a[0] == 'release':
+        print(release())
+        _v = current(); _M, _m, _p = _v.split('.')
+        if _p == '0':                                   # новая МИНОР или МАЖОР: нужен итог в реестр версий (17.11.2026, Т. В.)
+            try: _S = _cg1_read_json(SUMMARY, encoding='utf-8')
+            except Exception: _S = {}
+            if (_m == '0' and _M not in (_S.get('major') or {})) or (_M + '.' + _m) not in (_S.get('minor') or {}):
+                print('РЕЕСТР: напиши итог — python3 version.py summary ' + (_M if _m == '0' else _M + '.' + _m) + ' "текст"')
     elif a[0] == 'js': js(a[1]); print('version', current())
     elif a[0] == 'news':
         e = releases()[0]; t = 'Версия ' + e['v'] + ': ' + ' '.join(e['items'])

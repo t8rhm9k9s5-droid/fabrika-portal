@@ -127,6 +127,9 @@
   if (!window.__T14_FILE){   // 27.10.2026, портал: возврат на главную — первым пунктом
     const hm = document.createElement('button'); hm.type = 'button'; hm.className = 'tb-home'; hm.innerHTML = ICON.home + '<span>Главная</span>';   // кнопка, а не ссылка: у панели модели стили для кнопок
     hm.addEventListener('click', ()=>{ location.href = 'home.html'; }); sheetEl.appendChild(hm);
+    // 17.11.2026, Т. В.: «как вернуться из 3D в 2D? нет такой кнопки внизу» — как «3D» в нижнем меню плана
+    const p2 = document.createElement('button'); p2.type = 'button'; p2.className = 'tb-2d'; p2.innerHTML = ICON.plan + '<span>2D</span>';
+    p2.addEventListener('click', ()=>{ location.href = 'plan.html'; }); sheetEl.appendChild(p2);
   }
   tabs.forEach(([k, label, icon])=>{
     const b = document.createElement('button'); b.type = 'button'; b.dataset.tab = k; b.setAttribute('aria-expanded', 'false');
@@ -147,9 +150,10 @@
     for (const s in sec) sec[s].hidden = s !== k;
     if (k === 'more') syncRows();
     panel.querySelector('.phead h3').textContent = TITLES[k] || '';
-    panel.hidden = false; panel.scrollTop = 0; cur = k; mark();
+    panel.hidden = false; panel.scrollTop = 0; cur = k; mark(); if (!document.body.classList.contains('tb-open')) document.body.classList.add('tb-open');
   }
-  function close(){ if (cur === null && panel.hidden) return; panel.hidden = true; cur = null; mark(); }
+  // classList.remove/add пишут атрибут class даже без изменений — наблюдатель за body ниже вызвал бы close() снова и снова (зависание 17.11.2026)
+  function close(){ if (document.body.classList.contains('tb-open')) document.body.classList.remove('tb-open'); if (cur === null && panel.hidden) return; panel.hidden = true; cur = null; mark(); }
   function toggle(k){
     if (k === 'find'){ const b = $id('objBtn'); if (b && b.getAttribute('aria-expanded') === 'true'){ b.click(); mark(); return; } return open('find'); }
     if (cur === k) close(); else open(k);

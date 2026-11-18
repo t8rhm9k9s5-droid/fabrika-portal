@@ -5,7 +5,7 @@
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
    Сотрудник26 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник10 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   На techfabrikant.ru — Сотрудник11 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -69,7 +69,7 @@
   }
   // 26.10.2026 (пользователь): предупреждения — ТОЛЬКО гроза, сильный снегопад (снег/снегопад ≥ 7 мм за 12 ч), шторм (порывы ≥ 20 м/с),
   // ураган (порывы ≥ 33 м/с) в ближайшие 24 часа. Обычно их считает сервер (wx/f.php → alerts) — тогда сайт и боты пишут одно и то же;
-  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник10]
+  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник11]
   function dmhm(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
   function span(t0, t1){ return dmhm(t0) + ' с ' + hm(new Date(t0)) + ' до ' + (dmhm(t1 + 36e5) !== dmhm(t0) ? dmhm(t1 + 36e5) + ' ' : '') + hm(new Date(t1 + 36e5)) + ' МСК'; }
   function alerts(rows){
@@ -140,9 +140,9 @@
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник10 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник10 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник11 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник11 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
-    // Теперь: Сотрудник10 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
+    // Теперь: Сотрудник11 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
       clearTimeout(to); var ctl2 = window.AbortController ? new AbortController() : null, to2 = setTimeout(function(){ if (ctl2) ctl2.abort(); }, 20000);
       var good = function(w){ wx = w; wxGot = Date.now(); wxErr = ''; ls(K_WX, JSON.stringify({ w: w, got: wxGot })); };
@@ -223,7 +223,9 @@
     '.t14sky .wa-tag{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--wa,#ff9500);color:#fff;font:700 12px/1 var(--f-body,inherit)}' +
     '.t14wxban{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(60px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;gap:8px;max-width:min(560px,calc(100vw - 28px));padding:9px 8px 9px 14px;border-radius:14px;background:#ff9500;color:#fff;font:600 14px/1.35 var(--f-body,-apple-system,system-ui,sans-serif);box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer}' +
     '.t14wxban.l2{background:#ff3b30}.t14wxban .tx{flex:1;min-width:0}.t14wxban .x{flex:none;border:0;background:rgba(255,255,255,.25);color:#fff;width:24px;height:24px;border-radius:12px;font:700 15px/1 var(--f-body,inherit);cursor:pointer}' +
-    'html.lite .t14sky,html.lite .t14skyw{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface-solid,#fafcfb)}';
+    'html.lite .t14sky,html.lite .t14skyw{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface-solid,#fafcfb)}' +
+    // 17.11.2026, Т. В.: «погода мигрирует по меню… если меню не предполагает её — её быть не должно»: под открытым меню, окном слоёв и т. п. не показывать
+    'body.tb-open .t14sky,body.tb-open .t14skyw,body.lk-open .t14sky,body.lk-open .t14skyw{display:none!important}';   // без :has — на iPhone он пересчитывал стили при каждом движении модели (зависание 17.11)
   var pill = null, win = null, side = 'l';
   function mount(where){
     side = where === 'right' ? 'r' : 'l';

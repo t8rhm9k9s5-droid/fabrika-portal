@@ -38,6 +38,11 @@ seg1 = seg1.replace("let EX=3;", "let EX=1;")
 seg1 = seg1.replace("renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));",
                     "renderer.setPixelRatio(Math.min(matchMedia('(pointer: coarse)').matches?(/Android/i.test(navigator.userAgent)?1.75:(/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?3:1.5):2,window.devicePixelRatio||1));   // phones: less GPU memory; Android (APK lag, 23.10.2026): 1.25; iPhone/iPad: full sharpness (23.10.2026)")
 assert 'pointer: coarse' in seg1
+# fence 17.11.2026: segments seen on camera frames as solid light grey-blue corrugated sheet (S.fence_prof, corr_1117) — profnastil; the rest as before
+seg1 = seg1.replace("verts.push(A0,B0,B1,A0,B1,A1); top.push(A1,B1);", "if((S.fence_prof||[]).includes(i)){const L=Math.hypot(b[0]-a[0],b[1]-a[1])/0.24;(gF.userData.pv=gF.userData.pv||[]).push(A0,B0,B1,A0,B1,A1);(gF.userData.fuv=gF.userData.fuv||[]).push(0,0,L,0,L,1,0,0,L,1,0,1);top.push(A1,B1);continue;} verts.push(A0,B0,B1,A0,B1,A1); top.push(A1,B1);")
+seg1 = seg1.replace("const g=new THREE.BufferGeometry().setFromPoints(verts); g.computeVertexNormals();", "if(gF.userData.pv){const pg=new THREE.BufferGeometry().setFromPoints(gF.userData.pv);pg.setAttribute('uv',new THREE.Float32BufferAttribute(gF.userData.fuv,2));pg.computeVertexNormals();gF.add(new THREE.Mesh(pg,new THREE.MeshLambertMaterial({color:0xffffff,map:profTex(),side:THREE.DoubleSide})));gF.userData.pv=gF.userData.fuv=null;}\n  const g=new THREE.BufferGeometry().setFromPoints(verts); g.computeVertexNormals();")
+seg1 = seg1.replace("const gF=G('fence');\nfunction buildFence(){", "const gF=G('fence');\nfunction profTex(){if(window.__profTex)return window.__profTex;const c=document.createElement('canvas');c.width=64;c.height=8;const x=c.getContext('2d');x.fillStyle='#b7c1c6';x.fillRect(0,0,64,8);x.fillStyle='#98a3a9';x.fillRect(0,0,16,8);x.fillStyle='#d2d9dd';x.fillRect(16,0,6,8);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return window.__profTex=t;}\nfunction buildFence(){")
+assert "gF.userData.pv=gF.userData.pv||[]" in seg1 and "map:profTex()" in seg1 and "function profTex()" in seg1
 # fence: no fence along building walls that form the boundary; sliding gates drawn as panels
 seg1 = seg1.replace("    if(isGate) continue;", "    if(isGate||(S.fence_open||[]).includes(i)||(S.gates2||[]).some(g=>Math.hypot(a[0]-g.a[0],a[1]-g.a[1])<0.6&&Math.hypot(b[0]-g.b[0],b[1]-g.b[1])<0.6)) continue;")
 seg1 = seg1.replace("gg.userData={kind:'gate'}; gF.add(gg); pickables.push(gg);\n}", """gg.userData={kind:'gate'}; gF.add(gg); pickables.push(gg);
@@ -92,7 +97,12 @@ for a_, b_ in [("for(const u of S.utils){", "for(const u of []){"), ("for(const 
 import sys as _rs; _rs.path.insert(0, B + 'review'); import patches as _RP, apply_review as _RV   # second review of the documents, 22.10.2026
 import ui as _UI   # map-like camera controls and the Liquid Glass look
 seg1 = _UI.seg1(_RP.seg1(seg1)); segU = _RP.segU(segU)
-scene = '\n'.join(['/* ===================== SCENE (from the 3D page) ===================== */', seg1, _cg1_read_file(B + 'app/detail_part.js', encoding='utf-8'), segM, segU, _RP.net(_cg1_read_file(B + 'app/net_part.js', encoding='utf-8')), _cg1_read_file(B + 'app/review_part.js', encoding='utf-8'), segP, segR])
+# 17.11.2026 (Т. В.): автопарк на парковках — грузовые у гаража в фирменной ливрее, легковые у АБК (app/fleet_part.js, fleet/fleet.py)
+_FLEET_JS = _cg1_read_file(B + 'app/fleet_part.js', encoding='utf-8').replace("'/*__FLEET_LOGO__*/'", json.dumps(_cg1_read_file('/home/claude/fabrika/src/Исходники/docs_brand/brand/logo-h.svg', encoding='utf-8').strip(), ensure_ascii=False))
+assert '__FLEET_LOGO__' not in _FLEET_JS
+segP = segP.replace('buildParking();', 'buildParking();buildFleet();'); segR = segR.replace('buildParking();', 'buildParking();buildFleet();')
+assert 'buildFleet()' in segP and 'buildFleet()' in segR
+scene = '\n'.join(['/* ===================== SCENE (from the 3D page) ===================== */', seg1, _cg1_read_file(B + 'app/detail_part.js', encoding='utf-8'), segM, segU, _RP.net(_cg1_read_file(B + 'app/net_part.js', encoding='utf-8')), _cg1_read_file(B + 'app/review_part.js', encoding='utf-8'), _FLEET_JS, segP, segR])
 for bad in ("document.getElementById('card')", "UI.", "setMove(", "showObj("):
     if bad in scene: print('WARNING scene still has', bad)
 
@@ -113,7 +123,7 @@ _ti = app.index(";(function(){\n  const btn = document.getElementById('pagesBtn'
 app = app[:_tj] + _cg1_read_file(B + 'app/tabs_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/cardc_part.js', encoding='utf-8') + '\n' + app[_tj:]
 # time of day and weather (23.10.2026): app/sky_core.js (also assets/sky.js for the plan page) + app/sky_part.js (light, sky, rain and snow in the scene)
 _tk = app.index(";(function(){\n  const btn = document.getElementById('pagesBtn')"); _tk = app.rfind('})();', 0, _tk)
-app = app[:_tk] + _cg1_read_file(B + 'app/sky_core.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/sky_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/batch_part.js', encoding='utf-8') + '\n' + app[_tk:]   # batch_part: glued layers and 60 frames (23.10.2026)
+app = app[:_tk] + _cg1_read_file(B + 'app/sky_core.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/sky_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/batch_part.js', encoding='utf-8') + '\n' + _cg1_read_file(B + 'app/pbr_part.js', encoding='utf-8') + '\n' + app[_tk:]   # batch_part: glued layers and 60 frames (23.10.2026)
 _fr = "if (moved || tween || now < kickUntil || now - lastDraw > 500){ renderer.render(scene, camera);"
 assert app.count(_fr) == 1, 'frame'
 app = app.replace(_fr, "const skyA = window.__t14skyTick ? window.__t14skyTick(now) : false, bA = window.__t14batch ? window.__t14batch(now, moved || !!tween) : false;\n  if (window.__t14fps) window.__t14fps(now, moved || !!tween);\n  if (moved || tween || skyA || bA || now < kickUntil || now - lastDraw > 500){ if (!(moved || tween) || skyA || bA) renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);")
@@ -150,10 +160,24 @@ assert app.count('/*__STOCK__*/null') == 1
 if _os2.path.exists(_sb): app = app.replace('/*__STOCK__*/null', _cg1_read_file(_sb, encoding='utf-8').replace('<', '\\u003c'))
 for _a, _b in (('видны в режиме «Под землёй»', 'видны из-под земли: наклоните вид вниз за уровень глаз'), ('видна в режиме «Под землёй»', 'видна из-под земли: наклоните вид вниз за уровень глаз')):
     assert app.count(_a) == 1, _a; app = app.replace(_a, _b)   # the button «Под землёй» is gone: underground by tilting
+_lay = "['park','Проезд, газоны и парковка у админ. здания','#7a8084',['parking'],1,'Здания и участок'],"
+assert app.count(_lay) == 1, 'fleet layer'
+app = app.replace(_lay, _lay + "['fleet','Автопарк на парковках','#c1121c',['fleet'],1,'Здания и участок'],")
+_wsj = "  // panel joints\n"
+assert app.count(_wsj) == 1, 'ws joints'
+app = app.replace(_wsj, "  // 17.11.2026 (камера 050, кадр 26.10): красно-оранжевая полоса от земли до подоконников по всем фасадам (по проекту — серый профлист цоколя RAL 7043)\n"
+  "  {const ro=0xd8431f;[[-0.25,6.75],[9.75,44.735],[45.745,49.75]].forEach(([a,b])=>wbox(g.ws_walls,a,b,-.36,-.33,-.05,1.0,ro,ckInfo));wbox(g.ws_walls,-.25,49.75,W+.33,W+.36,-.05,1.0,ro,ckInfo);"
+  "wbox(g.ws_walls,-.36,-.33,-.33,W+.33,-.05,1.0,ro,ckInfo);wbox(g.ws_walls,49.83,49.86,-.33,W+.33,-.05,1.0,ro,ckInfo);}\n" + _wsj)
+_crd = "  if (k==='park'){ const p=u.pk;"
+assert app.count(_crd) == 1, 'fleet card'
+app = app.replace(_crd, """  if (k==='car'){ const c=u.car, f=v=>v==null?'уточняется':typeof v==='number'?nf(v,v<10&&v%1?2:0)+' т':esc(String(v));
+    return {k:c.place==='office'?'Автопарк · парковка у АБК':c.place==='dock'?'Автопарк · у рампы склада № 1':'Автопарк · открытая стоянка у гаража', t:c.name, d:`<dl class="kv"><dt>Тип</dt><dd>${esc(c.type)} · ${esc(c.body)}</dd><dt>Марка</dt><dd>${esc(c.make)}</dd><dt>Модель</dt><dd>${esc(c.model)}</dd><dt>Грузоподъёмность</dt><dd>${f(c.payload)}</dd><dt>Мест</dt><dd>${c.seats==null?'уточняется':esc(String(c.seats))}</dd><dt>Габарит</dt><dd>≈ ${nf(c.L,1)} × ${nf(c.W,1)} × ${nf(c.H,1)} м</dd><dt>Топливо</dt><dd>${esc(c.fuel||'—')}</dd><dt>Цвет</dt><dd>${c.livery?'фирменная ливрея':'на модели условно — уточняется'}</dd></dl><p>${c.livery?'Фирменная ливрея: белый кузов, красная полоса RAL 3020, знак «Фабрикант» на бортах. ':''}Госномер и водитель — в справочнике «Гараж».</p><p>Источник: ${esc(c.src)}</p>`}; }
+""" + _crd)
 assert '</script' not in app.lower()
 shell = _UI.shell(_cg1_read_file(B + 'app/shell.html', encoding='utf-8'))
 d = _cg1_read_json(B + 'site_app.json', encoding='utf-8')
 _RV.apply_pre(d)
+import corr_1117 as _C17g; _C17g.gas_snap(d, _RV._zat(d))   # 17.11.2026: газ «по забору»/«по стене» — на забор и стены, без лишних опор
 import sys as _sn; _sn.path.insert(0, B + 'net'); import netdet as _ND; _ND.annotate(d)   # pipe sizes from the labels, risers and jogs between pipe ends
 d['areas'] = _cg1_read_json(B + 'areas.json', encoding='utf-8')   # production areas (staff page) shown as a layer
 _fix = _cg1_read_json(B + 'site_fix.json', encoding='utf-8')
@@ -177,7 +201,7 @@ if _bn:
     _P = _np.array(_bn['poly'], float); _i = max(range(len(_P)), key=lambda i: ((_P[i] + _P[(i + 1) % len(_P)]) / 2) @ _np.array([.46, .89]))
     _A, _B = _P[_i], _P[(_i + 1) % len(_P)]; _t = (_B - _A) / _np.linalg.norm(_B - _A); _n = _np.array([_t[1], -_t[0]])
     if _n @ (((_A + _B) / 2) - _P.mean(axis=0)) < 0: _n = -_n
-    _src = 'фото 21.10.2026 (О. Сотрудник11, ОМТС), «дорога у нового склада»'
+    _src = 'фото 21.10.2026 (О. Сотрудник12, ОМТС), «дорога у нового склада»'
     d['front']['surfaces'] += [
         {'kind': 'concrete', 'h': .15, 'name': 'Бетонная отмостка вдоль стены материального склада', 'src': _src, 'poly': _strip(_A, _B, _n, 0, 1.0),
          'note': 'Бетонная полоса ≈ 1 м вдоль северо-восточной стены двухэтажной части цеха мягкой мебели, с бортом ≈ 15 см. Ширина — по фото, приблизительно.'},
@@ -251,13 +275,15 @@ import sys as _sys; _sys.path.insert(0, B + 'detail'); import specs as _DS   # d
 _det = _DS.specs(d['buildings'])
 for _b in d['buildings']:
     if _b['k'] in _det: _b['det'] = _det[_b['k']]
-import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник37
-import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник37 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
-import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник11 (кирпич, арочная кровля, главка с крестом)
+import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник29
+import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник29 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
+import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник12 (кирпич, арочная кровля, главка с крестом)
 import corr_cams_1028 as _CC; _CC.apply(d, _RV._zat(d))   # 28.10.2026: камеры — места, направление, наклон, угол обзора по кадрам 26.10 и скриншотам А. Сотрудник1
 import corr_cams_1028b as _CB; _CB.apply(d, _RV._zat(d))   # 28.10.2026, второй заход: ответ А. Сотрудник1 — 053 выше, 042 на забор, 019 и 024 внутрь, 063 с вагончиком, новая 028, склад ТПА вплотную, 10 бытовок
 import corr_alex_1106 as _AX; _AX.apply(d, _RV._zat(d))   # 09.11.2026: правки А. В. Сотрудник1 (письмо 06.11, «да» 09.11) — work/alex_0611/plan.md
 import corr_tsh_1114 as _TS; _TS.apply(d)   # 14.11.2026: головная секция ТШ-15НМ над бункером «Гефест», описание котла (fabrika/work/tsh15nm/pkg)
+_sys.path.insert(0, B + 'fleet'); import fleet as _FLT; _FLT.apply(d)   # 17.11.2026: автопарк — места, ТТХ, ливрея (fleet/fleet.py)
+import corr_1117 as _C17; _C17.apply(d)   # 17.11.2026 (ночь): детализация зданий по кадрам камер и фото коллег (review/corr_1117.py)
 if _oso.environ.get('FABRIKA_DUMP'):
     _cg1_dump_func = json.dump
     _cg1_dump_value = d

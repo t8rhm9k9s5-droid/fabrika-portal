@@ -16,13 +16,13 @@ function rvWallBox(A, a, b, z0, z1, w){
 }
 const FT = {metal:{h:2.0, name:'Металлическая изгородь на столбах', txt:'Знак «линия с точками» — металлическая изгородь на столбах (в акте сдачи реперов у Sp13 — «металлическая изгородь»). Высота ≈ 2,0 м и сетка — условно.'},
             stone:{h:2.2, name:'Каменный или железобетонный забор', txt:'Знак «двойная линия с поперечными штрихами» — каменный или железобетонный забор. Высота ≈ 2,2 м — условно (у проходной верх столба 108,15, ≈ 2,2 м над землёй).'}};
-function rvFenceSeg(a, b, type, h, ud, col){
+function rvFenceSeg(a, b, type, h, ud, col, solid){
   const P = nAcc(), N = nAcc(), L = Math.hypot(b[0] - a[0], b[1] - a[1]);
   if (type === 'metal'){
     const n = Math.max(1, Math.ceil(L / 2.5));
     for (let j = 0; j <= n; j++){ const t = j / n, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; rvWallBox(P, [x - .03, y], [x + .03, y], 0, h + .05, .06); }
     rvWallBox(P, a, b, h - .05, h, .05); rvWallBox(N, a, b, .08, h - .05, .02);
-    const m1 = nMesh(P, rvMat(col || 0x55606a)), m2 = nMesh(N, rvMat(col || 0x7f8b92, .3));
+    const m1 = nMesh(P, rvMat(col || 0x55606a)), m2 = nMesh(N, solid ? rvMat(0xb3bdc2) : rvMat(col || 0x7f8b92, .3));   // solid: забор из профлиста, как на кадрах 012, 054, 063 (17.11.2026)
     m1.userData = m2.userData = ud; gF.add(m1, m2); pickables.push(m1, m2);
   } else {
     const n = Math.max(1, Math.round(L / 4));
@@ -37,7 +37,7 @@ function rvFence(){
   for (let i = 0; i < F.length; i++){
     const ty = T[i]; if (!FT[ty] || (S.fence_open || []).includes(i)) continue;
     const a = F[i], b = F[(i + 1) % F.length], f = FT[ty];
-    rvFenceSeg(a, b, ty, f.h, rvUD('Ограждение', {name:f.name, rows:[['Длина', '≈ ' + nf(Math.hypot(b[0] - a[0], b[1] - a[1]), 0) + ' м'], ['Высота', '≈ ' + nf(f.h, 1) + ' м, условно']], note:f.txt, src:'топосъёмка 2016 г. (16/208-и-РАВП-ИГДИ), тип по условному знаку'}));
+    rvFenceSeg(a, b, ty, f.h, rvUD('Ограждение', {name:f.name, rows:[['Длина', '≈ ' + nf(Math.hypot(b[0] - a[0], b[1] - a[1]), 0) + ' м'], ['Высота', '≈ ' + nf(f.h, 1) + ' м, условно']], note:f.txt + ((S.fence_prof || []).includes(i) ? ' На кадрах камер 26.10.2026 этот участок — сплошной светло-серый профлист на металлических столбах.' : ''), src:'топосъёмка 2016 г. (16/208-и-РАВП-ИГДИ), тип по условному знаку' + ((S.fence_prof || []).includes(i) ? '; облик — кадры камер 26.10.2026' : '')}), null, ty === 'metal' && (S.fence_prof || []).includes(i));
   }
   for (const e of (S.fence_extra || [])) rvFenceSeg(e.pts[0], e.pts[1], e.type, e.h, rvUD('Ограждение', {name:e.name, rows:[['Высота', '≈ ' + nf(e.h, 1) + ' м']], note:e.note, src:e.src || 'топосъёмка 2016 г.'}), e.col);
   for (const g of (S.fence_gaps || [])){ const mx = (g.a[0] + g.b[0]) / 2, my = (g.a[1] + g.b[1]) / 2, L = Math.hypot(g.b[0] - g.a[0], g.b[1] - g.a[1]);
@@ -168,6 +168,7 @@ function ctxBuild(){
   const at = (x, y) => gAt(x, y), gr = C.ground;
   const pg = new THREE.PlaneGeometry(gr.x1 - gr.x0, gr.y1 - gr.y0); pg.rotateX(-Math.PI / 2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xdfe2d6})); plane.position.copy(V((gr.x0 + gr.x1) / 2, (gr.y0 + gr.y1) / 2, szzPlaneY() - 0.1)); gCtx.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear && typeof basePlaneClear === 'function') basePlaneClear(plane, true);   // 16.11.2026: прозрачная земля — и эта плоскость (трубы под ней)
   const RM = {asphalt:new THREE.MeshLambertMaterial({color:0x8f9397, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}),
               dirt:new THREE.MeshLambertMaterial({color:0xb7a685, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2})};
   const edge = new THREE.LineBasicMaterial({color:0x6c7075, transparent:true, opacity:.55});

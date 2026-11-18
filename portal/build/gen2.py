@@ -322,7 +322,7 @@ if os.path.exists('/home/claude/build/site3d.json'):
                     q = np.array([Tm(v) for v in b['poly']])
                     ang = math.degrees(math.atan2(q[1][1] - q[0][1], q[1][0] - q[0][0]))
                     lsvg.append(f'<text class="blab blab-stage2" data-lb="{b["k"]}" x="{cx:.2f}" y="{cy:.2f}" font-size="3.4" transform="rotate({ang:.1f} {cx:.2f} {cy:.2f})">Склад №2 — 2-й этап, не построен</text>')
-                if b.get('kind') == 'plan':
+                if b.get('kind') == 'plan' and False:   # 17.11.2026: подпись «красный контур на ГП, без подписи» убрана — здание чужое (ответ гл. инженера 23.10, 1.8), подробности в карточке
                     q = np.array([Tm(v) for v in b['poly']])
                     ang = math.degrees(math.atan2(q[2][1] - q[1][1], q[2][0] - q[1][0]))
                     lsvg.append(f'<text class="blab blab-plan" data-lb="{b["k"]}" x="{cx:.2f}" y="{cy:.2f}" font-size="2.6" transform="rotate({ang:.1f} {cx:.2f} {cy:.2f})">красный контур на ГП, без подписи</text>')
@@ -350,6 +350,41 @@ if os.path.exists('/home/claude/build/site3d.json'):
                            f'<text class="spot-t" x="{cx + .9:.2f}" y="{cy + .65:.2f}">{fz(z)}</text><circle class="hit" cx="{cx:.2f}" cy="{cy:.2f}" r="1.2"/></g>')
         cxw, cyw = Tm(np.mean(X3['parcel779']['pts'], axis=0)[:2])
         par_svg.append(f'<text class="parlab" x="{cxw+8:.2f}" y="{cyw+14:.2f}">:779</text>')
+        # 17.11.2026, Т. В.: «участки, на которых стоят здания, — разделить цветом, указать кадастровые номера и площадь, но без мусора данных».
+        #   Каждый участок — своим цветом (лёгкая заливка + контур), одна подпись «:номер / площадь» постоянного экранного размера
+        #   на свободном от зданий месте (точки-кандидаты data-la, выбор и столкновения — в cadLay шаблона). Полный номер, назначение — в карточке.
+        try:
+            from shapely.geometry import Polygon as _SP
+            from shapely.ops import unary_union as _UU, polylabel as _PL
+            _PG = {}
+            for _k in ('parcel779', 'parcel845'):
+                if _k in X3: _PG[X3[_k]['id']] = [(q[0], q[1]) for q in X3[_k]['pts']]
+            _pf = '/home/claude/build/reg/plots_geom.json'          # границы остальных участков (публичная кадастровая карта → модель), когда появятся
+            if os.path.exists(_pf):
+                for _k, _v in _cg1_read_json(_pf).items(): _PG.setdefault(_k, [(q[0], q[1]) for q in _v['pts']])
+            _RP = (X3.get('reg') or {}).get('plots') or _REG.get('plots') or {}
+            _PC = ['#2a9d8f', '#d1495b', '#457b9d', '#b07d00', '#8e44ad', '#e76f51', '#3d8b37', '#1f6fb2', '#9a4f96', '#5c7c2a', '#b5651d']
+            _BU = _UU([_SP([(q[0], q[1]) for q in b['poly']]).buffer(2.0) for b in X3['buildings'] if len(b.get('poly') or []) >= 3])
+            _nf = lambda v: f'{v:,.0f}'.replace(',', '\u202f') if float(v).is_integer() else f'{v:,.1f}'.replace(',', '\u202f').replace('.', ',')
+            par_svg[:] = [x for x in par_svg if 'class="parlab"' not in x and 'class="parcel-g"' not in x]
+            _ord = [k for k in _RP if k in _PG] + sorted(k for k in _PG if k not in _RP)
+            _out = []
+            for _i, _cid in enumerate(_ord):
+                _pts = _PG[_cid]; _P = _SP(_pts).buffer(0); _info = _RP.get(_cid) or {}
+                _ar = _info.get('area') or round(_P.area)
+                _free = _P.buffer(-4).difference(_BU)
+                _pcs = sorted(getattr(_free, 'geoms', [_free]), key=lambda g: -g.area)
+                _la = []
+                for _g in _pcs[:4]:
+                    if _g.is_empty or _g.area < 60: continue
+                    _c = _PL(_g, tolerance=0.5); _la.append('%.2f,%.2f' % Tm((_c.x, _c.y)))
+                if not _la: _c = _P.representative_point(); _la.append('%.2f,%.2f' % Tm((_c.x, _c.y)))
+                _note = f"{_nf(_ar)} м² по ЕГРН (перечень «Земельные участки и недвижимость»). " + (f"Вид использования: {_info['use_doc']}. " if _info.get('use_doc') else '') + ((_info.get('note') or '')[:1].upper() + (_info.get('note') or '')[1:])
+                _out.append(f'<g class="hitg plot" data-lbl="Земельный участок" data-h="{_cid}" data-note="{html.escape(_note.strip())}" data-t1=":{_cid.split(":")[-1]}" '
+                            f'data-t2="{_nf(_ar)} м²" data-la="{";".join(_la)}" style="--pc:{_PC[_i % len(_PC)]}"><path class="plot-f" d="{pm(_pts)}"/><path class="hit" d="{pm(_pts)}"/></g>')
+            par_svg[:0] = _out
+            print('участки на плане:', len(_out), 'из', len(_RP) or len(_out))
+        except Exception as _e: print('plots', _e)
         # gas from the general plan + overground gas by labels
         gas_svg, wat_svg = [], []
         GN = {'gas_hp': 'Газопровод высокого давления', 'gas_lp': 'Газопровод низкого давления', 'gas_ug': 'Газопровод подземный', 'gas_over': 'Газопровод надземный'}

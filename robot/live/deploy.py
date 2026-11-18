@@ -23,7 +23,10 @@ def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — фай
 
 SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|manifest\.webmanifest|'
                         r'robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess|'
-                        r'menutest/(?:full/)?(?:index\.html|manifest\.webmanifest))$')   # 15.11.2026: тест нижнего меню (Т. В.), без данных портала
+                        r'menutest/(?:full/)?(?:index\.html|manifest\.webmanifest)|'   # 15.11.2026: тест нижнего меню (Т. В.), без данных портала
+                        # 16.11.2026: тестовая копия портала с доступом по группам (опрос Т. В. «Да, выкладывай копию»; проверка Сотрудник81 И. В. 17.11)
+                        r'gtest/(?:b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|'
+                        r'manifest\.webmanifest|robots\.txt|applink\.js))$')
 HOST_FILES = re.compile(r'^host/((st|max|wx)/[\w.-]+\.(php|htaccess)|(st|max|wx)/\.htaccess)$')
 CODE_FILES = re.compile(r'^(code/[\w.-]+\.(py|json|txt)|out/plan_\d{4}-\d{2}\.json)$')      # out/plan_… — планы выпуска (27.10); .txt — файлы ключей k_owner/k_cmd (29.10)
 PACK = re.compile(r'^fabrik(?:a|ant)-update-\d{8}-\d{4}\.(?:zip|pkg)$')     # .pkg — the zip encrypted (27.10), .zip — plain (old)
@@ -54,6 +57,17 @@ def download(fid):
         m = re.search(rb'name="uuid" value="([\w-]+)"', b)
         b = _get('https://drive.usercontent.google.com/download?id=%s&export=download&confirm=t%s' % (fid, ('&uuid=' + m.group(1).decode()) if m else ''))
     return b
+
+
+def release_part(zraw):
+    """16.11.2026 (R5-01): опись части выпуска code/release_part.json → {'rid', 'i', 'n'} или None (старые пакеты, одиночный пакет без описи)"""
+    try:
+        z = zipfile.ZipFile(io.BytesIO(zraw))
+        if 'code/release_part.json' not in z.namelist(): return None
+        j = json.loads(z.read('code/release_part.json').decode('utf-8'))
+        rid, i, n = str(j['rid'])[:40], int(j['i']), int(j['n'])
+        return {'rid': rid, 'i': i, 'n': n} if re.match(r'^[\w-]+$', rid) and 1 <= i <= n <= 50 else None
+    except Exception: return None
 
 
 def unpack(zb, key):
@@ -412,11 +426,31 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
         ok, how = verify(kb, name, zb, want, st)
         if not ok:
             fail(name, how); continue
+        # 16.11.2026 (R5-01 Рекса): выпуск из нескольких частей (drive_pack --split) — code/release_part.json {rid, i, n}.
+        #   Часть не ставится, если более ранняя часть того же выпуска провалена; последняя часть (m.bin, sw.js — переключение версии)
+        #   ставится только после успешной установки всех предыдущих. Пакеты без описи — как раньше.
+        rel = st.setdefault('rel', {})
+        try: zraw = unpack(zb, kb)
+        except (DeployError, zipfile.BadZipFile, ValueError) as e:
+            fail(name, str(e)[:300] or e.__class__.__name__); continue
+        rp = release_part(zraw)
+        if rp:
+            R = rel.setdefault(rp['rid'], {'n': rp['n'], 'ok': [], 'bad': []})
+            if R['bad']:
+                fail(name, 'выпуск %s: часть %s не встала — часть %d из %d не ставлю, рабочая версия прежняя' % (rp['rid'], ','.join(map(str, R['bad'])), rp['i'], rp['n']))
+                continue
+            miss = [k for k in range(1, rp['i']) if k not in R['ok']]
+            if miss:
+                if fail(name, 'выпуск %s: части %s ещё не установлены — часть %d из %d ждёт' % (rp['rid'], ','.join(map(str, miss)), rp['i'], rp['n']), permanent=False):
+                    R['bad'].append(rp['i']); continue
+                break
         st['installing'] = name; state_save('deploy.json', st)       # 30.10.2026 аудит P5: метка «ставится» — обрыв процесса будет виден
         try:
-            n = install(unpack(zb, kb), L, site, log, name)
+            n = install(zraw, L, site, log, name)
         except (DeployError, zipfile.BadZipFile, ValueError) as e:
-            st.pop('installing', None); fail(name, str(e)[:300] or e.__class__.__name__); continue
+            st.pop('installing', None); fail(name, str(e)[:300] or e.__class__.__name__)
+            if rp: rel[rp['rid']]['bad'].append(rp['i'])
+            continue
         except RollbackIncomplete as e:                    # 01.11.2026, замечание 04: откат не доведён — не «прежняя версия»
             st.pop('installing', None); st['rb_incomplete'] = str(e)[:300]; st['err'] = str(e)[:300]
             try: alert('deploy:rollback', 'Фабрика: пакет %s — %s. Файлы могут быть разных версий; повтор отката через 10 мин.' % (name, str(e)[:200]))
@@ -424,10 +458,15 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
             state_save('deploy.json', st); break
         except Exception as e:                             # среда (диск, права) — откат уже сделан, повторить позже
             st.pop('installing', None)
-            if fail(name, (str(e) if isinstance(e, DeployRetry) else 'сбой установки: %s %s — откат' % (e.__class__.__name__, str(e)[:160]))[:300], permanent=False): continue
+            if fail(name, (str(e) if isinstance(e, DeployRetry) else 'сбой установки: %s %s — откат' % (e.__class__.__name__, str(e)[:160]))[:300], permanent=False):
+                if rp: rel[rp['rid']]['bad'].append(rp['i'])
+                continue
             break
         st.pop('installing', None); tries.pop(name, None)
         st['done'][name] = {'t': now_(), 'files': n, 'sha': hashlib.sha256(zb).hexdigest()[:16], 'from': files[name][0], 'sig': how}
+        if rp:
+            rel[rp['rid']]['ok'].append(rp['i'])
+            st['done'][name]['rel'] = '%s %d/%d' % (rp['rid'], rp['i'], rp['n'])
         st['last'] = name; st['last_ts'] = pkg_ts(name)
         if how == 'v2': st['v2'] = True                    # 30.10.2026 аудит P4: после первого v2 подпись v1 больше не принимается
         state_save('deploy.json', st)                      # 30.10.2026 аудит P10: сразу после установки

@@ -256,7 +256,7 @@ html body .tabpanel h4{color:var(--p-fg3);font-weight:600;letter-spacing:.03em}
   .pside .pnav{display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border-radius:21px;color:var(--p-fg);text-decoration:none;font:500 15px/1.15 var(--f-body);
     border:0;background:none;width:100%;text-align:left;cursor:pointer;box-sizing:border-box;transition:background var(--p-dur)}
   .pside .pnav:hover{background:var(--p-sel);background:color-mix(in srgb,var(--p-sel) 60%,transparent)}
-  .pside .pnav[aria-current="page"]{background:var(--p-sel);box-shadow:inset 0 1px 0 var(--p-glass-rim)}
+  .pside .pnav[aria-current="page"],.pside .pnav[data-cur]{background:var(--p-sel);box-shadow:inset 0 1px 0 var(--p-glass-rim)}
   .pside .pnav .pi{flex:none;display:inline-flex;color:var(--c,var(--p-fg2))}
   .pside .pnav .pi svg{width:21px;height:21px;stroke-width:1.7}
   .pside .pnav .pt{min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -681,3 +681,56 @@ body.has-srch .tabbar{right:var(--dock-x)}
 body.has-portal .ios{padding-top:10px!important;padding-block-start:10px!important}
 /* 15.11.2026 ~22:00 (проверка всех разделов): у страниц с обёрткой .app (чертежи и др.) тот же лишний отступ строки часов — шапка уже держит его */
 body.has-portal:not(.pg-plan) > .app{padding-top:18px!important}
+/* 15.11.2026 ~22:50 (видео 22:25): строка поиска всегда видна — прилипает к верху листа при прокрутке результатов */
+html body .tabpanel .psearch{position:sticky;top:0;z-index:3;box-shadow:0 -10px 0 var(--p-sheet-s,#1c1c22),0 6px 14px rgba(0,0,0,.18)}
+html.kb-open body .tabbar{visibility:hidden}
+/* 15.11.2026, Т. В. (компьютер, видео «Glassy SideBar»): 1) подсказка у значка узкой панели — стеклянная плашка портала, выезжает из панели
+   (вместо тёмной/белой у курсора); 2) стрелка «›» на краю панели раскрывает её с названиями разделов, «‹» сворачивает (выбор запоминается).
+   html[data-side=open] ×4 — сильнее правил узкой панели (skin_v22 ×3, glass.css :root). */
+html body .ptip.ptip.ptip{background:var(--p-glass-s);background:color-mix(in srgb,var(--p-glass-s) 96%,transparent);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur);color:var(--p-fg);
+  border:1px solid var(--p-glass-edge);border-radius:16px;padding:9px 13px;box-shadow:inset 0 1px 0 var(--p-glass-rim),0 0 0 .5px var(--p-glass-out),0 10px 28px rgba(0,0,0,.16);
+  font:500 13.5px/1.3 var(--f-body);transform:translate(-8px,0) scale(.97);transform-origin:left center;transition:opacity .16s ease,transform .22s cubic-bezier(.2,.8,.2,1)}
+html body .ptip.ptip.ptip.on{transform:none}
+html body .ptip.ptip.ptip b{font-weight:600;font-size:14px;color:var(--p-fg)}
+html body .ptip.ptip.ptip span{color:var(--p-fg2)}
+html body .ptip.ptip.ptip::before{content:"";position:absolute;left:-5px;top:50%;width:9px;height:9px;margin-top:-5px;background:inherit;border-left:1px solid var(--p-glass-edge);border-bottom:1px solid var(--p-glass-edge);transform:rotate(45deg);-webkit-backdrop-filter:none;backdrop-filter:none}
+.t14-tip{display:none!important}
+.pexp{display:none}
+@media (min-width:701px) and (hover:hover){
+  .pexp.on{display:grid;place-items:center;position:fixed;z-index:61;top:calc(var(--p-gap,12px) + 26px);left:calc(var(--p-gap,12px) + var(--p-side) - 14px);width:28px;height:28px;padding:0;border-radius:50%;cursor:pointer;
+    color:var(--p-fg);background:var(--p-glass);-webkit-backdrop-filter:var(--p-blur);backdrop-filter:var(--p-blur);border:1px solid var(--p-glass-edge);
+    box-shadow:inset 0 1px 0 var(--p-glass-rim),0 0 0 .5px var(--p-glass-out),0 4px 12px rgba(0,0,0,.14);transition:left .26s cubic-bezier(.2,.8,.2,1),transform .15s}
+  .pexp.on:hover{transform:scale(1.08)}
+  .pexp svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .26s}
+  html[data-side=open] .pexp svg{transform:rotate(180deg)}
+  html.side-anim .pside{transition:width .26s cubic-bezier(.2,.8,.2,1)}
+  html[data-side=open][data-side][data-side][data-side]{--p-side:252px!important}
+  html[data-side=open][data-side][data-side][data-side] .pside{align-items:stretch!important;padding:16px 10px!important}
+  html[data-side=open][data-side][data-side][data-side] .pside .plogo{width:auto!important;margin:0 0 14px!important;padding:2px 10px 0!important}
+  html[data-side=open][data-side][data-side][data-side] .pside .plogo svg{width:min(176px,100%)!important}
+  html[data-side=open][data-side][data-side][data-side] .pside .pnavs,html[data-side=open][data-side][data-side][data-side] .pside .pfoot{justify-items:stretch!important}
+  html[data-side=open][data-side][data-side][data-side] .pside .pnav{width:100%!important;padding:0 12px!important;justify-content:flex-start!important;border-radius:22px!important;gap:12px}
+  html[data-side=open][data-side][data-side][data-side] .pside .pt{display:block!important;white-space:nowrap;animation:pside-in .24s ease both}
+  html[data-side=open][data-side][data-side][data-side] .pside .pcap{display:block!important;white-space:nowrap}
+  html[data-side=open][data-side][data-side][data-side] .pside .pbadge:not(:empty){display:inline!important}
+}
+@keyframes pside-in{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){html.side-anim .pside,.pexp.on,.pexp svg,html body .ptip.ptip.ptip{transition:none!important}html[data-side=open] .pside .pt{animation:none!important}}
+
+/* 18.11.2026: «Отчёты ПДО по дням · с 01.11» — все дни отчёта в одной таблице, листается вбок (не по одному периоду, как «Вчера · неделя · месяц») */
+.fhome .pdo-seg{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
+.fhome .pdo-seg button{flex:none;border:0;border-radius:14px;padding:7px 12px;font:600 13.5px/1.2 var(--f-body);background:var(--p-soft);color:var(--p-fg2);cursor:pointer}
+.fhome .pdo-seg button[aria-pressed="true"]{background:var(--ic-items,#0877D8);color:#fff}
+.fhome .pdt-box{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.fhome table.hp.pdt{min-width:0;width:max-content}
+.fhome .hp.pdt tr > *{display:table-cell}
+.fhome .hp.pdt tbody th{min-width:150px;max-width:190px;width:auto}
+.fhome .hp.pdt td{min-width:64px;max-width:130px}
+.fhome .hp.pdt td small{white-space:normal}
+.fhome .hp.pdt td.pdt-sum{background:var(--p-soft)}
+.fhome .hp.pdt tr.pdt-tot th,.fhome .hp.pdt tr.pdt-tot td{border-bottom:2px solid var(--p-line)}
+.fhome .pdt-g{all:unset;cursor:pointer;font:500 14px/1.3 var(--f-body);color:var(--p-fg)}
+.fhome .pdt-g::before{content:'▸ ';color:var(--p-fg3)}.fhome .pdt-g[aria-expanded="true"]::before{content:'▾ '}
+.fhome .pdt-g small{display:inline;color:var(--p-fg3);font-size:12px}
+.fhome .pdt-m{display:block;padding-left:16px;font:400 13px/1.3 var(--f-body);color:var(--p-fg2)}
+.fhome .hp.pdt tr.pdt-mod td b{font-size:14px;font-weight:550}

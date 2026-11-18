@@ -162,13 +162,7 @@
       });
     }
     qlPaint();
-    // 15.11.2026, Т. В.: «главную страницу возьми и сделай её тестовой, отдельную ссылку» — тестовая главная (app_build/build_pwa.py → t/home.html)
-    if (p.role === 'admin') {
-      var tf = el('div', 'iform'), ta = el('a', 'igroup');
-      ta.href = 't/home.html'; ta.style.cssText = 'display:block;padding:12px 16px;margin:8px 0 0;color:inherit;text-decoration:none';
-      ta.innerHTML = '<b style="font-weight:500">Тестовая главная — полный экран</b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px">Та же главная, верх под часами прозрачный. Проверка перед выпуском на портал</small>';
-      tf.append(el('p', 'ihdr', 'Тест'), ta); s.body.appendChild(tf);
-    }
+    // 15.11.2026 ~22:45, Т. В.: «что это за тест на меню?» — строка «Тест → Тестовая главная» убрана: портал уже в этом режиме (2.5.77); страница t/home.html осталась по ссылке
     go.addEventListener('click', function () {
       if (np.lastChild.value.length < 8) return msg(f, 'Пароль — не короче 8 знаков.', true);
       var npw = np.lastChild.value; busy(go, true); A.changePw(npw).then(function () { busy(go, false); np.lastChild.value = ''; A.ql.off().then(function () { s.close(); toast('Пароль сменён — на других устройствах войдите заново'); lockScreen({ pw: npw }); }); }, function (e) { busy(go, false); msg(f, e.message, true); });
@@ -210,26 +204,79 @@
     if (starter) { ta.value = starter; send(); } else setTimeout(function () { ta.focus(); }, 200);
   }
   // ---------------- версии: номер МАЖОР.МИНОР.ПАТЧ (SemVer, с 28.10.2026) и что нового (assets/version.js из CHANGELOG.txt)
+  // 17.11.2026 (Т. В.: «полный реестр исправлений по всем версиям»): реестр — МАЖОР → МИНОР → ПАТЧ, у МАЖОР и МИНОР итог;
+  //   у любой версии — «путь»: итоги всех МАЖОР до неё, итог её МИНОР и что изменилось в ней самой (assets/versions_full.js, грузится по открытию)
+  function reestrLoad(cb) {
+    if (G.T14_REESTR) return cb(G.T14_REESTR);
+    var sc = document.createElement('script'); sc.src = 'assets/versions_full.js';
+    sc.onload = function () { cb(G.T14_REESTR || null); }; sc.onerror = function () { cb(null); };
+    document.head.appendChild(sc);
+  }
+  function verRows(where, items) {
+    var g = el('div', 'igroup'); where.appendChild(g);
+    items.forEach(function (t) { var r = el('div', 'irow static', '<span class="ic"><span class="ibody"><span class="ititle" style="font-size:15px;line-height:1.38;white-space:normal;overflow:visible;text-overflow:clip;display:block"></span></span></span>'); r.querySelector('.ititle').textContent = t; g.appendChild(r); });
+  }
+  function verPath(R, v) {            // одна версия: путь от версии 1 до неё
+    var p = v.split('.'), M = +p[0], mm = p[0] + '.' + p[1], rel = null, mn = null;
+    R.majors.forEach(function (J) { J.minors.forEach(function (x) { if (x.v === mm) { mn = x; x.rel.forEach(function (r) { if (r.v === v) rel = r; }); } }); });
+    var s = sheet('Версия ' + v, 'Путь к версии: что было в каждой большой версии, что в малой ' + mm + ' и что изменилось в ' + v);
+    var bk = el('button', 'vr-rel', '‹ Все версии'); bk.type = 'button'; bk.addEventListener('click', function () { versions(); }); s.body.appendChild(bk);
+    R.majors.slice().reverse().forEach(function (J) {
+      if (+J.v > M) return;
+      s.body.appendChild(el('p', 'ihdr', esc(J.title) + ' · ' + esc(J.dates)));
+      verRows(s.body, J.summary.length ? J.summary : ['—']);
+    });
+    if (mn) { s.body.appendChild(el('p', 'ihdr', esc(mn.v) + ' · итог малой версии')); verRows(s.body, [mn.summary]); }
+    if (rel) { s.body.appendChild(el('p', 'ihdr', esc(rel.v) + ' · ' + esc(rel.date) + ' · что изменилось')); verRows(s.body, rel.items); }
+    verCss(s.body);
+  }
+  function verCss(where) {
+    where.appendChild(el('style', '', '.vr-maj>summary,.vr-min>summary{cursor:pointer;list-style:none}.vr-maj>summary::-webkit-details-marker,.vr-min>summary::-webkit-details-marker{display:none}' +
+      '.vr-maj{margin:14px 0 4px}.vr-maj>summary{font:700 18px var(--f-body);color:var(--ios-label);padding:6px 2px}.vr-maj>summary small{display:block;font:500 13px var(--f-body);color:var(--ios-2);margin-top:2px}' +
+      '.vr-min{margin:8px 0 0 6px;border-left:2px solid var(--ios-sep,rgba(128,128,128,.3));padding-left:10px}.vr-min>summary{font:600 15.5px var(--f-body);color:var(--ios-label);padding:6px 0}' +
+      '.vr-min>summary span{display:block;font:400 14px/1.38 var(--f-body);color:var(--ios-2);margin-top:2px}.vr-rel{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 0 2px;font:600 14.5px var(--f-body);color:var(--ios-blue,#0a84ff);cursor:pointer}'));
+  }
   function versions() {
     var V = G.T14_VERSION || { v: '', log: [] };
-    var s = sheet('Версия ' + V.v, 'МАЖОР.МИНОР.ПАТЧ — как принято у программистов: МАЖОР — крупная переделка (дизайн, структура), МИНОР — новые возможности (раздел, отчёт, команда бота), ПАТЧ — исправления и обновления данных. Номер получает каждый выпуск; «Готовится» — внесено, но ещё не выпущено.');
-    function list(where, L) {
-      L.forEach(function (e) {
-        where.appendChild(el('p', 'ihdr', esc(e.v) + ' · ' + esc(e.date)));
-        var g = el('div', 'igroup'); where.appendChild(g);
-        e.items.forEach(function (t) { var r = el('div', 'irow static', '<span class="ic"><span class="ibody"><span class="ititle" style="font-size:15.5px;line-height:1.35"></span></span></span>'); r.querySelector('.ititle').textContent = t; g.appendChild(r); });
-      });
-    }
+    var s = sheet('Версия ' + V.v, 'Реестр версий по международной схеме: МАЖОР.МИНОР.ПАТЧ (Semantic Versioning). МАЖОР — крупная переделка, МИНОР — новые возможности, ПАТЧ — исправления. У каждой большой и малой версии — итог; нажмите на номер — откроется путь к этой версии.');
     if (V.pending && V.pending.length) {           // what is done but not yet a version
       var n = V.pending.reduce(function (a, i) { return a + i.n; }, 0);
-      list(s.body, [{ v: 'Готовится', date: n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'изменение' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'изменения' : 'изменений') + ', номер — при выпуске', items: V.pending.map(function (i) { return i.t + (i.n > 1 ? ' (' + i.n + ')' : ''); }) }]);
+      s.body.appendChild(el('p', 'ihdr', 'Готовится · ' + n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'изменение' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'изменения' : 'изменений') + ', номер — при выпуске'));
+      verRows(s.body, V.pending.map(function (i) { return i.t + (i.n > 1 ? ' (' + i.n + ')' : ''); }));
     }
-    list(s.body, V.log);
-    // before 1.0.0 everything was a test: kept, folded
-    if (V.tests && V.tests.length) {
-      var d = el('details', 'itests', '<summary class="ihdr" style="cursor:pointer">До 1.0.0 — тестовые версии (' + V.tests.length + ')</summary>');
-      s.body.appendChild(d); list(d, V.tests);
-    }
+    var box = el('div', ''); s.body.appendChild(box); box.appendChild(el('p', 'ifoot', 'Загружаю реестр…'));
+    verCss(s.body);
+    reestrLoad(function (R) {
+      box.innerHTML = '';
+      if (!R) { V.log.forEach(function (e) { box.appendChild(el('p', 'ihdr', esc(e.v) + ' · ' + esc(e.date))); verRows(box, e.items); }); return; }
+      var cur = R.v, pth = el('button', 'ibtn pri', 'Путь к текущей версии ' + esc(cur)); pth.type = 'button'; pth.style.cssText = 'display:block;width:100%;margin:6px 0 4px';
+      pth.addEventListener('click', function () { verPath(R, cur); }); box.appendChild(pth);
+      R.majors.forEach(function (J, ji) {
+        var d = el('details', 'vr-maj'); if (ji === 0) d.open = true;
+        var sm = el('summary', ''); sm.textContent = J.title; var sd = el('small', ''); sd.textContent = J.dates + ' · малых версий: ' + J.minors.length; sm.appendChild(sd); d.appendChild(sm);
+        verRows(d, J.summary);
+        J.minors.forEach(function (mn, mi) {
+          var m = el('details', 'vr-min'); if (ji === 0 && mi === 0) m.open = true;
+          var ms = el('summary', ''); ms.textContent = mn.v + ' · ' + mn.from + (mn.to !== mn.from ? ' – ' + mn.to : '') + ' · исправлений: ' + mn.rel.length;
+          var mt = el('span', ''); mt.textContent = mn.summary; ms.appendChild(mt); m.appendChild(ms);
+          var lazy = function () {
+            if (m._done) return; m._done = true;
+            mn.rel.forEach(function (r) {
+              var b = el('button', 'vr-rel'); b.type = 'button'; b.textContent = r.v + ' · ' + r.date + '  ›';
+              b.addEventListener('click', function () { verPath(R, r.v); }); m.appendChild(b); verRows(m, r.items);
+            });
+          };
+          if (m.open) lazy(); m.addEventListener('toggle', function () { if (m.open) lazy(); });
+          d.appendChild(m);
+        });
+        box.appendChild(d);
+      });
+      if (R.tests && R.tests.length) {
+        var t = el('details', 'vr-maj', '<summary>До 1.0.0 — тестовые версии<small>' + R.tests.length + ' версий</small></summary>');
+        t.addEventListener('toggle', function () { if (!t.open || t._done) return; t._done = true; R.tests.forEach(function (e) { t.appendChild(el('p', 'ihdr', 'тест ' + esc(e.v) + ' · ' + esc(e.date))); verRows(t, e.items); }); });
+        box.appendChild(t);
+      }
+    });
   }
   // ---------------- сообщить об ошибке: все исправления — владельцу на почту
   function report(what) {

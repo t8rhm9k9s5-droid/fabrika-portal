@@ -488,6 +488,7 @@ function buildPlanOutline(b){
 
 // ---------- fence & gate ----------
 const gF=G('fence');
+function profTex(){if(window.__profTex)return window.__profTex;const c=document.createElement('canvas');c.width=64;c.height=8;const x=c.getContext('2d');x.fillStyle='#b7c1c6';x.fillRect(0,0,64,8);x.fillStyle='#98a3a9';x.fillRect(0,0,16,8);x.fillStyle='#d2d9dd';x.fillRect(16,0,6,8);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return window.__profTex=t;}
 function buildFence(){
   gF.clear(); const P=S.fence, H=2.0, verts=[], top=[]; rvFence();
   for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];
@@ -495,8 +496,9 @@ function buildFence(){
     if(isGate||(S.fence_type&&S.fence_type[i])||(S.fence_open||[]).includes(i)||(S.gates2||[]).some(g=>Math.hypot(a[0]-g.a[0],a[1]-g.a[1])<0.6&&Math.hypot(b[0]-g.b[0],b[1]-g.b[1])<0.6)) continue;
     const ga=gy(zat(a[0],a[1])), gb=gy(zat(b[0],b[1]));
     const A0=V(a[0],a[1],ga),A1=V(a[0],a[1],ga+H),B0=V(b[0],b[1],gb),B1=V(b[0],b[1],gb+H);
-    verts.push(A0,B0,B1,A0,B1,A1); top.push(A1,B1);
+    if((S.fence_prof||[]).includes(i)){const L=Math.hypot(b[0]-a[0],b[1]-a[1])/0.24;(gF.userData.pv=gF.userData.pv||[]).push(A0,B0,B1,A0,B1,A1);(gF.userData.fuv=gF.userData.fuv||[]).push(0,0,L,0,L,1,0,0,L,1,0,1);top.push(A1,B1);continue;} verts.push(A0,B0,B1,A0,B1,A1); top.push(A1,B1);
   }
+  if(gF.userData.pv){const pg=new THREE.BufferGeometry().setFromPoints(gF.userData.pv);pg.setAttribute('uv',new THREE.Float32BufferAttribute(gF.userData.fuv,2));pg.computeVertexNormals();gF.add(new THREE.Mesh(pg,new THREE.MeshLambertMaterial({color:0xffffff,map:profTex(),side:THREE.DoubleSide})));gF.userData.pv=gF.userData.fuv=null;}
   const g=new THREE.BufferGeometry().setFromPoints(verts); g.computeVertexNormals();
   gF.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0x3f7d57,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false})));
   gF.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(top),new THREE.LineBasicMaterial({color:0x2e6b46})));
@@ -992,6 +994,8 @@ function buildWorkshop(){
   const endShape=new THREE.Shape([new THREE.Vector2(-.25,.5),new THREE.Vector2(W+.25,.5),new THREE.Vector2(W+.25,zr(W+.25)),new THREE.Vector2(-.25,zr(-.25))]);
   const eg=new THREE.ExtrudeGeometry(endShape,{depth:.1,bevelEnabled:false});
   [-.25,49.65].forEach(s=>{const m=new THREE.Mesh(eg,wmat);m.rotation.y=Math.PI/2;m.position.set(s,0,0);m.userData={kind:'b',b:wsB};pickables.push(m);g.ws_walls.add(m)});
+  // 17.11.2026 (камера 050, кадр 26.10): красно-оранжевая полоса от земли до подоконников по всем фасадам (по проекту — серый профлист цоколя RAL 7043)
+  {const ro=0xd8431f;[[-0.25,6.75],[9.75,44.735],[45.745,49.75]].forEach(([a,b])=>wbox(g.ws_walls,a,b,-.36,-.33,-.05,1.0,ro,ckInfo));wbox(g.ws_walls,-.25,49.75,W+.33,W+.36,-.05,1.0,ro,ckInfo);wbox(g.ws_walls,-.36,-.33,-.33,W+.33,-.05,1.0,ro,ckInfo);wbox(g.ws_walls,49.83,49.86,-.33,W+.33,-.05,1.0,ro,ckInfo);}
   // panel joints
   const J=[];const zj=[1.7,2.9,4.1,5.3];
   zj.forEach(z=>{J.push([P(-.25,W+.26,z),P(49.75,W+.26,z)]);J.push([P(-.26,-.25,z),P(-.26,W+.25,z)]);J.push([P(49.76,-.25,z),P(49.76,W+.25,z)]);
@@ -1026,7 +1030,7 @@ function buildWorkshop(){
   const cInfo={sys:'каркас',title:'Стойка торцевого фахверка С1/С2',rows:[['Сечение','труба 120×4'],['Место','торец по оси 1 — в 2,48 и 5,6 м от оси А; торец по оси 10 — в 5,6 м (КР, разрез 4-4, фундаменты Ф2)']],src:SRC.kr};
   wbox(g.ws_frame,-.06,.06,2.42,2.54,0,ztc(2.48),st,cInfo);
   [0,49.5].forEach(s=>wbox(g.ws_frame,s-.06,s+.06,5.54,5.66,0,ztc(5.6),st,cInfo));
-  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник13 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
+  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник14 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
   const posts=[0,1.203,3.987,5.379,6.771,9.555,W], zig=[[.12,'t'],[1.203,'b'],[2.6,'t'],[3.987,'b'],[5.379,'t'],[6.771,'b'],[8.16,'t'],[9.555,'b'],[11.08,'t']];
   AX.forEach(s=>{
     wbeam(g.ws_frame,P(s,0,ZBC),P(s,W,ZBC),.1,.08,st,fI);wbeam(g.ws_frame,P(s,0,ztc(0)),P(s,W,ztc(W)),.12,.08,st,fI);
@@ -1081,7 +1085,7 @@ function buildWorkshop(){
   fence.add(new THREE.LineSegments(new THREE.EdgesGeometry(fence.geometry),new THREE.LineBasicMaterial({color:0x4f6f4f})));
   // ---------- electrical ----------
   const pw=S.proj.power;
-  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник15 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
+  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник16 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
   wbox(g.ws_el,.1,.5,7.55,8.35,0,2.0,0xd0d4d8,vruI);wbox(g.ws_el,.48,.52,7.6,8.3,1.75,1.9,0xe0a400,vruI);
   [['ЩР','Щит силовой ЩР',[['Установленная / расчётная','34,0 / 23,8 кВт'],['Нагрузка','розетки швейных машин 0,4 кВт, 220/380 В']],6.85,7.4],
    ['ЩВ','Щит ЩВ — вентиляция и тепловые завесы',[['Установленная / расчётная','24,08 / 9,65 кВт'],['Нагрузка','завесы КЭВ-9П3011Е 2 × 9 кВт и КЭВ-6П2211Е 6 кВт, вытяжные вентиляторы санузлов']],6.25,6.75],
@@ -1554,13 +1558,13 @@ function rvWallBox(A, a, b, z0, z1, w){
 }
 const FT = {metal:{h:2.0, name:'Металлическая изгородь на столбах', txt:'Знак «линия с точками» — металлическая изгородь на столбах (в акте сдачи реперов у Sp13 — «металлическая изгородь»). Высота ≈ 2,0 м и сетка — условно.'},
             stone:{h:2.2, name:'Каменный или железобетонный забор', txt:'Знак «двойная линия с поперечными штрихами» — каменный или железобетонный забор. Высота ≈ 2,2 м — условно (у проходной верх столба 108,15, ≈ 2,2 м над землёй).'}};
-function rvFenceSeg(a, b, type, h, ud, col){
+function rvFenceSeg(a, b, type, h, ud, col, solid){
   const P = nAcc(), N = nAcc(), L = Math.hypot(b[0] - a[0], b[1] - a[1]);
   if (type === 'metal'){
     const n = Math.max(1, Math.ceil(L / 2.5));
     for (let j = 0; j <= n; j++){ const t = j / n, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; rvWallBox(P, [x - .03, y], [x + .03, y], 0, h + .05, .06); }
     rvWallBox(P, a, b, h - .05, h, .05); rvWallBox(N, a, b, .08, h - .05, .02);
-    const m1 = nMesh(P, rvMat(col || 0x55606a)), m2 = nMesh(N, rvMat(col || 0x7f8b92, .3));
+    const m1 = nMesh(P, rvMat(col || 0x55606a)), m2 = nMesh(N, solid ? rvMat(0xb3bdc2) : rvMat(col || 0x7f8b92, .3));   // solid: забор из профлиста, как на кадрах 012, 054, 063 (17.11.2026)
     m1.userData = m2.userData = ud; gF.add(m1, m2); pickables.push(m1, m2);
   } else {
     const n = Math.max(1, Math.round(L / 4));
@@ -1575,7 +1579,7 @@ function rvFence(){
   for (let i = 0; i < F.length; i++){
     const ty = T[i]; if (!FT[ty] || (S.fence_open || []).includes(i)) continue;
     const a = F[i], b = F[(i + 1) % F.length], f = FT[ty];
-    rvFenceSeg(a, b, ty, f.h, rvUD('Ограждение', {name:f.name, rows:[['Длина', '≈ ' + nf(Math.hypot(b[0] - a[0], b[1] - a[1]), 0) + ' м'], ['Высота', '≈ ' + nf(f.h, 1) + ' м, условно']], note:f.txt, src:'топосъёмка 2016 г. (16/208-и-РАВП-ИГДИ), тип по условному знаку'}));
+    rvFenceSeg(a, b, ty, f.h, rvUD('Ограждение', {name:f.name, rows:[['Длина', '≈ ' + nf(Math.hypot(b[0] - a[0], b[1] - a[1]), 0) + ' м'], ['Высота', '≈ ' + nf(f.h, 1) + ' м, условно']], note:f.txt + ((S.fence_prof || []).includes(i) ? ' На кадрах камер 26.10.2026 этот участок — сплошной светло-серый профлист на металлических столбах.' : ''), src:'топосъёмка 2016 г. (16/208-и-РАВП-ИГДИ), тип по условному знаку' + ((S.fence_prof || []).includes(i) ? '; облик — кадры камер 26.10.2026' : '')}), null, ty === 'metal' && (S.fence_prof || []).includes(i));
   }
   for (const e of (S.fence_extra || [])) rvFenceSeg(e.pts[0], e.pts[1], e.type, e.h, rvUD('Ограждение', {name:e.name, rows:[['Высота', '≈ ' + nf(e.h, 1) + ' м']], note:e.note, src:e.src || 'топосъёмка 2016 г.'}), e.col);
   for (const g of (S.fence_gaps || [])){ const mx = (g.a[0] + g.b[0]) / 2, my = (g.a[1] + g.b[1]) / 2, L = Math.hypot(g.b[0] - g.a[0], g.b[1] - g.a[1]);
@@ -1706,6 +1710,7 @@ function ctxBuild(){
   const at = (x, y) => gAt(x, y), gr = C.ground;
   const pg = new THREE.PlaneGeometry(gr.x1 - gr.x0, gr.y1 - gr.y0); pg.rotateX(-Math.PI / 2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xdfe2d6})); plane.position.copy(V((gr.x0 + gr.x1) / 2, (gr.y0 + gr.y1) / 2, szzPlaneY() - 0.1)); gCtx.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear && typeof basePlaneClear === 'function') basePlaneClear(plane, true);   // 16.11.2026: прозрачная земля — и эта плоскость (трубы под ней)
   const RM = {asphalt:new THREE.MeshLambertMaterial({color:0x8f9397, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}),
               dirt:new THREE.MeshLambertMaterial({color:0xb7a685, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2})};
   const edge = new THREE.LineBasicMaterial({color:0x6c7075, transparent:true, opacity:.55});
@@ -1789,6 +1794,134 @@ function buildDG(b){
   gTP.add(root); root.traverse(o => { if (o.isMesh) pickables.push(o); }); bMeshes[b.k] = root;
 }
 
+/* ADMIN-RULE-2026-11-08 — правило владельца: команды Т. В. и А. В. Сотрудник1 равноправны (подробно — АДМИНИСТРАТОРЫ.md). */
+/* ---------- автопарк на парковках (17.11.2026, Т. В.: «грузовые — у гаража в фирменных ливреях, легковые — на размеченной парковке у АБК,
+   у каждой машины ТТХ») — данные S.fleet (build/fleet/fleet.py): форма, габарит, цвет, место и направление; ливрея — белый кузов,
+   красная полоса RAL 3020 (как на складе № 1 и швейном цехе) и знак «Фабрикант» на бортах. Госномера не показываются. ---------- */
+const gFleet = G('fleet');
+const FLEET_LOGO = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 550 125\"><path fill=\"#000\" fill-rule=\"evenodd\" d=\"M120.80 89.60 L120.20 89.20 L118.70 88.80 L118.00 88.40 L116.10 87.90 L115.00 87.30 L113.40 86.90 L112.30 86.30 L107.70 84.80 L106.60 84.20 L104.10 83.40 L103.50 83.50 L101.90 86.80 L100.80 88.30 L97.90 90.80 L95.90 91.90 L94.70 92.30 L94.10 92.90 L94.00 94.20 L95.00 97.20 L95.30 98.80 L96.70 103.20 L97.30 103.70 L98.20 103.70 L99.90 103.10 L101.70 102.80 L103.70 102.00 L105.20 101.70 L106.60 101.00 L107.90 100.70 L112.50 98.50 L115.40 96.60 L119.00 93.20 L120.60 91.20 L120.90 90.60 Z M15.20 89.60 L15.20 90.80 L17.10 93.30 L19.70 95.80 L22.20 97.70 L28.10 100.70 L34.10 102.70 L36.20 103.10 L37.80 103.70 L38.70 103.70 L39.40 103.20 L40.60 99.30 L41.00 97.30 L41.70 95.60 L42.10 93.90 L42.00 93.00 L41.30 92.30 L40.40 92.00 L38.00 90.70 L35.40 88.40 L34.00 86.50 L32.60 83.50 L31.80 83.40 L31.10 83.80 L29.50 84.20 L28.30 84.80 L24.00 86.20 L19.90 87.90 L18.50 88.20 Z M126.90 65.60 L126.40 65.10 L124.80 65.10 L118.70 65.80 L112.40 66.10 L105.60 66.80 L105.00 67.60 L105.00 71.90 L104.60 75.90 L104.70 76.50 L105.50 77.40 L106.90 77.90 L112.50 80.70 L113.30 80.90 L116.90 82.70 L119.90 83.90 L121.20 84.70 L123.30 85.40 L123.70 85.10 L124.50 83.20 L125.80 78.20 L126.70 72.30 Z M9.20 65.40 L9.10 68.70 L9.30 71.60 L10.20 78.10 L10.90 80.30 L11.20 82.20 L12.20 84.90 L12.60 85.30 L13.40 85.30 L20.60 81.90 L21.40 81.70 L27.00 78.90 L30.40 77.50 L31.30 76.70 L31.50 76.30 L31.50 75.50 L31.20 74.10 L31.10 68.00 L30.90 67.30 L30.50 66.90 L27.20 66.40 L20.00 66.00 L12.80 65.20 L9.50 65.10 Z M94.10 61.40 L93.80 61.00 L93.30 60.80 L83.90 60.90 L82.10 61.10 L81.20 61.40 L79.90 62.20 L78.50 63.90 L77.40 67.00 L77.10 69.20 L77.40 69.60 L78.10 69.70 L81.80 69.20 L87.50 68.80 L89.50 68.10 L91.50 66.90 L92.80 65.50 L93.80 63.70 Z M42.40 60.90 L42.00 61.30 L41.90 61.70 L42.20 63.60 L43.20 65.50 L44.30 66.70 L45.50 67.60 L48.10 68.70 L51.60 69.10 L52.30 69.70 L52.90 70.90 L53.10 72.50 L53.90 75.20 L54.00 77.00 L53.10 80.40 L52.90 82.00 L52.10 84.40 L51.90 86.00 L51.10 88.40 L50.90 89.60 L51.00 90.70 L52.10 91.60 L53.10 91.90 L54.50 92.70 L55.30 92.90 L63.70 96.80 L64.30 97.30 L64.60 98.00 L64.50 107.60 L64.20 108.00 L63.40 108.40 L57.00 109.20 L55.20 109.80 L54.10 110.40 L53.10 111.40 L52.20 113.60 L52.30 115.20 L53.20 117.00 L53.60 117.50 L55.30 118.60 L56.00 118.80 L57.90 118.80 L59.00 118.40 L60.30 117.50 L62.00 114.50 L62.60 114.10 L73.40 114.10 L74.30 114.80 L75.40 117.00 L76.30 117.90 L77.50 118.60 L78.40 118.80 L80.10 118.80 L80.80 118.60 L82.60 117.40 L83.50 116.10 L83.80 115.10 L83.70 112.60 L82.90 111.30 L82.10 110.50 L79.90 109.40 L74.40 108.50 L72.60 108.40 L71.70 107.70 L71.50 107.30 L71.50 98.20 L71.60 97.70 L72.10 97.00 L73.70 96.10 L74.90 95.70 L78.60 93.90 L79.40 93.70 L84.70 91.10 L85.10 90.70 L85.30 90.00 L84.40 86.90 L83.80 86.20 L82.20 85.50 L80.60 85.50 L77.90 86.00 L71.00 86.40 L63.40 86.30 L60.00 86.10 L59.30 85.90 L58.90 85.40 L58.90 84.20 L59.80 81.20 L60.50 77.70 L60.50 75.00 L59.60 70.90 L58.90 68.80 L58.50 66.50 L57.90 64.70 L57.40 63.80 L56.10 62.30 L54.10 61.20 L49.80 60.80 Z M512.40 58.50 L512.00 59.20 L512.00 65.20 L512.30 65.60 L512.80 65.80 L521.50 65.80 L522.10 66.10 L522.40 66.50 L522.40 87.80 L522.70 88.90 L523.00 89.20 L523.80 89.40 L532.10 89.40 L532.70 89.20 L533.30 88.30 L533.30 66.60 L533.80 66.00 L534.30 65.80 L543.40 65.70 L543.80 65.20 L543.80 59.20 L543.60 58.70 L543.20 58.40 Z M471.90 58.80 L471.70 59.30 L471.70 88.40 L472.20 89.20 L472.80 89.40 L481.10 89.40 L482.20 89.00 L482.50 88.40 L482.50 79.50 L482.80 78.70 L483.50 78.20 L493.40 78.20 L493.90 78.40 L494.50 79.20 L494.60 79.90 L494.50 88.10 L494.80 89.00 L495.30 89.30 L504.10 89.40 L504.70 89.20 L505.10 88.80 L505.30 88.30 L505.30 59.50 L505.10 58.90 L504.70 58.50 L495.50 58.40 L494.90 58.70 L494.50 59.80 L494.60 70.00 L494.50 70.40 L493.60 71.10 L483.40 71.10 L482.70 70.60 L482.50 70.20 L482.50 59.20 L482.10 58.60 L481.70 58.40 L472.50 58.40 Z M346.90 59.00 L346.70 59.50 L346.70 88.40 L347.20 89.20 L347.80 89.40 L356.20 89.40 L357.60 88.90 L367.70 75.50 L369.10 73.40 L370.60 71.70 L371.30 71.40 L371.80 72.00 L371.80 88.40 L372.00 88.90 L372.40 89.30 L372.80 89.40 L381.10 89.40 L382.20 89.00 L382.50 88.40 L382.50 59.40 L382.10 58.70 L381.70 58.50 L373.00 58.40 L372.40 58.50 L371.50 59.00 L359.10 75.60 L358.40 76.20 L357.80 76.20 L357.40 75.40 L357.30 59.00 L356.70 58.50 L348.40 58.40 L347.50 58.50 Z M424.70 58.60 L424.40 58.30 L423.70 58.10 L417.40 58.10 L416.20 58.40 L414.70 59.20 L413.30 60.60 L412.40 62.00 L411.00 65.50 L410.20 67.00 L410.00 67.80 L409.10 69.40 L408.10 70.20 L403.70 70.90 L402.80 70.70 L402.20 69.80 L402.20 59.50 L402.00 59.00 L401.60 58.60 L400.90 58.40 L392.20 58.50 L391.80 58.70 L391.40 59.40 L391.40 88.40 L391.70 89.00 L392.80 89.40 L401.10 89.40 L401.70 89.20 L402.20 88.40 L402.20 78.60 L402.80 77.90 L403.40 77.70 L407.40 77.40 L408.00 77.70 L408.70 78.40 L413.40 88.00 L414.50 89.30 L425.20 89.40 L425.70 89.20 L425.90 88.80 L425.80 88.10 L422.90 83.30 L420.60 79.00 L419.30 77.20 L418.40 76.30 L416.90 75.40 L416.40 74.70 L416.70 73.80 L417.70 72.50 L418.80 70.30 L420.00 67.10 L420.80 65.70 L421.70 64.90 L423.90 64.70 L424.60 64.30 L424.80 63.50 L424.90 59.20 Z M335.90 60.20 L334.70 59.40 L331.70 58.20 L329.00 57.90 L325.90 57.90 L322.60 58.20 L320.00 58.90 L317.90 59.20 L316.40 59.80 L315.70 59.70 L314.00 58.80 L312.30 58.40 L303.40 58.40 L302.70 58.70 L302.30 59.50 L302.00 63.30 L302.60 64.00 L304.20 64.20 L305.30 64.60 L305.70 64.90 L306.10 65.70 L306.10 98.40 L306.50 99.00 L316.20 99.10 L316.70 98.70 L316.90 98.00 L316.80 90.80 L317.00 90.20 L317.40 89.80 L325.80 89.80 L327.30 89.60 L330.90 88.70 L333.30 87.60 L334.50 86.80 L336.90 84.60 L338.40 82.30 L339.60 79.20 L340.10 74.80 L340.10 72.10 L339.70 67.10 L339.00 65.30 L338.70 63.90 L337.40 61.80 Z M326.30 65.80 L327.30 66.40 L328.10 67.30 L328.80 68.60 L329.10 69.70 L329.30 75.30 L329.00 78.60 L328.40 80.20 L327.40 81.80 L326.00 82.90 L325.20 83.20 L322.00 83.80 L317.70 83.60 L317.10 83.10 L316.80 82.10 L316.90 66.40 L317.20 66.00 L317.80 65.70 L322.70 65.20 L324.50 65.30 Z M434.00 59.40 L433.90 65.40 L434.40 66.20 L435.20 66.30 L438.00 65.90 L444.90 65.50 L447.00 65.50 L448.80 65.80 L449.80 66.20 L451.00 67.40 L451.40 68.70 L451.50 70.20 L450.80 71.10 L450.10 71.30 L442.10 71.30 L436.90 72.10 L434.50 73.20 L433.00 74.60 L432.00 76.10 L431.30 78.10 L431.10 79.30 L431.10 82.80 L431.40 84.40 L432.10 86.30 L432.70 87.20 L433.70 88.20 L434.70 88.80 L438.00 89.70 L443.20 89.60 L448.20 88.70 L451.30 87.70 L452.40 87.70 L454.10 88.90 L456.70 89.40 L464.10 89.40 L465.00 89.00 L465.50 87.90 L465.80 85.20 L465.70 84.30 L465.10 83.70 L462.50 83.20 L462.00 82.80 L461.70 82.10 L461.50 66.90 L460.60 63.70 L459.40 61.80 L458.00 60.40 L455.90 59.10 L453.20 58.20 L448.80 57.80 L441.20 58.10 L438.10 58.40 L436.80 58.70 L435.00 58.80 L434.40 59.00 Z M451.10 76.50 L451.50 77.60 L451.50 81.80 L451.30 82.50 L450.90 82.90 L450.30 83.20 L446.60 84.00 L443.50 83.90 L442.30 82.90 L441.80 81.70 L441.80 79.50 L442.20 78.30 L443.30 77.10 L445.10 76.50 L447.10 76.20 L450.40 76.10 Z M225.00 59.40 L224.90 65.40 L225.40 66.20 L226.20 66.30 L229.00 65.90 L237.60 65.50 L240.00 65.80 L240.90 66.30 L241.90 67.30 L242.40 69.20 L242.40 70.40 L241.80 71.10 L241.10 71.30 L233.10 71.30 L227.90 72.10 L225.70 73.10 L224.00 74.50 L223.00 76.10 L222.30 78.10 L222.10 79.30 L222.10 82.80 L222.30 84.20 L223.10 86.30 L223.70 87.20 L224.70 88.20 L225.90 88.90 L229.00 89.70 L234.70 89.50 L235.60 89.20 L239.10 88.70 L242.30 87.70 L243.30 87.70 L244.60 88.70 L245.40 89.00 L247.70 89.40 L255.10 89.40 L255.70 89.20 L256.10 88.80 L256.40 88.00 L256.80 85.00 L256.50 84.00 L255.60 83.60 L253.60 83.30 L252.90 82.70 L252.70 82.20 L252.60 68.00 L252.10 65.40 L251.70 64.10 L250.80 62.40 L248.90 60.40 L247.40 59.40 L244.90 58.40 L242.70 58.00 L239.80 57.80 L233.70 58.00 L229.10 58.40 L227.80 58.70 L226.00 58.80 L225.40 59.00 Z M242.10 76.50 L242.50 77.60 L242.50 81.80 L242.30 82.50 L241.90 82.90 L241.30 83.20 L237.60 84.00 L234.90 84.00 L234.00 83.60 L233.00 82.60 L232.80 82.00 L232.90 79.00 L233.20 78.30 L234.30 77.10 L236.10 76.50 L238.10 76.20 L241.40 76.10 Z M184.30 41.30 L183.80 41.60 L183.60 42.00 L183.60 45.00 L183.40 45.80 L182.80 46.40 L182.20 46.60 L176.40 47.10 L170.90 48.30 L168.50 49.20 L166.50 50.30 L165.30 51.20 L163.50 53.10 L162.30 55.10 L161.30 58.10 L161.00 59.70 L160.60 64.20 L160.60 67.70 L161.20 73.40 L162.30 76.80 L163.50 78.80 L165.50 80.90 L168.00 82.50 L171.10 83.70 L173.20 84.00 L174.70 84.50 L179.10 85.10 L182.20 85.30 L182.80 85.50 L183.50 86.40 L183.60 88.60 L183.80 89.00 L184.30 89.30 L193.10 89.40 L193.80 88.80 L193.90 86.50 L194.20 85.80 L194.70 85.40 L201.10 84.80 L206.30 83.70 L209.00 82.70 L210.80 81.70 L212.20 80.70 L213.30 79.60 L214.60 77.80 L215.50 75.90 L216.60 71.50 L216.80 69.70 L216.80 62.20 L216.60 60.40 L215.70 56.50 L214.60 54.10 L213.70 52.80 L212.00 51.10 L210.80 50.20 L209.00 49.20 L205.90 48.10 L201.10 47.10 L196.10 46.70 L194.60 46.40 L194.10 45.90 L193.90 45.40 L193.90 42.20 L193.40 41.30 Z M194.60 53.00 L196.00 53.00 L200.60 54.10 L202.60 55.20 L204.10 57.10 L204.80 59.20 L205.10 61.40 L205.00 71.60 L204.80 72.70 L203.90 75.10 L202.30 76.90 L200.50 77.90 L196.00 78.90 L194.60 78.90 L194.10 78.50 L193.90 78.00 L193.90 53.80 L194.00 53.50 Z M181.60 53.00 L182.70 53.00 L183.10 53.20 L183.50 53.80 L183.60 54.60 L183.60 77.30 L183.30 78.50 L182.70 78.90 L180.30 78.70 L177.00 77.90 L174.90 76.70 L173.90 75.60 L173.00 74.00 L172.30 69.40 L172.40 61.40 L173.00 58.00 L173.90 56.30 L175.20 55.00 L177.00 54.00 Z M295.70 41.50 L294.50 41.20 L290.80 41.00 L290.30 41.20 L290.00 41.70 L289.70 43.40 L288.30 44.60 L281.70 45.90 L279.20 46.20 L275.80 47.00 L274.50 47.10 L271.10 48.20 L269.00 49.20 L267.10 50.50 L265.20 52.40 L264.10 54.00 L263.20 55.80 L262.30 58.60 L261.70 63.10 L261.60 71.70 L262.20 78.40 L263.00 81.20 L264.30 83.90 L265.20 85.20 L266.50 86.50 L268.00 87.60 L270.70 88.80 L274.50 89.70 L280.60 89.90 L284.10 89.60 L287.50 88.70 L289.90 87.60 L292.20 85.90 L293.40 84.60 L294.60 82.90 L295.70 80.30 L296.20 77.90 L296.50 75.30 L296.40 71.50 L296.00 68.70 L295.50 66.70 L294.60 64.70 L293.60 63.20 L292.40 62.00 L291.40 61.30 L289.40 60.30 L285.40 59.60 L281.40 59.70 L277.10 60.30 L274.10 61.20 L273.00 61.20 L272.40 60.50 L272.40 59.40 L272.90 57.60 L273.60 56.60 L274.50 55.80 L276.10 55.00 L281.80 53.90 L284.40 53.70 L287.20 53.10 L290.80 52.70 L294.30 51.40 L295.60 50.20 L296.40 48.30 L296.50 45.60 L296.30 43.10 L296.10 42.10 Z M273.00 67.80 L276.90 67.10 L281.00 67.00 L282.30 67.30 L283.50 67.90 L284.70 69.10 L285.00 69.60 L285.70 72.10 L285.70 77.10 L285.00 80.20 L284.20 81.60 L283.10 82.70 L280.50 83.70 L277.80 83.70 L275.30 82.90 L273.90 81.60 L272.90 79.70 L272.30 75.40 L272.30 68.60 Z M122.70 40.20 L121.80 40.20 L121.00 40.80 L120.20 41.10 L118.90 42.00 L112.60 45.40 L104.30 50.20 L104.00 50.70 L104.00 51.90 L104.70 55.80 L104.90 59.40 L105.50 60.30 L126.10 60.40 L126.60 60.10 L126.90 59.30 L126.80 56.20 L125.80 48.80 L124.50 43.90 L124.10 43.20 L123.70 41.70 Z M13.30 40.20 L12.20 42.10 L11.20 45.10 L10.80 47.20 L10.30 48.70 L9.20 56.60 L9.30 60.00 L9.90 60.40 L30.10 60.40 L30.60 60.20 L31.00 59.70 L31.20 58.90 L31.30 56.60 L32.00 51.80 L31.90 50.40 L30.50 49.40 L24.20 46.00 L22.90 45.10 L18.40 42.70 L14.00 40.10 Z M94.90 38.00 L95.30 38.60 L96.50 39.00 L98.60 40.10 L100.60 42.00 L101.60 43.70 L102.20 44.00 L102.70 44.00 L109.10 41.00 L109.90 40.80 L111.20 40.00 L114.40 38.70 L118.00 36.90 L119.00 36.60 L119.70 36.00 L119.80 35.20 L117.60 33.00 L115.50 31.40 L113.90 30.40 L111.20 29.20 L109.90 28.90 L108.50 28.30 L104.30 27.40 L102.00 27.10 L98.20 27.00 L97.70 27.20 L97.20 28.00 L96.90 30.00 L96.10 32.40 L95.90 34.00 L95.20 35.80 Z M41.20 37.90 L40.60 34.90 L39.90 32.80 L39.70 31.30 L39.00 29.30 L38.80 27.90 L38.50 27.30 L37.90 27.00 L35.50 27.00 L31.90 27.40 L29.50 28.00 L28.20 28.10 L26.20 28.90 L24.80 29.20 L22.20 30.40 L19.40 32.20 L16.40 35.00 L16.20 35.40 L16.40 36.10 L17.10 36.60 L18.10 36.90 L19.50 37.70 L22.70 39.00 L23.80 39.70 L24.60 39.90 L32.50 43.70 L33.50 44.00 L34.20 43.90 L34.70 43.40 L35.20 42.40 L36.60 40.80 L39.00 39.30 L40.80 38.60 Z M42.50 19.00 L43.10 22.20 L43.80 24.30 L44.20 26.60 L44.80 28.20 L46.30 34.80 L46.80 36.20 L47.50 36.80 L54.90 35.80 L56.70 35.80 L62.80 35.20 L66.90 35.10 L73.10 35.20 L79.20 35.80 L82.60 35.90 L87.70 36.80 L88.80 36.70 L89.30 36.20 L91.10 28.90 L91.70 27.10 L92.10 24.90 L92.80 22.80 L93.00 21.30 L93.60 19.80 L93.60 19.00 L93.40 18.70 L93.00 18.60 L89.00 20.00 L87.60 20.30 L85.70 21.10 L84.60 21.30 L83.00 22.00 L81.50 22.40 L80.50 22.40 L77.10 18.80 L69.20 9.40 L68.30 8.60 L67.80 8.60 L67.20 9.00 L56.80 21.30 L55.60 22.40 L55.00 22.50 L52.70 21.90 L51.20 21.20 L50.10 21.00 L43.40 18.70 L42.80 18.70 Z\"/></svg>";
+const FL = {};
+function flMat(c, extra){ const k = 'm' + c + (extra ? JSON.stringify(extra) : ''); return FL[k] || (FL[k] = new THREE.MeshLambertMaterial(Object.assign({color:c}, extra || {}))); }
+function flLiveryTex(){
+  if (FL.tex) return FL.tex;
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 440; const g = c.getContext('2d');
+  const paint = img => {
+    g.fillStyle = '#f4f5f4'; g.fillRect(0, 0, 1024, 440);
+    g.fillStyle = '#c1121c'; g.fillRect(0, 330, 1024, 70);            // красная полоса внизу борта
+    g.fillStyle = '#c1121c'; g.fillRect(0, 410, 1024, 14);
+    if (img){ const w = 760, h = w * 125 / 550; g.drawImage(img, (1024 - w) / 2, 70, w, h); }
+    else { g.fillStyle = '#111'; g.font = '700 120px Arial, sans-serif'; g.textAlign = 'center'; g.fillText('ФАБРИКАНТ', 512, 220); }
+  };
+  paint(null);
+  const t = new THREE.CanvasTexture(c); try { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); } catch (e) {}
+  if (FLEET_LOGO.indexOf('<svg') === 0){
+    const im = new Image(); im.onload = () => { paint(im); t.needsUpdate = true; };
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(FLEET_LOGO);
+  }
+  return (FL.tex = t);
+}
+function flBox(grp, w, h, d, x, y, z, mat){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); grp.add(m); return m; }
+function flWheel(grp, x, z, r, wd){
+  const m = new THREE.Mesh(FL.wg || (FL.wg = new THREE.CylinderGeometry(1, 1, 1, 14)), flMat(0x18191b)); m.scale.set(r, wd, r); m.rotation.x = Math.PI / 2; m.position.set(x, r, z); grp.add(m);
+  const hub = new THREE.Mesh(FL.wg, flMat(0x9ea3a7)); hub.scale.set(r * .55, wd + .02, r * .55); hub.rotation.x = Math.PI / 2; hub.position.set(x, r, z); grp.add(hub);
+}
+function flSide(grp, L, H, x, y, W){   // фирменный борт: две плоскости по бокам грузового отсека
+  const tex = flLiveryTex(), mat = FL.lv || (FL.lv = new THREE.MeshLambertMaterial({map:tex}));
+  for (const s of [1, -1]){ const p = new THREE.Mesh(new THREE.PlaneGeometry(L, H), mat); p.position.set(x, y, s * (W / 2 + .012)); if (s < 0) p.rotation.y = Math.PI; grp.add(p); }
+}
+const FL_GLASS = 0x4f6779;
+function flCar(c){
+  const g = new THREE.Group(), L = c.L, W = c.W, H = c.H, body = flMat(c.color != null ? c.color : 0xf2f3f2), gl = flMat(FL_GLASS), dark = flMat(0x2a2c2e);
+  const r = c.kind === 'forklift' ? .3 : c.kind === 'farm' ? .55 : L > 5.6 ? .47 : .36;
+  const wx = c.kind === 'forklift' ? [L * .22, -L * .22] : [L * .33, -L * .33];
+  const white = flMat(0xf1f2f1), red = flMat(0xc1121c);
+  if (c.kind === 'sedan' || c.kind === 'suv' || c.kind === 'suvbox' || c.kind === 'mpv'){
+    // боковой профиль: кузов до линии окон и «стекло» с наклонными стойками, выдавлены на ширину (вперёд — +x)
+    const h = L / 2, belt = c.kind === 'sedan' ? .86 : c.kind === 'suvbox' ? 1.18 : 1.02, sill = c.kind === 'suvbox' ? .42 : .3;
+    const low = c.kind === 'sedan' ? [[-h, sill], [h - .05, sill], [h, .55], [h - .08, .74], [h * .45, belt - .02], [-h + .12, belt], [-h, .74]]
+              : c.kind === 'suvbox' ? [[-h, sill], [h, sill], [h, belt - .12], [h - .2, belt], [-h, belt]]
+              : [[-h, sill], [h - .05, sill], [h, .6], [h - .12, .88], [h * .52, belt], [-h + .05, belt], [-h, .8]];
+    const top = c.kind === 'sedan' ? [[h * .42, belt - .02], [-h * .62, belt], [-h * .36, H - .02], [h * .05, H]]
+              : c.kind === 'suvbox' ? [[h * .5, belt], [-h + .05, belt], [-h + .1, H], [h * .44, H]]
+              : c.kind === 'mpv' ? [[h * .5, belt], [-h + .1, belt], [-h + .25, H], [h * .05, H]]
+              : [[h * .5, belt], [-h + .08, belt], [-h + .2, H], [h * .08, H]];
+    const ext = (pts, w, m) => { const s = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1])));
+      const geo = new THREE.ExtrudeGeometry(s, {depth:w, bevelEnabled:false}); geo.translate(0, 0, -w / 2); const me = new THREE.Mesh(geo, m); g.add(me); return me; };
+    ext(low, W, body); ext(top, W * .86, gl);
+    const tp = top.slice().sort((a, b) => b[1] - a[1]).slice(0, 2), rx0 = Math.min(tp[0][0], tp[1][0]), rx1 = Math.max(tp[0][0], tp[1][0]);
+    flBox(g, rx1 - rx0 + .06, .07, W * .88, (rx0 + rx1) / 2, H + .02, 0, body);                             // крыша цветом кузова
+    for (const s of [1, -1]) flBox(g, .09, belt > 1 ? H - belt : H - belt, .02, (top[0][0] + top[3][0]) / 2 - .05, (belt + H) / 2, s * (W * .43 + .012), body);   // средняя стойка
+    flBox(g, .06, .16, W * .8, h + .01, .62, 0, flMat(0x3a3d40));                                          // решётка
+    if (c.kind === 'suvbox') flBox(g, .3, .62, .62, -h - .14, .95, 0, dark);                              // запаска на двери
+  } else if (c.kind === 'van' || c.kind === 'bus'){
+    flBox(g, L - .9, H - .35, W, -.35, .35 + (H - .35) / 2, 0, white);
+    flBox(g, 1.1, 1.0, W, L / 2 - .55, .35 + .5, 0, white);                                                // капот
+    flBox(g, .9, .8, W * .96, L / 2 - 1.2, 1.6, 0, gl);                                                     // лобовое
+    if (c.kind === 'bus') flBox(g, L - 2.4, .55, W + .02, -.6, 1.75, 0, gl);                              // окна салона
+    flBox(g, L - .9, .16, W + .02, -.35, .62, 0, red);
+    flSide(g, Math.min(3.6, L - 2.6), 1.3, -1.0, c.kind === 'bus' ? 1.05 : 1.45, W);
+  } else if (c.kind === 'boxtruck' || c.kind === 'lighttruck'){
+    const cabL = c.kind === 'lighttruck' ? 1.9 : 2.0, cabH = c.kind === 'lighttruck' ? 2.3 : 2.6, boxL = L - cabL - .25, boxH = H - 1.05;
+    flBox(g, cabL, cabH, W * .96, L / 2 - cabL / 2, .45 + cabH / 2, 0, white);
+    flBox(g, .08, cabH * .38, W * .86, L / 2 + .01, .45 + cabH * .66, 0, gl);
+    flBox(g, cabL + .01, .12, W * .97, L / 2 - cabL / 2, .45 + cabH * .32, 0, red);
+    flBox(g, boxL, .22, W * .5, -L / 2 + boxL / 2, .72, 0, dark);                                          // рама
+    flBox(g, boxL, boxH, W, -L / 2 + boxL / 2, 1.05 + boxH / 2, 0, white);
+    flSide(g, boxL - .2, boxH - .2, -L / 2 + boxL / 2, 1.05 + boxH / 2, W);
+  } else if (c.kind === 'tractor'){
+    flBox(g, 2.3, 2.9, W, L / 2 - 1.15, .55 + 1.45, 0, white);
+    flBox(g, .08, 1.0, W * .9, L / 2 + .01, 2.6, 0, gl);
+    flBox(g, 2.31, .2, W + .02, L / 2 - 1.15, 1.25, 0, red);
+    flBox(g, 1.6, .9, W * .9, L / 2 - 1.15, H - .45, 0, white);                                            // спойлер на крыше
+    flBox(g, L - 2.3, .35, W * .7, -1.15, .95, 0, dark);                                                   // рама
+    flBox(g, 1.4, .18, 1.6, -L / 2 + 1.2, 1.2, 0, flMat(0x3a3c3e));                                        // седло
+    const ls = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .9), FL.lv || (FL.lv = new THREE.MeshLambertMaterial({map:flLiveryTex()})));
+    for (const s of [1, -1]){ const p = ls.clone(); p.position.set(L / 2 - 1.15, 1.95, s * (W / 2 + .012)); if (s < 0) p.rotation.y = Math.PI; g.add(p); }
+  } else if (c.kind === 'tanker'){
+    flBox(g, 2.0, 2.4, W * .96, L / 2 - 1.0, .45 + 1.2, 0, white);
+    flBox(g, .08, .9, W * .86, L / 2 + .01, 2.2, 0, gl);
+    flBox(g, 2.01, .12, W * .97, L / 2 - 1.0, 1.3, 0, red);
+    const tk = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, L - 2.6, 20), white); tk.rotation.z = Math.PI / 2; tk.position.set(-1.1, 1.85, 0); g.add(tk);
+    const bd = new THREE.Mesh(new THREE.CylinderGeometry(1.01, 1.01, L - 2.7, 20, 1, true, Math.PI * .1, Math.PI * .3), red); bd.rotation.z = Math.PI / 2; bd.position.copy(tk.position); g.add(bd);
+    flBox(g, L - 2.3, .3, W * .5, -1.1, .75, 0, dark);
+  } else if (c.kind === 'crane'){
+    flBox(g, 2.0, 2.4, W * .96, L / 2 - 1.0, .45 + 1.2, 0, white);
+    flBox(g, 2.01, .12, W * .97, L / 2 - 1.0, 1.3, 0, red);
+    flBox(g, L - 2.0, .9, W, -1.0, 1.0, 0, flMat(0xe2b23a));                                               // платформа
+    flBox(g, 1.8, 1.0, 1.8, -L / 2 + 2.4, 1.95, 0, flMat(0xe2b23a));                                       // поворотная часть
+    const bm = flBox(g, L - 1.2, .5, .55, .3, 2.7, 0, flMat(0xd9a52f)); bm.rotation.z = .05;                // стрела в транспортном положении
+  } else if (c.kind === 'farm'){
+    flBox(g, 2.0, 1.0, .9, .8, 1.15, 0, flMat(0x2f6fb5));                                                  // капот
+    flBox(g, 1.4, 1.5, 1.3, -.7, 1.9, 0, flMat(0x2f6fb5)); flBox(g, 1.3, 1.0, 1.32, -.7, 2.1, 0, gl);
+    flWheel(g, -1.0, W / 2 - .2, .75, .45); flWheel(g, -1.0, -W / 2 + .2, .75, .45); flWheel(g, 1.2, W / 2 - .15, .45, .3); flWheel(g, 1.2, -W / 2 + .15, .45, .3);
+  } else if (c.kind === 'forklift'){
+    const y = flMat(0xf2b705);
+    flBox(g, 2.1, 1.0, W, -.35, .75, 0, y); flBox(g, .9, .6, W * .9, -1.1, 1.35, 0, flMat(0x2b2d2f));      // корпус и противовес
+    for (const s of [1, -1]) flBox(g, .08, H - .1, .08, -.6, H / 2, s * W * .42, dark);                    // стойки кабины
+    flBox(g, 1.3, .06, W, -.6, H, 0, dark);
+    flBox(g, .12, H + .2, W * .55, .78, (H + .2) / 2, 0, dark);                                            // мачта
+    for (const s of [1, -1]) flBox(g, 1.1, .05, .12, 1.4, .12, s * .3, flMat(0x55585b));                    // вилы
+  }
+  if (c.kind !== 'farm'){
+    const car = /^(sedan|suv|suvbox|mpv)$/.test(c.kind);
+    for (const x of wx) for (const s of [1, -1]) flWheel(g, x, s * (W / 2 - (c.kind === 'forklift' ? .15 : car ? .1 : .22)), r, c.kind === 'forklift' ? .25 : .26);
+    if (L > 7 && c.kind !== 'bus') for (const s of [1, -1]) flWheel(g, -L * .33 + 1.15, s * (W / 2 - .22), r, .26);
+  }
+  g.traverse(o => { if (o.isMesh) o.userData = {kind:'car', car:c}; });
+  return g;
+}
+function buildFleet(){
+  gFleet.children.slice().forEach(o => { gFleet.remove(o); o.traverse(m => { if (m.isMesh && m.geometry && m.geometry !== FL.wg && !m.geometry.parameters) m.geometry.dispose(); }); });
+  for (const c of (S.fleet || [])){
+    const g = flCar(c); g.position.copy(V(c.x, c.y, gy(zat(c.x, c.y)) + .02)); g.rotation.y = c.hd * Math.PI / 180;
+    gFleet.add(g); g.traverse(o => { if (o.isMesh) pickables.push(o); });
+  }
+}
+// проверка снимками (как __t14): взгляд из точки на точку, местные метры и высота над землёй
+window.__t14look = (ex, ey, eh, tx, ty, th) => flyTo(V(ex, ey, gy(zat(ex, ey)) + eh), V(tx, ty, gy(zat(tx, ty)) + th), 10);
+// проверка места камеры по кадру (17.11.2026): после enterCamView ставит взгляд в точку x, y на высоте h, азимут az (по компасу), наклон tilt вниз
+window.__t14pose = (x, y, h, az, tilt) => { const C = V(x, y, gy(zat(x, y)) + h), a = (90 - az) * Math.PI / 180, t = tilt * Math.PI / 180; tween = null; camera.position.copy(C); camera.up.set(0, 1, 0); camera.lookAt(C.clone().add(new THREE.Vector3(Math.cos(a) * Math.cos(t), -Math.sin(t), -Math.sin(a) * Math.cos(t)))); };
+
 const PLANS=S.plans||{};
 const gPlans=G('plans3d');
 const texCache={};
@@ -1811,12 +1944,12 @@ function buildPlans(){
 }
 function rebuildEdited(){
   applyEditsData(); buildBuildings(); buildCams(); {placeWsRoot(); wsRoot.visible=!(S.buildings.find(b=>b.k==='ws')||{}).hidden}
-  buildUtils(); buildPlans(); buildParking(); updLabTexts(); applyLayers();
+  buildUtils(); buildPlans(); buildParking();buildFleet(); updLabTexts(); applyLayers();
   for(const k in bMeshes){const b=S.buildings.find(o=>o.k===k);if(b&&b.edited){const e=bMeshes[k]&&bMeshes[k].children&&bMeshes[k].children.find(c=>c.isLineSegments);if(e)e.material.color.setHex(0xb06a00)}}
 }
 
 let wsBuilt=false;
-function rebuildAll(){updTerrain();buildContours();buildBuildings();buildFence();buildCams();buildUtils();if(!wsBuilt){buildWorkshop();wsBuilt=true}else placeWsRoot();buildPlans();buildParking();updLabTexts();applyLayers();if(sel)reselect()}
+function rebuildAll(){updTerrain();buildContours();buildBuildings();buildFence();buildCams();buildUtils();if(!wsBuilt){buildWorkshop();wsBuilt=true}else placeWsRoot();buildPlans();buildParking();buildFleet();updLabTexts();applyLayers();if(sel)reselect()}
 
 
 
@@ -2095,14 +2228,14 @@ const CHIPS = [
   ['gas','Газ','var(--gas)',['u_gas_hp','u_gas_lp','u_gas_ug','u_gas_over','gasdev'],1,''],['water','Водопровод','var(--water)',['u_water','artwell'],1,''],
   ['sewer','Канализация','var(--sewer)',['u_sewer','manholes','projnet'],1,''],['elec','Электричество','var(--elec)',['cable','wallc','tray','power'],1,''],
   ['clear','Прозрачная земля','var(--sw-grass)',[],0,''],
-  ['park','Проезд, газоны и парковка у админ. здания','#7a8084',['parking'],1,'Здания и участок'],['stage2','Склад №2 — 2-й этап (проект, прозрачно)','#c9a227',['stage2'],1,'Здания и участок'],['projn','Проект навеса над лит. З (ТЕР14-НК)','#d9a520',['projn'],1,'Здания и участок'],['ghost','Снесённые после 2016 г.','var(--sw-ghost)',['ghost'],1,'Здания и участок'],['cond','Здания за границей съёмки и контур без подписи','#e2b860',['newb','plan'],0,'Здания и участок'],
+  ['park','Проезд, газоны и парковка у админ. здания','#7a8084',['parking'],1,'Здания и участок'],['fleet','Автопарк на парковках','#c1121c',['fleet'],1,'Здания и участок'],['stage2','Склад №2 — 2-й этап (проект, прозрачно)','#c9a227',['stage2'],1,'Здания и участок'],['projn','Проект навеса над лит. З (ТЕР14-НК)','#d9a520',['projn'],1,'Здания и участок'],['ghost','Снесённые после 2016 г.','var(--sw-ghost)',['ghost'],1,'Здания и участок'],['cond','Здания за границей съёмки и контур без подписи','#e2b860',['newb','plan'],0,'Здания и участок'],
   ['parcel','Границы участков','var(--sw-parcel)',['parcel'],1,'Здания и участок'],['zones','Охранные зоны, сервитут, ограничения','#e0a020',['zones'],1,'Здания и участок'],['rvmisc','Вентшахты, трубы, ступени, приямки, столбы','#8d8f8a',['rvmisc'],1,'Здания и участок'],['ctx','Окрестности: улицы и соседние здания (OSM, 2ГИС)','#9aa0a6',['ctx'],1,'Здания и участок'],['pzu','Отметки ПЗУ у склада','var(--sw-pzu)',['pzu'],1,'Здания и участок'],['trees','Деревья','var(--sw-tree)',['trees'],1,'Здания и участок'],
   ['wsw','Стены и кровля','var(--sw-ws)',['ws_walls','ws_roof'],1,'Швейный цех'],['wsi','Каркас и оборудование','var(--sw-frame)',['ws_frame','ws_int'],1,'Швейный цех'],
   ['wsn','Сети внутри','#1e88e5',['ws_el','ws_water','ws_heat','ws_sewer'],1,'Швейный цех'],['found','Фундаменты','var(--sw-conc)',['ws_fnd'],1,'Швейный цех'],['gnd','Заземление','#9acd32',['ws_gnd'],0,'Швейный цех'],
   ['heat','Теплосеть','#c0392b',['u_heat'],1,'Сети'],['projnet2','Проектные сети склада № 2 и ливневый лоток (19/221)','#8f5bd0',['projnet2'],1,'Сети'],['net','Кабели камер (по схеме)','var(--sw-net)',['net'],0,'Сети'],['unknown','Сеть без подписи на топоплане','var(--sw-ghost)',['u_unknown'],0,'Сети'],
   ['hypso','Рельеф цветом','var(--sw-hyp)',[],0,'Рельеф и съёмка'],['contours','Горизонтали','#8a7454',['contours'],0,'Рельеф и съёмка'],['relief','Рельеф ×3','#b5835a',[],0,'Рельеф и съёмка'],
   ['heights','Отметки топоплана','var(--muted)',['heights'],0,'Рельеф и съёмка'],['geo','Изыскания: скважины и грунтовые воды','#2f8fd8',['geo'],0,'Рельеф и съёмка'],['hist','Что было в 2016 г. и исчезло','#9e9e9e',['hist'],0,'Рельеф и съёмка'],['sp','Пункты съёмки','var(--muted)',['sp'],0,'Рельеф и съёмка'],
-  ['szz','Граница СЗЗ и расчётные точки','#2f5fd0',['szz'],1,'Санитарно-защитная зона'],['isa25','Источники выбросов 2025','#8c1d12',['isa25'],1,'Санитарно-защитная зона'],['rt25','Расчётные точки 2025','#16a085',['rt25'],0,'Санитарно-защитная зона'],['isa','Источники выбросов 2019 (проект СЗЗ)','#e67e22',['isa'],0,'Санитарно-защитная зона'],['noise','Шум: изолинии и источники','#8e44ad',['noise'],0,'Санитарно-защитная зона']
+  ['szz','Граница СЗЗ и расчётные точки','#2f5fd0',['szz'],0,'Санитарно-защитная зона'],['isa25','Источники выбросов 2025','#8c1d12',['isa25'],0,'Санитарно-защитная зона'],['rt25','Расчётные точки 2025','#16a085',['rt25'],0,'Санитарно-защитная зона'],['isa','Источники выбросов 2019 (проект СЗЗ)','#e67e22',['isa'],0,'Санитарно-защитная зона'],['noise','Шум: изолинии и источники','#8e44ad',['noise'],0,'Санитарно-защитная зона']
 ];
 const chipsEl = $('#chips'), chipBtn = {}, chipOn = {}, moreEl = $('#morePanel'), moreBody = $('#moreBody');
 const moreBtn = document.createElement('button'); moreBtn.type = 'button'; moreBtn.className = 'chip more'; moreBtn.id = 'chipMore';
@@ -2122,8 +2255,13 @@ moreBtn.addEventListener('click', ()=>toggleMore(moreEl.hidden));
 $('#moreX').addEventListener('click', ()=>toggleMore(false));
 document.addEventListener('pointerdown', e=>{ if (!moreEl.hidden && !moreEl.contains(e.target) && !moreBtn.contains(e.target)) toggleMore(false); });
 let groundClear = false;
+// 16.11.2026 (Т. В.: «почему линии коммуникаций газа, воды и прочее прерываются на 3Д плане»): под рельефом лежит ровная «земля окрестностей»
+// (окрестности и СЗЗ) на 0,4 м ниже самой низкой точки — канализация и водопровод глубже, и сквозь прозрачную землю их закрывала она.
+// Теперь при прозрачной земле прозрачны и эти плоскости.
+function basePlaneClear(o, on){ const m = o && o.material; if (!m) return; m.transparent = on; m.opacity = on ? .18 : 1; m.depthWrite = !on; m.needsUpdate = true; }
 function setGroundClear(on){
-  groundClear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  groundClear = on; terMat.userData.clear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  scene.traverse(o=>{ if (o.userData && o.userData.basePlane) basePlaneClear(o, on); });
   otmMat.transparent = on; otmMat.opacity = on ? .25 : 1; otmMat.depthWrite = !on; otmMat.needsUpdate = true;
   controls.maxPolarAngle = on ? Math.PI*0.8 : Math.PI*0.495;
   gCont.children.forEach(c=>{ c.material.opacity = on ? .15 : .35; });
@@ -2412,6 +2550,7 @@ function buildSZZ(){
   const bb = szzBbox(), pad = 70, w = bb.x1 - bb.x0 + 2*pad, h = bb.y1 - bb.y0 + 2*pad, cx = (bb.x0 + bb.x1)/2, cy = (bb.y0 + bb.y1)/2;
   const pg = new THREE.PlaneGeometry(w, h); pg.rotateX(-Math.PI/2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xd9dccd})); plane.position.copy(V(cx, cy, szzPlaneY() - 0.02)); gSzz.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear) basePlaneClear(plane, true);   // сквозь прозрачную землю видны трубы под ней
   const B = SZ.boundary.map(p=>p.loc);
   const sh = new THREE.Shape(B.map(([x, y])=>new THREE.Vector2(x - CX, y - CY))), sg = new THREE.ShapeGeometry(sh); sg.rotateX(-Math.PI/2);
   const fill = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({color:0x2f5fd0, transparent:true, opacity:.14, depthWrite:false}));
@@ -2533,7 +2672,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник15 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -2621,7 +2760,8 @@ function buildNDV(){
       const q = [[a[0]+nx, a[1]+ny], [b[0]+nx, b[1]+ny], [b[0]-nx, b[1]-ny], [a[0]-nx, a[1]-ny]].map(([x, y])=>V(x, y, gAt(x, y) + .25));
       for (const k of [0, 1, 2, 0, 2, 3]) pz.push(q[k].x, q[k].y, q[k].z);
       const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pz, 3));
-      mk.push(new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.3, side:THREE.DoubleSide, depthWrite:false})));
+      mk.push(new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.07, side:THREE.DoubleSide, depthWrite:false})));   // 17.11.2026: почти прозрачно — на стоянке видно щебень и машины, как на кадрах 025 и 054
+      { const ol = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(q), new THREE.LineDashedMaterial({color:col, dashSize:1.2, gapSize:.6})); ol.computeLineDistances(); mk.push(ol); }
     } else {
       const a = s.a, b = s.b || s.a, L = Math.max(.8, Math.hypot(b[0]-a[0], b[1]-a[1])), hh = Math.min(1.2, Math.max(.6, s.h * .2));
       const pn = new THREE.Mesh(new THREE.BoxGeometry(L, hh, .34), new THREE.MeshLambertMaterial({color:col, emissive:0x1a0606}));
@@ -2681,7 +2821,7 @@ function ndvInfo(u){
        <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
        <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник15 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -2769,6 +2909,24 @@ function placeLab(el, pos, show){
   const w = labWH ? labWH[0] : canvas.clientWidth, h = labWH ? labWH[1] : canvas.clientHeight;
   el.style.transform = `translate(${((tmpV.x*.5+.5)*w).toFixed(1)}px,${((-tmpV.y*.5+.5)*h).toFixed(1)}px) translate(-50%,-100%)`;
 }
+// 17.11.2026, Т. В.: «план должен быть читаемый для человека, не замусоренный» — подписи не налезают друг на друга:
+//   сначала крупные здания, потом мелкие, потом номера камер; что не влезло — скрыто до приближения. Мелкие постройки (< 150 м²)
+//   подписаны только вблизи, номера камер внутри цехов — только вблизи или у выбранной камеры.
+const LBL_PLACED = [];
+function bArea(b){ if (b._a == null){ let A = 0; const P = b.poly || []; for (let i = 0; i < P.length; i++){ const a = P[i], q = P[(i+1)%P.length]; A += a[0]*q[1] - q[0]*a[1]; } b._a = Math.abs(A)/2; } return b._a; }
+const bLabOrder = () => Object.keys(bLab).sort((x, y)=>bArea(bLab[y].b) - bArea(bLab[x].b));
+let bLabSorted = null;
+function placeLabC(el, pos, show, w, h, force){
+  if (!show){ el.hidden = true; return; }
+  tmpV.copy(pos).project(camera);
+  const vis = tmpV.z < 1 && tmpV.x > -1.05 && tmpV.x < 1.05 && tmpV.y > -1.05 && tmpV.y < 1.05;
+  if (!vis){ el.hidden = true; return; }
+  const W = canvas.clientWidth, H = canvas.clientHeight, x = (tmpV.x*.5+.5)*W, y = (-tmpV.y*.5+.5)*H;
+  const r = [x - w/2 - 2, y - h - 2, x + w/2 + 2, y + 2];
+  if (!force && LBL_PLACED.some(q=>r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1])){ el.hidden = true; return; }
+  LBL_PLACED.push(r); el.hidden = false;
+  el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
+}
 const labMeta = new Map();
 function polyArea(p){ let a = 0; for (let i = 0, n = p.length; i < n; i++){ const q = p[i], r = p[(i + 1) % n]; a += q[0] * r[1] - r[0] * q[1]; } return Math.abs(a) / 2; }
 function declutterLabs(){
@@ -2795,16 +2953,23 @@ function updateLabels(){
   labWH = [canvas.clientWidth, canvas.clientHeight];   // T14Perf
   const dist = camera.position.distanceTo(controls.target), near = dist < 170;
   const ar = chipOn.areas ? areaNow : null;
-  for (const k in bLab){ const {el, b} = bLab[k]; const c = E.centroid(b.poly);
-    placeLab(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn.has(k) && lay.buildings !== false && inSolo2(c)); }
+  LBL_PLACED.length = 0;
+  if (!bLabSorted || bLabSorted.length !== Object.keys(bLab).length) bLabSorted = bLabOrder();
+  const seenTxt = new Set();   // одна подпись на литеру: «лит. А1–А2» у двух пристроек — один раз, у большей
+  for (const k of bLabSorted){ const {el, b} = bLab[k]; const c = E.centroid(b.poly);
+    const small = bArea(b) < 150, isSel = sel && sel.kind === 'obj' && (sel.k === k || sel.ek === k), txt = el.textContent || '';
+    placeLabC(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn.has(k) && lay.buildings !== false && inSolo2(c) && (!small || dist < 110 || isSel) && (isSel || !seenTxt.has(txt)),
+      txt.length * 6.2 + 18, 20, isSel);
+    if (!el.hidden) seenTxt.add(txt); }
   for (const k in areaLab){ const el = areaLab[k], b = S.buildings.find(o=>o.k===k), a = ar && ar[k];
     if (!a || !b){ el.hidden = true; continue; }
     const c = E.centroid(b.poly); placeLab(el, tmpV.copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !b.hidden && inSolo2(c)); }
   // cameras: a dot when the whole site is in view, the number when closer or selected
   for (const k in camLab){ const L = camLab[k], c = L.c; if (!c) continue;
-    const on = sel && sel.kind === 'cam' && sel.key === k, mini = !on && !near;
+    const on = sel && sel.kind === 'cam' && sel.key === k, mini = !on && !near, o = camObjs[k], indoor = !!(o && o.g && o.g.indoor);
     if (L.mini !== mini){ L.mini = mini; L.el.classList.toggle('mini', mini); }
-    placeLab(L.el, L.pos, !c.hidden && lay.cams !== false && condOk(c) && (dist < 700 || on) && inSolo2([c.x,c.y])); }
+    placeLabC(L.el, L.pos, !c.hidden && lay.cams !== false && condOk(c) && (dist < 700 || on) && inSolo2([c.x,c.y]) && (!indoor || on || dist < 90),
+      mini ? 9 : (L.el.textContent || '').length * 7 + 12, mini ? 9 : 17, on); }
   for (const r of rulLabels){ tmpV.copy(r.pos).project(camera); const vis = tmpV.z <= 1 && tmpV.z >= -1; r.el.hidden = !vis; if (!vis) continue;
     r.el.style.transform = `translate(${((tmpV.x*.5+.5)*canvas.clientWidth).toFixed(1)}px,${((-tmpV.y*.5+.5)*canvas.clientHeight).toFixed(1)}px) translate(-50%,-50%)`; }
   for (const s of spotLab) placeLab(s.el, V(s.p.x, s.p.y, gy(s.p.z) + 1.5), lay.pzu !== false && dist < 300);
@@ -2932,14 +3097,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник15 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */
@@ -3052,6 +3217,8 @@ function infoOther(u){
              : `<dt>Покрытие</dt><dd>${st?st.t:'—'}</dd><dt>Площадь</dt><dd>≈ ${nf(f.area,0)} м²</dd>${f.h?`<dt>Высота</dt><dd>≈ ${nf(f.h,2)} м</dd>`:''}`;
     if (f.kind==='lightpole') return {k:'Освещение и камеры', t:f.name, d:`<dl class="kv"><dt>Высота опоры</dt><dd>≈ ${nf(f.h,0)} м</dd><dt>Прожектор</dt><dd>≈ ${nf(f.lamp_h,1)} м</dd><dt>Камера</dt><dd>011 «Парковка», ≈ 4,3 м</dd></dl><p>${esc(f.note)}</p><p>Источник: ${esc(f.src)}.</p>`};
     return {k:f.kind==='brickfence' || f.kind==='mesh' ? 'Ограждение' : f.proj ? 'По проекту (построено ли — не подтверждено)' : 'Покрытие', t:f.name, d:`<dl class="kv">${kv}</dl><p>${esc(f.note)}</p><p>Источник: ${esc(f.src)}. Точность ±0,5–1 м.</p>`}; }
+  if (k==='car'){ const c=u.car, f=v=>v==null?'уточняется':typeof v==='number'?nf(v,v<10&&v%1?2:0)+' т':esc(String(v));
+    return {k:c.place==='office'?'Автопарк · парковка у АБК':c.place==='dock'?'Автопарк · у рампы склада № 1':'Автопарк · открытая стоянка у гаража', t:c.name, d:`<dl class="kv"><dt>Тип</dt><dd>${esc(c.type)} · ${esc(c.body)}</dd><dt>Марка</dt><dd>${esc(c.make)}</dd><dt>Модель</dt><dd>${esc(c.model)}</dd><dt>Грузоподъёмность</dt><dd>${f(c.payload)}</dd><dt>Мест</dt><dd>${c.seats==null?'уточняется':esc(String(c.seats))}</dd><dt>Габарит</dt><dd>≈ ${nf(c.L,1)} × ${nf(c.W,1)} × ${nf(c.H,1)} м</dd><dt>Топливо</dt><dd>${esc(c.fuel||'—')}</dd><dt>Цвет</dt><dd>${c.livery?'фирменная ливрея':'на модели условно — уточняется'}</dd></dl><p>${c.livery?'Фирменная ливрея: белый кузов, красная полоса RAL 3020, знак «Фабрикант» на бортах. ':''}Госномер и водитель — в справочнике «Гараж».</p><p>Источник: ${esc(c.src)}</p>`}; }
   if (k==='park'){ const p=u.pk; return {k:'Парковка', t:p.name, d:`<dl class="kv"><dt>Мест</dt><dd>≈ ${p.stalls} (три ряда по 2,5 м)</dd><dt>Площадь</dt><dd>≈ ${nf(p.area,0)} м²</dd></dl><p>Контур и ряды — ${esc(p.src)}. Разметки на месте может не быть: места показаны по тому, как стоят машины на снимке.</p><p>Это парковка сотрудников: вокруг неё и палисадника с часовней забора нет. Территория огорожена справа от административного здания — от постройки «МН» к ул. Терехина и вдоль улицы к проходной, слева — откатные ворота от забора к углу здания.</p>`}; }
   return null;
 }
@@ -4775,6 +4942,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   if (!window.__T14_FILE){   // 27.10.2026, портал: возврат на главную — первым пунктом
     const hm = document.createElement('button'); hm.type = 'button'; hm.className = 'tb-home'; hm.innerHTML = ICON.home + '<span>Главная</span>';   // кнопка, а не ссылка: у панели модели стили для кнопок
     hm.addEventListener('click', ()=>{ location.href = 'home.html'; }); sheetEl.appendChild(hm);
+    // 17.11.2026, Т. В.: «как вернуться из 3D в 2D? нет такой кнопки внизу» — как «3D» в нижнем меню плана
+    const p2 = document.createElement('button'); p2.type = 'button'; p2.className = 'tb-2d'; p2.innerHTML = ICON.plan + '<span>2D</span>';
+    p2.addEventListener('click', ()=>{ location.href = 'plan.html'; }); sheetEl.appendChild(p2);
   }
   tabs.forEach(([k, label, icon])=>{
     const b = document.createElement('button'); b.type = 'button'; b.dataset.tab = k; b.setAttribute('aria-expanded', 'false');
@@ -4795,9 +4965,10 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     for (const s in sec) sec[s].hidden = s !== k;
     if (k === 'more') syncRows();
     panel.querySelector('.phead h3').textContent = TITLES[k] || '';
-    panel.hidden = false; panel.scrollTop = 0; cur = k; mark();
+    panel.hidden = false; panel.scrollTop = 0; cur = k; mark(); if (!document.body.classList.contains('tb-open')) document.body.classList.add('tb-open');
   }
-  function close(){ if (cur === null && panel.hidden) return; panel.hidden = true; cur = null; mark(); }
+  // classList.remove/add пишут атрибут class даже без изменений — наблюдатель за body ниже вызвал бы close() снова и снова (зависание 17.11.2026)
+  function close(){ if (document.body.classList.contains('tb-open')) document.body.classList.remove('tb-open'); if (cur === null && panel.hidden) return; panel.hidden = true; cur = null; mark(); }
   function toggle(k){
     if (k === 'find'){ const b = $id('objBtn'); if (b && b.getAttribute('aria-expanded') === 'true'){ b.click(); mark(); return; } return open('find'); }
     if (cur === k) close(); else open(k);
@@ -5694,7 +5865,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
    Сотрудник26 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник10 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   На techfabrikant.ru — Сотрудник11 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -5758,7 +5929,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   }
   // 26.10.2026 (пользователь): предупреждения — ТОЛЬКО гроза, сильный снегопад (снег/снегопад ≥ 7 мм за 12 ч), шторм (порывы ≥ 20 м/с),
   // ураган (порывы ≥ 33 м/с) в ближайшие 24 часа. Обычно их считает сервер (wx/f.php → alerts) — тогда сайт и боты пишут одно и то же;
-  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник10]
+  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник11]
   function dmhm(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
   function span(t0, t1){ return dmhm(t0) + ' с ' + hm(new Date(t0)) + ' до ' + (dmhm(t1 + 36e5) !== dmhm(t0) ? dmhm(t1 + 36e5) + ' ' : '') + hm(new Date(t1 + 36e5)) + ' МСК'; }
   function alerts(rows){
@@ -5829,9 +6000,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник10 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник10 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник11 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник11 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
-    // Теперь: Сотрудник10 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
+    // Теперь: Сотрудник11 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
       clearTimeout(to); var ctl2 = window.AbortController ? new AbortController() : null, to2 = setTimeout(function(){ if (ctl2) ctl2.abort(); }, 20000);
       var good = function(w){ wx = w; wxGot = Date.now(); wxErr = ''; ls(K_WX, JSON.stringify({ w: w, got: wxGot })); };
@@ -5912,7 +6083,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     '.t14sky .wa-tag{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--wa,#ff9500);color:#fff;font:700 12px/1 var(--f-body,inherit)}' +
     '.t14wxban{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(60px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;gap:8px;max-width:min(560px,calc(100vw - 28px));padding:9px 8px 9px 14px;border-radius:14px;background:#ff9500;color:#fff;font:600 14px/1.35 var(--f-body,-apple-system,system-ui,sans-serif);box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer}' +
     '.t14wxban.l2{background:#ff3b30}.t14wxban .tx{flex:1;min-width:0}.t14wxban .x{flex:none;border:0;background:rgba(255,255,255,.25);color:#fff;width:24px;height:24px;border-radius:12px;font:700 15px/1 var(--f-body,inherit);cursor:pointer}' +
-    'html.lite .t14sky,html.lite .t14skyw{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface-solid,#fafcfb)}';
+    'html.lite .t14sky,html.lite .t14skyw{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface-solid,#fafcfb)}' +
+    // 17.11.2026, Т. В.: «погода мигрирует по меню… если меню не предполагает её — её быть не должно»: под открытым меню, окном слоёв и т. п. не показывать
+    'body.tb-open .t14sky,body.tb-open .t14skyw,body.lk-open .t14sky,body.lk-open .t14skyw{display:none!important}';   // без :has — на iPhone он пересчитывал стили при каждом движении модели (зависание 17.11)
   var pill = null, win = null, side = 'l';
   function mount(where){
     side = where === 'right' ? 'r' : 'l';
@@ -6008,7 +6181,8 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
    T14SKY (app/sky_core.js) даёт солнце и погоду; здесь — только сцена. «Всегда день» в окне погоды возвращает прежний свет. */
 ;(function(){
   const SK = window.T14SKY; if (!SK) return;
-  SK.has3d = true; SK.mount('left');
+  SK.has3d = true; SK.mount('right');   // 17.11.2026, Т. В.: погода всегда в одном месте — справа сверху, как на 2D-плане
+  { const st = document.createElement('style'); st.textContent = 'body.sky-r #compass{top:calc(64px + env(safe-area-inset-top,0px))!important}'; document.head.appendChild(st); document.body.classList.add('sky-r'); }
   const R = Math.PI / 180, lite = document.documentElement.classList.contains('lite');
   const hemi = scene.children.find(o => o.isHemisphereLight), sunL = scene.children.find(o => o.isDirectionalLight);
   if (!hemi || !sunL) return;
@@ -6147,16 +6321,16 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     if (o.isInstancedMesh || o.isSkinnedMesh || o.isPoints || o.isSprite || !o.geometry || !o.geometry.isBufferGeometry || !o.material || Array.isArray(o.material)) return null;
     const m = o.material, g = o.geometry, pos = g.attributes.position; if (!pos || pos.itemSize !== 3) return null;
     if (m.alphaMap || m.wireframe || m.blending !== THREE.NormalBlending || m.isShaderMaterial || o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return null;
-    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial))) return null;
+    if (m.map && (!g.attributes.uv || !(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial))) return null;
     if (g.morphAttributes && Object.keys(g.morphAttributes).length) return null;
-    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial)) return null; if (!g.attributes.normal && m.isMeshLambertMaterial) return null; return 'mesh'; }   // one material: geometry groups do not matter
+    if (o.isMesh){ if (!(m.isMeshLambertMaterial || m.isMeshBasicMaterial || m.isMeshStandardMaterial)) return null; if (!g.attributes.normal && !m.isMeshBasicMaterial) return null; return 'mesh'; }   // 16.11.2026: и физические (pbr_part)   // one material: geometry groups do not matter
     if (o.isLineSegments || o.isLineLoop || o.isLine){ if (!(m.isLineBasicMaterial || m.isLineDashedMaterial)) return null; if (m.isLineDashedMaterial && !g.attributes.lineDistance) return null; return o.isLineSegments ? 'seg' : o.isLineLoop ? 'loop' : 'strip'; }
     return null;
   }
   function shown(o, top){ for (let q = o; q && q !== top; q = q.parent) if (!q.visible) return false; return true; }
   function matKey(o, kind){
     const m = o.material, op = Math.round((m.transparent ? m.opacity : 1) * 100);
-    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
+    return [kind === 'mesh' ? (m.isMeshBasicMaterial ? 'B' : m.isMeshStandardMaterial ? 'P' + Math.round(m.roughness * 20) + '/' + Math.round(m.metalness * 20) + '/' + Math.round((m.envMapIntensity || 1) * 10) : 'L') : 'S', m.side, m.transparent ? 1 : 0, op, m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0,
             m.polygonOffset ? m.polygonOffsetFactor + '/' + m.polygonOffsetUnits : '-', m.flatShading ? 1 : 0, m.fog ? 1 : 0, o.renderOrder || 0,
             m.map ? m.map.uuid : '-', m.isLineDashedMaterial ? 'D' + m.dashSize + '/' + m.gapSize + '/' + m.scale : '-'].join(',');
   }
@@ -6182,6 +6356,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     st.items = null;
   }
   function build(top, st, list){
+    if (window.__t14pbrPrep) window.__t14pbrPrep(top);   // 16.11.2026: цвета и материалы слоя — уже физические и линейные, до склейки
     top.updateMatrixWorld(true); mInv.copy(top.matrixWorld).invert();
     const groups = new Map(), items = [];
     for (const it of list){
@@ -6199,7 +6374,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
       if (gr.list.length < 2) { gr.list.forEach(it => { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); }); continue; }   // one object: nothing to gain
       const mesh = gr.kind === 'mesh', NV = gr.nv;
       const m00 = gr.list[0].o.material, UV = m00.map ? new Float32Array(NV * 2) : null, LD = m00.isLineDashedMaterial ? new Float32Array(NV) : null;
-      const P = new Float32Array(NV * 3), C = new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
+      const HI = !!window.__t14pbr, CK = HI ? 65535 : 255, P = new Float32Array(NV * 3), C = HI ? new Uint16Array(NV * 3) : new Uint8Array(NV * 3), N = mesh ? new Int8Array(NV * 3) : null, EM = mesh ? new Uint8Array(NV * 3) : null;
       const I = NV > 65535 ? new Uint32Array(gr.ni) : new Uint16Array(gr.ni);
       let vo = 0, io = 0;
       for (const it of gr.list){
@@ -6210,7 +6385,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
         for (let i = 0; i < nv; i++){
           v.fromBufferAttribute(pos, i).applyMatrix4(mRel); const j = (vo + i) * 3; P[j] = v.x; P[j + 1] = v.y; P[j + 2] = v.z;
           let r = cr, gg = cg, bb = cb; if (col){ r *= col.getX(i); gg *= col.getY(i); bb *= col.getZ(i); }
-          C[j] = Math.round(Math.min(1, r) * 255); C[j + 1] = Math.round(Math.min(1, gg) * 255); C[j + 2] = Math.round(Math.min(1, bb) * 255);
+          C[j] = Math.round(Math.min(1, r) * CK); C[j + 1] = Math.round(Math.min(1, gg) * CK); C[j + 2] = Math.round(Math.min(1, bb) * CK);
           if (mesh){
             if (nrm){ v.fromBufferAttribute(nrm, i).applyMatrix3(nMat).normalize(); N[j] = Math.round(v.x * 127); N[j + 1] = Math.round(v.y * 127); N[j + 2] = Math.round(v.z * 127); }
             EM[j] = er; EM[j + 1] = eg; EM[j + 2] = eb;
@@ -6239,6 +6414,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
       if (m0.map) common.map = m0.map;
       if (!mesh) bm = m0.isLineDashedMaterial ? new THREE.LineDashedMaterial(Object.assign(common, {dashSize: m0.dashSize, gapSize: m0.gapSize, scale: m0.scale})) : new THREE.LineBasicMaterial(common);
       else if (m0.isMeshBasicMaterial) bm = new THREE.MeshBasicMaterial(common);
+      else if (m0.isMeshStandardMaterial){ bm = new THREE.MeshStandardMaterial(Object.assign(common, {roughness: m0.roughness, metalness: m0.metalness, envMapIntensity: m0.envMapIntensity, flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emisP'; }
       else { bm = new THREE.MeshLambertMaterial(Object.assign(common, {flatShading: !!m0.flatShading})); bm.onBeforeCompile = emisHook; bm.customProgramCacheKey = () => 't14emis'; }
       const b = mesh ? new THREE.Mesh(bg, bm) : new THREE.LineSegments(bg, bm);
       b.userData.__batch = 1; b.raycast = noRay; b.renderOrder = gr.list[0].o.renderOrder || 0; b.matrixAutoUpdate = false;
@@ -6289,6 +6465,173 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     if (avg > 19 && pr > prMin + .01){ pr = Math.max(prMin, pr - .25); renderer.setPixelRatio(pr); resize(); okRun = 0; }
     else if (avg < 15.5 && pr < prMax - .01){ if (++okRun >= 3){ pr = Math.min(prMax, pr + .25); renderer.setPixelRatio(pr); resize(); okRun = 0; } }
     else okRun = 0;
+  };
+})();
+
+/* ---- 3D: свет и материалы как в жизни (16.11.2026, Т. В.: «подними уровень детализации 3D-карты до того же уровня, что и в модели дома,
+   можно даже немножко лучше, чтобы все нюансы было видно») — этап 1 из 4.
+   • цвет как у фотоаппарата: свет считается в линейных единицах → плёночная кривая ACES → sRGB (все цвета модели переводятся из sRGB один раз);
+   • физические материалы (MeshStandardMaterial) вместо матовых Ламберта: шероховатость, блики, стекло;
+   • освещение от неба: карта окружения (PMREM) из цвета неба и земли, обновляется вместе со временем суток и погодой;
+   • резкие тени у камеры: теневая камера солнца — вокруг точки, куда смотрим (чем ближе, тем резче), а не на всю площадку.
+   Только на качестве «Высокое» (T14Perf); на слабых устройствах модель — как раньше. */
+;(function(){
+  // 16.11.2026, Т. В.: «давай на портал сразу» — включено у всех (только «Высокое» качество); ?pbr=0 в адресе — выключить на этом устройстве, ?pbr=1 — включить.
+  let on = false;
+  try {
+    const q = new URLSearchParams(location.search).get('pbr'); if (q === '1' || q === '0') localStorage.setItem('t14.pbr', q);
+    const st = localStorage.getItem('t14.pbr');
+    on = st !== '0';   // 16.11.2026, Т. В.: «давай на портал сразу» — у всех на «Высоком» качестве; ?pbr=0 — выключить на устройстве
+  } catch (e) { }
+  if (!on) return;
+  const PF = window.T14Perf; if (PF && PF.level && PF.level() !== 'high') return;
+  if (!THREE.PMREMGenerator || !THREE.MeshStandardMaterial || !THREE.sRGBEncoding) return;
+  const hemi = scene.children.find(o => o.isHemisphereLight), sunL = scene.children.find(o => o.isDirectionalLight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = .8;
+  window.__t14pbr = true;
+
+  // ---------- цвета: sRGB → линейные, один раз на каждый объект ----------
+  const doneM = new WeakSet(), doneA = new WeakSet(), doneT = new WeakSet();
+  const lin = c => { if (c && c.isColor) c.convertSRGBToLinear(); };
+  function texIn(t){ if (t && t.isTexture && !doneT.has(t)) { doneT.add(t); t.encoding = THREE.sRGBEncoding; t.needsUpdate = true; } }
+  // 16.11.2026 (Т. В.: «почему линии коммуникаций… прерываются»): прежний код и после замены материалов меняет их сам —
+  // прозрачная земля, стены цеха, подсветка выбранного, «рельеф цветом». Всё это переносится сюда каждый кадр (watch ниже).
+  const syncs = [], crec = [], vrec = [];
+  function vconv(a){
+    const arr = a.array, n = arr.length, k = a.normalized || arr instanceof Uint8Array ? 255 : 1;
+    for (let i = 0; i < n; i++) { const v = arr[i] / k; const l = v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); arr[i] = k === 1 ? l : Math.round(l * k); }
+    a.needsUpdate = true;
+  }
+  function vcolIn(g){
+    const a = g && g.attributes && g.attributes.color; if (!a || doneA.has(a)) return; doneA.add(a);
+    vconv(a); vrec.push({ a, ver: a.version });
+  }
+  function remember(m){ const r = { m, c: m.color && m.color.isColor ? m.color.clone() : null, e: m.emissive && m.emissive.isColor ? m.emissive.clone() : null }; m.__t14c = r; crec.push(r); }
+  const GLASS = m => m.transparent && m.opacity < .7;
+  function upgrade(m){
+    if (m.isMeshLambertMaterial || m.isMeshPhongMaterial) {
+      const s = new THREE.MeshStandardMaterial({ color: m.color, map: m.map || null, vertexColors: m.vertexColors, transparent: m.transparent, opacity: m.opacity,
+        side: m.side, depthWrite: m.depthWrite, depthTest: m.depthTest, alphaTest: m.alphaTest, polygonOffset: m.polygonOffset, polygonOffsetFactor: m.polygonOffsetFactor,
+        polygonOffsetUnits: m.polygonOffsetUnits, emissive: m.emissive || new THREE.Color(0), emissiveMap: m.emissiveMap || null, visible: m.visible, fog: m.fog });
+      s.name = m.name; s.userData = m.userData;
+      if (GLASS(m)) { s.roughness = .12; s.metalness = 0; s.envMapIntensity = 1; }       // стекло, прозрачные кровли — блик неба
+      else { s.roughness = .82; s.metalness = 0; s.envMapIntensity = .45; }                  // стены, кровли, асфальт — матовые
+      return s;
+    }
+    return m;
+  }
+  function prep(o, terr){
+    if (!o.material) return;
+    if (o.userData && o.userData.__batch) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && doneM.add(m)); if (o.geometry && o.geometry.attributes.color) doneA.add(o.geometry.attributes.color); return; }   // склейка (batch_part): цвета уже линейные
+    const many = Array.isArray(o.material), list = many ? o.material : [o.material];
+    let out = list;
+    if (o.isMesh) out = list.map(m => { if (!m || doneM.has(m)) return m; const u = upgrade(m); if (terr && u.isMeshStandardMaterial) { u.roughness = 1; u.envMapIntensity = .3; } return u; });
+    out.forEach(m => { if (!m || doneM.has(m)) return; doneM.add(m); lin(m.color); lin(m.emissive); texIn(m.map); texIn(m.emissiveMap); m.needsUpdate = true; remember(m); });
+    if (o.isMesh || o.isLine || o.isPoints) vcolIn(o.geometry);
+    if (o.isMesh && out !== list) o.material = many ? out : out[0];
+  }
+  // общий материал разделяют сотни сеток: новый — один на старый
+  const swap = new Map(), upgrade0 = upgrade;
+  upgrade = function (m) { if (swap.has(m)) return swap.get(m); const u = upgrade0(m); swap.set(m, u);
+    if (u !== m) syncs.push({ o: m, n: u, op: m.opacity, tr: m.transparent, dw: m.depthWrite, dt: m.depthTest, vis: m.visible, side: m.side, ver: m.version,
+      c: m.color ? m.color.getHex() : -1, e: m.emissive ? m.emissive.getHex() : -1 });
+    return u; };
+  let lastN = -1, scanT = 0;
+  window.__t14pbrPrep = function (top) { const ter = scene.getObjectByName('terrain'), terSet = new Set(); if (ter) ter.traverse(o => terSet.add(o)); top.traverse(o => prep(o, terSet.has(o))); };
+  function scan(now){
+    if (now - scanT < 900) return; scanT = now;
+    let n = 0; scene.traverse(() => { n++; }); if (n === lastN) return; lastN = n;
+    const ter = scene.getObjectByName('terrain'), terSet = new Set(); if (ter) ter.traverse(o => terSet.add(o));
+    scene.traverse(o => prep(o, terSet.has(o)));
+    // что ушло из сцены при перестройке — больше не отслеживаем
+    const usedM = new Set(), usedA = new Set();
+    scene.traverse(o => { const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => x && usedM.add(x)); const a = o.geometry && o.geometry.attributes && o.geometry.attributes.color; if (a) usedA.add(a); });
+    const keep = (arr, f) => { let j = 0; for (let i = 0; i < arr.length; i++) if (f(arr[i])) arr[j++] = arr[i]; arr.length = j; };
+    keep(syncs, s => usedM.has(s.n)); keep(crec, r => usedM.has(r.m)); keep(vrec, r => usedA.has(r.a));
+    swap.forEach((u, m) => { if (!usedM.has(u)) swap.delete(m); });
+    renderer.shadowMap.needsUpdate = true;
+  }
+  // перенос изменений: прежний материал → физический; цвет, заданный кодом в sRGB, → в линейный
+  function watch(){
+    for (let i = 0; i < syncs.length; i++) { const s = syncs[i], o = s.o, n = s.n;
+      if (o.opacity !== s.op) { s.op = o.opacity; n.opacity = o.opacity; }
+      if (o.transparent !== s.tr) { s.tr = o.transparent; n.transparent = o.transparent; n.needsUpdate = true; }
+      if (o.depthWrite !== s.dw) { s.dw = o.depthWrite; n.depthWrite = o.depthWrite; }
+      if (o.depthTest !== s.dt) { s.dt = o.depthTest; n.depthTest = o.depthTest; }
+      if (o.visible !== s.vis) { s.vis = o.visible; n.visible = o.visible; }
+      if (o.side !== s.side) { s.side = o.side; n.side = o.side; n.needsUpdate = true; }
+      if (o.version !== s.ver) { s.ver = o.version; n.needsUpdate = true; }
+      if (o.color && o.color.getHex() !== s.c) { s.c = o.color.getHex(); n.color.copy(o.color).convertSRGBToLinear(); if (n.__t14c && n.__t14c.c) n.__t14c.c.copy(n.color); }
+      if (o.emissive && n.emissive && o.emissive.getHex() !== s.e) { s.e = o.emissive.getHex(); n.emissive.copy(o.emissive).convertSRGBToLinear(); if (n.__t14c && n.__t14c.e) n.__t14c.e.copy(n.emissive); }
+    }
+    for (let i = 0; i < crec.length; i++) { const r = crec[i], m = r.m;
+      if (r.c && !m.color.equals(r.c)) { m.color.convertSRGBToLinear(); r.c.copy(m.color); }
+      if (r.e && m.emissive && !m.emissive.equals(r.e)) { m.emissive.convertSRGBToLinear(); r.e.copy(m.emissive); }
+    }
+    for (let i = 0; i < vrec.length; i++) { const r = vrec[i]; if (r.a.version !== r.ver) { vconv(r.a); r.ver = r.a.version; } }   // «рельеф цветом», слои: цвета земли записаны заново
+  }
+
+  // ---------- свет неба: цвета, которые меняет время суток (sky_part), — в линейные, когда они сменились ----------
+  const seen = new Map();   // объект Color → последнее записанное нами линейное значение
+  function liveColor(c){ if (!c || !c.isColor) return; const s = seen.get(c); if (s && s.equals(c)) return; c.convertSRGBToLinear(); seen.set(c, c.clone()); }
+  let hiSet = -1;
+  function liveLights(){
+    if (hemi) { liveColor(hemi.color); liveColor(hemi.groundColor); if (hemi.intensity !== hiSet) { hemi.intensity *= .55; hiSet = hemi.intensity; } }   // небо светит картой окружения — заливка слабее
+    if (sunL) liveColor(sunL.color);
+    if (scene.background && scene.background.isColor) liveColor(scene.background);
+    if (scene.fog && scene.fog.color) liveColor(scene.fog.color);
+  }
+
+  // ---------- окружение: полусфера «небо — горизонт — земля» в карту отражений (PMREM) ----------
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envGeo = new THREE.SphereGeometry(100, 32, 16), envCol = new Float32Array(envGeo.attributes.position.count * 3);
+  envGeo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
+  const envMesh = new THREE.Mesh(envGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false }));
+  const envScene = new THREE.Scene(); envScene.add(envMesh);
+  let envRT = null, envSig = '', envT = 0;
+  function envUpdate(now){
+    if (now - envT < 4000) return; envT = now;
+    const top = scene.background && scene.background.isColor ? scene.background : new THREE.Color(.6, .7, .8);
+    const gnd = hemi ? hemi.groundColor : new THREE.Color(.2, .2, .18), sky = hemi ? hemi.color : top;
+    const sig = top.getHexString() + gnd.getHexString() + sky.getHexString(); if (sig === envSig) return; envSig = sig;
+    const p = envGeo.attributes.position, c = new THREE.Color(), hz = top.clone().lerp(new THREE.Color(1, 1, 1), .25);
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i) / 100;
+      if (y >= 0) c.copy(hz).lerp(sky.clone().lerp(top, .5), Math.pow(y, .6)); else c.copy(hz).lerp(gnd, Math.min(1, -y * 3));
+      envCol[i * 3] = c.r; envCol[i * 3 + 1] = c.g; envCol[i * 3 + 2] = c.b;
+    }
+    envGeo.attributes.color.needsUpdate = true;
+    const rt = pmrem.fromScene(envScene, .04);
+    scene.environment = rt.texture; if (envRT) envRT.dispose(); envRT = rt;
+  }
+
+  // ---------- тени у камеры: теневая камера солнца — вокруг точки, куда смотрим ----------
+  const R0 = (function () { try { const hx = (S.extent.x1 - S.extent.x0) / 2, hy = (S.extent.y1 - S.extent.y0) / 2; return Math.hypot(hx, hy) + 40; } catch (e) { return 600; } })();
+  let sunDir = sunL ? sunL.position.clone().normalize() : null, lastPos = null, fitR = 0, fitC = new THREE.Vector3(1e9, 0, 0);
+  if (sunL) { scene.add(sunL.target); }
+  function shadowFit(){
+    if (!sunL || !sunL.castShadow || !renderer.shadowMap.enabled) return;
+    if (!lastPos || !lastPos.equals(sunL.position)) sunDir = sunL.position.clone().normalize();   // солнце передвинул sky_part — новое направление
+    const tg = controls.target, d = camera.position.distanceTo(tg), R = Math.min(R0, Math.max(45, d * .95 + 25));
+    const moved = fitC.distanceTo(tg) > R * .12 || Math.abs(R - fitR) > fitR * .15;
+    if (moved) {
+      fitR = R; fitC.copy(tg);
+      const sc = sunL.shadow.camera; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = 3000; sc.updateProjectionMatrix();
+      const tex = 2 * R / (sunL.shadow.mapSize.x || 2048);
+      sunL.shadow.bias = -0.0004; if ('normalBias' in sunL.shadow) sunL.shadow.normalBias = Math.max(.02, tex * 1.6);
+      renderer.shadowMap.needsUpdate = true;
+    }
+    sunL.target.position.copy(fitC); sunL.target.updateMatrixWorld();
+    sunL.position.copy(fitC).addScaledVector(sunDir, 1200); lastPos = sunL.position.clone();
+  }
+
+  // ---------- перед каждым кадром ----------
+  const _render = renderer.render.bind(renderer);
+  renderer.render = function (sc, cam) {
+    if (sc === scene) { const now = performance.now(); try { scan(now); watch(); liveLights(); envUpdate(now); shadowFit(); } catch (e) { console.warn('pbr', e); } }
+    return _render(sc, cam);
   };
 })();
 

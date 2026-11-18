@@ -22,7 +22,7 @@
   function bin(name) { return (window.T14Live && T14Live.bin) ? T14Live.bin(name).catch(function () { return null; }) : Promise.resolve(null); }
   function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(); }
   var MN = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник9) + рассылки
+  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник10) + рассылки
   // за день (хостинг: sales.bin → sday). Пришёл отчёт «за месяц» — сумма дней (на время последнего письма); свежее сборки — берём с хостинга.
   function revLive(R, SD) {
     if (!R || !R.v || !R.v.length || !SD || !SD.days) return R;
@@ -135,7 +135,8 @@
         '<div class="hub-bar" hidden><a class="hub-back" href="#">' + esc(CFG.title) + '</a><nav class="hub-chips" aria-label="Подразделы"></nav></div>' +
         '<div class="hub-main">' +
         (CFG.kpis.length ? '<div class="fh-cap"><h2>' + esc(CFG.pulseTitle || 'Контрольные точки раздела') + '</h2></div><ul class="pk-grid hub-k" data-n="' + CFG.kpis.length + '">' + CFG.kpis.map(kpiHTML).join('') + '</ul>' : '') +
-        (CFG.per ? '<div class="fh-cap"><h2>Вчера · прошлая неделя · месяц</h2></div><p class="pnote hub-leg" style="margin:-4px 4px 8px">Строка — показатель, столбец — период. В ячейке крупно — значение за период, под ним — процент от плана или нормы этого же периода, если они есть. Зелёный — 90% и выше, жёлтый — 70–89%, красный — ниже 70%; «—» — за период нет отчёта.</p><div class="igroup hub-per"' + mh('per') + '><p class="fh-ok">Собираю отчёты по дням…</p></div>' : '') +
+        (CFG.per ? '<div class="fh-cap"><h2>Вчера · неделя · месяц</h2></div><p class="pnote hub-leg" style="margin:-4px 4px 8px">Строка — показатель, столбец — период. В ячейке крупно — штуки (значение) за период, под ними — процент от плана этого периода и сам план. Зелёный — 90% и выше, жёлтый — 70–89%, красный — ниже 70%; «—» — за период нет отчёта.</p><div class="igroup hub-per"' + mh('per') + '><p class="fh-ok">Собираю отчёты по дням…</p></div>' : '') +
+        (CFG.pdo ? '<div class="fh-cap" id="pdo-days"><h2>Отчёты ПДО по дням · с 01.11</h2></div><p class="pnote hub-leg" style="margin:-4px 4px 8px">Всё из двух утренних файлов ПДО: «Отчёт выпуска производства» (все участки, дневная и ночная смена) и 1С «Ведомость по заказам на производство» (приход заказов по видам и моделям). Столбец — день отчёта, первый столбец — сумма с 01.11. Таблица листается вбок.</p><div class="igroup hub-pdo"' + mh('pdo') + '><p class="fh-ok">Собираю отчёты ПДО…</p></div>' : '') +
         '<div class="fh-cols hub-cols' + (CFG.noAttn ? ' no-attn' : '') + '">' +
         (CFG.noAttn ? '' : '<section class="fh-attn"><div class="fh-cap"><h2 class="hub-ah">Требует внимания</h2></div><div class="igroup hub-attn"' + mh('attn') + '><p class="fh-ok">Собираю отчёты раздела…</p></div></section>') +
         '<section><div class="fh-cap"><h2>Подразделы</h2></div><ul class="fh-secs hub-t">' + ST.tiles.map(tileHTML).join('') + '</ul></section>' +
@@ -227,6 +228,11 @@
         try { T = CFG.per(ctx, PP) || T; } catch (e) { }
       }
       if (E && T) { ST.busy = true; E.innerHTML = perHTML(T, PP); keepH('per', E); setTimeout(function () { ST.busy = false; }, 0); }
+    }
+    if (CFG.pdo) {                                                  // 18.11.2026, Т. В.: все цифры обоих файлов ПДО с 01.11
+      var E3 = hub.querySelector('.hub-pdo'), H3 = null;
+      try { H3 = pdoHTML(CFG.pdo(ctx)); } catch (e) { try { console.log('hub pdo: ' + e); } catch (x) { } }
+      if (E3 && H3) { ST.busy = true; E3.innerHTML = H3; keepH('pdo', E3); setTimeout(function () { ST.busy = false; }, 0); }
     }
   }
   function start(cfg) {
@@ -344,12 +350,81 @@
     var ddm = function (d) { return p2(d.getDate()) + '.' + p2(d.getMonth() + 1); };
     return [
       { k: 'y', a: isoD(y), b: isoD(y), h: y.getTime() === cy.getTime() ? 'Вчера' : DWF[y.getDay()], s: y.getTime() === cy.getTime() ? DW[y.getDay()] + ', ' + ddm(y) : ddm(y) + ' · последний рабочий' },
+      // 17.11.2026, Т. В.: «нужны штуки за вчера, за эту неделю, за прошлую» — в будни со вторника добавлена текущая неделя (пн — вчера)
+    ].concat(!wk && dow >= 1 ? [{ k: 'w', a: isoD(new Date(t.getFullYear(), t.getMonth(), t.getDate() - dow)), b: isoD(cy), h: 'Эта неделя', s: ddm(new Date(t.getFullYear(), t.getMonth(), t.getDate() - dow)) + '–' + ddm(cy) }] : []).concat([
       { k: 'w', a: isoD(m0), b: isoD(s0), h: wk ? 'Эта неделя' : 'Прошлая неделя', s: ddm(m0) + '–' + ddm(s0) },
       { k: 'm', a: isoD(pm0), b: isoD(pm1), h: MN0[pm0.getMonth()], s: 'весь месяц' },
       { k: 'c', a: isoD(cm0), b: isoD(t), h: MN0[cm0.getMonth()], s: t.getDate() > 1 ? 'с 1-го по ' + ddm(cy) : 'с 1-го — пока нет дней', empty: t.getDate() === 1 }
-    ];
+    ]);
   }
   function inP(d, p) { return d >= p.a && d <= p.b; }
+  // 18.11.2026, Т. В.: «из этого отчёта с 1/11 прими всю статистику по обоим файлам и отобрази на портале» — pf.bin → pdo (робот, pdo_hist.py)
+  function pdoHTML(P) {
+    var D = (P && P.days) || []; if (!D.length) return '<p class="fh-ok">Отчётов ПДО с 01.11 пока нет.</p>';
+    var DW = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    function fmt(n) { return n == null ? '' : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+    function dh(r) { var d = r.d, x = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)); return '<th scope="col">' + d.slice(8, 10) + (r.to ? '–' + r.to.slice(8, 10) : '') + '.' + d.slice(5, 7) + '<small>' + (r.to ? '2 дня' : DW[x.getDay()]) + '</small></th>'; }
+    var head = '<thead><tr><th scope="col"><span class="hp-sr">Показатель</span></th><th scope="col">С 01.11<small>' + D.length + ' отч.</small></th>' + D.map(dh).join('') + '</tr></thead>';
+    // --- выпуск по участкам (PDF)
+    var names = [], seen = {};
+    D.forEach(function (x) { (x.v || []).forEach(function (r) { if (!seen[r[0]]) { seen[r[0]] = 1; names.push(r[0]); } }); });
+    function vcell(r, acc) {
+      if (!r) return '<td><span class="hp-no">—</span></td>';
+      var tot = r[3] || [], day = r[1] || [], night = r[2] || [], note = r[4] || '', sm = [];
+      if (!tot.length) return '<td><span class="hp-no">—</span>' + (note ? '<small>' + esc(note.slice(0, 30)) + '</small>' : '') + '</td>';
+      acc.f += +tot[0] || 0; acc.n++;
+      if ((+night[0] || 0) > 0 && tot.length < 2) sm.push('д ' + fmt(day[0] || 0) + ' · н ' + fmt(night[0]));   // составная ячейка (Шеффилд в ночной графе) — без «д · н»
+      if (tot.length > 1) {
+        var w = note.split(/\s+/).filter(Boolean);
+        if (w.length === tot.length - 1) tot.slice(1).forEach(function (v, i) { if (+v > 0) { sm.push('+' + fmt(v) + ' ' + w[i]); acc.x[w[i]] = (acc.x[w[i]] || 0) + (+v); } });
+        else if (note) sm.push(note.slice(0, 40));
+      } else if (note) sm.push(note.slice(0, 40));
+      return '<td><b>' + fmt(tot[0]) + '</b>' + (sm.length ? '<small>' + esc(sm.join(' · ')) + '</small>' : '') + '</td>';
+    }
+    var vrows = names.map(function (nm) {
+      var acc = { f: 0, n: 0, x: {} }, cells = D.map(function (x) { var r = (x.v || []).filter(function (z) { return z[0] === nm; })[0]; return vcell(r, acc); }).join('');
+      var xs = Object.keys(acc.x).map(function (k) { return '+' + fmt(acc.x[k]) + ' ' + k; }).join(' · ');
+      return '<tr><th scope="row">' + esc(nm) + '</th><td class="pdt-sum">' + (acc.n ? '<b>' + fmt(acc.f) + '</b>' : '<span class="hp-no">—</span>') + (xs ? '<small>' + esc(xs) + '</small>' : '') + '</td>' + cells + '</tr>';
+    }).join('');
+    // --- приход заказов по 1С (Excel «Ведомость по заказам на производство»): вид → модели
+    var vids = [], sv = {};
+    D.forEach(function (x) { ((x.s && x.s.groups) || []).forEach(function (g) { if (!sv[g[0]]) { sv[g[0]] = 1; vids.push(g[0]); } }); });
+    function sval(x, vid, model) {
+      var g = ((x.s && x.s.groups) || []).filter(function (z) { return z[0] === vid; })[0]; if (!g) return null;
+      if (model == null) return g[1];
+      var m = (g[2] || []).filter(function (z) { return z[0] === model; })[0]; return m ? m[1] : null;
+    }
+    function srow(lbl, f, cls, attr) {
+      var sum = 0, has = false, c = D.map(function (x) { var v = x.s ? f(x) : undefined; if (v != null) { sum += +v; has = true; } return '<td>' + (v == null ? '<span class="hp-no">' + (x.s ? '' : '—') + '</span>' : '<b>' + fmt(v) + '</b>') + '</td>'; }).join('');
+      return '<tr' + (cls ? ' class="' + cls + '"' : '') + (attr || '') + '><th scope="row">' + lbl + '</th><td class="pdt-sum">' + (has ? '<b>' + fmt(sum) + '</b>' : '<span class="hp-no">—</span>') + '</td>' + c + '</tr>';
+    }
+    var srows = srow('<b>Всего заказов</b>', function (x) { return x.s.total; }, 'pdt-tot');
+    vids.forEach(function (vid, gi) {
+      var ms = [], mseen = {};
+      D.forEach(function (x) { var g = ((x.s && x.s.groups) || []).filter(function (z) { return z[0] === vid; })[0]; ((g && g[2]) || []).forEach(function (m) { if (!mseen[m[0]]) { mseen[m[0]] = 1; ms.push(m[0]); } }); });
+      var op = ST.pdoOpen && ST.pdoOpen[gi];
+      srows += srow('<button type="button" class="pdt-g" data-g="' + gi + '" aria-expanded="' + !!op + '">' + esc(vid) + (ms.length ? ' <small>' + ms.length + ' мод.</small>' : '') + '</button>', function (x) { return sval(x, vid); }, 'pdt-vid');
+      ms.forEach(function (m) { srows += srow('<span class="pdt-m">' + esc(m) + '</span>', function (x) { return sval(x, vid, m); }, 'pdt-mod', ' data-g="' + gi + '"' + (op ? '' : ' hidden')); });
+    });
+    var tab = ST.pdoTab || 'v';
+    return '<div class="pdo-seg" role="group" aria-label="Файл ПДО"><button type="button" data-t="v" aria-pressed="' + (tab === 'v') + '">Выпуск по участкам</button><button type="button" data-t="s" aria-pressed="' + (tab === 's') + '">Приход заказов (1С)</button></div>' +
+      '<div class="hp-scroll pdt-box" data-t="v"' + (tab === 'v' ? '' : ' hidden') + '><table class="hp pdt">' + head + '<tbody>' + vrows + '</tbody></table></div>' +
+      '<div class="hp-scroll pdt-box" data-t="s"' + (tab === 's' ? '' : ' hidden') + '><table class="hp pdt">' + head + '<tbody>' + srows + '</tbody></table></div>' +
+      '<p class="hp-note">Отчёт выпуска: «д · н» — дневная и ночная смена, «+N Шеффилд» и т. п. — отдельные строки из той же ячейки отчёта (переупаковка в выпуск не входит). Приход заказов: нажмите на вид — откроются модели. Последний отчёт — ' + D[0].d.slice(8, 10) + '.' + D[0].d.slice(5, 7) + '.</p>';
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest && e.target.closest('.pdo-seg button');
+    if (t) {
+      ST.pdoTab = t.getAttribute('data-t'); var box = t.closest('.hub-pdo');
+      [].slice.call(t.parentNode.children).forEach(function (x) { x.setAttribute('aria-pressed', String(x === t)); });
+      [].slice.call(box.querySelectorAll('.pdt-box')).forEach(function (x) { x.hidden = x.getAttribute('data-t') !== ST.pdoTab; });
+      return;
+    }
+    var g = e.target && e.target.closest && e.target.closest('.pdt-g'); if (!g) return;
+    var i = g.getAttribute('data-g'), op = g.getAttribute('aria-expanded') !== 'true';
+    ST.pdoOpen = ST.pdoOpen || {}; ST.pdoOpen[i] = op; g.setAttribute('aria-expanded', String(op));
+    [].slice.call(g.closest('tbody').querySelectorAll('tr.pdt-mod[data-g="' + i + '"]')).forEach(function (r) { r.hidden = !op; });
+  });
   function perHTML(T, P) {
     if (!T || !T.rows || !T.rows.length) return '<p class="fh-ok">' + esc(T.msg || 'Данных по дням пока нет.') + '</p>';
     function td(c) {
@@ -395,14 +470,15 @@
     kpis: [{ id: 'cap', t: 'Мощность · выпуск по группам', ic: 's_prod', href: '#s-pf' }, { id: 'rep', t: 'Отчёты ПДО', ic: 's_docs', href: '#pf-days' },
       { id: 'low', t: 'Отстают линии', ic: 'trend', href: '#s-pf' }, { id: 'recl', t: 'Рекламации', ic: 's_docs', href: 'sales.html#recl' },
       { id: 'galv', t: 'Гальваника и покраска', ic: 'layers', href: '#s-galv' }, { id: 'ppl', t: 'Люди', ic: 'staff', href: '#s-head' }],
-    tiles: [{ id: 'pf', t: 'Выпуск и план-факт', ic: 's_prod', hdr: [/^план-факт/], open: '#pf-prod', close: '#pf-galv' },
-      { id: 'galv', t: 'Гальваническая линия', ic: 'layers', hdr: [/^план-факт/], open: '#pf-galv', close: '#pf-prod' },
+    tiles: [{ id: 'pf', t: 'Выпуск и план-факт', ic: 's_prod', hdr: [/^выпуск за вчера/, /^гальваническая линия · вчера/, /^приход заказов/, /^план-факт/], open: '#pf-prod', close: '#pf-galv' },
+      { id: 'galv', t: 'Гальваническая линия', ic: 'layers', hdr: [/^гальваническая линия · вчера/, /^выпуск за вчера/, /^приход заказов/, /^план-факт/], open: '#pf-galv', close: '#pf-prod' },
       { id: 'sc', t: 'Продажи, выпуск и план по линиям', ic: 's_sales', hdr: [/^продажи и выпуск/, /^продажи, выпуск/] },
       { id: 'inv', t: 'Расследования', ic: 'docs', opt: true, hdr: [/^расследования/] },
       { id: 'areas', t: 'Участки и мастера', ic: 's_grid', hdr: [/^участки с мастерами/, /^ночная смена/, /^отдельные участки/] },
       { id: 'lead', t: 'Руководство и сводка', ic: 'staff', intro: true, hdr: [/^сводка/] },
       { id: 'head', t: 'Численность по участкам', ic: 'person', hdr: [/^численность/] },
       { id: 'map', t: 'Цеха на карте', ic: 's_map', href: 'plan.html', s: 'здания, участки и камеры' }],
+    pdo: function (x) { return x.pf && x.pf.pdo; },
     data: function () {
       var A = jd('areas-data'), fb = jd('pf-data'), SC = jd('salescap-data');
       return bin('pf.bin').then(function (d) { return { pf: d && (d.months || d.galv) ? d : fb, A: A, SC: SC }; });
@@ -491,7 +567,7 @@
       var rows = [], more = [];
       // 02.11.2026, Т. В.: выполнение плана — по группам, у каждой свой % (как на главной и в «Мощность · выпуск по группам»), без общего процента
       PFG.forEach(function (g) {
-        rows.push({ t: g[0] + (g[0] === 'Кресла руководителя' ? ' (с «Шеффилд»)' : ''), u: 'группа · шт, % плана', c: P.map(function (p) {
+        rows.push({ t: g[0] + (g[0] === 'Кресла руководителя' ? ' (с «Шеффилд»)' : ''), u: 'группа · штук, под ними % плана', c: P.map(function (p) {
           if (p.empty) return { s: 'месяц только начался' };
           if (!D.dl && (p.k === 'y' || p.k === 'w')) return { s: 'по дням — после обновления' };
           var F = 0, Pl = 0, hf = false, nd = 0;
@@ -499,12 +575,12 @@
           if (!nd) return { s: p.k === 'y' ? 'отчёта ПДО нет' : 'отчётов нет', tone: p.k === 'y' ? 'warn' : '' };
           if (!hf) return { s: Pl ? 'в отчётах выпуска нет' : '—', tone: Pl ? 'warn' : '' };
           if (!Pl) return { v: n(F), s: 'плана нет' };
-          var v = pc(F, Pl); return { v: v + '%', s: n(F) + ' из ' + n(Pl), tone: tone(v) };
+          var v = pc(F, Pl); return { v: n(F), s: v + '% · план ' + n(Pl), tone: tone(v) };   // 17.11.2026, Т. В.: крупно — штуки, под ними процент
         }) });
       });
       // отчёт за день приходит на следующий РАБОЧИЙ день (14.11.2026, Т. В.: «в субботу-воскресенье отчёты не приходят… смотри рабочий календарь»):
       //   ждём отчёты только за дни D, у которых следующий рабочий день уже наступил; за пятницу — в понедельник, не раньше
-      var yday = (function () { var t = pD(PER()[3].b), d = new Date(t); for (var i = 0; i < 40; i++) { d.setDate(d.getDate() - 1); var w = new Date(d); do { w.setDate(w.getDate() + 1); } while (!isWd(w)); if (w <= t) break; } return isoD(d); })();
+      var yday = (function () { var t = pD(PER().filter(function (q) { return q.k === 'c'; })[0].b), d = new Date(t); for (var i = 0; i < 40; i++) { d.setDate(d.getDate() - 1); var w = new Date(d); do { w.setDate(w.getDate() + 1); } while (!isWd(w)); if (w <= t) break; } return isoD(d); })();
       rows.push({ t: 'Отчёты ПДО', u: 'дней с отчётом выпуска', c: P.map(function (p) {
         if (p.empty) return {};
         var to = p.b < yday ? p.b : yday, wdn = to >= p.a ? wdIn(p.a, to) : 0, nd;
@@ -562,7 +638,7 @@
     kpis: [{ id: 'onl', t: 'Онлайн · наши модели в интернете', ic: 'store', href: '#online' }, { id: 'rev', t: 'Продажи и план', ic: 's_sales', href: '#s-opm' }, { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf' },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl' }, { id: 'prom', t: 'Визиты, звонки, отчёты', ic: 'phone', href: '#prom' },
       { id: 'mp', t: 'Ozon · месяц и день', ic: 'box', href: '#mp' }, { id: 'rv', t: 'Отзывы маркетплейсов', ic: 'chat', href: '#mp' }],
-    // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник7, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
+    // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник8, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
     tiles: [{ id: 'ops', t: 'Офисы продаж', ic: 'store', intro: true, hdr: [/^офисы продаж(?! —)/] },
       { id: 's1c', t: 'Продажи 1С · типы и мощности', ic: 's_sales', opt: true, hdr: [/^продажи за день/, /^продажи 1/] },
       { id: 'opm', t: 'Офисы продаж · октябрь', ic: 's_sales', opt: true, hdr: [/^офисы продаж — /] },
@@ -574,7 +650,7 @@
       { id: 'tz', t: 'ТЗ в работе и расчёты', ic: 'file', href: '#tz1c', hdr: [/^тз в работе/, /^тз и расчеты/] },
       { id: 'peo', t: 'Расчёты ПЭО', ic: 'docs', href: '#peo', hdr: [/^расчеты пэо/] },
       { id: 'prom', t: 'Визиты и звонки', ic: 'phone', href: '#prom', hdr: [/^обещанные/] },
-      { id: 'cls', t: 'Сотрудник8', ic: 'staff', href: '#cls', hdr: [/^клиенты/] },
+      { id: 'cls', t: 'Сотрудник9', ic: 'staff', href: '#cls', hdr: [/^клиенты/] },
       { id: 'cp', t: 'Контрольные точки', ic: 'trend', href: '#cp', hdr: [/^(контрольные|реперные) точки/] }],
     data: function () {
       return Promise.all([bin('sales.bin'), bin('promises.bin'), bin('docs.bin'), bin('pf.bin'), bin('ozh.bin')]).then(function (r) {
@@ -614,7 +690,7 @@
       // 13.11.2026, Т. В.: «онлайн-продажи — приоритетная карточка, в продажах чуть ли не первой»: мониторинг наших моделей в интернете (build/online/online.json)
       // 14.11.2026 (реестр Рекса F4-01): данные онлайн-продаж — объект window.T14_ONLINE (sales_frag), не JSON-текст элемента
       var ON = window.T14_ONLINE && typeof window.T14_ONLINE === 'object' && !Array.isArray(window.T14_ONLINE) ? window.T14_ONLINE : null;
-      // 14.11.2026: весь Рунет (Google + Сотрудник10) по номенклатуре 1С — главнее старой выборки по 11 моделям
+      // 14.11.2026: весь Рунет (Google + Сотрудник11) по номенклатуре 1С — главнее старой выборки по 11 моделям
       var RNk = ON && ON.runet;
       if (RNk && RNk.offers) { var olow2 = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
         K.push({ id: 'onl', v: n(RNk.models_found) + '<small>из ' + n(RNk.models_n) + ' моделей</small>', s: 'в Рунете: ' + n(RNk.offers) + ' предложений на ' + n(RNk.sites_n) + ' сайтах · ' + (RNk.check ? 'магазинов на сверке с 1С — ' + n(RNk.check.shops) : 'не клиенты — ' + n((RNk.sites_by_type || {})['магазин'] || 0)) + (olow2 ? ' · ниже РРЦ — ' + n(olow2) : '') + ' · ' + String(RNk.t || '').slice(8, 10) + '.' + String(RNk.t || '').slice(5, 7), tone: 'warn' });
@@ -645,7 +721,7 @@
       } else if (TZ && TZ.open) { var op = Array.isArray(TZ.open) ? TZ.open.length : TZ.open; if (op) att.push({ href: '#tzlist', ic: 'file', t: 'ТЗ без расчёта ПЭО', s: 'отправлены в ПТО, расчёта ПЭО ещё нет', v: n(op), tone: 'warn' }); tl.push({ id: 'tz', s: n(TZ.n) + ' ТЗ с 01.01 · без расчёта ' + n(op) }); }
       var C2 = x.PF && x.PF.calc; if (C2 && C2.peo && C2.peo.n) tl.push({ id: 'peo', s: n(C2.peo.n) + ' расчётов с 01.01' });
       tl.push({ id: 'ops', s: ops.length + ' ' + pl(ops.length, 'офис', 'офиса', 'офисов') + ' · отчёты в группе MAX и почте' });
-      var SO = x.SOP && x.SOP.sales_oct && x.SOP.sales_oct.total, PO = x.SOP && x.SOP.plan_oct;   // 30.10.2026: офисы продаж — октябрь (данные М. И. Сотрудник7)
+      var SO = x.SOP && x.SOP.sales_oct && x.SOP.sales_oct.total, PO = x.SOP && x.SOP.plan_oct;   // 30.10.2026: офисы продаж — октябрь (данные М. И. Сотрудник8)
       if (SO && SO.sum != null) tl.push({ id: 'opm', s: 'продажи ' + (SO.sum / 1e6).toFixed(2).replace('.', ',') + ' млн ₽' + (PO && PO.total ? ' · ' + (SO.sum / PO.total * 100).toFixed(1).replace('.', ',') + '% плана' : '') + ' · недели, план по менеджерам' });
       var SDs = (S.sday && S.sday.days) ? S.sday : x.SD, SDd = SDs && SDs.days, SDk = SDd ? Object.keys(SDd).sort() : [];   // 30.10.2026: продажи за день — рассылки 1С (хостинг: sales.bin → sday)
       if (x.SD && x.SD.days && SDk.length && Object.keys(x.SD.days).sort().pop() > SDk[SDk.length - 1]) { SDd = x.SD.days; SDk = Object.keys(SDd).sort(); }
@@ -735,7 +811,7 @@
       var D = x.D, K = [], att = [], tl = [];
       function kind(k) { return ((D && D.kinds) || []).filter(function (r) { return r.k === k; })[0] || null; }
       var z = kind('zps'), f = kind('fts');
-      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник11), не утверждён Сотрудник6
+      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник12), не утверждён Сотрудник6
       if (!D) return { kpis: ['yday', 'late', 'open', 'old', 'med', 'term'].map(function (k) { return k === 'term' && TK ? TK : { id: k, v: '—', s: k === 'late' ? 'нет связи с отчётами ОМТС — данные приходят с хостинга' : '', tone: 'none' }; }), attn: [], attnMsg: 'Отчёты ОМТС ещё не загрузились — данные приходят с хостинга раз в 10 минут.' };
       var tz = z && z.total, tf = f && f.total, tot = (tz || 0) + (tf || 0);
       var HZ = z && z.hist, HF = f && f.hist, op = (HZ ? HZ.open || 0 : 0) + (HF ? HF.open || 0 : 0);
@@ -749,7 +825,7 @@
       K.push({ id: 'old', v: old ? n(old) + '<small>дн.</small>' : '—', s: 'с утверждения заявки', tone: old > 30 ? 'bad' : old ? 'warn' : 'none' });
       var med = [HZ && HZ.med_in, HF && HF.med_in].filter(function (v) { return v != null; }), avg = [HZ && HZ.avg_in, HF && HF.avg_in].filter(function (v) { return v != null; });
       K.push({ id: 'med', v: med.length ? n(Math.max.apply(null, med)) + (avg.length ? ' / ' + String(Math.max.apply(null, avg)).replace('.', ',') : '') + '<small>дн.</small>' : '—', s: 'медиана' + (avg.length ? ' / среднее' : '') + ': дней в просрочке до закрытия' + (avg.length ? '' : ' · среднее — после обновления хостинга'), tone: '' });
-      K.push(TK || { id: 'term', v: '—', s: 'документ готовит О. В. Сотрудник11', tag: 'готовится', tone: 'none' });
+      K.push(TK || { id: 'term', v: '—', s: 'документ готовит О. В. Сотрудник12', tag: 'готовится', tone: 'none' });
       [['ЖПС', z], ['ФТС', f]].forEach(function (q) {
         var r = q[1]; if (!r || !r.p) return;
         var L = (r.p.reqs || []), o30 = L.filter(function (x2) { return (x2.age || 0) > 30; }).length;
@@ -761,7 +837,7 @@
         att.push({ href: '#s-hist', ic: 'person', t: k + ': открытые заявки в просрочке', s: 'по истории ежедневных отчётов 1С', v: n(BR[k]), tone: 'warn' });
       });
       if (HZ || HF) tl.push({ id: 'hist', s: 'открыто ' + n(op) + ' · по неделям и ответственным' });
-      tl.push({ id: 'terms', s: TT && TT.groups ? 'проект ОМТС от ' + dd(TT.date) + ' · ' + TT.n_groups + ' групп, ' + TT.n_rows + ' строк · не утверждён' : 'готовится — О. В. Сотрудник11' }); tl.push({ id: 'norm', s: 'источник уточняется' });
+      tl.push({ id: 'terms', s: TT && TT.groups ? 'проект ОМТС от ' + dd(TT.date) + ' · ' + TT.n_groups + ' групп, ' + TT.n_rows + ' строк · не утверждён' : 'готовится — О. В. Сотрудник12' }); tl.push({ id: 'norm', s: 'источник уточняется' });
       return { kpis: K, attn: att, tiles: tl };
     },
     // 01.11.2026: вчера · прошлая неделя · месяц — заявки в просрочке по отчётам 1С (omts.bin → hist.dn: на конец дня, новые, закрытые)
@@ -804,7 +880,7 @@
     root: function () { return document.getElementById('home'); },
     anchor: function () { var h = document.querySelector('h1'); return h && (h.parentElement.querySelector(':scope > #res') || h.parentElement.querySelector(':scope > .igroup.hero')); },
     intro: function () { var h = document.querySelector('h1'); return h ? [h.parentElement.querySelector(':scope > .igroup.hero')] : []; },
-    // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник12, используй его как базу. То есть движение
+    // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник13, используй его как базу. То есть движение
     //   по складу в разрезе филиалов то же самое. Склады брака тоже можно указать уже внутри отчета.» → карточки и таблица по периодам — по отчёту
     //   1С «Товары на складах» (move-data сборки; свежее — st/smv.bin / smvs.bin робота хостинга); «Свободный остаток в Рязани» — как раньше (ПКС)
     kpis: [{ id: 'all', t: 'Все склады · конечный остаток', ic: 's_stock', href: '#s-whs' }, { id: 'mov', t: 'Приход за месяц', ic: 'trend', href: '#s-whs' },
@@ -895,7 +971,7 @@
       var sel = 0, pref = ['c', 'm', 'w', 'y'];                 // по умолчанию — текущий месяц, затем прошлый: отчёт месячный
       for (var pi = 0; pi < pref.length; pi++) { var si = -1; P.forEach(function (p, i) { if (p.k === pref[pi]) si = i; }); if (si >= 0 && rows[0].c[si] && rows[0].c[si].v != null) { sel = si; break; } }
       return { sel: sel, rows: rows.concat(more.slice(0, 3)), more: more.slice(3), moreT: 'остальные филиалы и брак (' + more.slice(3).length + ')',
-        note: 'Отчёт 1С «Товары на складах» — тот же, что у М. М. Сотрудник12 («Запасы ГП»): за месяц — конечный остаток и изменение от начального, с приходом и расходом; ' +
+        note: 'Отчёт 1С «Товары на складах» — тот же, что у М. М. Сотрудник13 («Запасы ГП»): за месяц — конечный остаток и изменение от начального, с приходом и расходом; ' +
           'за день и неделю — по ежедневной рассылке этого отчёта' + (days.length > MV.length ? '' : ' (появится, когда рассылка начнёт приходить)') + '. Последний отчёт — по ' + dd(last.to) + '.' };
     }
   };

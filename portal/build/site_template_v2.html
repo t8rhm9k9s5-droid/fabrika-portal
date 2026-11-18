@@ -187,7 +187,15 @@ button:focus-visible,input:focus-visible,.item:focus-visible,.chip:focus-visible
 .nocam #marks .cam:not(.sel),.nocam #marks .dev,.nocam .fov:not(.sel),.nocam .hitg.spot{display:none}
 .nonames .blab:not(.blab-proj):not(.blab-stage2):not(.blab-plan):not(.blab-tp):not(.blab-dg){display:none}
 #lits{display:none}
-.nocad #cadL{display:none} .nopar #parcels{display:none}
+.nocad #cadL{display:none} .nopar #parcels,.nopar #parL{display:none}
+/* 17.11.2026 — участки: свой цвет у каждого, лёгкая заливка и контур; подпись «:номер / площадь» (#parL) */
+.plot .plot-f{fill:var(--pc);fill-opacity:.075;stroke:var(--pc);stroke-opacity:.85;stroke-width:.55;stroke-dasharray:3 1.2 .6 1.2}
+.hitg.plot.sel .plot-f{fill-opacity:.16;stroke-width:1.1}
+.parcel-p{display:none}
+#parL{pointer-events:none}
+#parL text{text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--paper);stroke-linejoin:round}
+#parL .pl1{font-family:var(--f-narrow);font-weight:700;font-size:11.5px;fill:var(--pc);stroke-width:3px}
+#parL .pl2{font-family:var(--f-mono);font-size:9px;fill:var(--pc);fill-opacity:.85;stroke-width:2.6px}
 #cadL{pointer-events:none}
 #cadL text{text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--paper);stroke-linejoin:round}
 #cadL .cl{font-family:var(--f-narrow);font-weight:700;font-size:13px;fill:var(--ink);stroke-width:3px;letter-spacing:.01em}
@@ -298,7 +306,7 @@ details:not([open]) summary .lbl::after{content:" ▸"}
         <!-- 15.11.2026, Т. В.: «основной вид карты 2D — адреса с литерами и кадастровыми номерами зданий; камеры, обзор, слепые зоны, вода, газ,
              СЗЗ — галочками» -->
         <span class="tgh">План</span>
-        <button class="tog" id="tCad" aria-pressed="true">Литеры и кадастровые номера</button>
+        <button class="tog" id="tCad" aria-pressed="true">Литеры и площади зданий</button>
         <button class="tog" id="tPar" aria-pressed="true">Земельные участки</button>
         <button class="tog" id="tNames" aria-pressed="false">Названия цехов</button>
         <span class="tgh">Видеонаблюдение</span>
@@ -416,7 +424,7 @@ document.getElementById('meta').innerHTML=`<b>${cams.length}</b> камер · $
 document.getElementById('magn').setAttribute('transform',`rotate(${G.decl})`);
 document.getElementById('declTxt').textContent=`магн. +${G.decl.toFixed(1).replace('.',',')}°`;
 function llAt(x,y){const a=G.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
-const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 
 // ---- draw cameras ----
 const camEls={};
@@ -755,7 +763,7 @@ function ndvCard(k,o){
     return [`Выбросы в атмосферу · 2025`,`Инвентаризация и НДВ, 2025 г.`,`<p class="note" style="color:var(--ink)">${esc(s.dev)}; ${esc(s.date)}.</p>
       ${s.objects.map(o=>`<span class="lbl">${esc(o.name)} · НВОС ${o.cat} кат. · ${o.code}</span><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org,'организованный','организованных','организованных')}, ${ruN(o.unorg,'неорганизованный','неорганизованных','неорганизованных')})</dd><dt>Выброс</dt><dd>${nfz(o.ty,3)} т/год; ${esc(o.subst)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd></dl>`).join('')}
       <p class="note" style="color:var(--ink)">С проектом СЗЗ 2019 г.: было ${ruN(c.n19,'источник','источника','источников')} и ${nfz(c.ty19,1)} т/год, стало ${c.n25} и ${nfz(c.ty25,1)} т/год. Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, нет в 2025 г. — ${c.gone.length} (${c.gone.join(', ')}).</p>
-      <span class="lbl">Сотрудник15, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
+      <span class="lbl">Сотрудник16, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.result)}</p>
       <span class="lbl">НДВ гальванического цеха, 2026–2032 гг.</span><table class="szzt"><tr><th>Вещество</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c,n,kl,gs,ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td class="m">${fgz(gs)}</td><td class="m">${fgz(ty)}</td></tr>`).join('')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.szz)} ${esc(s.prod)} ${esc(s.heat)}</p><p class="note">${esc(s.org.head)}. ${esc(s.org.eco)}. ${esc(s.meas)}</p>${ndvSrc}`]}
@@ -926,14 +934,25 @@ applyEdits();
 //   мелко на экране — только литера, крупнее — литера и номер в квартале («:147»), ещё крупнее — «лит. Б» и полный номер
 var CADS=[];
 {const cg=el('g',{id:'cadL'},svg); svg.insertBefore(cg,fovs);
- for(const k in B){const m=B[k]||{},cad=(m.cad||[]).filter(c=>c&&c.n).sort((a,b)=>(a.m==='gp')-(b.m==='gp')).map(c=>c.n)[0]||'',lit=m.lit||''; if(!lit&&!cad) continue;   // сначала номер здания по ЕГРН, подпись генплана — потом
+ for(const k in B){const m=B[k]||{},cad=(m.cad||[]).filter(c=>c&&c.n).sort((a,b)=>(a.m==='gp')-(b.m==='gp')).map(c=>c.n)[0]||'',lit=m.lit||''; if(!lit&&!cad&&!(m.name&&m.kind!=='canopy'&&m.kind!=='stage2'&&m.kind!=='plan')) continue;   // 17.11.2026: и здания без литеры — с названием и площадью   // сначала номер здания по ЕГРН, подпись генплана — потом
   const p=svg.querySelector('path.bld[data-b="'+CSS.escape(k)+'"]'); if(!p) continue;
   const P=m.poly||[]; let L=0,A=0; for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];L=Math.max(L,Math.hypot(b[0]-a[0],b[1]-a[1]));A+=a[0]*b[1]-b[0]*a[1];}
   A=Math.abs(A)/2; const W=L?A/L:0;
-  const g=el('g',{class:'cadg'},cg); CADS.push({k,p,g,t1:el('text',{class:'cl'},g),t2:el('text',{class:'cn'},g),lit,cad,L,W,A});}
+  // 17.11.2026, Т. В.: «на плане вместе с названием укажи площадь» — общая площадь по ЕГРН, если её нет — «≈» по контуру на плане
+  const sq=(m.cad||[]).map(c=>c&&c.s?parseFloat(String(c.s).replace(',','.')):0).find(v=>v>0), nf=v=>String(v).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
+  const ar=sq?nf(sq)+' м²':'≈ '+nf(Math.round(A))+' м²';
+  const sn=lit?'':String(m.name||'').split(/ \(| — |, /)[0].slice(0,26);
+  const g=el('g',{class:'cadg'},cg); CADS.push({k,p,g,t1:el('text',{class:'cl'},g),t2:el('text',{class:'cn'},g),lit,cad,L,W,A,ar,sn});}
  // части одного здания с той же литерой (И1–И4 из четырёх корпусов) — подпись одна, на самой большой части
  const best={}, sc=o=>(o.cad?1e7:0)+o.A; for(const o of CADS){const key=o.lit||('#'+o.k); if(!best[key]||sc(best[key])<sc(o))best[key]=o;}
  CADS=CADS.filter(o=>{const keep=best[o.lit||('#'+o.k)]===o; if(!keep)o.g.remove(); return keep}).sort((a,b)=>b.A-a.A);}
+// 17.11.2026: подписи участков — после зданий, в свободных от зданий местах (точки data-la из gen2.py); мелко на экране — не подписываем
+var PARL=[];
+{const pg=el('g',{id:'parL'},svg); svg.insertBefore(pg,fovs);
+ for(const g of svg.querySelectorAll('#parcels g.plot')){const la=(g.dataset.la||'').split(';').filter(Boolean).map(v=>v.split(',').map(Number)); if(!la.length) continue;
+  const lg=el('g',{class:'plg'},pg); lg.style.setProperty('--pc',g.style.getPropertyValue('--pc'));
+  const t1=el('text',{class:'pl1',y:-6},lg), t2=el('text',{class:'pl2',y:7},lg); t1.textContent=g.dataset.t1||''; t2.textContent=g.dataset.t2||'';
+  PARL.push({g:lg,src:g,la,w:Math.max((g.dataset.t1||'').length*7.2,(g.dataset.t2||'').length*5.8)+8});}}
 function cadLay(k){
   const placed=[], hit=(x0,y0,x1,y1)=>placed.some(r=>x0<r[2]&&x1>r[0]&&y0<r[3]&&y1>r[1]);
   for(const o of CADS){                                   // от больших зданий к малым; подписи не налезают друг на друга
@@ -946,7 +965,7 @@ function cadLay(k){
     let l1='',l2='';
     for(;t>0;t--){
       if(!o.lit&&t<2){t=0;break}
-      l1=o.lit?(t>=3?'лит. '+o.lit:o.lit):''; l2=t>=3?o.cad:(t>=2&&o.cad?':'+o.cad.split(':').pop():'');
+      l1=o.lit?(t>=3?'лит. '+o.lit:o.lit):(o.sn||''); l2=t>=2?o.ar:'';   // 17.11.2026, Т. В.: «не замусоренный» — у здания только литера (название) и площадь; кадастровый номер — в карточке здания
       const w=Math.max(l1.length*7.4,l2.length*6)+6, h=(l1&&l2)?28:17;
       if(!hit(sx-w/2,sy-h/2,sx+w/2,sy+h/2)){placed.push([sx-w/2,sy-h/2,sx+w/2,sy+h/2]);break}
     }
@@ -954,6 +973,17 @@ function cadLay(k){
     o.g.removeAttribute('display');
     if(o.l1!==l1||o.l2!==l2){o.l1=l1;o.l2=l2;o.t1.textContent=l1;o.t2.textContent=l2;o.t1.setAttribute('y',l2?(l1?-6:0):0);o.t2.setAttribute('y',l1?8:0)}
     o.g.setAttribute('transform',`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${k})${theta?` rotate(${(-theta).toFixed(2)})`:''}`);
+  }
+  if(typeof PARL==='undefined'||document.querySelector('.nopar')) return;
+  for(const o of PARL){
+    if(!o.bb){try{o.bb=o.src.querySelector('.plot-f').getBBox()}catch(e){o.bb={width:0,height:0}}}
+    if(Math.max(o.bb.width,o.bb.height)/k<110){o.g.setAttribute('display','none');continue}
+    let ok=false;
+    for(const [ax,ay] of o.la){const rp=rootOf(ax,ay),sx=(rp.x-view.x)/k,sy=(rp.y-view.y)/k,w=o.w,h=28;
+      if(hit(sx-w/2,sy-h/2,sx+w/2,sy+h/2)) continue;
+      placed.push([sx-w/2,sy-h/2,sx+w/2,sy+h/2]); ok=true;
+      o.g.setAttribute('transform',`translate(${ax} ${ay}) scale(${k})${theta?` rotate(${(-theta).toFixed(2)})`:''}`); break}
+    if(ok) o.g.removeAttribute('display'); else o.g.setAttribute('display','none');
   }
 }
 // ---- 15.11.2026: «вид сверху, максимально для устройства» — участок (здания и ограждение) вписывается в экран между «Назад» и нижним меню ----

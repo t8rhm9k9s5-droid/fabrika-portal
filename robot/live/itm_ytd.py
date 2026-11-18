@@ -31,7 +31,7 @@ TZ_RE = re.compile(r'(?<![0-9A-Za-zА-Яа-яЁё])ТЗ\s*№?\s*(\d{1,4})\s*[/\
 def tz_num(m): return '%02d/%d' % (int(m.group(1)), int(m.group(2)))
 PTO_RE = re.compile(r'^(tech(-[a-z0-9]+)?|technolog)@fabrikant\.su$')
 PEO_RE = re.compile(r'^(econom(-\d+)?|peo)@fabrikant\.su$')
-PROD_FROM = ('user28@example.org', 'user14@example.org', 'user13@example.org')
+PROD_FROM = ('user28@example.org', 'user16@example.org', 'user15@example.org')
 MON = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 H16 = lambda s: hashlib.sha256(str(s or '').strip().encode('utf-8', 'replace')).hexdigest()[:16] if s else ''
 
@@ -83,7 +83,7 @@ def _want(r):
     dk = _doc_kind(r)
     if dk: return dk
     if r['fr'] in ('user28@example.org', 'user36@example.org') and 'отчет' in s: return 'rep'      # 28.10: в августе отчёт слал и industry@ («Отчет выпуска продукции за сутки»)
-    if r['fr'] in ('user14@example.org', 'user13@example.org') and ('гальван' in s or r['sz'] < 3 * 1024 * 1024): return 'rep'
+    if r['fr'] in ('user16@example.org', 'user15@example.org') and ('гальван' in s or r['sz'] < 3 * 1024 * 1024): return 'rep'
     if 'план' in s and r['fr'].endswith('@fabrikant.su') and r['fr'] not in ('user3@example.org',): return 'plan'
     return None
 
@@ -164,7 +164,7 @@ def _save_full(L, IG, kind, full, row, st, res):
                     with open(tgt, 'wb') as f: f.write(data)
                     os.chmod(tgt, 0o600)
                 got.append('other ' + row.get('t', '')[:10]); res['other'] = res.get('other', 0) + 1
-            if not k and row.get('fr') in ('user14@example.org', 'user13@example.org', 'user37@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')) \
+            if not k and row.get('fr') in ('user16@example.org', 'user15@example.org', 'user37@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')) \
                     and re.search(r'цен|себестоим|план|факт|выполнен|отгруз|продаж|склад', low):
                 eco = os.path.join(L, 'ytd', 'econ'); os.makedirs(eco, exist_ok=True)      # 28.10: отчёты ПЭО (средние цены, планы) — для раздела «Продажи → экономика»
                 tgt = os.path.join(eco, '%s_%s_%s' % (row.get('t', '')[:10], row['mid'][:6], re.sub(r'[^\w.\- ]+', '_', fn)[-80:]))
@@ -415,6 +415,13 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
                 except Exception as e: c = {'k': key, 'd': d, 'v': {}, 'err': e.__class__.__name__}
                 cache[d] = c
             days[c.get('d') or d] = c
+    # 18.11.2026: отчёты ПДО ноября, которых нет в raw хостинга (пришли в itm@ до переезда робота на 1c@ или ещё не разложены), — из pdo_seed.json рядом с кодом
+    try:
+        import pdo_hist as PH
+        with open(os.path.join(PH.HERE, 'pdo_seed.json'), encoding='utf-8') as f_: _seed = json.load(f_)
+        for x in _seed.get('days') or []:
+            if x.get('l') and x['d'] not in days: days[x['d']] = {'k': 'seed', 'd': x['d'], 'v': x['l'], 'src': 'seed'}
+    except Exception: pass
     # --- январь — май: «Ведомость по заказам на производство» (Excel ПДО в ytd/other) — выпуск по видам номенклатуры там, где нет отчёта выпуска
     oth = os.path.join(L, 'ytd', 'other'); ved_n = 0
     if os.path.isdir(oth):
@@ -593,7 +600,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
     # реестр по каждому ТЗ из тем писем: изделие и клиент (тема «ТЗ №ММ/N  Изделие_Клиент»), кто завёл, когда ответил ПТО, рассчитал ПЭО,
     # было ли письмо о заказе / счёте / договоре / запуске
     REG = []
-    MGMT = ('user35@example.org', 'user6@example.org', 'user38@example.org', 'user5@example.org', 'user39@example.org')
+    MGMT = ('user35@example.org', 'user8@example.org', 'user38@example.org', 'user5@example.org', 'user39@example.org')
     for k, rs in tz.items():
         reqs = [r for r in rs if not PEO_RE.match(r.get('fr') or '')]
         first = reqs[0] if reqs else rs[0]
@@ -726,8 +733,44 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
     except Exception as e: C['lines_err'] = e.__class__.__name__
     # 03.11.2026, Т. В.: «план утверждён … ставь» — план месяца по строкам и до первого отчёта ПДО (страница показывает текущий месяц с планом)
     planv = {ym: {'wd': plans_wd.get(ym), 'lines': {n: pv for n, (pv, a) in L.items() if pv}} for ym, L in plans.items()}
-    return {'months': months, 'galv': G, 'plans': sorted(plans), 'planv': planv, 'days': len(days), 'dl': dl, 'tz': T, 'other': other, 'calc': C,
+    try:                                                   # 18.11.2026, Т. В.: все цифры обоих файлов ПДО с 01.11 — блок «Отчёты ПДО по дням»
+        import pdo_hist as PH; PDO = PH.build(BO, OUTD, L)
+    except Exception as e: PDO = {'err': e.__class__.__name__}
+    return {'pdo': PDO, 'months': months, 'galv': G, 'plans': sorted(plans), 'planv': planv, 'days': len(days), 'dl': dl, 'tz': T, 'other': other, 'calc': C,
             'plan_letters': sorted(plan_letters, key=lambda x: x['t'])[-80:], 'by_folder': by_folder}, cache
+
+
+def summary_only(L, BO, OUTD, log, jload, jsave, publish):
+    """17.11.2026, Т. В.: ящик itm@ роботу больше не открывается (16.11), а раздел «Выпуск и план-факт» (st/pf.bin) собирался только
+    после разбора itm@ — и перестал обновляться. Отчёты ПДО и ПЭО теперь приходят из 1c@ и лежат в OUTD/raw (их раскладывает live.py),
+    поэтому сводка считается заново без IMAP: при каждом новом отчёте в OUTD/raw (по времени изменения файлов) — пересчёт и публикация pf.bin.
+    Счёт писем «ТЗ №…» и планов берётся из прежнего индекса itm@ (state/ytd_index.jsonl) как есть — новых писем оттуда больше нет."""
+    st = jload('ytd.json', {'folders': {}, 'n': 0, 'full': 0, 'queue': []})
+    res = {'t': IT._now().strftime('%Y-%m-%dT%H:%M'), 'state': 'из 1c@ (itm@ отключён)'}
+    sig = 0.0
+    for base in (os.path.join(OUTD, 'raw'), os.path.join(L, 'ytd', 'raw')):
+        for d, _ds, fs in os.walk(base):
+            for f in fs:
+                try: sig = max(sig, os.path.getmtime(os.path.join(d, f)))
+                except OSError: pass
+    sig = '%.1f|pdo2' % sig                                # 18.11.2026: |pdo1 — новая версия сводки (блок ПДО) пересчитывается сразу после выкладки кода
+    if st.get('sum_sig') == sig and jload('ytd_sum.json', None, peek=True) is not None:
+        res['state'] += ', без изменений'; return res
+    idx = os.path.join(L, 'state', 'ytd_index.jsonl')
+    S, cache = _summary(L, BO, OUTD, jload, idx, st)
+    pc = cache.pop('_peo', None)
+    if pc is not None: jsave('peo_sales_cache.json', pc)
+    jsave('ytd_days.json', cache)
+    S.update({'t': res['t'], 'state': res['state'], 'scanned': st.get('n'), 'full': st.get('full'), 'queue': len(st.get('queue') or [])})
+    jsave('ytd_sum.json', S)
+    publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res['state'], 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
+                       'days': S['days'], 'dl': S.get('dl') or {}, 'tz': {k: S['tz'].get(k) for k in ('n', 'to_pto', 'peo', 'months', 'lead_med', 'lead_avg', 'noreq', 'by_from', 'open', 'list', 'stages')},
+                       'calc': {k: (S.get('calc') or {}).get(k) for k in ('n', 'months', 'lines', 'pdo_pf', 'pdo_files', 'peo')}})
+    st['sum_sig'] = sig; st['sum_t'] = res['t'][:13]; jsave('ytd.json', st)
+    dl = S.get('dl') or {}
+    log('выпуск и план-факт из 1c@: pf.bin пересчитан, последний день', max(dl) if dl else '—')
+    res['last'] = max(dl) if dl else None
+    return res
 
 
 def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
@@ -916,7 +959,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
             jsave('ytd_days.json', cache)
             S.update({'t': res['t'], 'state': res.get('state'), 'scanned': st['n'], 'full': st.get('full'), 'queue': len(st['queue'])})
             jsave('ytd_sum.json', S)
-            publish('pf.bin', {'t': res['t'], 'state': res.get('state'), 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
+            publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res.get('state'), 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
                                'days': S['days'], 'dl': S.get('dl') or {}, 'tz': {k: S['tz'].get(k) for k in ('n', 'to_pto', 'peo', 'months', 'lead_med', 'lead_avg', 'noreq', 'by_from', 'open', 'list', 'stages')},
                                'calc': {k: (S.get('calc') or {}).get(k) for k in ('n', 'months', 'lines', 'pdo_pf', 'pdo_files', 'peo')}})
             st['sum_t'] = res['t'][:13]; jsave('ytd.json', st)

@@ -203,7 +203,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   function secLogged() { var p = secMe(); return !!(p && p.st !== 'pending' && window.T14Acct && T14Acct.tok && T14Acct.tok()); }
   // 13.11.2026, Т. В.: «почему этот раздел не прогружен сразу, а загружается при открытии» — последний ответ бота хранится на устройстве
   //   (только у вошедшего лично, привязан к его id, 24 ч): раздел открывается сразу, свежие данные бот догружает фоном.
-  var SEC_TTL = 7 * 24 * 3600e3;   // показ — из сохранённого до 7 дней; свежее бот догружает фоном (здесь и на любой странице — acct.js secWarm)
+  var SEC_TTL = 90 * 24 * 3600e3;   // 16.11.2026: показ из сохранённого всегда (старое — лучше «Проверяю доступ…»), свежее — фоном   // показ — из сохранённого до 7 дней; свежее бот догружает фоном (здесь и на любой странице — acct.js secWarm)
   function secCacheGet(part) { try { var p = secMe(), c = JSON.parse(localStorage.getItem('t14.secc.' + part) || 'null'); return c && p && c.id === p.id && Date.now() - c.t < SEC_TTL ? c.data : null; } catch (e) { return null; } }
   function secCachePut(part, data) { try { var p = secMe(); if (p) localStorage.setItem('t14.secc.' + part, JSON.stringify({ id: p.id, t: Date.now(), data: data })); } catch (e) {} }
   function secCacheDrop() { ['org', 'kos', 'ko', 'sim'].forEach(function (k) { try { localStorage.removeItem('t14.secc.' + k); } catch (e) {} }); }
@@ -230,7 +230,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (R.busy) return h + note('Проверяю доступ…');
     if (R.err) return h + note(R.err === 'login' ? 'Войдите личным входом.' : 'Не получилось: ' + esc(R.err) + ' <a href="#" onclick="return false" data-secre="' + part + '">Повторить</a>');
     if (R.pin === 'wait') return h + note((R.sent ? '<b>Подтвердите в Telegram.</b> Бот «Фабрика» прислал вам кнопку «Да, это я» — нажмите её, затем ' : (esc(R.why || 'Нужно подтверждение в Telegram.') + ' Затем ')) + '<a href="#" data-secre="' + part + '">Проверить</a>.');
-    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник81 Отчество41 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
+    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник83 Отчество41 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
       R.req === 'again' ? 'Сотрудник4 уже у Сотрудник2 Отчество2. После его ответа — <a href="#" data-secre="' + part + '">Проверить</a>.' : esc(R.why || 'Доступа нет.'));
     if (R.none) return h + note(esc(R.why || 'Раздел ещё не выложен.'));
     return h + note('Нет данных. <a href="#" data-secre="' + part + '">Повторить</a>');
@@ -333,7 +333,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
         return sxCard((a.n ? 'Уч. ' + a.n + ' · ' : 'Ночная смена · ') + a.title, a.staff ? a.staff + ' чел.' : '', [(a.blocks || []).join(', '), a.note].filter(Boolean).map(esc).join(' · '),
           [sxP(a.who, true)].concat((a.team || []).map(function (p) { return sxP(p); })));
       })));
-    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник71 и вся его служба, системный администратор и 1С-программисты»
+    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник73 и вся его служба, системный администратор и 1С-программисты»
     var td = O.tech_director, TD = DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; });
     if (td && TD.length) h += sxSec('og-t', 'Техническая служба · ' + TD.length, sxScheme([sxCard('Технический директор', TD.reduce(function (s, d) { return s + (Number(d.count) || 0); }, 0) + ' чел.', '', [sxP(td, true)], 'og-node')],
       TD.map(function (d) { return sxCard(d.title, d.count ? d.count + ' чел.' : '', d.note && !/^Подчиняется техническому/.test(d.note) ? esc(d.note) : (/уточняется/.test(d.note || '') ? 'состав службы уточняется' : ''), (d.heads || []).map(function (p) { return sxP(p, true); }).concat((d.staff || []).map(function (p) { return sxP(p); }))); })));

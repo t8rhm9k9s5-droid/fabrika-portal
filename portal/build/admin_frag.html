@@ -54,8 +54,14 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
   function msg(t, s) { state.innerHTML = '<div class="igroup"><div class="irow static"><span class="ic"><span class="ibody"><span class="ititle"></span><span class="isub"></span></span></span></div></div>'; state.querySelector('.ititle').textContent = t; state.querySelector('.isub').textContent = s || ''; }
   function ini(n) { return String(n || '?').split(/\s+/).map(function (w) { return w[0] || ''; }).join('').slice(0, 2).toUpperCase(); }
   function ago(t) { if (!t) return 'ещё не заходил'; var m = Math.round((Date.now() - t) / 6e4); return m < 60 ? 'был недавно' : m < 1440 ? 'был сегодня' : 'был ' + Math.round(m / 1440) + ' дн. назад'; }
+  // 16.11.2026, Т. В.: «Управление — Загружаю…» → список людей хранится на устройстве (t14.admc, тот же вход), страница открывается
+  //   из него сразу; свежий список догружается фоном (acct.js secWarm заранее, здесь — при открытии).
+  function admCache() { try { var p = A.me(), c = JSON.parse(localStorage.getItem('t14.admc') || 'null'); return c && p && c.id === p.id && c.data && c.data.users ? c.data : null; } catch (e) { return null; } }
   function load() {
-    return A.api('users', { tok: A.tok() }).then(function (r) { D = r; draw(); });
+    return A.api('users', { tok: A.tok() }).then(function (r) {
+      D = r; try { var p = A.me(); if (p && r && r.users) localStorage.setItem('t14.admc', JSON.stringify({ id: p.id, t: Date.now(), data: r })); } catch (e) { /* без кэша */ }
+      draw();
+    });
   }
   function draw() {
     state.innerHTML = ''; main.hidden = false;
@@ -93,7 +99,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
       act('Отклонить', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     } else {
       if (u.st === 'active' && u.id !== me.id) act(u.role === 'admin' ? 'Сделать сотрудником' : 'Сделать администратором', '', function () { return A.api('userset', { tok: A.tok(), id: u.id, role: u.role === 'admin' ? 'user' : 'admin' }); });
-      if (u.st === 'active') act('Новый пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
+      if (u.st === 'active') act('Сотрудник5 пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
       if (u.id !== me.id) act(u.st === 'off' ? 'Включить доступ' : 'Отключить доступ', u.st === 'off' ? '' : 'red', function () { return A.api('userset', { tok: A.tok(), id: u.id, st: u.st === 'off' ? 'active' : 'off' }); });
       if (u.id !== me.id && u.st === 'off') act('Удалить совсем', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     }
@@ -104,7 +110,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
     where.appendChild(c); where.appendChild(UI.el('p', 'ifoot', 'Передайте лично (не в общий чат). Пароль показывается один раз; сменить его можно в «Ещё» → «Личный вход».'));
   }
   function addPerson() {
-    var s = UI.sheet('Новый человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
+    var s = UI.sheet('Сотрудник5 человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
     var nm = UI.field('Имя, фамилия', 'text', 'Имя1 Имя1'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
     var role = UI.el('button', 'irow', '<span class="ic"><span class="ibody"><span class="ititle">Администратор</span><span class="isub">люди, уведомления, документы, чат</span></span><span class="isw"></span></span>'); role.type = 'button'; role.setAttribute('aria-pressed', 'false');
     role.addEventListener('click', function () { role.setAttribute('aria-pressed', String(role.getAttribute('aria-pressed') !== 'true')); });
@@ -162,7 +168,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
     var act = D.users.filter(function (u) { return u.st === 'active'; }).length;
     var s = UI.sheet('Общий пароль', D.shared ? 'Сейчас сайт открывается и общим паролем, и личными входами.' : 'Выключен: сайт открывается только личными входами.'), f = UI.el('div', 'iform');
     if (D.shared) {
-      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Новых людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
+      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Сотрудник5 людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
       var go = UI.btn('Выключить общий пароль', 'red'); f.appendChild(go);
       go.addEventListener('click', function () { if (!go.dataset.arm) { go.dataset.arm = 1; go.textContent = 'Точно? Нажмите ещё раз'; return; } UI.busy(go, true); A.api('shared', { tok: A.tok(), on: false }).then(function () { s.close(); load(); }, function (e) { UI.busy(go, false); UI.msg(f, e.message, true); }); });
     }
@@ -229,7 +235,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
     }
     function draw(J) {
       f.innerHTML = ''; f.appendChild(stat(J));
-      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Новый токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
+      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Сотрудник5 токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
       f.appendChild(act(J.token ? 'Заменить токен и переподключить' : 'Сохранить токен и подключить', 'pri', function () {
         var v = tk.lastChild.value.trim(); if (!v) return Promise.reject(new Error('Вставьте токен.'));
         return mxCall('token', { token: v }).then(function (r) { tk.lastChild.value = ''; return r; });
@@ -268,6 +274,8 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
       main.hidden = true;
       if (!c || !c.url) return msg(A.inApp() ? 'Нет связи с сервером' : 'Управление работает в приложении «Фабрика»', A.inApp() ? 'Проверьте интернет и откройте раздел ещё раз.' : 'Откройте сайт с паролем на телефоне и войдите по личному логину администратора.');
       if (!p || !A.tok()) { msg('Нужен личный вход администратора'); var b = UI.btn('Личный вход', 'pri'); b.style.cssText = 'width:100%;margin-top:12px'; b.addEventListener('click', function () { UI.account(); }); state.appendChild(b); return; }
+      var cached = admCache();
+      if (cached) { D = cached; draw(); load().catch(function () { /* показано сохранённое; ошибка — в следующий раз */ }); return; }
       msg('Загружаю…');
       load().catch(function (e) {
         if (UI.expired && UI.expired(e)) { msg('Срок личного входа истёк', UI.expiredText); var rb = UI.reloginBtn(); rb.style.cssText = 'width:100%;margin-top:12px'; state.appendChild(rb); return; }   // 05.11.2026 (1.29.0): как в «Транспорте» 1.28.4

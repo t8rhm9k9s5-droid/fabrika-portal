@@ -27,8 +27,7 @@
       '<p class="mil">' + L.map(function (x) { return '<span><i style="background:' + x.c + '"></i>' + x.t + (x.n ? ' · ' + x.n : '') + '</span>'; }).join('') +
       '<span><i style="background:#3b82f6;border-radius:50%"></i>камеры</span><span><i style="background:rgba(59,130,246,.25)"></i>зоны обзора</span><span><i style="background:repeating-linear-gradient(45deg,#d92d20 0 2px,transparent 2px 4px)"></i>слепые зоны</span></p>' +
       '<p class="min">Слои включаются во вкладке «Слои»; число у сети — участков линий на плане.</p></div>';
-    box.innerHTML = h; box.open = st('t14.mapinfo.open2', false);
-    box.hidden = svg.classList.contains('nocam');   // 15.11.2026, Т. В.: сводка камер — только при включённом слое «Камеры», свёрнута
+    box.innerHTML = h; box.open = true;   // 17.11.2026, Т. В.: сводка открывается круглой кнопкой справа (вместо «⤢»), а не висит сверху
     var b = box.querySelector('.mibl'); if (b) b.addEventListener('click', function () { if (window.T14Blind) window.T14Blind.show(); });
   }
   // 15.11.2026, аудит портала (F-11): метки камер перекрываются — по клику показываем выбор из совпавших камер, а не открываем соседнюю
@@ -74,8 +73,34 @@
       '@media (max-width:700px){#mapInfo{left:auto;right:max(8px,env(safe-area-inset-right,0px));bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + 52px);width:min(270px,calc(100% - 80px))}}';
     document.head.appendChild(css);
     box = document.createElement('details'); box.id = 'mapInfo';
-    box.addEventListener('toggle', function () { ss('t14.mapinfo.open2', box.open); });
     P.svg.parentNode.appendChild(box); render();
+    // 17.11.2026, Т. В.: «вместо этой кнопки (⤢) размести сводку карты» — круглая кнопка «i» в столбике справа; сводка — окном рядом с ней
+    var css2 = document.createElement('style');
+    css2.textContent = '#mapInfo{display:none!important}#mapInfo.show{display:block!important}#mapInfo summary{display:none}' +
+      '#mapInfo.show{position:absolute;z-index:7;bottom:auto!important;width:min(300px,calc(100vw - 100px))!important;max-height:min(60vh,520px);overflow:auto;' +
+      'background:var(--glass-text,rgba(28,30,36,.94));color:var(--fg,#f2f4f5);border:1px solid var(--edge,rgba(255,255,255,.14));border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:10px 14px}' +
+      '#mapInfo.show .mib p:first-child{margin-top:0}#mapInfoBtn svg{width:22px;height:22px}#mapInfoBtn[aria-expanded=true]{background:var(--fg,#fff);color:var(--bg,#111)}' +
+      '@media (max-width:900px){#zfit{display:none!important}}';
+    document.head.appendChild(css2);
+    var btn = document.createElement('button'); btn.type = 'button'; btn.id = 'mapInfoBtn'; btn.className = 'lk-one'; btn.title = 'Сводка карты'; btn.setAttribute('aria-label', 'Сводка карты'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.2"/><circle cx="12" cy="7.8" r=".9" fill="currentColor" stroke="none"/></svg>';
+    function place() {
+      var r = btn.getBoundingClientRect(), pr = box.parentNode.getBoundingClientRect();
+      box.style.setProperty('left', 'auto', 'important'); box.style.setProperty('right', Math.max(8, pr.right - r.left + 10) + 'px', 'important');
+      var h = box.offsetHeight || 300, top = r.top - pr.top + r.height / 2 - h / 2;
+      top = Math.max(60, Math.min(top, pr.height - h - 90));
+      box.style.setProperty('top', top + 'px', 'important');
+    }
+    function showInfo(v) { box.classList.toggle('show', v); btn.setAttribute('aria-expanded', String(v)); if (v) { render(); box.open = true; place(); } }
+    btn.addEventListener('click', function (e) { e.stopPropagation(); showInfo(!box.classList.contains('show')); });
+    document.addEventListener('click', function (e) { if (box.classList.contains('show') && !box.contains(e.target) && e.target !== btn) showInfo(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') showInfo(false); });
+    addEventListener('resize', function () { if (box.classList.contains('show')) place(); });
+    (function put(n) {
+      var zf = document.getElementById('zfit'), col = document.querySelector('.lk-col');
+      if (zf && (col || n > 40)) { zf.parentNode.insertBefore(btn, zf); return; }
+      if (n < 100) setTimeout(function () { put(n + 1); }, 100);
+    })(0);
     enableCameraChoice(P);
     window.addEventListener('t14blind', render); window.addEventListener('t14layers', function () { setTimeout(render, 0); }); window.addEventListener('t14edits', function () { setTimeout(render, 50); });
     return true;

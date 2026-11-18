@@ -329,7 +329,7 @@ const CHIPS = [
   ['net','Кабели камер (по схеме)','var(--sw-net)',['net'],0,'Сети'],['unknown','Сеть без подписи на топоплане','var(--sw-ghost)',['u_unknown'],0,'Сети'],
   ['hypso','Рельеф цветом','var(--sw-hyp)',[],0,'Рельеф и съёмка'],['contours','Горизонтали','#8a7454',['contours'],0,'Рельеф и съёмка'],['relief','Рельеф ×3','#b5835a',[],0,'Рельеф и съёмка'],
   ['heights','Отметки топоплана','var(--muted)',['heights'],0,'Рельеф и съёмка'],['sp','Пункты съёмки','var(--muted)',['sp'],0,'Рельеф и съёмка'],
-  ['szz','Граница СЗЗ и расчётные точки','#2f5fd0',['szz'],1,'Санитарно-защитная зона'],['isa25','Источники выбросов 2025','#8c1d12',['isa25'],1,'Санитарно-защитная зона'],['rt25','Расчётные точки 2025','#16a085',['rt25'],0,'Санитарно-защитная зона'],['isa','Источники выбросов 2019 (проект СЗЗ)','#e67e22',['isa'],0,'Санитарно-защитная зона'],['noise','Шум: изолинии и источники','#8e44ad',['noise'],0,'Санитарно-защитная зона']
+  ['szz','Граница СЗЗ и расчётные точки','#2f5fd0',['szz'],0,'Санитарно-защитная зона'],['isa25','Источники выбросов 2025','#8c1d12',['isa25'],0,'Санитарно-защитная зона'],['rt25','Расчётные точки 2025','#16a085',['rt25'],0,'Санитарно-защитная зона'],['isa','Источники выбросов 2019 (проект СЗЗ)','#e67e22',['isa'],0,'Санитарно-защитная зона'],['noise','Шум: изолинии и источники','#8e44ad',['noise'],0,'Санитарно-защитная зона']
 ];
 const chipsEl = $('#chips'), chipBtn = {}, chipOn = {}, moreEl = $('#morePanel'), moreBody = $('#moreBody');
 const moreBtn = document.createElement('button'); moreBtn.type = 'button'; moreBtn.className = 'chip more'; moreBtn.id = 'chipMore';
@@ -349,8 +349,13 @@ moreBtn.addEventListener('click', ()=>toggleMore(moreEl.hidden));
 $('#moreX').addEventListener('click', ()=>toggleMore(false));
 document.addEventListener('pointerdown', e=>{ if (!moreEl.hidden && !moreEl.contains(e.target) && !moreBtn.contains(e.target)) toggleMore(false); });
 let groundClear = false;
+// 16.11.2026 (Т. В.: «почему линии коммуникаций газа, воды и прочее прерываются на 3Д плане»): под рельефом лежит ровная «земля окрестностей»
+// (окрестности и СЗЗ) на 0,4 м ниже самой низкой точки — канализация и водопровод глубже, и сквозь прозрачную землю их закрывала она.
+// Теперь при прозрачной земле прозрачны и эти плоскости.
+function basePlaneClear(o, on){ const m = o && o.material; if (!m) return; m.transparent = on; m.opacity = on ? .18 : 1; m.depthWrite = !on; m.needsUpdate = true; }
 function setGroundClear(on){
-  groundClear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  groundClear = on; terMat.userData.clear = on; terMat.opacity = on ? .18 : 1; terMat.depthWrite = !on;
+  scene.traverse(o=>{ if (o.userData && o.userData.basePlane) basePlaneClear(o, on); });
   otmMat.transparent = on; otmMat.opacity = on ? .25 : 1; otmMat.depthWrite = !on; otmMat.needsUpdate = true;
   controls.maxPolarAngle = on ? Math.PI*0.8 : Math.PI*0.495;
   gCont.children.forEach(c=>{ c.material.opacity = on ? .15 : .35; });
@@ -636,6 +641,7 @@ function buildSZZ(){
   const bb = szzBbox(), pad = 70, w = bb.x1 - bb.x0 + 2*pad, h = bb.y1 - bb.y0 + 2*pad, cx = (bb.x0 + bb.x1)/2, cy = (bb.y0 + bb.y1)/2;
   const pg = new THREE.PlaneGeometry(w, h); pg.rotateX(-Math.PI/2);
   const plane = new THREE.Mesh(pg, new THREE.MeshLambertMaterial({color:0xd9dccd})); plane.position.copy(V(cx, cy, szzPlaneY() - 0.02)); gSzz.add(plane);
+  plane.userData.basePlane = 1; if (terMat.userData.clear) basePlaneClear(plane, true);   // сквозь прозрачную землю видны трубы под ней
   const B = SZ.boundary.map(p=>p.loc);
   const sh = new THREE.Shape(B.map(([x, y])=>new THREE.Vector2(x - CX, y - CY))), sg = new THREE.ShapeGeometry(sh); sg.rotateX(-Math.PI/2);
   const fill = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({color:0x2f5fd0, transparent:true, opacity:.14, depthWrite:false}));
@@ -757,7 +763,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник15 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -845,7 +851,8 @@ function buildNDV(){
       const q = [[a[0]+nx, a[1]+ny], [b[0]+nx, b[1]+ny], [b[0]-nx, b[1]-ny], [a[0]-nx, a[1]-ny]].map(([x, y])=>V(x, y, gAt(x, y) + .25));
       for (const k of [0, 1, 2, 0, 2, 3]) pz.push(q[k].x, q[k].y, q[k].z);
       const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pz, 3));
-      mk.push(new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.3, side:THREE.DoubleSide, depthWrite:false})));
+      mk.push(new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.07, side:THREE.DoubleSide, depthWrite:false})));   // 17.11.2026: почти прозрачно — на стоянке видно щебень и машины, как на кадрах 025 и 054
+      { const ol = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(q), new THREE.LineDashedMaterial({color:col, dashSize:1.2, gapSize:.6})); ol.computeLineDistances(); mk.push(ol); }
     } else {
       const a = s.a, b = s.b || s.a, L = Math.max(.8, Math.hypot(b[0]-a[0], b[1]-a[1])), hh = Math.min(1.2, Math.max(.6, s.h * .2));
       const pn = new THREE.Mesh(new THREE.BoxGeometry(L, hh, .34), new THREE.MeshLambertMaterial({color:col, emissive:0x1a0606}));
@@ -905,7 +912,7 @@ function ndvInfo(u){
        <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
        <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник15 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -991,20 +998,45 @@ function placeLab(el, pos, show){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   el.style.transform = `translate(${((tmpV.x*.5+.5)*w).toFixed(1)}px,${((-tmpV.y*.5+.5)*h).toFixed(1)}px) translate(-50%,-100%)`;
 }
+// 17.11.2026, Т. В.: «план должен быть читаемый для человека, не замусоренный» — подписи не налезают друг на друга:
+//   сначала крупные здания, потом мелкие, потом номера камер; что не влезло — скрыто до приближения. Мелкие постройки (< 150 м²)
+//   подписаны только вблизи, номера камер внутри цехов — только вблизи или у выбранной камеры.
+const LBL_PLACED = [];
+function bArea(b){ if (b._a == null){ let A = 0; const P = b.poly || []; for (let i = 0; i < P.length; i++){ const a = P[i], q = P[(i+1)%P.length]; A += a[0]*q[1] - q[0]*a[1]; } b._a = Math.abs(A)/2; } return b._a; }
+const bLabOrder = () => Object.keys(bLab).sort((x, y)=>bArea(bLab[y].b) - bArea(bLab[x].b));
+let bLabSorted = null;
+function placeLabC(el, pos, show, w, h, force){
+  if (!show){ el.hidden = true; return; }
+  tmpV.copy(pos).project(camera);
+  const vis = tmpV.z < 1 && tmpV.x > -1.05 && tmpV.x < 1.05 && tmpV.y > -1.05 && tmpV.y < 1.05;
+  if (!vis){ el.hidden = true; return; }
+  const W = canvas.clientWidth, H = canvas.clientHeight, x = (tmpV.x*.5+.5)*W, y = (-tmpV.y*.5+.5)*H;
+  const r = [x - w/2 - 2, y - h - 2, x + w/2 + 2, y + 2];
+  if (!force && LBL_PLACED.some(q=>r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1])){ el.hidden = true; return; }
+  LBL_PLACED.push(r); el.hidden = false;
+  el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
+}
 function updateLabels(){
   if (camViewOn) return;
   const dist = camera.position.distanceTo(controls.target), near = dist < 170;
   const ar = chipOn.areas ? areaNow : null;
-  for (const k in bLab){ const {el, b} = bLab[k]; const c = E.centroid(b.poly);
-    placeLab(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn.has(k) && lay.buildings !== false && inSolo2(c)); }
+  LBL_PLACED.length = 0;
+  if (!bLabSorted || bLabSorted.length !== Object.keys(bLab).length) bLabSorted = bLabOrder();
+  const seenTxt = new Set();   // одна подпись на литеру: «лит. А1–А2» у двух пристроек — один раз, у большей
+  for (const k of bLabSorted){ const {el, b} = bLab[k]; const c = E.centroid(b.poly);
+    const small = bArea(b) < 150, isSel = sel && sel.kind === 'obj' && (sel.k === k || sel.ek === k), txt = el.textContent || '';
+    placeLabC(el, tmpV.set(0,0,0).copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !(ar && ar[k]) && !b.hidden && !planOn.has(k) && lay.buildings !== false && inSolo2(c) && (!small || dist < 110 || isSel) && (isSel || !seenTxt.has(txt)),
+      txt.length * 6.2 + 18, 20, isSel);
+    if (!el.hidden) seenTxt.add(txt); }
   for (const k in areaLab){ const el = areaLab[k], b = S.buildings.find(o=>o.k===k), a = ar && ar[k];
     if (!a || !b){ el.hidden = true; continue; }
     const c = E.centroid(b.poly); placeLab(el, tmpV.copy(V(c[0], c[1], gy(b.base) + b.h + 1.2)), !b.hidden && inSolo2(c)); }
   // cameras: a dot when the whole site is in view, the number when closer or selected
   for (const k in camLab){ const L = camLab[k], c = L.c; if (!c) continue;
-    const on = sel && sel.kind === 'cam' && sel.key === k, mini = !on && !near;
+    const on = sel && sel.kind === 'cam' && sel.key === k, mini = !on && !near, o = camObjs[k], indoor = !!(o && o.g && o.g.indoor);
     if (L.mini !== mini){ L.mini = mini; L.el.classList.toggle('mini', mini); }
-    placeLab(L.el, L.pos, !c.hidden && lay.cams !== false && condOk(c) && (dist < 700 || on) && inSolo2([c.x,c.y])); }
+    placeLabC(L.el, L.pos, !c.hidden && lay.cams !== false && condOk(c) && (dist < 700 || on) && inSolo2([c.x,c.y]) && (!indoor || on || dist < 90),
+      mini ? 9 : (L.el.textContent || '').length * 7 + 12, mini ? 9 : 17, on); }
   for (const r of rulLabels){ tmpV.copy(r.pos).project(camera); const vis = tmpV.z <= 1 && tmpV.z >= -1; r.el.hidden = !vis; if (!vis) continue;
     r.el.style.transform = `translate(${((tmpV.x*.5+.5)*canvas.clientWidth).toFixed(1)}px,${((-tmpV.y*.5+.5)*canvas.clientHeight).toFixed(1)}px) translate(-50%,-50%)`; }
   for (const s of spotLab) placeLab(s.el, V(s.p.x, s.p.y, gy(s.p.z) + 1.5), lay.pzu !== false && dist < 300);
@@ -1095,14 +1127,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник10 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник15 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */

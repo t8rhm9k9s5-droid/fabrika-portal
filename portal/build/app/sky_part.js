@@ -6,7 +6,8 @@
    T14SKY (app/sky_core.js) даёт солнце и погоду; здесь — только сцена. «Всегда день» в окне погоды возвращает прежний свет. */
 ;(function(){
   const SK = window.T14SKY; if (!SK) return;
-  SK.has3d = true; SK.mount('left');
+  SK.has3d = true; SK.mount('right');   // 17.11.2026, Т. В.: погода всегда в одном месте — справа сверху, как на 2D-плане
+  { const st = document.createElement('style'); st.textContent = 'body.sky-r #compass{top:calc(64px + env(safe-area-inset-top,0px))!important}'; document.head.appendChild(st); document.body.classList.add('sky-r'); }
   const R = Math.PI / 180, lite = document.documentElement.classList.contains('lite');
   const hemi = scene.children.find(o => o.isHemisphereLight), sunL = scene.children.find(o => o.isDirectionalLight);
   if (!hemi || !sunL) return;
