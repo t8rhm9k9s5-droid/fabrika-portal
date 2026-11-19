@@ -160,9 +160,16 @@ def run(L, log, jload, jsave, publish, iso):
     except Exception: return {'state': 'нет настроек бота MAX'}
     if not token: return {'state': 'нет токена MAX'}
     now = datetime.datetime.now(MC.MSK)
-    code, j = MC.api(token, 'GET', '/chats', {'count': 100})
-    if code != 200: return {'state': 'MAX /chats: %s' % code}
-    chats = [(str(c.get('chat_id')), str(c.get('title') or '')) for c in (j or {}).get('chats') or [] if c.get('chat_id') and c.get('type') in (None, 'chat', 'channel')]
+    # 19.11.2026: GET /chats у MAX отвечает 404 — список групп бота берём из ~/.fabrika_max/groups.json (как max_hist), /chats — запасной
+    chats = []
+    try:
+        with open(os.path.join(M, 'groups.json'), encoding='utf-8') as f: G = json.load(f) or {}
+        chats = [(str(k), str((v or {}).get('title') or '')) for k, v in G.items() if re.match(r'^-?\d+$', str(k)) and (v or {}).get('on', True)]
+    except Exception: chats = []
+    if not chats:
+        code, j = MC.api(token, 'GET', '/chats', {'count': 100})
+        if code != 200: return {'state': 'нет groups.json, MAX /chats: %s' % code}
+        chats = [(str(c.get('chat_id')), str(c.get('title') or '')) for c in (j or {}).get('chats') or [] if c.get('chat_id') and c.get('type') in (None, 'chat', 'channel')]
     calls, groups, st = 1, {}, jload('maxrep.json', {}) or {}
     for cid, title in chats:
         if calls >= MAX_CALLS: break

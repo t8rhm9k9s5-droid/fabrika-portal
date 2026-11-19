@@ -154,7 +154,7 @@ frag = '''
     el.querySelectorAll('.mchips button').forEach(function(b){ b.addEventListener('click', function(){ CUR = b.getAttribute('data-m'); CURU = true; prod(D); }); });
     var val = document.getElementById('pf-prod-val'); if (val) val.textContent = ms.length + ' мес.';
   }
-  // 28.10.2026, пользователь: «от Сотрудник53 приходят такие отчёты раз в месяц, мне нужны они за год с разбивкой по месяцам» — ПДО «План-факт <месяц>»
+  // 28.10.2026, пользователь: «от Сотрудник38 приходят такие отчёты раз в месяц, мне нужны они за год с разбивкой по месяцам» — ПДО «План-факт <месяц>»
   var PFM = 'pc', PFL = ['Изо', 'Стандарты', 'Сильвия', 'КаБаРе', 'Кресла руководителя', 'Операторские кресла', 'Бун', 'Самба', 'Анри', 'Мягкая мебель', 'ГКЗ', 'Накладки Самба', 'ГКИ Одди'];
   function pdoTable(PF){
     if (!PF) return '';
@@ -187,20 +187,24 @@ frag = '''
     f.textContent = live ? ('Данные — отчёты ПДО с 01.01.2026, обновлено ' + String(D.t || '').replace('T', ' ') + (D.state === 'идёт' ? '; отчёты ещё загружаются — таблица дополняется.' : '.'))
       : 'Сейчас показаны данные из последних отчётов; полная выборка с 01.01.2026 собирается и появится здесь автоматически.';
   }
-  // 02.11.2026, Т. В.: «Отчёты ПДО» открывают все полученные отчёты выпуска — по дням, новые сверху; месячные «План-факт» — в таблице выше
+  // 19.11.2026, Т. В.: «отчёты ПДО по дням вниз — чушь; по датам вправо, каждый столбик — новая дата, план-факт, как во всех остальных»
   function days(D){
     var el = document.getElementById('pf-days-body'); if (!el) return;
     var DL = D.dl || {}, ks = Object.keys(DL).sort().reverse(), val = document.getElementById('pf-days-val');
-    if (val) val.textContent = ks.length ? ks.length + ' ' + (ks.length % 10 === 1 && ks.length % 100 !== 11 ? 'отчёт' : ks.length % 10 >= 2 && ks.length % 10 <= 4 && (ks.length % 100 < 10 || ks.length % 100 >= 20) ? 'отчёта' : 'отчётов') : '—';
+    if (val) val.textContent = ks.length ? ks.length + ' раб. дн.' : '—';
     if (!ks.length){ el.innerHTML = '<p class="pfnote">Дневные отчёты выпуска ещё не пришли.</p>'; return; }
     var WDn = ['вс','пн','вт','ср','чт','пт','сб'];
-    el.innerHTML = '<p class="pfnote" style="margin:0 0 8px">Отчёт выпуска производства за каждый рабочий день, шт. «Шеффилд» в дневных отчётах отдельной строкой не идёт — его план считается в группе «Кресла руководителя».</p>' +
-      ks.map(function(d, i){
-        var r = DL[d] || {}, names = Object.keys(r).sort(function(a, b){ return (r[b] || 0) - (r[a] || 0) || a.localeCompare(b, 'ru'); });   // 03.11, Т. В.: по убыванию
-        var dt = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10));
-        return '<details class="pfday"' + (i === 0 ? ' open' : '') + '><summary><b>' + d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '</b> <span class="dim">' + WDn[dt.getDay()] + ' · ' + names.length + ' строк</span></summary>' +
-          '<div class="pfscroll"><table class="ptab"><tbody>' + names.map(function(k){ return '<tr><td class="nm">' + esc(k) + '</td><td>' + n(r[k]) + '</td></tr>'; }).join('') + '</tbody></table></div></details>';
-      }).join('');
+    function pdOf(ln, d){ var m = d.slice(0, 7), MM = (D.months || {})[m] || {}, VV = (D.planv || {})[m] || {}, w = MM.wd || VV.wd || 0, l = (MM.lines || {})[ln], P = (l && l.p) || (VV.lines || {})[ln] || 0; return P && w ? P / w : 0; }
+    var Y = ks[0], nm = {}; ks.forEach(function(d){ Object.keys(DL[d] || {}).forEach(function(k){ nm[k] = (nm[k] || 0) + (d === Y ? 1e9 : 0) + (DL[d][k] || 0); }); });
+    var names = Object.keys(nm).sort(function(a, b){ return nm[b] - nm[a] || a.localeCompare(b, 'ru'); });
+    var head = '<tr><th>Строка</th><th>План дня</th>' + ks.map(function(d, i){ var dt = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)); return '<th' + (i === 0 ? ' class="y"' : '') + '>' + d.slice(8, 10) + '.' + d.slice(5, 7) + '<br><span class="dim">' + WDn[dt.getDay()] + '</span></th>'; }).join('') + '</tr>';
+    var body = names.map(function(k){
+      var pd = pdOf(k, Y);
+      return '<tr><td class="nm">' + esc(k) + '</td><td class="dim">' + (pd ? n(pd) : '—') + '</td>' + ks.map(function(d, i){
+        var f = (DL[d] || {})[k], p = pdOf(k, d), c = f == null || !p ? '' : f < p * 0.9 ? 'lo' : f >= p ? 'hi' : '';
+        return '<td class="' + (i === 0 ? 'y ' : '') + c + '">' + (f == null ? '<span class="dim">—</span>' : n(f)) + '</td>'; }).join('') + '</tr>'; }).join('');
+    el.innerHTML = '<p class="pfnote" style="margin:0 0 8px">Выпуск по дням, шт: самая свежая дата — первый столбец, дальше вправо — предыдущие рабочие дни. План дня = план месяца ПДО ÷ рабочие дни. Красным — меньше 90% плана дня, зелёным — план выполнен. «Шеффилд» в дневных отчётах отдельной строкой не идёт — он в группе «Кресла руководителя».</p>' +
+      '<div class="pfscroll"><table class="ptab pdm"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>';
   }
   function render(D, live){ try { window.__pfD = D; galv(D.galv); prod(D); days(D); foot(D, live); } catch (e) { try { console.log('pf: ' + e); } catch (_) {} } }
   render(JSON.parse(document.getElementById('pf-data').textContent), false);
