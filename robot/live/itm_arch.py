@@ -46,6 +46,26 @@ def _ext(n):
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
 SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник34 С. В.)', 'user32@example.org': 'Видеонаблюдение (регистраторы Dahua)'}
+CCTV_LABEL, DONE_LABEL = 'Видеонаблюдение', 'Учтено на портале'   # 19.11.2026: ярлыки ящика 1c@ (созданы вручную)
+
+
+def _file_1c(M, raw, mv, log):
+    """19.11.2026, Т. В.: разобранное из «Входящих» 1c@ — в свою папку, прочитанным. Сбой — не страшно: письмо уже в реестре, повторим в следующий проход."""
+    n = 0
+    try:
+        typ, _ = M.select('"%s"' % raw, readonly=False)
+        if typ != 'OK': return 0
+        for u, lab in mv:
+            try:
+                M.uid('STORE', str(u), '+X-GM-LABELS', '("%s")' % IT.utf7_encode(lab))
+                M.uid('STORE', str(u), '+FLAGS', '(\\Seen)')
+                M.uid('STORE', str(u), '-X-GM-LABELS', '(\\Inbox)')
+                n += 1
+            except Exception as e: log('  ! 1c@: не перенёс письмо', u, lab, e.__class__.__name__)
+    except Exception as e: log('  ! 1c@: перенос писем по папкам', e.__class__.__name__, e)
+    return n
+
+
 CCTV_FROM = 'user32@example.org'   # 19.11.2026: письма регистраторов — снимки .jpg тоже в arch/files (cctv.py → портал)   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
 PRUNE_DRY = False   # 13.11.2026 ~13:45, Т. В. (опрос): «Да, включай» — удаление вложений старше 3 дней включено
@@ -167,6 +187,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
             for raw, name in fl:
                 if time.time() - t0 > budget or res['new'] >= limit: pending += 1; continue
                 typ, _ = M.select('"%s"' % raw, readonly=True)
+                mv = [] if (stname == 'arch_1c.json' and host == 'imap.gmail.com' and raw.upper() == 'INBOX') else None
                 if typ != 'OK': continue
                 uv = (M.untagged_responses.get('UIDVALIDITY') or [b''])[0]
                 uv = uv.decode() if isinstance(uv, bytes) else str(uv)
@@ -256,12 +277,16 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                             if rt[str(u)] >= IT.QUAR_TRIES:
                                 rt.pop(str(u), None)
                                 res.setdefault('quar_list', []).append('%s %s uid %s «%s»: %s %s' % (who, name[:30], u, subj[:80], e.__class__.__name__, str(e)[:80]))
+                    if mv is not None:                              # 19.11.2026, Т. В.: письма камер — в «Видеонаблюдение», учтённые отчёты — в «Учтено на портале»
+                        if frm == CCTV_FROM: mv.append((u, CCTV_LABEL))
+                        elif row.get('r'): mv.append((u, DONE_LABEL))
                     if again: continue                                              # повтор разбора — строка реестра и счётчики уже есть
                     out.write(json.dumps(row, ensure_ascii=False) + '\n'); out.flush()
                     fs['last'] = max(int(fs['last']), u); fs['n'] = int(fs.get('n') or 0) + 1
                     res['new'] += 1; st['n'] += 1
                     st['folders'][raw] = fs
                 st['folders'][raw] = fs
+                if mv: res['moved'] = res.get('moved', 0) + _file_1c(M, raw, mv, log)
         res['state'] = 'идёт' if pending else 'готово'
     except imaplib.IMAP4.error as e:
         res['state'] = ('Mail.ru: ' if host == IT.HOST else host + ': ') + str(e)[:160]
