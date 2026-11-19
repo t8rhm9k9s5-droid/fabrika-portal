@@ -14,10 +14,15 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник22 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник7 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
         ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
         ('marketing', 'Имя4: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('omtsreg', 'Реестр заявок ОМТС (1С, ежедневно)', '#9a5a00', 'chart'),   # 19.11.2026, Т. В.: системная информация из почты 1c@ — на портал (mail_reg.py → st/mreg.bin)
+        ('opexp', 'Расходы офисов продаж: счета, акты, аренда', '#ff9500', 'price'),
+        ('export', 'Экспорт: Узбекистан и Казахстан', '#30b0c7', 'folder'),
+        ('mdog', 'Договоры из почты', '#5856d6', 'form'),
+        ('memo_q', 'Служебные записки: качество, производство, поставки', '#ff3b30', 'form'),
         ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
         # 14.11.2026: график ППР и ТО (Сотрудник1 А. В., 13.11) — «Производство → Оборудование»
         ('equip', 'Оборудование: графики ППР и ТО', '#ff9500', 'chart'),
@@ -76,10 +81,10 @@ PUB = _cg1_read_json('/home/claude/library/fabrikant_su.json', encoding='utf-8')
 #   не было адресата. Решение пользователя (опрос): адресат и срок на портале; договоры, ЭДО, акты рекламации и политика ПДн — юристу,
 #   каталог, гарантии и сертификаты (замена файлов на сайте) — маркетологу (письмо 26.10, срок 30.10, ответа нет). Служебные пометки
 #   проверки («WebFetch…») из текста убраны — сотрудникам они не нужны.
-PUB_TO = {'agreements': 'юрист Сотрудник34 Н. Я.', 'edo': 'юрист Сотрудник34 Н. Я.', 'claims': 'юрист Сотрудник34 Н. Я.', 'policy': 'юрист Сотрудник34 Н. Я.',
-          'catalogs': 'маркетолог Сотрудник40 Д. Р.', 'warranty': 'маркетолог Сотрудник40 Д. Р.', 'certs': 'маркетолог Сотрудник40 Д. Р.'}
-PUB_ST = {'маркетолог Сотрудник40 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
-          'юрист Сотрудник34 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник40 придержано (ищем её письмо с прайсом)
+PUB_TO = {'agreements': 'юрист Сотрудник48 Н. Я.', 'edo': 'юрист Сотрудник48 Н. Я.', 'claims': 'юрист Сотрудник48 Н. Я.', 'policy': 'юрист Сотрудник48 Н. Я.',
+          'catalogs': 'маркетолог Сотрудник32 Д. Р.', 'warranty': 'маркетолог Сотрудник32 Д. Р.', 'certs': 'маркетолог Сотрудник32 Д. Р.'}
+PUB_ST = {'маркетолог Сотрудник32 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
+          'юрист Сотрудник48 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник32 придержано (ищем её письмо с прайсом)
 def _pub_clean(x):
     x = re.sub(r'\s*\((?:WebFetch|бинарные данные)[^)]*\)', '', x)
     x = re.sub(r'^Файл (\.\w+) не прочитан\s*—\s*', r'Файл \1 в старом формате — ', x)
@@ -315,7 +320,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
     {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник22 К. В.: записки на возврат   // 11.11.2026, Сотрудник22 К. В.
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник7 К. В.: записки на возврат   // 11.11.2026, Сотрудник7 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -326,6 +331,14 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     {k: 'other', t: 'Гарантия, политики и прочее', c: '#8e8e93', i: 'folder', x: 'Гарантийные условия, эксплуатация, политики'},
     {k: 'econ', t: 'Цены и мощность', c: '#af52de', i: 'chart', x: 'Цены материалов, оснастка ГКИ, план объектов'},
     {k: 'reports', t: 'Отчёты и сводки', c: '#5ac8fa', i: 'chart', x: 'Буфер заказов, клиенты, ассортимент, отчёты'},
+    // 19.11.2026, Т. В.: системная информация из почты 1c@ — робот собирает сам (mail_reg.py, prot_mail.py)
+    {k: 'maxrep', t: 'Отчёты из групп MAX', c: '#007aff', i: 'chart', x: 'Визиты клиентов, машины, поставки, отсутствующие, деньги UZ, объекты'},
+    {k: 'omtsreg', t: 'Реестр заявок ОМТС', c: '#9a5a00', i: 'chart', x: 'Отчество42 рассылка 1С — файлы по дням'},
+    {k: 'protocols', t: 'Протоколы переговоров с поставщиками', c: '#9a5a00', i: 'form', x: 'Цены, условия поставки, разногласия — из почты ОМТС'},
+    {k: 'opexp', t: 'Расходы офисов продаж', c: '#ff9500', i: 'price', x: 'Счета, акты, аренда, грузчики, ГСМ — по офисам'},
+    {k: 'export', t: 'Экспорт: Узбекистан и Казахстан', c: '#30b0c7', i: 'folder', x: 'Перевозка, грузчики, оплаты, документы'},
+    {k: 'mdog', t: 'Договоры из почты', c: '#5856d6', i: 'rules', x: 'Договоры аренды и поставки, присланные на 1c@'},
+    {k: 'memo_q', t: 'Служебки: качество, производство, поставки', c: '#ff3b30', i: 'form', x: 'Только по качеству, производству и поставкам'},
     {k: 'dwg', t: 'Чертежи', c: '#30b0c7', i: 'docs', href: 'docs.html', x: 'Листы проектной и исполнительной документации'},
     {k: 'site', t: 'Документы площадки', c: '#a2845e', i: 'arch', href: 'archive.html', x: 'Проекты, съёмка, ГПЗУ, разрешения, схема камер'}
   ];
@@ -346,6 +359,8 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     if (k === 'reports') { a = count('reports'); ['buf', 'cls', 'assort'].forEach(function(q){ K = mk(q); if (K) a += K.cnt || 0; }); return a; }
     if (k === 'dwg') return D.docs || '';
     if (k === 'site') return D.arch || '';
+    if (k === 'maxrep') return MXR ? (MXR.visits || []).length + (MXR.out || []).length + (MXR.inbound || []).length + (MXR.supply || []).length : '';
+    if (mregItems(k).length) return count(k) + mregItems(k).length;
     return count(k);
   }
   // 30.10.2026, пользователь: «Документы — давай уже сам часть приводи в порядок»: версии ИИ-ассистента (fix/reissue → library/reissue), каждая ждёт проверки исполнителя
@@ -433,7 +448,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник22, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник7, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -524,7 +539,54 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     var t = a.innerHTML; a.classList.add('busy');
     T14Live.download(a.getAttribute('data-fid'), a.getAttribute('data-fn')).then(function(ok){ a.classList.remove('busy'); if (!ok) { a.innerHTML = t + ' <span>— не открылся</span>'; } });
   });
+  // 19.11.2026, Т. В.: системная информация из почты 1c@ — робот кладёт в st/mreg.bin (протоколы — st/prot.bin); файлы скачиваются через data-fid
+  var MREG = null, PROTB = null;
+  function mregItems(k){
+    if (k === 'protocols') return ((PROTB && PROTB.items) || []).map(function(x){ return {t: x.t, who: x.sup, s: x.s, files: [{fid: x.fid, n: x.n, sz: x.sz}]}; });
+    return (MREG && MREG.cats && MREG.cats[k]) || [];
+  }
+  function mregBlock(k){
+    var L = mregItems(k); if (!L.length) return '';
+    var kb = function(n){ return n > 1048576 ? (n / 1048576).toFixed(1) + ' МБ' : Math.max(1, Math.round(n / 1024)) + ' КБ'; };
+    return '<p class="ihdr">Из почты 1c@ — автоматически · ' + L.length + '</p><div class="igroup">' + L.slice(0, 200).map(function(x){
+      var d = String(x.t || '').slice(8, 10) + '.' + String(x.t || '').slice(5, 7);
+      return '<div style="padding:10px 14px;border-top:1px solid var(--line,rgba(0,0,0,.08))"><div style="font-size:13px;color:var(--sub,#8e8e93)">' + esc(d) + (x.of ? ' · ' + esc(x.of) : '') + (x.who ? ' · ' + esc(x.who) : '') + '</div>' +
+        '<div style="font-size:15px;margin:2px 0">' + esc(x.s || '') + '</div>' +
+        (x.files || []).map(function(f){ return '<a href="#" data-fid="' + esc(f.fid) + '" data-fn="' + esc(f.n) + '" style="display:inline-block;margin:4px 12px 0 0;font-size:14px">📎 ' + esc(f.n) + ' <span style="color:var(--sub,#8e8e93)">' + kb(f.sz || 0) + '</span></a>'; }).join('') + '</div>';
+    }).join('') + '</div>';
+  }
+  // 19.11.2026, Т. В.: «всё, что повторяется в группах MAX — систематизируй, выложи отчётами» (max_rep.py → st/maxrep.bin)
+  var MXR = null;
+  function maxrepView(){
+    var c = TT('maxrep'), h = regsHead({t: c.t, c: c.c, i: c.i}, esc(c.x));
+    if (!MXR) { V.innerHTML = h + '<p class="empty">Робот собирает историю групп — отчёты появятся в течение часа.</p>'; return; }
+    var dm = function(d){ return d ? String(d).slice(8, 10) + '.' + String(d).slice(5, 7) : ''; };
+    var rub = function(n){ return n == null ? '' : Math.round(n).toLocaleString('ru-RU'); };
+    var box = function(t, n, body){ return '<p class="ihdr">' + esc(t) + (n ? ' · ' + n : '') + '</p><div class="igroup" style="padding:4px 0">' + (body || '<p class="empty" style="margin:10px 14px">Пока нет данных.</p>') + '</div>'; };
+    var row = function(a, b, c2){ return '<div style="padding:9px 14px;border-top:1px solid var(--line,rgba(0,0,0,.08))"><div style="display:flex;gap:10px;justify-content:space-between;align-items:baseline"><b style="font-size:15px">' + a + '</b><span style="color:var(--sub,#8e8e93);font-size:13px;white-space:nowrap">' + (c2 || '') + '</span></div>' + (b ? '<div style="font-size:14px;margin-top:2px">' + b + '</div>' : '') + '</div>'; };
+    var Z = MXR;
+    // визиты: по дням и менеджерам
+    var vis = (Z.visits || []).slice(0, 60).map(function(v){ return row(esc(dm(v.day)) + ' · ' + esc(v.who), v.rows && v.rows.length ? v.rows.map(function(r){ return '• ' + esc(r.client) + ' — ' + esc(r.did) + (r.next ? ' · след. ' + esc(r.next) : '') + (r.sum ? ' · <b>' + rub(r.sum) + ' ₽</b>' : ''); }).join('<br>') : esc(v.raw || ''), (v.rows || []).length ? v.rows.length + ' кл.' : ''); }).join('');
+    var out = (Z.out || []).slice(0, 30).map(function(o){ return row(esc(dm(o.day)) + ' · уехало ' + o.n + ' маш.', esc((o.list || []).join(', ')), esc(o.who)); }).join('');
+    var inb = (Z.inbound || []).slice(0, 30).map(function(o){ return row(esc(dm(o.day)) + ' · ' + (o.list || []).length + ' маш.' + (o.tons ? ' · ' + String(o.tons).replace('.', ',') + ' т' : ''), esc((o.list || []).map(function(x){ return x.what + (x.t ? ' ' + String(x.t).replace('.', ',') + ' т' : ''); }).join(', '))); }).join('');
+    var sup = (Z.supply || []).slice(0, 30).map(function(o){ return row(esc(dm(o.day)) + (o.sum ? ' · ' + rub(o.sum) + ' ₽' : ''), esc((o.top || []).slice(0, 5).join('; ')), (o.docs || '') + ' док. · ' + (o.sup || '') + ' пост.'); }).join('');
+    var abs = (Z.absent || []).slice(0, 20).map(function(o){ return row(esc(dm(o.day)), esc((o.rows || []).join('; ')) + (o.nomark ? '<br><span style="color:#ff9500">Нет отметки: ' + esc(o.nomark) + '</span>' : ''), (o.rows || []).length + ' уч.'); }).join('');
+    var mon = (Z.money || []).slice(0, 40).map(function(o){ return row(esc(dm(o.day)) + ' · ' + esc(o.who), esc(o.x) + ((o.files || []).length ? '<br>📎 ' + esc(o.files.join(', ')) : ''), o.sum ? rub(o.sum) + ' ' + esc(o.cur) : ''); }).join('');
+    var obj = (Z.objects || []).slice(0, 20).map(function(o){ return row(esc(dm(o.day)) + ' · ' + esc(o.who), (o.file ? '📎 ' + esc(o.file) + '<br>' : '') + esc(o.x).replace(/\\n/g, '<br>')); }).join('');
+    h += box('Визиты и сделки: вечерние отчёты менеджеров', (Z.visits || []).length, vis) + box('Машины с погрузки (уехало)', (Z.out || []).length, out) +
+         box('Машины поставщиков на территорию', (Z.inbound || []).length, inb) + box('Поставки за день: документы и суммы без НДС', (Z.supply || []).length, sup) +
+         box('Отсутствующие по участкам', (Z.absent || []).length, abs) + box('Деньги: оплаты и согласования (Узбекистан)', (Z.money || []).length, mon) +
+         box('Большие объекты ФТС и ВиТ: реестры и статусы', (Z.objects || []).length, obj);
+    V.innerHTML = h + '<p class="ifoot">Собирает робот из групп MAX: ' + esc((Z.groups || []).join(', ')) + '. Обновлено ' + esc(String(Z.t || '').replace('T', ' ')) + '.</p>';
+  }
+  if (window.T14Live && T14Live.bin) T14Live.bin('maxrep.bin').then(function(Z){ if (Z && Z.v) { MXR = Z; var h = location.hash.slice(1); if (!h) main(); else if (h === 'maxrep') maxrepView(); } });
+  if (window.T14Live && T14Live.bin) {
+    var mregRe = function(){ var h = location.hash.slice(1); if (!h) main(); else if (mregItems(h).length) cat(h); };
+    T14Live.bin('mreg.bin').then(function(Z){ if (Z && Z.cats) { MREG = Z; mregRe(); } });
+    T14Live.bin('prot.bin').then(function(Z){ if (Z && Z.items) { PROTB = Z; mregRe(); } });
+  }
   function cat(k){
+    if (k === 'maxrep') return maxrepView();
     if ((k === 'reissue' || /^reissue-/.test(k)) && D.reissue) return reissueView();
     if (k === 'dog') return dogView(TT('dog'));
     if (k === 'kp') return mailKind('kp', TT('kp'));
@@ -560,8 +622,10 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       h += '<div class="igroup" style="margin-top:14px">' + its.map(function(i){ return docRow(i, c); }).join('') + '</div>';
     }
     h += pubBlock(k, c.c, c.i);
+    h += mregBlock(k);
     if (ls.length) h += '<p class="ihdr">Внешние ссылки</p><div class="igroup">' + ls.map(linkRow).join('') + '</div>';
-    if (k === 'protocols' && !its.length) h += '<p class="empty">ОМТС собирает протоколы переговоров с поставщиками (цены, условия поставки, разногласия). Присылают файлом на user1@example.org с темой «Протокол переговоров — поставщик»; каждый появится здесь в течение дня.</p>';
+    if (mregItems(k).length) {}
+    else if (k === 'protocols' && !its.length) h += '<p class="empty">ОМТС собирает протоколы переговоров с поставщиками (цены, условия поставки, разногласия). Присылают файлом на user1@example.org с темой «Протокол переговоров — поставщик»; каждый появится здесь в течение дня.</p>';
     else if (!its.length && !pubDocs(k).length) h += '<p class="empty">' + (ls.length ? 'Документы доступны по ссылкам выше.' : 'Пока нет документов.') + '</p>';
     h += how();
     V.innerHTML = h;
