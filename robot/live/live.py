@@ -78,7 +78,7 @@ QUERY = ('(((from:user28@example.org subject:Отчет) OR ((from:user16@exampl
          ' OR (from:user3@example.org (subject:"Складские остатки" OR subject:"Жилпромсервис отчеты" OR subject:"ПКС свободные остатки"))'
          ' OR ((from:user5@example.org OR from:user4@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
          ' OR (from:user30@example.org filename:zip)'
-         ' OR ((from:user6@example.org OR from:user33@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
+         ' OR ((from:user6@example.org OR from:user35@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
          ' OR ((from:user16@example.org OR from:user15@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
 GALV_FROM = ('user16@example.org', 'user15@example.org')
 GALV_DATE = re.compile(r'за\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}|\d{2}))?(?!\d)', re.I)
@@ -977,7 +977,7 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
     if sm:
         try:
             import subprocess
-            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user40@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
+            r = subprocess.run([sm, '-t', '-oi'], input=msg('Фабрика <user42@example.org>').as_bytes(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
             if r.returncode == 0: return 'ok (sendmail)'
             errs.append('sendmail: %s %s' % (r.returncode, r.stderr[:100].decode('utf-8', 'replace')))
         except Exception as e: errs.append('sendmail: ' + str(e)[:100])
@@ -1289,7 +1289,7 @@ def sales_day_backfill():
 
 
 REP_BF_V = 1
-REP_BF_FROM = ('user3@example.org', 'user34@example.org', 'user30@example.org')
+REP_BF_FROM = ('user3@example.org', 'user36@example.org', 'user30@example.org')
 
 
 def rep_1c_backfill(budget=40):
@@ -1449,6 +1449,39 @@ def lane_reports():
             status['svc'] = SVC.publish_all(L, publish, log)
         except Exception as e:
             status['svc'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! письма служб:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: видеонаблюдение (письма регистраторов cctv@ → st/cam.bin, ночной периметр → бот)
+            import cctv as CC
+            status['cctv'] = CC.run(L, log, jload, jsave, publish, publish_file, alert, now(), mail_send)
+        except Exception as e:
+            status['cctv'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! камеры:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: детализация звонков МТС (user43@example.org → st/calls.bin), особый контроль корпоративных номеров
+            import mts as MT
+            status['mts'] = MT.run(L, log, jload, jsave, publish, now())
+        except Exception as e:
+            status['mts'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! звонки МТС:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: FTP сайта fabrikant.su → раздел портала и обмен отчётами (ftp_sync.py; доступ — ~/.fabrika_live/ftp.json)
+            import ftp_sync as FS
+            status['ftp'] = FS.run(L, log, jload, jsave, publish, publish_file, now(), mail_send)
+        except Exception as e:
+            status['ftp'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! FTP:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: протоколы переговоров ОМТС из 1c@ → «Документы» (prot_mail.py)
+            import prot_mail as PM
+            status['prot'] = PM.run(L, log, jload, jsave, publish, publish_file, now())
+        except Exception as e:
+            status['prot'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! протоколы:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: системная информация из 1c@ (реестр ОМТС, расходы ОП, экспорт, договоры) → «Документы» (mail_reg.py)
+            import mail_reg as MR
+            status['mreg'] = MR.run(L, log, jload, jsave, publish, publish_file, now())
+        except Exception as e:
+            status['mreg'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! почта → документы:', e.__class__.__name__, e)
+        try:                                                           # 19.11.2026, Т. В.: онлайн-цены → портал без пересборки сайта (Claude кладёт code/online.json пакетом кода)
+            po = os.path.join(CODE, 'online.json'); so = jload('onl_pub.json', {}) or {}
+            if os.path.exists(po) and so.get('m') != os.path.getmtime(po):
+                with open(po, encoding='utf-8') as f: oj = json.load(f)
+                if isinstance(oj, dict) and oj.get('arts') and publish('onl.bin', oj): so = {'m': os.path.getmtime(po), 't': oj.get('t')}; jsave('onl_pub.json', so)
+            status['onl'] = so.get('t')
+        except Exception as e:
+            status['onl'] = 'ошибка: %s' % e.__class__.__name__; log('  ! онлайн-цены:', e.__class__.__name__, e)
         try: status['sday_bf'] = sales_day_backfill()                  # 30.10.2026: «Продажи в разрезе…» из архива 1c@ (пришли до разборщика)
         except Exception as e:
             status['sday_bf'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! продажи за день (архив):', e.__class__.__name__, e)
@@ -1484,6 +1517,29 @@ def lane_reports():
         except Exception as e:
             import traceback; log('  ! пересчёт:', traceback.format_exc()[-600:])
             parts = parts or {}
+        # 19.11.2026, Т. В.: «выложил, но не отобразил во всех карточках» — pf.bin (главная, «Производство», гальваника) пересчитывался только
+        # участком docs раз в час, а ls.bin — сразу. Сотрудник5 отчёт → pf.bin в этом же прогоне (summary_only сверяет подпись, без изменений — выход сразу).
+        if new and (jload('status.json', {}, peek=True).get('itm') or {}).get('mail') != 'ok':
+            try:
+                import itm_ytd as IY
+                status['ytd_now'] = IY.summary_only(L, BO, OUTD, log, jload, jsave, publish)
+            except Exception as e:
+                status['ytd_now'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! выпуск и план-факт сразу:', e.__class__.__name__, e)
+        # 19.11.2026: продажи 1С за день приходят в 10:00, а «Продажи» (sales.bin) собирал участок history раз в час — на портале к 11:10.
+        # Пришли новые продажи — history вне очереди на ближайшем cron (lane_go.json, как разовый прогон по слову владельца).
+        try:
+            sdm = os.path.getmtime(os.path.join(STATE, 'sales_day.json'))
+            hts = float((jload('lane_history.json', {}, peek=True) or {}).get('ts') or 0)
+            if sdm > hts:
+                gp = os.path.join(CODE, 'lane_go.json')
+                try:
+                    with open(gp, encoding='utf-8') as _f: go = json.load(_f) or {}
+                except Exception: go = {}
+                go['history'] = iso(now())
+                with open(gp + '.tmp', 'w', encoding='utf-8') as _f: json.dump(go, _f)
+                os.replace(gp + '.tmp', gp)
+                status['sales_go'] = go['history']
+        except Exception as e: log('  ! продажи сразу:', e.__class__.__name__, e)
     last = last_by_kind(recv)
     status.update({'t': iso(t), 'expect': expected(t.date(), last), 'last': last, 'check_at': CHECK_AT})
     if alerts is not None and status_ok:
@@ -1512,7 +1568,7 @@ def lane_reports():
         status['probe_vi'] = PVI.run(jload, jsave, iso, now())
     except Exception as e: status['probe_vi'] = {'err': e.__class__.__name__}
     st_pub = {k: status.get(k) for k in ('t', 'mail', 'mail_t', 'expect', 'last', 'check_at', 'deploy', 'gas', 'itm', 'ozon', 'mail_q', 'mail_out',
-                                         'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12')}   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
+                                         'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12', 'cctv', 'mts', 'ftp', 'onl', 'prot', 'mreg')}   # 19.11.2026: итоги камер, звонков МТС и FTP — для проверки выкладки   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
     st_pub['lanes'] = lanes_status()
     st_pub['arch_prune'] = status.get('arch_prune') or (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
     st_pub['alert'] = a if a and (a.get('miss') or a.get('none')) else None
@@ -1632,7 +1688,7 @@ def lane_bots():
     except Exception as e:
         status['unans'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
         log('  ! без ответа:', e.__class__.__name__, e)
-    try:                                                   # 30.10.2026, пользователь: «user41@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
+    try:                                                   # 30.10.2026, пользователь: «user44@example.org — на особый контроль»; опрос «Робот: напоминание и вам сводка» (sales_ctl.py)
         import sales_ctl as SCT
         status['sales_ctl'] = SCT.run(L, CFG, log, jload, jsave, iso, mail_send)
     except Exception as e:
