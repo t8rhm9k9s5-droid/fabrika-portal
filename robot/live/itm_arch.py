@@ -45,7 +45,8 @@ def _ext(n):
 # «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
-SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник34 С. В.)'}   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
+SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник34 С. В.)', 'user32@example.org': 'Видеонаблюдение (регистраторы Dahua)'}
+CCTV_FROM = 'user32@example.org'   # 19.11.2026: письма регистраторов — снимки .jpg тоже в arch/files (cctv.py → портал)   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
 PRUNE_DRY = False   # 13.11.2026 ~13:45, Т. В. (опрос): «Да, включай» — удаление вложений старше 3 дней включено
 _MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
@@ -197,6 +198,11 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                     if size < MAX_MSG:
                         typ, d = M.uid('FETCH', str(u), '(BODY.PEEK[])')
                         full = next((x[1] for x in d or [] if isinstance(x, tuple)), None)
+                        if full is None and hdr:                   # 19.11.2026 (Рекс №44): письмо не скачалось — не отмечать разобранным, повторить
+                            fr = fs.setdefault('fetch_retry', {}); k = str(u); fr[k] = int(fr.get(k) or 0) + 1
+                            if fr[k] < IT.QUAR_TRIES:
+                                log('  ! архив: письмо не скачалось, повтор', name, u); pending += 1; break
+                            fr.pop(k, None)                        # после нескольких попыток — как большое письмо (только заголовок)
                     msg = email.message_from_bytes(full or hdr, policy=email.policy.default)
                     fname, frm = IT.addr(msg['From'])
                     subj = IT.clean(msg['Subject']).strip()
@@ -226,7 +232,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                         sha = hashlib.sha256(data_).hexdigest()
                         a = {'n': fn[:160], 'sz': len(data_), 'sha': sha[:24]}
                         ext = _ext(fn)
-                        if data_ and ext in DOC_EXT:
+                        if data_ and (ext in DOC_EXT or (frm == CCTV_FROM and ext in ('.jpg', '.jpeg') and len(data_) <= 2 * 1024 * 1024)):
                             dst = os.path.join(root, sha[:24] + ext)
                             if os.path.exists(dst): a['p'] = 1
                             elif st['bytes'] + len(data_) <= ARCH_CAP:
