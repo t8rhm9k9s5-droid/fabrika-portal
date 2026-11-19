@@ -57,9 +57,10 @@ def _file_1c(M, raw, mv, log):
         if typ != 'OK': return 0
         for u, lab in mv:
             try:
-                M.uid('STORE', str(u), '+X-GM-LABELS', '("%s")' % IT.utf7_encode(lab))
                 M.uid('STORE', str(u), '+FLAGS', '(\\Seen)')
-                M.uid('STORE', str(u), '-X-GM-LABELS', '(\\Inbox)')
+                typ, _ = M.uid('MOVE', str(u), '"%s"' % IT.utf7_encode(lab))      # 19.11.2026: Gmail — MOVE в ярлык = из «Входящих» в папку (снять \\Inbox при выбранной INBOX нельзя)
+                if typ != 'OK':
+                    M.uid('STORE', str(u), '+X-GM-LABELS', '("%s")' % IT.utf7_encode(lab))
                 n += 1
             except Exception as e: log('  ! 1c@: не перенёс письмо', u, lab, e.__class__.__name__)
     except Exception as e: log('  ! 1c@: перенос писем по папкам', e.__class__.__name__, e)

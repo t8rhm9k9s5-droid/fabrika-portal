@@ -1568,7 +1568,7 @@ def lane_reports():
         status['probe_vi'] = PVI.run(jload, jsave, iso, now())
     except Exception as e: status['probe_vi'] = {'err': e.__class__.__name__}
     st_pub = {k: status.get(k) for k in ('t', 'mail', 'mail_t', 'expect', 'last', 'check_at', 'deploy', 'gas', 'itm', 'ozon', 'mail_q', 'mail_out',
-                                         'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12', 'cctv', 'mts', 'ftp', 'onl', 'prot', 'mreg')}   # 19.11.2026: итоги камер, звонков МТС и FTP — для проверки выкладки   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
+                                         'mail_mode', 'gas_in', 'period_lock', 'vyp_note', 'probe_vi', 'fresh12', 'cctv', 'mts', 'ftp', 'onl', 'prot', 'mreg', 'maxrep')}   # 19.11.2026: итоги камер, звонков МТС и FTP — для проверки выкладки   # 29.10.2026: режим почты и письма от бота (read="gas"); 02.11: закрытие месяца — порталу
     st_pub['lanes'] = lanes_status()
     st_pub['arch_prune'] = status.get('arch_prune') or (status.get('arch') or {}).get('prune') or (status.get('arch_1c') or {}).get('prune')   # 13.11.2026: итог очистки вложений (сколько удалилось бы / удалено) — для проверки перед включением
     st_pub['alert'] = a if a and (a.get('miss') or a.get('none')) else None
@@ -1741,6 +1741,12 @@ def lane_history():
     except Exception as e:
         status['promises'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
         log('  ! история MAX:', e.__class__.__name__, e)
+    try:                                                   # 19.11.2026, Т. В.: повторяющееся из групп MAX → отчёты (визиты, машины, поставки, отсутствующие, деньги UZ, объекты)
+        import max_rep as MXR
+        status['maxrep'] = MXR.run(L, log, jload, jsave, publish, iso)
+    except Exception as e:
+        status['maxrep'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
+        log('  ! отчёты MAX:', e.__class__.__name__, e)
     try:                                                   # 27.10.2026: раздел «Продажи» — отчёты офисов продаж из группы MAX и itm@ (sales_rep.py)
         import sales_rep as SR
         status['sales'] = SR.run(L, CFG, log, jload, jsave, publish, iso)
