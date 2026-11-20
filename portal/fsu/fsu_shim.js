@@ -1,0 +1,25 @@
+/* fsu: запросы сайта к API → снимки в /fsu/_api/ (сайт работает внутри портала без связи с fabrikant.su) */
+(function(){var A=__AMAP__,K=Object.keys(A);
+function norm(k){return k.replace(/([?&])rand=[^&]*&?/,'$1').replace(/[?&]$/,'')}
+var N={};K.forEach(function(k){N[norm(k)]=A[k]});
+function act(k){var m=/action=([^&]+)/.exec(k);return m?m[1]:''}
+function find(u){try{var x=new URL(u,document.baseURI);if(x.pathname.indexOf('/fsu/api/')!==0)return null;
+ var k=x.pathname.slice(4)+x.search;if(A[k])return A[k];if(N[norm(k)])return N[norm(k)];
+ var a=act(k),pg=/[?&]page=(\d+)/.exec(k);for(var i=0;i<K.length;i++)if(act(K[i])===a&&a&&(!pg||K[i].indexOf('page='+pg[1])>=0)&&k.split('&url=')[1]===K[i].split('&url=')[1])return A[K[i]];
+ return '';}catch(e){return null}}
+function to(h){return h?'/fsu/_api/'+h+'.json':'data:application/json,%7B%7D'}
+var O=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){var h=find(u);if(h!==null){arguments[0]='GET';arguments[1]=to(h)}return O.apply(this,arguments)};
+var F=window.fetch;window.fetch=function(i,o){var u=typeof i==='string'?i:(i&&i.url);if(/(^|\/fsu\/)acct\.json$/.test(u||''))return F('/acct.json',o);var h=find(u);if(h!==null)return F(to(h));return F.apply(this,arguments)};
+})();
+/* 20.11.2026: фото под экран — srcset из вариантов 640/1280/2560 (fsu_img.py), лениво; карта вариантов _img.json грузится сразу, параллельно с приложением */
+(function(){var M=null,Q=[];var PF='upload/als-1c/catalog/products/';
+function rel(u){try{var p=new URL(u,document.baseURI).pathname;if(p.indexOf('/fsu/')!==0)return null;p=decodeURIComponent(p.slice(5));return p.indexOf(PF)===0?'~'+p.slice(PF.length):p}catch(e){return null}}
+function fix(im){if(!M){Q.push(im);return}var s=im.getAttribute('src');if(!s||im.srcset)return;var k=rel(s),v=k&&M[k];if(!v)return;
+ var b=s.split('?')[0],ss=[b+' '+v[0]+'w'];if(v[1])ss.unshift(b+'.640.webp '+v[1]+'w');if(v[2])ss.push(b+'.2560.webp '+v[2]+'w');
+ var w=Math.round(im.getBoundingClientRect().width)||im.width||v[0];im.sizes=w+'px';im.srcset=ss.join(', ');im.__fsu=1}
+function scan(n){if(n.tagName==='IMG'){if(!n.loading)n.loading='lazy';n.decoding='async';fix(n)}else if(n.querySelectorAll)n.querySelectorAll('img').forEach(function(i){if(!i.loading)i.loading='lazy';i.decoding='async';fix(i)})}
+new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='attributes'){if(m.target.tagName==='IMG'&&m.attributeName==='src'){m.target.removeAttribute('srcset');fix(m.target)}}else m.addedNodes.forEach(scan)})}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
+var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){document.querySelectorAll('img[srcset]').forEach(function(i){var w=Math.round(i.getBoundingClientRect().width);if(w)i.sizes=w+'px'})},300)});
+function load(){fetch('/fsu/_img.json').then(function(r){return r.ok?r.json():{}}).then(function(j){M=j||{};var q=Q;Q=[];q.forEach(fix);document.querySelectorAll('img').forEach(fix)}).catch(function(){M={}})}
+load();
+})();

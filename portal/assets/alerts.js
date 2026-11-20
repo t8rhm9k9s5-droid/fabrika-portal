@@ -13,7 +13,7 @@
   if (!L.length) return;
   var page = (location.pathname.split('/').pop() || 'home.html');
   var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
-    'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
+    'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'cams.html': 'site', 'jps.html': 'sales', 'mts.html': 'people', 'ftp.html': 'docs', 'transport.html': 'log' };
   function secOf() { return page === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[page] || ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function day() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
@@ -30,7 +30,10 @@
   function forHere(a) {
     // 15.11.2026 ~21:45, Т. В. (видео 21:39): «алерты, не относящиеся к данному разделу, в разделе не печатать» — критичные тоже только на главной и в своём разделе
     if (page === 'home.html') return true;
-    return (a.secs || []).indexOf(secOf()) >= 0 || String(a.href || '').split('#')[0] === page;
+    // 16.11.2026 (R5-06 Рекса): у общей страницы разделов (razdel.html) раздел — в #хвосте; совпадение одного имени файла не значит «этот раздел»
+    //   (раньше тревога продаж из razdel.html#sales показывалась и в #recl, #online, #peo, #struct)
+    var hp = String(a.href || '').split('#'), here = hp[0] === page && (page !== 'razdel.html' || decodeURIComponent(hp[1] || '') === secOf());
+    return (a.secs || []).indexOf(secOf()) >= 0 || here;
   }
   // ---------- карточка-уведомление ----------
   function card(a) {
@@ -50,7 +53,11 @@
     if (sub && sub.parentNode) return { p: sub.parentNode, before: sub.nextSibling };
     var m = document.querySelector('main.ios') || document.querySelector('main') || document.querySelector('.ios');
     // 15.11.2026 ~22:00, Т. В.: «раздел должен начинаться с максимальной верхней точки» — тревоги раздела под заголовком и подписью, а не над ними
-    if (m) { var h = m.querySelector('h1'); if (h && h.parentNode === m) { var nx = h.nextElementSibling; if (nx && nx.tagName === 'P') h = nx; return { p: m, before: h.nextSibling }; } return { p: m, before: m.firstChild }; }
+    if (m) {
+      var h = m.querySelector('h1');
+      if (h) { while (h.parentNode && h.parentNode !== m) h = h.parentNode; var nx = h.nextElementSibling; if (h.tagName === 'H1' && nx && nx.tagName === 'P') h = nx; return { p: m, before: h.nextSibling }; }
+      return { p: m, before: m.firstChild };
+    }
     var top = document.querySelector('.ptop');
     return top ? { p: top.parentNode, before: top.nextSibling, loose: true } : null;
   }

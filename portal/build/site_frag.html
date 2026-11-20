@@ -1,0 +1,178 @@
+<!-- ADMIN-RULE-2026-11-08 — правило владельца, бессрочно, для любого исполнителя (Claude, ChatGPT, боты, люди):
+     Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
+     Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
+     Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. -->
+<title>Фабрика — сайт</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* «Сайт» (раздел «Продукция») — 20.11.2026, Т. В.: «отдельный раздел каталога «Сайт», и сайт должен смотреться как сайт внутри этого раздела; подгрузи всё с FTP».
+   Данные — только с FTP сайта fabrikant.su: st/ftp_idx.bin и st/ftp_stores.bin (робот ftp_sync.py), картинки — st/f/<id>.bin. Режим «Убедить»: витрина, реальные фото. */
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+:root{--w-bg:#F6F4F1;--w-card:#FFFFFF;--w-ink:#1D1B1A;--w-mut:#6E6863;--w-line:rgba(29,27,26,.10);--w-acc:#C8102E;--w-acc2:#9E0B23;--w-soft:#EFEBE6;--w-ph:#ECE8E3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--w-bg:#141312;--w-card:#1E1C1B;--w-ink:#F3F0EC;--w-mut:#A59E97;--w-line:rgba(243,240,236,.12);--w-acc:#E8334F;--w-acc2:#FF5A72;--w-soft:#262321;--w-ph:#2A2725}}
+:root[data-theme="dark"]{--w-bg:#141312;--w-card:#1E1C1B;--w-ink:#F3F0EC;--w-mut:#A59E97;--w-line:rgba(243,240,236,.12);--w-acc:#E8334F;--w-acc2:#FF5A72;--w-soft:#262321;--w-ph:#2A2725}
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 8px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+.web{background:var(--w-bg);color:var(--w-ink);border-radius:18px;overflow:hidden;border:.5px solid var(--w-line);box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -18px rgba(0,0,0,.25)}
+.wtop{display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--w-card);border-bottom:.5px solid var(--w-line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;color:inherit}
+.brand i{width:34px;height:34px;background:url(data:image/png;base64,REDACTED_B64_12) center/contain no-repeat}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand i{background-image:url(data:image/png;base64,REDACTED_B64_13)}}
+:root[data-theme="dark"] .brand i{background-image:url(data:image/png;base64,REDACTED_B64_13)}
+.brand b{font:800 19px/1 var(--f-display,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);letter-spacing:.02em;text-transform:uppercase}.brand small{display:block;font-size:11px;color:var(--w-mut);letter-spacing:.04em;margin-top:3px}
+.wnav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.wnav a{font:600 14px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);color:var(--w-ink);text-decoration:none;padding:8px 12px;border-radius:10px;cursor:pointer}
+.wnav a:hover{background:var(--w-soft)}.wnav a[aria-current="page"]{background:var(--w-ink);color:var(--w-card)}
+.wnav a:focus-visible,.card:focus-visible,.btn:focus-visible{outline:2px solid var(--w-acc);outline-offset:2px}
+.wbody{padding:22px 20px 28px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:center;margin-bottom:28px}
+.hero h1{font:800 clamp(28px,4.4vw,44px)/1.05 var(--f-display,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);letter-spacing:-.02em;margin:0 0 10px;text-wrap:balance}
+.hero p{color:var(--w-mut);margin:0 0 16px;max-width:52ch}
+.hero .hp{border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:#fff;border:.5px solid var(--w-line)}.hero .hp img{width:100%;height:100%;object-fit:contain;display:block}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:6px}.stats b{display:block;font:800 26px/1 var(--f-display,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);font-variant-numeric:tabular-nums}.stats span{font-size:13px;color:var(--w-mut)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:11px 16px;font:600 15px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);cursor:pointer;background:var(--w-acc);color:#fff;text-decoration:none}
+.btn:hover{background:var(--w-acc2)}.btn.alt{background:var(--w-soft);color:var(--w-ink)}.btn.alt:hover{background:var(--w-line)}
+h2.sec{font:800 24px/1.15 var(--f-display,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);letter-spacing:-.01em;margin:30px 0 14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2.sec small{font:500 14px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);color:var(--w-mut)}h2.sec a{margin-left:auto;font:600 14px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);color:var(--w-acc);cursor:pointer;text-decoration:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.card{background:var(--w-card);border-radius:14px;overflow:hidden;cursor:pointer;border:.5px solid var(--w-line);transition:transform .18s ease-out,box-shadow .18s ease-out;text-decoration:none;color:inherit;display:block}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(0,0,0,.35)}
+.card .im{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center}
+.card .im img{width:100%;height:100%;object-fit:contain;display:block}
+.card .tx{padding:10px 12px 12px}.card .nm{font-weight:700;font-size:15px;line-height:1.25}.card .cd{color:var(--w-mut);font-size:12.5px;margin-top:3px}
+.ph{color:var(--w-mut);font-size:12.5px;text-align:center;padding:10px;background:var(--w-ph);width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 16px}
+.toolbar input{flex:1 1 240px;min-width:0;padding:11px 14px;border-radius:12px;border:.5px solid var(--w-line);background:var(--w-card);color:var(--w-ink);font:16px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:0;border-radius:999px;padding:7px 12px;font:600 13px var(--f-body,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);background:var(--w-soft);color:var(--w-ink);cursor:pointer}.chip[aria-pressed="true"]{background:var(--w-ink);color:var(--w-card)}
+.pp{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px}
+.gmain{background:#fff;border-radius:16px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden;border:.5px solid var(--w-line)}.gmain img{width:100%;height:100%;object-fit:contain}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-top:10px}.thumbs button{border:1.5px solid transparent;border-radius:10px;padding:0;background:#fff;aspect-ratio:1/1;overflow:hidden;cursor:pointer}.thumbs button[aria-pressed="true"]{border-color:var(--w-acc)}.thumbs img{width:100%;height:100%;object-fit:contain;display:block}
+.pinfo h1{font:800 32px/1.1 var(--f-display,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);margin:0 0 6px;letter-spacing:-.02em}.meta{color:var(--w-mut);font-size:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:16px 0;font-size:14.5px}.kv dt{color:var(--w-mut)}.kv dd{margin:0;font-weight:600}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.sw .card .im{aspect-ratio:1/1}.sw .card .im img{object-fit:cover}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}.plist .card .im{aspect-ratio:4/3}.plist .card .im img{object-fit:cover}
+.city{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.stores{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.store{background:var(--w-card);border-radius:14px;padding:14px 16px;border:.5px solid var(--w-line);font-size:14px}.store b{display:block;font-size:15.5px;margin-bottom:4px}.store div{color:var(--w-mut)}
+.logos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.logos .im{background:#fff;border-radius:14px;aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;padding:14px;border:.5px solid var(--w-line)}.logos img{max-width:100%;max-height:100%;object-fit:contain}
+.wfoot{border-top:.5px solid var(--w-line);padding:16px 20px;color:var(--w-mut);font-size:13px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;background:var(--w-card)}
+.wfoot a{color:var(--w-acc);text-decoration:none;font-weight:600;cursor:pointer}
+.empty{padding:26px;text-align:center;color:var(--w-mut);background:var(--w-card);border-radius:14px}
+.more{display:flex;justify-content:center;margin-top:16px}
+@media (max-width:720px){.hero,.pp{grid-template-columns:1fr}.wnav{margin-left:0;width:100%;overflow-x:auto;flex-wrap:nowrap}.wnav a{white-space:nowrap}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wbody{padding:16px 14px 22px}.wtop{padding:12px 14px}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+</style>
+<main class="ios" id="site">
+  <a class="back" href="home.html">Главная</a>
+  <div class="web">
+    <header class="wtop"><a class="brand" data-go="home"><i aria-hidden="true"></i><span><b>Фабрикант</b><small>мебель для офиса и дома</small></span></a>
+      <nav class="wnav" id="nav"></nav></header>
+    <div class="wbody" id="view"><div class="empty">Загружаю сайт…</div></div>
+    <footer class="wfoot"><span id="fdate">Сайт fabrikant.su · данные с FTP</span><span><a data-go="check">Проверка сайта</a></span></footer>
+  </div>
+</main>
+<script src="assets/live.js"></script>
+<script>
+(function(){
+  // «Сайт» внутри портала: витрина из FTP fabrikant.su (каталог, обивки, цвета, проекты, где купить, клиенты, проверка). 20.11.2026.
+  var V=document.getElementById('view'), NAV=document.getElementById('nav'), Z=null, STO=null, Q='', LET='', LIMIT=60, CITYSEL='', IMGI=0;
+  var PAGES=[['home','Главная'],['cat','Каталог'],['fab','Обивки и цвета'],['prj','Проекты'],['where','Где купить'],['cli','Сотрудник10']];
+  var CITY={moscow:'Москва','saint-petersburg':'Санкт-Петербург',ryazan:'Рязань',samara:'Самара',ekaterinburg:'Екатеринбург',krasnodar:'Краснодар',simferopol:'Симферополь','nizhny-novgorod':'Сотрудник15 Имя3',almaty:'Алматы'};
+  var URLS={}, PEND={};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function base(p){return String(p).split('/').pop()}
+  function isImg(p){return /\.(jpe?g|png|webp|gif|svg)$/i.test(p)}
+  function sz(b){b=+b||0;return b>1048576?(b/1048576).toFixed(1)+' МБ':b>1024?Math.round(b/1024)+' КБ':b+' Б'}
+  function moj(s){return /Р[ЉЊЋЏЃљњћџѓ]|Ð|Ñ/.test(s)}
+  function fixMoj(s){try{var b=[];for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);var m={1026:128,1027:129,8218:130,1107:131,8222:132,8230:133,8224:134,8225:135,8364:136,8240:137,1033:138,8249:139,1034:140,1036:141,1035:142,1039:143,1106:144,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,8482:153,1113:154,8250:155,1114:156,1116:157,1115:158,1119:159,160:160,1038:161,1118:162,1032:163,164:164,1168:165,166:166,167:167,1025:168,169:169,1028:170,171:171,172:172,173:173,174:174,1031:175,176:176,177:177,1030:178,1110:179,1169:180,181:181,182:182,183:183,1105:184,8470:185,1108:186,187:187,1112:188,1029:189,1109:190,1111:191}[c];if(c<128)b.push(c);else if(m)b.push(m);else if(c>=1040&&c<=1103)b.push(c-848);else return s}return decodeURIComponent(b.map(function(x){return '%'+(x<16?'0':'')+x.toString(16)}).join(''))}catch(e){return s}}
+  function nice(fn){var n=fn.replace(/\.[a-z0-9]+$/i,'').replace(/^(main|view|line|photo|cover|img)_/i,'').replace(/(_2x)?(_\d+)+$/,'').replace(/_(CB|PL|DO)$/i,' $1').replace(/[_-]+/g,' ').trim();if(/^[0-9a-f]{20,}$/i.test(n)||/^\d+$/.test(n)||n.length<2)return '';return n.charAt(0).toUpperCase()+n.slice(1)}
+  function M(){
+    if(M.c&&M.c.z===Z) return M.c; var P={},O={},C=[],J={},L=[],R=[];
+    (Z.items||[]).forEach(function(i){var a=i.p.split('/');if(i.d) return;
+      if(a[1]==='catalog'&&a[2]==='products'&&a[3]){var o=P[a[3]]||(P[a[3]]={code:a[3],ph:[],pdf:[],lead:null});if(isImg(i.p)){o.ph.push(i);if(i.lead)o.lead=i}else if(/\.pdf$/i.test(i.p))o.pdf.push(i)}
+      else if(a[1]==='catalog'&&a[2]==='offers'&&a[3]){var f=O[a[3]]||(O[a[3]]={code:a[3],ph:[],lead:null});if(isImg(i.p)){f.ph.push(i);if(i.lead)f.lead=i}}
+      else if(a[1]==='catalog'&&a[2]==='collections'){if(isImg(i.p))C.push(i)}
+      else if(a[1]==='projects'&&a[2]){var j=J[a[2]]||(J[a[2]]={code:a[2],ph:[],lead:null});if(isImg(i.p)){j.ph.push(i);if(i.lead)j.lead=i}}
+      else if(a[1]==='client-logos'){if(isImg(i.p))L.push(i)}
+      else if(a[1]==='reports')R.push(i)});
+    function fin(o,kind){return Object.keys(o).map(function(k){var x=o[k];x.ph.sort(function(a,b){var am=/\/(main|cover)/i.test(a.p)?0:1,bm=/\/(main|cover)/i.test(b.p)?0:1;return am-bm||(a.p<b.p?-1:1)});if(!x.lead)x.lead=x.ph[0]||null;
+      var nm='';if(x.lead)nm=nice(base(x.lead.p));if(!nm)x.ph.some(function(i){nm=nice(base(i.p));return !!nm});
+      x.code1c=moj(x.code)?fixMoj(x.code):x.code;x.name=nm||(kind==='p'?'Модель '+x.code1c:kind==='j'?(/^\d+$/.test(x.code)?'Проект '+x.code.replace(/^0+/,''):x.code.replace(/-xml-id$/,'').replace(/-/g,' ')):x.code1c);
+      if(kind==='j'&&!/^\d+$/.test(x.code)){x.name=x.code.replace(/-xml-id$/,'').replace(/-/g,' ');x.name=x.name.charAt(0).toUpperCase()+x.name.slice(1)}
+      return x}).sort(function(a,b){return (a.ph.length?0:1)-(b.ph.length?0:1)||a.name.localeCompare(b.name,'ru')})}
+    return (M.c={z:Z,P:fin(P,'p'),O:fin(O,'o'),C:C,J:fin(J,'j'),L:L,R:R});
+  }
+  function im(i,alt){if(!i) return '<div class="ph">нет фото</div>';if(!i.id) return '<div class="ph">'+(i.s>3145728?'фото тяжелее 3 МБ — на портал не загружено, нужно уменьшить на FTP':'фото загружается')+'</div>';return URLS[i.id]?'<img src="'+URLS[i.id]+'" alt="'+esc(alt||'')+'">':'<img data-id="'+i.id+'" data-n="'+esc(i.p)+'" alt="'+esc(alt||'')+'">'}
+  function loadImgs(){var L=[].slice.call(V.querySelectorAll('img[data-id]'));var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);get(e.target)}})},{rootMargin:'400px'}):null;L.forEach(function(x){io?io.observe(x):get(x)})}
+  function get(el){var id=el.dataset.id;if(URLS[id]){el.src=URLS[id];return}(PEND[id]||(PEND[id]=T14Live.file(id).then(function(b){if(!b)return null;var n=el.dataset.n||'';URLS[id]=URL.createObjectURL(new Blob([b],{type:/\.svg$/i.test(n)?'image/svg+xml':/\.png$/i.test(n)?'image/png':'image/jpeg'}));return URLS[id]}))).then(function(u){if(u)el.src=u;else el.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'нет фото'}))})}
+  function route(){var h=(location.hash||'').slice(1);try{h=decodeURIComponent(h)}catch(e){};var a=h.split('/');return {pg:a[0]||'home',id:a.slice(1).join('/')}}
+  function go(h){if(location.hash.slice(1)===h){draw()}else location.hash=h;window.scrollTo(0,document.getElementById('site').offsetTop-8)}
+  function nav(pg){NAV.innerHTML=PAGES.map(function(p){return '<a data-go="'+p[0]+'"'+(pg===p[0]||(pg==='p'&&p[0]==='cat')||(pg==='j'&&p[0]==='prj')?' aria-current="page"':'')+'>'+p[1]+'</a>'}).join('')}
+  function cover(x){if(x.lead&&x.lead.id)return x.lead;return x.ph.filter(function(i){return i.id})[0]||x.lead}
+  function card(x,kind){return '<a class="card" tabindex="0" data-go="'+kind+'/'+esc(x.code)+'"><div class="im">'+im(cover(x),x.name)+'</div><div class="tx"><div class="nm">'+esc(x.name)+'</div><div class="cd">'+(kind==='p'?'Код 1С '+esc(x.code1c)+' · ':'')+x.ph.length+' фото'+(x.pdf&&x.pdf.length?' · инструкция':'')+'</div></div></a>'}
+  function home(m){var hero=m.J.filter(function(j){return cover(j)&&cover(j).id})[0]||m.P.filter(function(p){return p.lead&&p.lead.id})[0];
+    var top=m.P.filter(function(p){return p.lead&&p.lead.id&&p.ph.length>2}).slice(0,8);if(top.length<8)top=top.concat(m.P.filter(function(p){return top.indexOf(p)<0&&p.ph.length}).slice(0,8-top.length));
+    var cities=STO&&STO.stores?Object.keys(STO.stores).length:9;
+    return '<section class="hero"><div><h1>Мебель «Фабрикант» для офиса, дома и бизнеса</h1><p>Кресла, стулья, диваны и мебель для зон ожидания собственного производства. Ткани и экокожа на выбор, готовые решения для сетей и проектов.</p>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" data-go="cat">Смотреть каталог</a><a class="btn alt" data-go="where">Где купить</a></div>'+
+      '<div class="stats" style="margin-top:18px"><div><b>'+m.P.length+'</b><span>моделей</span></div><div><b>'+m.O.length+'</b><span>обивок</span></div><div><b>'+m.C.length+'</b><span>цветов</span></div><div><b>'+cities+'</b><span>городов</span></div></div></div>'+
+      '<div class="hp">'+(hero?im(cover(hero),hero.name):'<div class="ph">фото загружается</div>')+'</div></section>'+
+      '<h2 class="sec">Модели <small>'+m.P.length+'</small><a data-go="cat">Весь каталог ›</a></h2><div class="cards">'+top.map(function(x){return card(x,'p')}).join('')+'</div>'+
+      (m.J.length?'<h2 class="sec">Проекты <small>'+m.J.length+'</small><a data-go="prj">Все проекты ›</a></h2><div class="plist">'+m.J.slice(0,3).map(function(x){return card(x,'j')}).join('')+'</div>':'')+
+      (m.O.length?'<h2 class="sec">Обивки <small>'+m.O.length+'</small><a data-go="fab">Все обивки и цвета ›</a></h2><div class="sw">'+m.O.filter(function(o){return o.lead}).slice(0,12).map(function(x){return '<a class="card" data-go="fab"><div class="im">'+im(x.lead,x.name)+'</div><div class="tx"><div class="cd">'+esc(x.name)+'</div></div></a>'}).join('')+'</div>':'')+
+      (m.L.length?'<h2 class="sec">Нам доверяют</h2><div class="logos">'+m.L.map(function(i){return '<div class="im">'+im(i,'')+'</div>'}).join('')+'</div>':'')}
+  function cat(m){var q=Q.toLowerCase().trim(),L=m.P.filter(function(x){return (!q||(x.name+' '+x.code1c).toLowerCase().indexOf(q)>=0)&&(!LET||x.name.charAt(0).toUpperCase()===LET)});
+    var letters=[];m.P.forEach(function(x){var c=x.name.charAt(0).toUpperCase();if(letters.indexOf(c)<0&&/[A-ZА-ЯЁ]/.test(c))letters.push(c)});letters.sort(function(a,b){return a.localeCompare(b,'ru')});
+    return '<h2 class="sec" style="margin-top:0">Каталог <small>'+L.length+' из '+m.P.length+' моделей</small></h2><div class="toolbar"><input id="q" type="search" placeholder="Модель или код 1С" value="'+esc(Q)+'" aria-label="Поиск по каталогу"></div>'+
+      '<div class="chips" style="margin-bottom:16px"><button class="chip" data-let="" aria-pressed="'+(!LET)+'">Все</button>'+letters.map(function(c){return '<button class="chip" data-let="'+c+'" aria-pressed="'+(LET===c)+'">'+c+'</button>'}).join('')+'</div>'+
+      (L.length?'<div class="cards">'+L.slice(0,LIMIT).map(function(x){return card(x,'p')}).join('')+'</div>'+(L.length>LIMIT?'<div class="more"><button class="btn alt" id="more">Показать ещё '+Math.min(60,L.length-LIMIT)+'</button></div>':''):'<div class="empty">Ничего не нашлось. Попробуйте другое название или код.</div>')}
+  function prod(m,id){var x=m.P.filter(function(p){return p.code===id})[0];if(!x) return '<div class="empty">Модель не найдена. <a data-go="cat">В каталог</a></div>';if(IMGI>=x.ph.length)IMGI=0;var cur=x.ph[IMGI];
+    var rel=m.P.filter(function(p){return p!==x&&p.name.split(' ')[0]===x.name.split(' ')[0]}).slice(0,4);
+    return '<p class="meta" style="margin:0 0 12px"><a data-go="cat" style="color:var(--w-acc);cursor:pointer">Каталог</a> › '+esc(x.name)+'</p><div class="pp"><div><div class="gmain">'+im(cur,x.name)+'</div>'+(x.ph.length>1?'<div class="thumbs">'+x.ph.map(function(i,k){return '<button data-img="'+k+'" aria-pressed="'+(k===IMGI)+'" aria-label="Фото '+(k+1)+'">'+im(i,'')+'</button>'}).join('')+'</div>':'')+'</div>'+
+      '<div class="pinfo"><h1>'+esc(x.name)+'</h1><div class="meta">Производство «Фабрикант»</div><dl class="kv"><dt>Код 1С</dt><dd>'+esc(x.code1c)+'</dd><dt>Фото</dt><dd>'+x.ph.length+'</dd><dt>Инструкция</dt><dd>'+(x.pdf.length?'есть':'нет')+'</dd></dl>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+x.pdf.map(function(f){return f.id?'<button class="btn" data-pdf="'+f.id+'" data-n="'+esc(f.p)+'">Инструкция по сборке</button>':'<span class="meta">инструкция загружается</span>'}).join('')+'<a class="btn alt" data-go="where">Где купить</a><a class="btn alt" data-go="fab">Обивки и цвета</a></div></div></div>'+
+      (rel.length?'<h2 class="sec">Из той же серии</h2><div class="cards">'+rel.map(function(r){return card(r,'p')}).join('')+'</div>':'')}
+  function fab(m){var q=Q.toLowerCase().trim(),O=m.O.filter(function(o){return !q||o.name.toLowerCase().indexOf(q)>=0||o.code.indexOf(q)>=0});
+    return '<h2 class="sec" style="margin-top:0">Обивки <small>'+m.O.length+'</small></h2><div class="toolbar"><input id="q" type="search" placeholder="Ткань, экокожа, цвет" value="'+esc(Q)+'" aria-label="Поиск обивки"></div><div class="sw">'+O.map(function(x){return '<div class="card"><div class="im">'+im(x.lead,x.name)+'</div><div class="tx"><div class="nm" style="font-size:13px">'+esc(x.name)+'</div><div class="cd">'+esc(x.code)+'</div></div></div>'}).join('')+'</div>'+
+      '<h2 class="sec">Цвета <small>'+m.C.length+'</small></h2><div class="sw">'+m.C.map(function(i){return '<div class="card"><div class="im">'+im(i,'')+'</div><div class="tx"><div class="cd">'+esc(base(i.p).replace(/\.\w+$/,''))+'</div></div></div>'}).join('')+'</div>'}
+  function prj(m){return '<h2 class="sec" style="margin-top:0">Проекты <small>'+m.J.length+'</small></h2><div class="plist">'+m.J.map(function(x){return card(x,'j')}).join('')+'</div>'}
+  function prj1(m,id){var x=m.J.filter(function(p){return p.code===id})[0];if(!x) return '<div class="empty">Проект не найден.</div>';if(IMGI>=x.ph.length)IMGI=0;
+    return '<p class="meta" style="margin:0 0 12px"><a data-go="prj" style="color:var(--w-acc);cursor:pointer">Проекты</a> › '+esc(x.name)+'</p><h1 style="font:800 30px/1.1 var(--f-display);margin:0 0 14px">'+esc(x.name)+'</h1><div class="gmain" style="aspect-ratio:16/9">'+im(x.ph[IMGI],x.name)+'</div>'+(x.ph.length>1?'<div class="thumbs">'+x.ph.map(function(i,k){return '<button data-img="'+k+'" aria-pressed="'+(k===IMGI)+'" aria-label="Фото '+(k+1)+'">'+im(i,'')+'</button>'}).join('')+'</div>':'')}
+  function where(){if(!STO||!STO.stores) return '<h2 class="sec" style="margin-top:0">Где купить</h2><div class="empty">Адреса магазинов загружаются с FTP — робот разбирает таблицы городов в ближайший обход.</div>';
+    var K=Object.keys(STO.stores).sort(function(a,b){return (CITY[base(a).replace(/\.xlsx$/i,'')]||a).localeCompare(CITY[base(b).replace(/\.xlsx$/i,'')]||b,'ru')});if(!CITYSEL||!STO.stores[CITYSEL])CITYSEL=K.filter(function(k){return /moscow/.test(k)})[0]||K[0];
+    var s=STO.stores[CITYSEL],H=s.h||[];
+    var body=s.err?'<div class="empty">Таблица этого города не читается: '+esc(s.err)+'</div>':(s.rows||[]).length?'<div class="stores">'+(s.rows||[]).map(function(r){var t=r[0]||'',rest=r.slice(1).map(function(v,k){return v?'<div>'+(H[k+1]?'<span style="opacity:.75">'+esc(H[k+1])+':</span> ':'')+esc(v)+'</div>':''}).join('');return '<div class="store"><b>'+esc(t)+'</b>'+rest+'</div>'}).join('')+'</div>':'<div class="empty">В таблице города пока нет магазинов.</div>';
+    return '<h2 class="sec" style="margin-top:0">Где купить <small>'+K.length+' городов</small></h2><div class="city">'+K.map(function(k){var c=CITY[base(k).replace(/\.xlsx$/i,'')]||base(k);var n=(STO.stores[k].n||0);return '<button class="chip" data-city="'+esc(k)+'" aria-pressed="'+(k===CITYSEL)+'">'+esc(c)+(n?' · '+n:'')+'</button>'}).join('')+'</div>'+body}
+  function cli(m){return '<h2 class="sec" style="margin-top:0">Нам доверяют <small>'+m.L.length+'</small></h2>'+(m.L.length?'<div class="logos">'+m.L.map(function(i){return '<div class="im">'+im(i,'')+'</div>'}).join('')+'</div>':'<div class="empty">Логотипов клиентов на FTP пока нет.</div>')}
+  function check(m){var it=Z.items||[],I=[];function add(t,d,lvl){I.push([t,d,lvl])}
+    var mj=m.P.filter(function(x){return moj(x.code)});if(mj.length)add('Битая кодировка у '+mj.length+' папок товаров','Например «'+mj[0].code+'» вместо «'+mj[0].code1c+'». Карточки не свяжутся с 1С, ссылки на сайте ломаются.','r');
+    var np=m.P.filter(function(x){return !x.ph.length});if(np.length)add('Товары без фото: '+np.length,np.slice(0,10).map(function(x){return x.code1c}).join(', '),'r');
+    var nm=m.P.filter(function(x){return x.ph.length&&!x.ph.some(function(i){return /\/(main|cover)[^/]*$/i.test(i.p)})});if(nm.length)add('Нет главного фото (main_…): '+nm.length,'Обложкой стало первое попавшееся фото. '+nm.slice(0,6).map(function(x){return x.code1c}).join(', '),'o');
+    var big=it.filter(function(i){return !i.d&&isImg(i.p)&&i.s>3145728});if(big.length)add('Картинки тяжелее 3 МБ: '+big.length,'На портал не загружаются, на сайте грузятся долго. Самая крупная — '+base(big.sort(function(a,b){return b.s-a.s})[0].p)+' ('+sz(big[0].s)+').','o');
+    var noname=m.P.filter(function(x){return /^Модель /.test(x.name)});if(noname.length)add('Нет понятного названия у '+noname.length+' моделей','Имена фото — хеши или цифры. Нужен список «код 1С → наименование».','o');
+    var pdf=m.P.filter(function(x){return x.pdf.length}).length;add('Инструкции по сборке: '+pdf+' из '+m.P.length,'',pdf<m.P.length?'o':'g');
+    if(STO&&STO.stores)Object.keys(STO.stores).forEach(function(k){var s=STO.stores[k];if(s.err)add('Не читается таблица '+base(k),s.err,'r');else if(!s.n)add('Пустая таблица '+base(k),'','o')});
+    if(!m.R.length)add('Нет отчётов 1С в папке reports','Выгрузку попросили у В. Сотрудник11 20.11.','o');
+    var pub=it.filter(function(i){return i.id}).length,tot=it.filter(function(i){return !i.d&&isImg(i.p)}).length;add('Загружено на портал: '+pub+' из '+tot+' картинок',pub<tot?'Робот догружает каждые 10 минут, пока очередь не кончится.':'Все картинки загружены.',pub<tot?'o':'g');
+    var col={r:'#C0271D',o:'#B25E00',g:'#1E7B34'};
+    return '<h2 class="sec" style="margin-top:0">Проверка сайта <small>по описи FTP '+esc((Z.t||'').replace('T',' '))+'</small></h2><div style="display:grid;gap:10px">'+I.map(function(x){return '<div class="store"><b style="color:'+col[x[2]]+'">'+esc(x[0])+'</b><div>'+esc(x[1])+'</div></div>'}).join('')+'</div><p class="meta" style="margin-top:14px">Полный список — в реестре ошибок сайта (таблица у Т. В.). Технический вид папок FTP — <a href="ftp.html" style="color:var(--w-acc)">файлы FTP</a>.</p>'}
+  function draw(){var r=route();nav(r.pg);
+    if(!Z){V.innerHTML='<div class="empty">Загружаю сайт с FTP…</div>';return}
+    var m=M(),h='';
+    if(r.pg==='cat')h=cat(m);else if(r.pg==='p')h=prod(m,r.id);else if(r.pg==='fab')h=fab(m);else if(r.pg==='prj')h=prj(m);else if(r.pg==='j')h=prj1(m,r.id);else if(r.pg==='where')h=where();else if(r.pg==='cli')h=cli(m);else if(r.pg==='check')h=check(m);else h=home(m);
+    V.innerHTML=h;hook();loadImgs();
+    var f=document.getElementById('fdate');if(f)f.textContent='Сайт fabrikant.su · данные с FTP на '+(Z.t||'').replace('T',' ')}
+  function hook(){var q=document.getElementById('q');if(q){q.oninput=function(){Q=q.value;LIMIT=60;var p=q.selectionStart;draw();var t=document.getElementById('q');if(t){t.focus();try{t.setSelectionRange(p,p)}catch(e){}}}}
+    V.querySelectorAll('[data-let]').forEach(function(b){b.onclick=function(){LET=b.dataset.let;LIMIT=60;draw()}});
+    V.querySelectorAll('[data-img]').forEach(function(b){b.onclick=function(){IMGI=+b.dataset.img;draw()}});
+    V.querySelectorAll('[data-city]').forEach(function(b){b.onclick=function(){CITYSEL=b.dataset.city;draw()}});
+    V.querySelectorAll('[data-pdf]').forEach(function(b){b.onclick=function(){T14Live.download(b.dataset.pdf,base(b.dataset.n),'Инструкция по сборке')}});
+    var mo=document.getElementById('more');if(mo)mo.onclick=function(){LIMIT+=60;draw()}}
+  document.getElementById('site').addEventListener('click',function(e){var a=e.target.closest('[data-go]');if(a){e.preventDefault();IMGI=0;if(a.dataset.go!=='cat'&&a.dataset.go!=='fab')Q='';go(a.dataset.go==='home'?'':a.dataset.go)}});
+  document.getElementById('site').addEventListener('keydown',function(e){if(e.key==='Enter'){var a=e.target.closest&&e.target.closest('.card[data-go]');if(a){e.preventDefault();a.click()}}});
+  window.addEventListener('hashchange',function(){IMGI=0;draw()});
+  draw();
+  if(window.T14Live&&T14Live.bin){T14Live.bin('ftp_idx.bin').then(function(d){if(d){Z=d;M.c=null;draw()}}).catch(function(){});T14Live.bin('ftp_stores.bin').then(function(d){if(d){STO=d;draw()}}).catch(function(){})}
+})();
+</script>

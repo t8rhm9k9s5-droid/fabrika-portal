@@ -82,7 +82,7 @@ def _want(r):
     if not r['mx'] or r['sz'] > MAX_FULL or TZ_RE.search(r['s']): return None
     dk = _doc_kind(r)
     if dk: return dk
-    if r['fr'] in ('user28@example.org', 'user36@example.org') and 'отчет' in s: return 'rep'      # 28.10: в августе отчёт слал и industry@ («Отчет выпуска продукции за сутки»)
+    if r['fr'] in ('user28@example.org', 'user39@example.org') and 'отчет' in s: return 'rep'      # 28.10: в августе отчёт слал и industry@ («Отчет выпуска продукции за сутки»)
     if r['fr'] in ('user16@example.org', 'user15@example.org') and ('гальван' in s or r['sz'] < 3 * 1024 * 1024): return 'rep'
     if 'план' in s and r['fr'].endswith('@fabrikant.su') and r['fr'] not in ('user3@example.org',): return 'plan'
     return None
@@ -157,14 +157,14 @@ def _save_full(L, IG, kind, full, row, st, res):
         if kind == 'rep' and low.endswith(('.pdf', '.xls', '.xlsx')):
             try: k, d = IG.kind_of(fn, data, sent)
             except Exception: k, d = None, None
-            if k not in ('vypusk.pdf', 'galv.pdf') and row.get('fr') in ('user28@example.org', 'user36@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')):
+            if k not in ('vypusk.pdf', 'galv.pdf') and row.get('fr') in ('user28@example.org', 'user39@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')):
                 oth = os.path.join(L, 'ytd', 'other'); os.makedirs(oth, exist_ok=True)       # 28.10: отчёт другого вида (и Excel январь — май) — сохранить, разобрать потом
                 tgt = os.path.join(oth, '%s_%s%s' % (row.get('t', '')[:10], row['mid'][:8], os.path.splitext(low)[1]))
                 if not os.path.exists(tgt):
                     with open(tgt, 'wb') as f: f.write(data)
                     os.chmod(tgt, 0o600)
                 got.append('other ' + row.get('t', '')[:10]); res['other'] = res.get('other', 0) + 1
-            if not k and row.get('fr') in ('user16@example.org', 'user15@example.org', 'user37@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')) \
+            if not k and row.get('fr') in ('user16@example.org', 'user15@example.org', 'user40@example.org') and low.endswith(('.pdf', '.xls', '.xlsx')) \
                     and re.search(r'цен|себестоим|план|факт|выполнен|отгруз|продаж|склад', low):
                 eco = os.path.join(L, 'ytd', 'econ'); os.makedirs(eco, exist_ok=True)      # 28.10: отчёты ПЭО (средние цены, планы) — для раздела «Продажи → экономика»
                 tgt = os.path.join(eco, '%s_%s_%s' % (row.get('t', '')[:10], row['mid'][:6], re.sub(r'[^\w.\- ]+', '_', fn)[-80:]))
@@ -600,7 +600,7 @@ def _summary(L, BO, OUTD, jload, idx_path, st):
     # реестр по каждому ТЗ из тем писем: изделие и клиент (тема «ТЗ №ММ/N  Изделие_Клиент»), кто завёл, когда ответил ПТО, рассчитал ПЭО,
     # было ли письмо о заказе / счёте / договоре / запуске
     REG = []
-    MGMT = ('user35@example.org', 'user8@example.org', 'user38@example.org', 'user5@example.org', 'user39@example.org')
+    MGMT = ('user37@example.org', 'user8@example.org', 'user41@example.org', 'user5@example.org', 'user42@example.org')
     for k, rs in tz.items():
         reqs = [r for r in rs if not PEO_RE.match(r.get('fr') or '')]
         first = reqs[0] if reqs else rs[0]
@@ -763,9 +763,11 @@ def summary_only(L, BO, OUTD, log, jload, jsave, publish):
     jsave('ytd_days.json', cache)
     S.update({'t': res['t'], 'state': res['state'], 'scanned': st.get('n'), 'full': st.get('full'), 'queue': len(st.get('queue') or [])})
     jsave('ytd_sum.json', S)
-    publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res['state'], 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
+    ok = publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res['state'], 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
                        'days': S['days'], 'dl': S.get('dl') or {}, 'tz': {k: S['tz'].get(k) for k in ('n', 'to_pto', 'peo', 'months', 'lead_med', 'lead_avg', 'noreq', 'by_from', 'open', 'list', 'stages')},
                        'calc': {k: (S.get('calc') or {}).get(k) for k in ('n', 'months', 'lines', 'pdo_pf', 'pdo_files', 'peo')}})
+    if ok is False:                                       # 19.11.2026 (Рекс №44): не опубликовали — подпись не фиксируем, следующий проход повторит
+        res['state'] += ', pf.bin не опубликован'; log('  ! выпуск и план-факт: pf.bin не опубликован — повтор в следующем проходе'); return res
     st['sum_sig'] = sig; st['sum_t'] = res['t'][:13]; jsave('ytd.json', st)
     dl = S.get('dl') or {}
     log('выпуск и план-факт из 1c@: pf.bin пересчитан, последний день', max(dl) if dl else '—')
@@ -806,7 +808,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
                     typ, _ = M.select('"%s"' % raw, readonly=True)
                     if typ != 'OK': tl[raw] = 'done'; continue
                     uids = set()
-                    for frm in PROD_FROM + ('user36@example.org', 'user37@example.org'):
+                    for frm in PROD_FROM + ('user39@example.org', 'user40@example.org'):
                         typ, data = M.uid('SEARCH', None, 'SINCE', IMAP_SINCE, 'FROM', '"%s"' % frm)
                         if typ == 'OK': uids |= set(int(u) for u in (data[0] or b'').split())
                     for word in ('ТЗ', 'план', 'План'):
@@ -873,7 +875,7 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
                     for ln in _cg3_file_12:
                         try: r = json.loads(ln)
                         except Exception: continue
-                        if r.get('fr') in ('user28@example.org', 'user36@example.org') and (r.get('t') or '') < '2026-06-01' and r.get('mx') \
+                        if r.get('fr') in ('user28@example.org', 'user39@example.org') and (r.get('t') or '') < '2026-06-01' and r.get('mx') \
                                 and re.search(r'отч[её]т', r.get('s') or '', re.I) and r.get('f') in rawof and r.get('mid') not in qm:
                             st['queue'].append([rawof[r['f']], r['u'], 'rep', r['mid'], r['t'], r['fr']]); qm.add(r['mid'])
                 st['rep_rq'] = 1; changed = True
@@ -959,10 +961,11 @@ def run(L, CFG, IG, BO, OUTD, log, jload, jsave, publish, budget=100):
             jsave('ytd_days.json', cache)
             S.update({'t': res['t'], 'state': res.get('state'), 'scanned': st['n'], 'full': st.get('full'), 'queue': len(st['queue'])})
             jsave('ytd_sum.json', S)
-            publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res.get('state'), 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
+            okp = publish('pf.bin', {'pdo': S.get('pdo') or {}, 't': res['t'], 'state': res.get('state'), 'months': S['months'], 'galv': S['galv'], 'plans': S['plans'], 'planv': S.get('planv') or {},
                                'days': S['days'], 'dl': S.get('dl') or {}, 'tz': {k: S['tz'].get(k) for k in ('n', 'to_pto', 'peo', 'months', 'lead_med', 'lead_avg', 'noreq', 'by_from', 'open', 'list', 'stages')},
                                'calc': {k: (S.get('calc') or {}).get(k) for k in ('n', 'months', 'lines', 'pdo_pf', 'pdo_files', 'peo')}})
-            st['sum_t'] = res['t'][:13]; jsave('ytd.json', st)
+            if okp is not False: st['sum_t'] = res['t'][:13]; jsave('ytd.json', st)   # 19.11.2026 (Рекс №44): только после публикации
+            else: log('  ! почта с начала года: pf.bin не опубликован — повтор в следующем проходе')
         except Exception as e:
             import traceback; log('  ! почта с начала года: сводка', traceback.format_exc()[-500:])
     res.update({'scanned': st['n'], 'queue': len(st['queue']), 'full': st.get('full')})

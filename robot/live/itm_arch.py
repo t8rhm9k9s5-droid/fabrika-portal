@@ -12,7 +12,7 @@
  • Вложения-документы (pdf, xls/xlsx, csv, doc/docx, odt/ods, zip/rar/7z, txt, xml) → ~/.fabrika_live/arch/files/<sha>.<расширение>
    (вне сайта, одинаковые файлы — один раз), не больше ARCH_CAP байт всего.
  • Известные отчёты (выпуск, ведомость, гальваника, склад, ПКС — те же правила, что у помощника) → ingest() из live.py: история на сайте.
-Сотрудник5 письма в этих папках архив тоже подбирает (по UID после последнего)."""
+Сотрудник6 письма в этих папках архив тоже подбирает (по UID после последнего)."""
 import datetime, email, email.header, email.policy, email.utils, hashlib, imaplib, json, os, re, ssl, time
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
@@ -26,7 +26,7 @@ MAX_MSG = 30 * 1024 * 1024
 # 03.11.2026 ~21:00, Т. В.: «Отчёты из ящика 1c@ не забраны». Письмо ПЭО «11_Гальваника НОЯБРЬ 2026» (03.11 08:51, без вложения: «выпуск …
 # за 02.11.2026 в 1С отсутствуют») ящик 1c@ прошёл раньше, чем робот научился читать такие письма (live.galv_none, 03.11) — за 02.11 гальваника
 # числилась «не пришла». Ящик Gmail (1c@): письма по этим запросам, которые уже пройдены, один раз ставятся на повторный разбор (как при сбое
-# разбора, fs['retry']): строка архива не задваивается, recv — тоже (повтор того же письма ничего не добавляет). Сотрудник5 запрос — новая версия.
+# разбора, fs['retry']): строка архива не задваивается, recv — тоже (повтор того же письма ничего не добавляет). Сотрудник6 запрос — новая версия.
 # 04.11.2026: Gmail режет «11_Гальваника» как одно слово — запрос subject:Гальваника письмо ПЭО «11_Гальваника НОЯБРЬ 2026» НЕ находил, повтор
 #   (REREAD_V=1) прошёл мимо него, за 02.11 «выпуска в 1С нет» не легло. Теперь — по отправителю; лишние письма ПЭО отсекает itm.report_like
 #   (нужно «гальваник» в теме/имени файла — подстрокой, «11_Гальваника» подходит). Новая версия — повтор ещё раз.
@@ -45,7 +45,30 @@ def _ext(n):
 # «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
-SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник34 С. В.)'}   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
+SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник35 С. В.)', 'user32@example.org': 'Видеонаблюдение (регистраторы Dahua)'}
+CCTV_LABEL, DONE_LABEL = 'Видеонаблюдение', 'Учтено на портале'   # 19.11.2026: ярлыки ящика 1c@ (созданы вручную)
+
+
+def _file_1c(M, raw, mv, log):
+    """19.11.2026, Т. В.: разобранное из «Входящих» 1c@ — в свою папку, прочитанным. Сбой — не страшно: письмо уже в реестре, повторим в следующий проход."""
+    n = 0
+    try:
+        typ, _ = M.select('"%s"' % raw, readonly=False)
+        if typ != 'OK': return 0
+        for u, lab in mv:
+            try:
+                M.uid('STORE', str(u), '+FLAGS', '(\\Seen)')
+                typ, _ = M.uid('MOVE', str(u), '"%s"' % IT.utf7_encode(lab))      # 19.11.2026: Gmail — MOVE в ярлык = из «Входящих» в папку (снять \\Inbox при выбранной INBOX нельзя)
+                if typ != 'OK':
+                    M.uid('STORE', str(u), '+X-GM-LABELS', '("%s")' % IT.utf7_encode(lab))
+                n += 1
+            except Exception as e: log('  ! 1c@: не перенёс письмо', u, lab, e.__class__.__name__)
+    except Exception as e: log('  ! 1c@: перенос писем по папкам', e.__class__.__name__, e)
+    return n
+
+
+MTS_FROM = 'user38@example.org'   # 20.11.2026: детализации МТС (mts.py берёт .xls из arch/files) — после сохранения вложения в «Учтено на портале»
+CCTV_FROM = 'user32@example.org'   # 19.11.2026: письма регистраторов — снимки .jpg тоже в arch/files (cctv.py → портал)   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
 PRUNE_DRY = False   # 13.11.2026 ~13:45, Т. В. (опрос): «Да, включай» — удаление вложений старше 3 дней включено
 _MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
@@ -115,7 +138,7 @@ def pw_1c(L):
 # 18.11.2026, Т. В.: «сделай разбор всех папок роботом, без твоего участия». Копии писем itm@ бот раскладывает по ярлыкам «ИТМ/…» мимо «Входящих» —
 # отчёт ПДО за 17.11 («ИТМ/производство») робот не видел, бот сообщил «нет отчёта по выпуску». Теперь 1c@ читается целиком: «Входящие» и все ярлыки.
 # Не читаются только служебные папки Gmail: «Вся почта» (дубли всех писем), «Отправленные», «Черновики», «Корзина», «Спам», «Важное», «Помеченные».
-# Сотрудник5 ярлык начинается с писем за последние NEW_DAYS дней (не с 01.08), чтобы свежие отчёты пришли сразу, а не после долгого разбора архива.
+# Сотрудник6 ярлык начинается с писем за последние NEW_DAYS дней (не с 01.08), чтобы свежие отчёты пришли сразу, а не после долгого разбора архива.
 SKIP_1C = ('\\all', '\\sent', '\\drafts', '\\trash', '\\junk', '\\important', '\\flagged', '\\noselect')
 NEW_DAYS = 10
 
@@ -166,6 +189,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
             for raw, name in fl:
                 if time.time() - t0 > budget or res['new'] >= limit: pending += 1; continue
                 typ, _ = M.select('"%s"' % raw, readonly=True)
+                mv = [] if (stname == 'arch_1c.json' and host == 'imap.gmail.com' and raw.upper() == 'INBOX') else None
                 if typ != 'OK': continue
                 uv = (M.untagged_responses.get('UIDVALIDITY') or [b''])[0]
                 uv = uv.decode() if isinstance(uv, bytes) else str(uv)
@@ -197,6 +221,11 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                     if size < MAX_MSG:
                         typ, d = M.uid('FETCH', str(u), '(BODY.PEEK[])')
                         full = next((x[1] for x in d or [] if isinstance(x, tuple)), None)
+                        if full is None and hdr:                   # 19.11.2026 (Рекс №44): письмо не скачалось — не отмечать разобранным, повторить
+                            fr = fs.setdefault('fetch_retry', {}); k = str(u); fr[k] = int(fr.get(k) or 0) + 1
+                            if fr[k] < IT.QUAR_TRIES:
+                                log('  ! архив: письмо не скачалось, повтор', name, u); pending += 1; break
+                            fr.pop(k, None)                        # после нескольких попыток — как большое письмо (только заголовок)
                     msg = email.message_from_bytes(full or hdr, policy=email.policy.default)
                     fname, frm = IT.addr(msg['From'])
                     subj = IT.clean(msg['Subject']).strip()
@@ -226,7 +255,7 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                         sha = hashlib.sha256(data_).hexdigest()
                         a = {'n': fn[:160], 'sz': len(data_), 'sha': sha[:24]}
                         ext = _ext(fn)
-                        if data_ and ext in DOC_EXT:
+                        if data_ and (ext in DOC_EXT or (frm == CCTV_FROM and ext in ('.jpg', '.jpeg') and len(data_) <= 2 * 1024 * 1024)):
                             dst = os.path.join(root, sha[:24] + ext)
                             if os.path.exists(dst): a['p'] = 1
                             elif st['bytes'] + len(data_) <= ARCH_CAP:
@@ -250,12 +279,16 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                             if rt[str(u)] >= IT.QUAR_TRIES:
                                 rt.pop(str(u), None)
                                 res.setdefault('quar_list', []).append('%s %s uid %s «%s»: %s %s' % (who, name[:30], u, subj[:80], e.__class__.__name__, str(e)[:80]))
+                    if mv is not None:                              # 19.11.2026, Т. В.: письма камер — в «Видеонаблюдение», учтённые отчёты — в «Учтено на портале»
+                        if frm == CCTV_FROM: mv.append((u, CCTV_LABEL))
+                        elif row.get('r') or (frm == MTS_FROM and any(x.get('p') for x in row['a'])): mv.append((u, DONE_LABEL))
                     if again: continue                                              # повтор разбора — строка реестра и счётчики уже есть
                     out.write(json.dumps(row, ensure_ascii=False) + '\n'); out.flush()
                     fs['last'] = max(int(fs['last']), u); fs['n'] = int(fs.get('n') or 0) + 1
                     res['new'] += 1; st['n'] += 1
                     st['folders'][raw] = fs
                 st['folders'][raw] = fs
+                if mv: res['moved'] = res.get('moved', 0) + _file_1c(M, raw, mv, log)
         res['state'] = 'идёт' if pending else 'готово'
     except imaplib.IMAP4.error as e:
         res['state'] = ('Mail.ru: ' if host == IT.HOST else host + ': ') + str(e)[:160]

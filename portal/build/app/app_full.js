@@ -1030,7 +1030,7 @@ function buildWorkshop(){
   const cInfo={sys:'каркас',title:'Стойка торцевого фахверка С1/С2',rows:[['Сечение','труба 120×4'],['Место','торец по оси 1 — в 2,48 и 5,6 м от оси А; торец по оси 10 — в 5,6 м (КР, разрез 4-4, фундаменты Ф2)']],src:SRC.kr};
   wbox(g.ws_frame,-.06,.06,2.42,2.54,0,ztc(2.48),st,cInfo);
   [0,49.5].forEach(s=>wbox(g.ws_frame,s-.06,s+.06,5.54,5.66,0,ztc(5.6),st,cInfo));
-  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник14 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
+  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник15 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
   const posts=[0,1.203,3.987,5.379,6.771,9.555,W], zig=[[.12,'t'],[1.203,'b'],[2.6,'t'],[3.987,'b'],[5.379,'t'],[6.771,'b'],[8.16,'t'],[9.555,'b'],[11.08,'t']];
   AX.forEach(s=>{
     wbeam(g.ws_frame,P(s,0,ZBC),P(s,W,ZBC),.1,.08,st,fI);wbeam(g.ws_frame,P(s,0,ztc(0)),P(s,W,ztc(W)),.12,.08,st,fI);
@@ -1085,7 +1085,7 @@ function buildWorkshop(){
   fence.add(new THREE.LineSegments(new THREE.EdgesGeometry(fence.geometry),new THREE.LineBasicMaterial({color:0x4f6f4f})));
   // ---------- electrical ----------
   const pw=S.proj.power;
-  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник16 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
+  const vruI={sys:'электрика',title:'ВРУ — вводно-распределительное устройство',rows:[['Установленная мощность',`${nf(pw['Ру'],2)} кВт`],['Расчётная мощность',`${nf(pw['Рр'],2)} кВт`],['Расчётный ток',`${nf(pw.Ip,1)} А, cos φ ${nf(pw.cos,2)}`],['Годовое потребление',`${nf(pw.year,1)} тыс. кВт·ч`],['Сотрудник17 по ТУ',`${nf(pw.tu_max,0)} кВт`],['Ввод',pw.cable],['Категория','III; аварийное освещение и пожарная сигнализация — I'],['Сеть','~400/230 В, 50 Гц, TN-C-S']],text:'ВРУ стоит у торцевой стены по оси 1, рядом со щитами ЩР, ЩВ, ЩО и ППУ. Питание от РУ-0,4 кВ существующей ТП 10/0,4 кВ. Какая именно ТП, в проекте не сказано.',src:SRC.e};
   wbox(g.ws_el,.1,.5,7.55,8.35,0,2.0,0xd0d4d8,vruI);wbox(g.ws_el,.48,.52,7.6,8.3,1.75,1.9,0xe0a400,vruI);
   [['ЩР','Щит силовой ЩР',[['Установленная / расчётная','34,0 / 23,8 кВт'],['Нагрузка','розетки швейных машин 0,4 кВт, 220/380 В']],6.85,7.4],
    ['ЩВ','Щит ЩВ — вентиляция и тепловые завесы',[['Установленная / расчётная','24,08 / 9,65 кВт'],['Нагрузка','завесы КЭВ-9П3011Е 2 × 9 кВт и КЭВ-6П2211Е 6 кВт, вытяжные вентиляторы санузлов']],6.25,6.75],
@@ -2672,7 +2672,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник17 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -2808,7 +2808,7 @@ function ndvInfo(u){
     return {k:'Расчётная точка · расчёт рассеивания 2025', t:`Р${r.n} — ${r.name}`, d:
       `<dl class="kv"><dt>Тип</dt><dd>${R25_TYPE[r.type]}</dd><dt>МСК-62</dt><dd class="mono">X ${nf(r.X, 2)}<br>Y ${nf(r.Y, 2)}</dd><dt>Высота</dt><dd>2 м</dd>
        ${r.type === 'szz' ? `<dt>На границе СЗЗ</dt><dd>${r.dszz < .5 ? 'да — точка лежит на границе 2019 г. (расхождение < 0,5 м)' : 'в ' + nf(r.dszz, 1) + ' м от границы'}</dd>` : ''}</dl>
-       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и Имя2 источники</p>
+       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и Имя1 источники</p>
        ${a ? `<table class="inv szzt"><tr><th>Вещество / группа</th><th>ПДК</th><th>вклад</th></tr>${a}</table>` : '<p class="note">Всё меньше 0,05 ПДК.</p>'}
        <p><b>Гальванический цех</b> (≥ 0,01 ПДК)</p>${g ? `<table class="inv szzt"><tr><th>Вещество</th><th>ПДК</th><th>вклад</th></tr>${g}</table>` : '<p class="note">Всё меньше 0,01 ПДК.</p>'}
        ${r.type === 'prom' ? '<p class="note">Граница производственной зоны — это забор предприятия; гигиенические нормативы для населения проверяются на границе СЗЗ и у жилья.</p>' : ''}
@@ -2818,10 +2818,10 @@ function ndvInfo(u){
     return {k:'Выбросы в атмосферу · 2025', t:'Инвентаризация и НДВ, 2025 г.', d:
       `<p>${esc(s.dev)}; ${esc(s.date)}.</p>
        ${s.objects.map(o=>`<p><b>${esc(o.name)}</b> — объект НВОС ${o.cat} категории, код <span class="mono">${o.code}</span></p><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org, 'организованный', 'организованных', 'организованных')}, ${ruN(o.unorg, 'неорганизованный', 'неорганизованных', 'неорганизованных')})</dd><dt>Выброс</dt><dd>${nf(o.ty, 3)} т/год: твёрдые ${nf(o.solid, 3)}, газообразные и жидкие ${nf(o.gas, 3)}; ${esc(o.subst)}</dd><dt>Классы</dt><dd>${esc(o.classes)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd>${o.place ? `<dt>Где</dt><dd>${esc(o.place)}</dd>` : ''}</dl>`).join('')}
-       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
-       <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
+       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник6 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
+       <details class="info"><summary>Сотрудник6 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник17 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -2891,7 +2891,7 @@ function areaColors(){
 /* ===================== LABELS ===================== */
 const labelsEl = $('#labels');
 const rulLabels = [];
-const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Офисная мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Корпусная мебель',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
+const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Имя2 мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Корпусная мебель',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
 if (ND && ND.short) Object.assign(SHORT, ND.short);
 SHORT.dg1 = 'ДГУ 64 кВт';
 const bLab = {};
@@ -3059,7 +3059,7 @@ function goView(name, instant){
 document.querySelectorAll('.views button').forEach(b=>b.addEventListener('click', ()=>{ markPlace(null); setSolo(null); hideAll(); goView(b.dataset.view); }));
 
 // ---------- «К объекту» and «Только здание» ----------
-const PLACES = [['nSklad','Склад №1'],['nGef','Котельная'],['ws','Швейный цех'],['b10','Админ. здание'],['b15','КПП'],['b31','Механический цех'],['b43','Цех металлоизделий'],['b22','Офисная мебель'],['b57','ТП-1'],['tp2','ТП-2'],['tp3','ТП-3'],['chapel','Часовня'],['__szz','СЗЗ'],['__ndv','Выбросы 2025'],['__site','Весь участок']];
+const PLACES = [['nSklad','Склад №1'],['nGef','Котельная'],['ws','Швейный цех'],['b10','Админ. здание'],['b15','КПП'],['b31','Механический цех'],['b43','Цех металлоизделий'],['b22','Имя2 мебель'],['b57','ТП-1'],['tp2','ТП-2'],['tp3','ТП-3'],['chapel','Часовня'],['__szz','СЗЗ'],['__ndv','Выбросы 2025'],['__site','Весь участок']];
 const placesEl = $('#places'), placeBtn = {}, soloBtn = $('#solo');
 let lastPlace = null, soloK = null;
 function markPlace(k){ Object.entries(placeBtn).forEach(([key,b])=>b.classList.toggle('on', key===k)); }
@@ -3097,14 +3097,14 @@ soloBtn.addEventListener('click', ()=>{
 
 /* ===================== INFO TEXTS ===================== */
 const bname = k => { const b = S.buildings.find(o=>o.k===k); return b ? b.name : 'Территория'; };
-const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks = (la,lo) => `<div class="links"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник12 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 function ll(x,y){const a=S.aff.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function ms(x,y){const a=S.aff.ms;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
 function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]);return L}
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник17 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */
@@ -3900,7 +3900,7 @@ const LIST = {
     cams.filter(c=>!c.isNew).forEach(c=>{ const h = c.host ? bname(c.host) : 'Территория'; (byHost[h] = byHost[h] || []).push(c); });
     const nc = cams.filter(c=>c.isNew);
     let body = Object.keys(byHost).sort((a,b)=>a.localeCompare(b,'ru')).map(h=>sec('h:' + h, esc(h), byHost[h].length, `<ul>${sortCams(byHost[h]).map(c=>row(c)).join('')}</ul>`, false, 'grp')).join('');
-    if (nc.length) body += sec('h:new', 'Сотрудник5 камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
+    if (nc.length) body += sec('h:new', 'Сотрудник6 камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
     if (cams.length) parts.push(sec('cams', '<i class="camdot"></i>Камеры', q ? cams.length : CAMS.length, body || '', false, 'sec cams'));
     if (!parts.length) parts.push('<p class="none">Ничего не найдено</p>');
     parts.push('<button type="button" class="btn primary addcam" id="addCam">+ Добавить камеру</button>');
@@ -4705,7 +4705,7 @@ function orgLabels(dist){
 }
 // cards
 function orgRoomCard(it, fl){
-  return {k:`${fl} этаж · ${it.post ? 'Имя2 вход для всех сотрудников' : it.inner ? 'вход через приёмную ' + it.no : it.label ? 'кабинет 310, приёмная' : 'кабинет ' + it.no}`, t:it.post ? 'КПП № 1 · ' + it.name : it.name,
+  return {k:`${fl} этаж · ${it.post ? 'Имя1 вход для всех сотрудников' : it.inner ? 'вход через приёмную ' + it.no : it.label ? 'кабинет 310, приёмная' : 'кабинет ' + it.no}`, t:it.post ? 'КПП № 1 · ' + it.name : it.name,
     d:(it.note ? `<p>${esc(it.note)}</p>` : '') + orgPeople(it.people) + (it.mail ? `<p>Почта всего отдела: <a href="mailto:${esc(it.mail)}">${esc(it.mail)}</a></p>` : '')
       + `<p class="note">${esc(ORG.note)} Источник: ${esc(ORG.src)}.</p>`};
 }
@@ -5711,7 +5711,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
     cardK.textContent = [kindName(b), lit, ar ? (ar.free ? ar.name : 'участок ' + ar.n) : ''].filter(Boolean).join(' · ');
     let sum = '';
     if (ar) sum = [ar.free ? '' : (ar.blocks || []).join(', '), (ar.approx ? '≈\u00a0' : '') + ar.staff + '\u00a0чел.', ar.night ? 'работает и\u00a0ночью' : ''].filter(Boolean).join('\u00a0· ');
-    else if (floorsEl) sum = `Офис: ${b.floors || 3} ${plural(b.floors || 3, 'этаж', 'этажа', 'этажей')}, ${nStaff} ${plural(nStaff, 'сотрудник', 'сотрудника', 'сотрудников')}.`;
+    else if (floorsEl) sum = `Имя2: ${b.floors || 3} ${plural(b.floors || 3, 'этаж', 'этажа', 'этажей')}, ${nStaff} ${plural(nStaff, 'сотрудник', 'сотрудника', 'сотрудников')}.`;
     else if (paras.length) sum = short(paras[0].textContent.split(/\.\s/)[0].replace(/\.$/, '') + '.', 110);
 
     const peopleT = floorsEl ? 'Этажи' : (ar || drvEl) ? 'Люди' : camsEl ? 'Камеры' : '';
@@ -5821,7 +5821,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
         `<div class="cc-bars">${s.balance.slice().sort((a, b) => b[2] - a[2]).map(x => `<div><span>${esc((t => t.charAt(0).toUpperCase() + t.slice(1))(x[0].replace(/^[А-ЯA-Z]+-\d+ — /, '')))}</span><em>${nf(x[2], 1)} %</em><i style="width:${(x[2] / mx * 100).toFixed(1)}%"></i></div>`).join('')}</div>`); })() : null;
     const banSec = banP ? section('shield', '#af52de', 'Что нельзя в зоне', '', null, [banP]) : null;
     const decSec = section('doc', '#30b0c7', 'Решение', dec ? dec[2] : '', null, null, `<p>${esc(s.decision || '')}</p>`);
-    const projSec = section('note', '#636366', 'Проект', '2019', null, null, rowsHTML([['Проект', s.title], ['Разработчик', s.dev], ['Карта границ', s.cad], ['Класс', s.cls], ['Разрешения', s.permits], ['Зона по ПЗЗ', s.zone]]));
+    const projSec = section('note', '#636366', 'Проект', '2019', null, null, rowsHTML([['Проект', s.title], ['Разработчик', s.dev], ['Карта границ', s.cad], ['Класс', s.cls], ['Разрешения', s.permits], ['Сотрудник92 по ПЗЗ', s.zone]]));
     const monSec = section('calendar', '#ff3b30', 'Натурные исследования', deadline ? 'срок ' + deadline : '', noRes ? 'bad' : null, null, `<p>${esc(s.monitor || '')}</p>${s.deadline ? `<p class="warn">${esc(s.deadline)}</p>` : ''}`);
     const notesSec = notesEl ? fromDetails(notesEl, 'note', '#8e8e93', 'Замечания к проекту', String((SZ.notes || []).length)) : null;
 
@@ -5864,8 +5864,8 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
    Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. */
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
-   Сотрудник26 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник11 Сотрудник26 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   Сотрудник27 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
+   На techfabrikant.ru — Сотрудник12 Сотрудник27 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -5929,7 +5929,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   }
   // 26.10.2026 (пользователь): предупреждения — ТОЛЬКО гроза, сильный снегопад (снег/снегопад ≥ 7 мм за 12 ч), шторм (порывы ≥ 20 м/с),
   // ураган (порывы ≥ 33 м/с) в ближайшие 24 часа. Обычно их считает сервер (wx/f.php → alerts) — тогда сайт и боты пишут одно и то же;
-  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник11]
+  // здесь — тот же расчёт на случай, когда сервера нет. rows: [t (мс), темп., ветер, символ, осадки мм, часов, порыв, условие Сотрудник12]
   function dmhm(t){ var d = new Date(t + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
   function span(t0, t1){ return dmhm(t0) + ' с ' + hm(new Date(t0)) + ' до ' + (dmhm(t1 + 36e5) !== dmhm(t0) ? dmhm(t1 + 36e5) + ' ' : '') + hm(new Date(t1 + 36e5)) + ' МСК'; }
   function alerts(rows){
@@ -6000,9 +6000,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник11 Сотрудник26; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник11 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник12 Сотрудник27; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник12 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
-    // Теперь: Сотрудник11 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
+    // Теперь: Сотрудник12 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
       clearTimeout(to); var ctl2 = window.AbortController ? new AbortController() : null, to2 = setTimeout(function(){ if (ctl2) ctl2.abort(); }, 20000);
       var good = function(w){ wx = w; wxGot = Date.now(); wxErr = ''; ls(K_WX, JSON.stringify({ w: w, got: wxGot })); };
@@ -6098,7 +6098,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   }
   function close(){ if (win) { win.remove(); win = null; } if (pill) pill.setAttribute('aria-expanded', 'false'); }
   function open(){
-    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник26 на площадке');
+    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник27 на площадке');
     // 29.10.2026 (прогон «нажать всё»): у окна погоды не было кнопки «Закрыть» и оно не закрывалось по Esc — кнопка × сверху, Esc закрывает
     win.addEventListener('click', function(e){ e.stopPropagation(); if (e.target.closest && e.target.closest('.skyx')) { close(); return; } var b = e.target.closest && e.target.closest('button[data-m]'); if (b) setMode(b.getAttribute('data-m')); });
     document.body.appendChild(win); fill(state()); load();
@@ -6131,9 +6131,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
           return '<tr><td>' + hm(new Date(r[0])) + '</td><td class="t">' + deg(r[1]) + '</td><td>' + esc(p.text || '') + (r[3] >= 0.1 ? ', ' + num1(r[3]) + ' мм' : '') + '</td><td class="wd">' + (r[4] != null ? Math.round(r[4]) + (r[5] != null && r[5] >= r[4] + 1 ? '–' + Math.round(r[5]) : '') + ' м/с' : '') + '</td></tr>'; }).join('') + '</table></div>';
     }
     var dm = function(iso){ if (isNaN(Date.parse(iso))) return '—'; var d = new Date(Date.parse(iso) + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ' в ' + hm(new Date(Date.parse(iso))); };
-    var src = w ? (w.label ? 'Сотрудник26: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник26: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
-                           : 'Сотрудник26: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
-                : (st.wxErr ? 'Сотрудник26 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
+    var src = w ? (w.label ? 'Сотрудник27: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник27: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
+                           : 'Сотрудник27: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
+                : (st.wxErr ? 'Сотрудник27 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
     var al = alOf(w), lv = al.reduce(function(a, x){ return Math.max(a, x.lv || 1); }, 0);
     win.innerHTML = '<button type="button" class="skyx" aria-label="Закрыть">×</button><h3>Поляны, ул. Терехина, 14</h3><div class="big">' + svg(iconFor(st)) + '<b>' + (tempOf(st) != null ? deg(tempOf(st)) : st.time) + '</b><span>' + esc(w ? w.text : st.phase) + '</span></div>' +
       (al.length ? '<div class="alerts' + (lv >= 2 ? ' l2' : '') + '"><b>Предупреждение · ближайшие 24 часа</b>' + al.map(function(a){ return '<div>' + esc(a.text) + '</div>'; }).join('') + '</div>' : '') +

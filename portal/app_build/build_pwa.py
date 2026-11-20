@@ -25,7 +25,8 @@ SITE = '/home/claude/site_zip'
 OUT = f'{B}/pwa/terekhina14'
 STAMP = time.strftime('%Y%m%d%H%M')
 if os.path.exists(OUT): shutil.rmtree(OUT)
-shutil.copytree(SITE, OUT)
+shutil.copytree(SITE, OUT, ignore=lambda d, n: ['fsu'] if os.path.abspath(d) == os.path.abspath(SITE) else [])
+if os.path.isdir(f'{SITE}/fsu'): shutil.copytree(f'{SITE}/fsu', f'{OUT}/fsu', copy_function=os.link)   # 20.11.2026: копия fabrikant.su — жёсткими ссылками (место на диске)
 os.remove(f'{OUT}/README.txt')
 shutil.copytree(f'{B}/fonts_www', f'{OUT}/fonts', dirs_exist_ok=True)   # the local fonts (@fontsource, OFL) — app_build/fonts_www; с 29.10 их же кладёт build_site.py (один набор на сайт)
 
@@ -148,8 +149,10 @@ for root, _, files in os.walk(OUT):
     for f in files:
         rel = os.path.relpath(os.path.join(root, f), OUT).replace(os.sep, '/')
         if rel in DOC_FILES or rel in ('sw.js', 'README.txt'): continue
+        if rel.startswith(('fsu/', 'library/')): continue   # 20.11.2026, Т. В. «на 1–2 Мбит/с должно летать»: копия сайта (≈430 МБ) и библиотека (≈275 МБ) — не в обязательную загрузку на телефон, сохраняются при открытии
         pre.append(rel)
-pre.sort()
+# сначала то, что нужно для входа и главной: страницы корня и общие файлы, потом остальное
+pre.sort(key=lambda r: (0 if '/' not in r and r.endswith('.html') else 1 if r.startswith(('assets/', 'lib/', 'fonts/', 'icons/')) else 2, r))
 pre_size = sum(os.path.getsize(f'{OUT}/{p}') for p in pre); doc_size = sum(os.path.getsize(f'{OUT}/{p}') for p in DOC_FILES)
 ver = hashlib.sha1(''.join(hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest() + p for p in pre).encode()).hexdigest()[:10]   # the whole content of every file
 # 28.10.2026, пользователь: «по мелким обновлениям не присылай всем уведомления в боты и пуши на портал — просто обновляй данные. Если меняем дизайн,
@@ -159,8 +162,18 @@ ver = hashlib.sha1(''.join(hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexd
 #   или первая сборка после 18:00 (сводка дня); не больше 5 в день. Решение — в release_state.json (его читает bot/bot_live.py для новостей бота).
 import datetime as _dtr
 _RS = f'{B}/release_state.json'
-try: _st = _cg1_load_json(_RS, encoding='utf-8')
-except Exception: _st = {}
+# 16.11.2026 (R5-05 Рекса): чтение-изменение-запись под блокировкой; повреждённый файл — копия .bak, иначе остановка
+#   (раньше «не прочитался» = пустое состояние = ложный «первый выпуск» и рассылка всем).
+import fcntl as _fcntl, shutil as _sh
+_rs_lock = open(_RS + '.lock', 'w'); _fcntl.flock(_rs_lock, _fcntl.LOCK_EX)
+def _rs_load():
+    for _p in (_RS, _RS + '.bak'):
+        if os.path.exists(_p):
+            try: return _cg1_load_json(_p, encoding='utf-8')
+            except Exception: continue
+    if os.path.exists(_RS): sys.exit('release_state.json повреждён (и .bak) — сборку не продолжаю, чтобы не объявить ложный первый выпуск')
+    return {}
+_st = _rs_load()
 _cur = {p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in pre}
 if not _st.get('pub'):
     try: _st['pub'] = re.search(r"const VERSION = '[^']*-([0-9a-f]{10})'", _cg1_read_file(f'{OUT}/sw.js', encoding='utf-8')).group(1)
@@ -178,9 +191,10 @@ if _public:
     if _digest: _st['digest_day'] = _day
 _st['last'] = {'t': _now.strftime('%Y-%m-%dT%H:%M'), 'public': bool(_public), 'changed': _changed, 'ver': ver}
 _st['days'] = {k: v for k, v in sorted(_days.items())[-10:]}
-_cg1_json_value_143 = _st
-with open(_RS, 'w', encoding='utf-8') as _cg1_json_output_143:
-    json.dump(_cg1_json_value_143, _cg1_json_output_143, ensure_ascii=False, indent=1)
+if os.path.exists(_RS): _sh.copy2(_RS, _RS + '.bak')
+with open(_RS + '.tmp', 'w', encoding='utf-8') as _cg1_json_output_143:
+    json.dump(_st, _cg1_json_output_143, ensure_ascii=False, indent=1)
+os.replace(_RS + '.tmp', _RS)
 print('уведомления:', 'всем (%s)' % _st.get('why') if _public else 'только данные, без рассылки всем (изменено файлов %d, рассылок сегодня %d)' % (_changed, _n))
 sw = _cg1_read_file(f'{B}/pwa_sw.js', encoding='utf-8')
 sw = sw.replace('__VERSION__', STAMP + '-' + _st['pub']).replace('__PRECACHE__', json.dumps(pre)).replace('__DOCS__', json.dumps({p: hashlib.sha1(_cg1_read_file(f'{OUT}/{p}', 'rb')).hexdigest()[:12] for p in DOC_FILES}))

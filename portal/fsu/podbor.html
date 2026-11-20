@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Подбор мебели — Фабрикант</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="preload" href="/fsu/f/media/fonts/als_gorizont/ALSGorizont2.1-MediumExpanded.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:ALSGorizont;src:url(/fsu/f/media/fonts/als_gorizont/ALSGorizont2.1-MediumExpanded.woff2) format("woff2");font-display:swap}
+@font-face{font-family:ALSDeparture;src:url(/fsu/f/media/fonts/als_departure/ALSDeparture-Regular.woff2) format("woff2");font-display:swap}
+@font-face{font-family:ALSDeparture;font-weight:700;src:url(/fsu/f/media/fonts/als_departure/ALSDeparture-Bold.woff2) format("woff2");font-display:swap}
+:root{--red:#F04930;--red-l:#FDE4E0;--ink:#111;--mut:#5f6470;--line:#e6e7ea;--bg:#fff;--card:#f6f6f7}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 ALSDeparture,system-ui,-apple-system,sans-serif}
+a{color:inherit}
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
+.bar{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:16px}
+.logo{display:block;flex:none}.logo img{display:block;height:26px;width:auto}
+h1{font:500 clamp(22px,3.4vw,34px)/1.15 ALSGorizont,system-ui,sans-serif;margin:22px 0 6px;letter-spacing:-.01em}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 120px}
+.lead{color:var(--mut);margin:0 0 16px;max-width:70ch}
+.q{display:flex;gap:8px;margin:0 0 14px}
+.q input{flex:1;min-width:0;height:52px;border:1.5px solid var(--line);border-radius:26px;padding:0 20px;font:inherit;font-size:17px;outline:none;background:#fff}
+.q input:focus-visible{border-color:var(--ink)}
+.q button{height:52px;border:0;border-radius:26px;background:var(--red);color:#fff;font:inherit;font-weight:700;padding:0 22px;cursor:pointer}
+.q button:hover{filter:brightness(.94)}.q button:active{filter:brightness(.88)}
+.hint{font-size:14px;color:var(--mut);margin:-6px 0 18px}.hint button{border:0;background:none;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font:inherit;cursor:pointer;padding:0}
+.lay{display:grid;grid-template-columns:280px 1fr;gap:28px;align-items:start}
+.side{position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;padding-right:4px}
+.g{margin:0 0 18px}.g h3{font:700 13px/1 ALSDeparture,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:18px;padding:7px 12px;font:inherit;font-size:14px;line-height:1.1;cursor:pointer;color:var(--ink)}
+.chip:hover{border-color:#bfc2c8}.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip:focus-visible,.card a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.chip .n{opacity:.55;margin-left:4px;font-size:12px}.chip[disabled]{opacity:.4;cursor:default}
+.rng{display:flex;gap:8px;align-items:center}.rng input{width:100%;height:40px;border:1.5px solid var(--line);border-radius:12px;padding:0 10px;font:inherit}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+.cnt{font-weight:700}.reset{border:0;background:none;color:var(--red);font:inherit;cursor:pointer;padding:0}
+.act{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.act .chip{background:var(--red-l);border-color:var(--red-l);color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:var(--card);border-radius:18px;overflow:hidden;transition:transform .18s ease-out,box-shadow .18s ease-out}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+.card a{display:block;text-decoration:none;height:100%}
+.ph{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center}
+.ph img{width:88%;height:88%;object-fit:contain}
+.ct{padding:12px 14px 14px}.ct b{display:block;font:500 16px/1.2 ALSGorizont,system-ui,sans-serif;margin:0 0 4px}
+.k{font-size:13px;color:var(--mut)}.dm{font-size:14px;margin-top:6px}.tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.tg span{font-size:12px;background:#fff;border-radius:10px;padding:3px 8px;color:#333}
+.empty{padding:40px 0;color:var(--mut)}
+.fbtn{display:none}
+@media (max-width:900px){.lay{grid-template-columns:1fr}.side{position:fixed;inset:auto 0 0 0;top:auto;max-height:78vh;background:#fff;z-index:40;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);padding:18px 16px calc(90px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .22s ease-out}
+ .side.open{transform:none}.fbtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ink);background:#fff;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+ .grid{grid-template-columns:repeat(2,1fr);gap:10px}.ct{padding:10px 12px 12px}.ct b{font-size:15px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<header class="top"><div class="bar"><a class="logo" href="/fsu/" aria-label="Фабрикант — на главную"><img src="/fsu/f/media/brand/logo-black.svg" alt="Фабрикант" width="163" height="29"></a></div></header>
+<main class="wrap">
+<h1>Подбор мебели по свойствам</h1>
+<p class="lead">Не нужно знать, как называется раздел каталога. Напишите, что нужно, или отметьте свойства: мягкость, ножки, каркас, обивку, размер.</p>
+<form class="q" id="qf" role="search"><input id="q" type="search" autocomplete="off" placeholder="Например: мягкое кресло на хроме, ширина 1 м" aria-label="Что ищете"><button type="submit">Найти</button></form>
+<div class="hint">Примеры: <button type="button" data-q="мягкое кресло на хромированных ножках">мягкое кресло на хроме</button> · <button type="button" data-q="кресло шириной 100 см">кресло шириной 1 метр</button> · <button type="button" data-q="стул на 4 ножках велюр">стул на 4 ножках, велюр</button> · <button type="button" data-q="барный стул экокожа">барный, экокожа</button></div>
+<div class="lay">
+ <aside class="side" id="side" aria-label="Свойства"></aside>
+ <section aria-live="polite">
+  <div class="head"><span class="cnt" id="cnt"></span><span><button class="fbtn" id="fbtn" type="button">Свойства</button> <button class="reset" id="rst" type="button">Сбросить</button></span></div>
+  <div class="act" id="act"></div>
+  <div class="grid" id="grid"></div>
+ </section>
+</div>
+</main>
+<script>
+(function(){
+var PF='/fsu/upload/als-1c/catalog/products/',D=[],IM={},S={};
+var G=[
+ ['k','Что ищете',null],
+ ['soft','Мягкость',function(x){return x.soft==null?null:['Жёсткое','Мягкое сиденье','Мягкое'][x.soft]}],
+ ['op','Опора',function(x){return {'ножки':'Ножки','крестовина на колёсиках':'На колёсиках','полозья':'Полозья','одна опора без колёс':'Одна опора, вращается','рама':'Рама','секция на балке':'На балке'}[x.op]||null}],
+ ['f','Каркас',function(x){var a=(x.f||[]).slice();if(x.fin&&a.indexOf(x.fin)<0&&/дерево|цветной/.test(x.fin))a.push(x.fin==='цветной/металл'?'цветной':x.fin);return a.map(function(v){return {'хром':'Хром','чёрный':'Чёрный','белый':'Белый','серебристый':'Серебристый','серый':'Серый','под дерево':'Под дерево','дерево':'Дерево','окраска':'Окрашенный','цветной':'Цветной'}[v]||v})}],
+ ['m','Обивка',function(x){return (x.m||[]).map(function(v){return v[0].toUpperCase()+v.slice(1)})}],
+ ['arm','Подлокотники',function(x){return x.arm==null?null:(x.arm?'Есть':'Нет')}],
+ ['w','Ширина',function(x){var w=x.w;if(!w)return null;return w<500?'до 50 см':w<700?'50–70 см':w<1000?'70–100 см':w<1500?'100–150 см':'больше 150 см'}],
+ ['seat','Высота сиденья',function(x){var h=x.seat;if(!h)return null;return h<600?'обычная (до 60 см)':h<700?'полубарная (60–70 см)':'барная (от 70 см)'}]
+];
+function val(g,x){var v=g[2]?g[2](x):x[g[0]];return v==null?[]:[].concat(v)}
+function img(p){if(!p)return'';return p.charAt(0)==='~'?PF+p.slice(1):p}
+function srcset(p){var k=p.replace(PF,'~').replace(/^\/fsu\//,''),v=IM[k];if(!v)return'';var a=[p+' '+v[0]+'w'];if(v[1])a.unshift(p+'.640.webp '+v[1]+'w');if(v[2])a.push(p+'.2560.webp '+v[2]+'w');return a.join(', ')}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* разбор фразы покупателя → свойства */
+var RX=[[/хром/,'f','Хром'],[/ч[её]рн/,'f','Чёрный'],[/бел/,'f','Белый'],[/дерев|массив|бук|под дерево/,'f','Дерево'],
+ [/велюр|бархат/,'m','Велюр'],[/экокож|кожзам|искусств\w* кож/,'m','Экокожа'],[/натуральн\w* кож/,'m','Натуральная кожа'],[/(^|\s)кож/,'m','Экокожа'],[/рогожк/,'m','Рогожка'],[/ткан/,'m','Ткань'],[/сетк/,'m','Сетка'],[/букле/,'m','Букле'],
+ [/(4|четыр\w*)\s*(ножк|ног)|на ножках|ножк/,'op','Ножки'],[/колес|колёс|ролик|крестовин|на колесах/,'op','На колёсиках'],[/полоз/,'op','Полозья'],[/вращ|поворот/,'op','Одна опора, вращается'],
+ [/жестк|жёстк|пластиков\w* сид|деревянн\w* сид/,'soft','Жёсткое'],[/мягк/,'soft','Мягкое'],
+ [/с подлокотник/,'arm','Есть'],[/без подлокотник/,'arm','Нет'],
+ [/диван/,'k','Диван'],[/барн|полубар|для стойки/,'k','Барный стул'],[/табурет/,'k','Табурет'],[/банкетк|скамь|кушетк/,'k','Банкетка / скамья'],[/пуф/,'k','Пуф'],[/компьют|рабоч|офисн\w* кресл|руководител/,'k','Рабочее кресло'],[/кресл\w* для отдых|в гостин|лаунж/,'k','Кресло для отдыха'],[/урн/,'k','Урна'],[/вешалк/,'k','Вешалка'],[/секци|зал\w* ожидан/,'k','Секции'],[/(^|\s)стул/,'k','Стул']];
+function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={},txt=t;RX.forEach(function(r){if(r[0].test(t)){if(r[1]==='m'&&r[2]==='Экокожа'&&f.m&&f.m.indexOf('Натуральная кожа')>=0)return;(f[r[1]]=f[r[1]]||[]).indexOf(r[2])<0&&f[r[1]].push(r[2])}});
+ if(/кресл/.test(t)&&!f.k){f.k=/колес|колёс|компьют|рабоч|офис/.test(t)?['Рабочее кресло']:['Кресло для отдыха','Рабочее кресло']}
+ var m=/(?:шир\w*|габарит\w*|размер\w*)?\s*(?:на|в|до|около)?\s*(\d+(?:[.,]\d+)?)\s*(м|метр\w*|см|мм)\b/.exec(t);
+ if(/метр/.test(t)&&!m)m=[0,'1','м'];
+ if(m){var v=parseFloat(String(m[1]).replace(',','.')),u=m[2];var mm=/^мм/.test(u)?v:/^см/.test(u)?v*10:v*1000;f._w=mm}
+ return f}
+function match(x,f){for(var i=0;i<G.length;i++){var g=G[i],sel=f[g[0]];if(!sel||!sel.length)continue;var vs=val(g,x);if(!sel.some(function(s){return vs.indexOf(s)>=0}))return false}
+ if(f._w){if(!x.w)return false;var lo=f._w*0.85,hi=f._w*1.15;if(x.w<lo||x.w>hi)return false}
+ if(f._q){var n=(x.n+' '+x.k+' '+x.s).toLowerCase();if(f._q.some(function(w){return n.indexOf(w)<0}))return false}return true}
+function count(g,v){var f=JSON.parse(JSON.stringify(S));f[g[0]]=[v];return D.filter(function(x){return match(x,f)}).length}
+function side(){var h='';G.forEach(function(g){var all={};D.forEach(function(x){val(g,x).forEach(function(v){all[v]=1})});var ks=Object.keys(all);if(g[0]==='w')ks=['до 50 см','50–70 см','70–100 см','100–150 см','больше 150 см'].filter(function(v){return all[v]});if(g[0]==='seat')ks=['обычная (до 60 см)','полубарная (60–70 см)','барная (от 70 см)'].filter(function(v){return all[v]});
+ h+='<div class="g"><h3>'+g[1]+'</h3><div class="chips">'+ks.map(function(v){var on=(S[g[0]]||[]).indexOf(v)>=0,c=count(g,v);return '<button type="button" class="chip" data-g="'+g[0]+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"'+(c||on?'':' disabled')+'>'+esc(v)+'<span class="n">'+c+'</span></button>'}).join('')+'</div></div>'});
+ if(S._w)h='<div class="g"><h3>Ширина около</h3><div class="chips"><button type="button" class="chip" aria-pressed="true" data-g="_w">'+Math.round(S._w/10)+' см ±15 % ×</button></div></div>'+h;
+ document.getElementById('side').innerHTML=h}
+function card(x){var p=img(x.p),ss=p?srcset(p):'',dm=[x.w&&('Ш '+x.w),x.dp&&('Г '+x.dp),x.h&&('В '+x.h)].filter(Boolean).join(' × ');
+ var tg=[].concat(val(G[2],x),val(G[4],x).slice(0,2),val(G[3],x).slice(0,1));
+ return '<article class="card"><a href="/fsu'+esc(x.u)+'"><div class="ph">'+(p?'<img loading="lazy" decoding="async" alt="'+esc(x.n)+'" src="'+esc(p)+'"'+(ss?' srcset="'+esc(ss)+'" sizes="(max-width:900px) 46vw, 240px"':'')+'>':'')+'</div><div class="ct"><b>'+esc(x.n)+'</b><div class="k">'+esc(x.k)+'</div>'+(dm?'<div class="dm">'+dm+' мм</div>':'')+(tg.length?'<div class="tg">'+tg.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>':'')+'</div></a></article>'}
+function render(){var r=D.filter(function(x){return match(x,S)});
+ r.sort(function(a,b){return (b.p?1:0)-(a.p?1:0)});
+ document.getElementById('cnt').textContent=r.length?('Подходит: '+r.length):'';
+ document.getElementById('grid').innerHTML=r.length?r.slice(0,240).map(card).join(''):'<div class="empty">Ничего не нашлось. Уберите одно из свойств или измените размер.</div>';
+ var a=[];Object.keys(S).forEach(function(k){if(k==='_w'||k==='_q')return;(S[k]||[]).forEach(function(v){a.push('<button type="button" class="chip" data-g="'+k+'" data-v="'+esc(v)+'" aria-pressed="true">'+esc(v)+' ×</button>')})});
+ document.getElementById('act').innerHTML=a.join('');side();
+ try{history.replaceState(null,'','#'+encodeURIComponent(JSON.stringify(S)))}catch(e){}}
+function toggle(g,v){if(g==='_w'){delete S._w}else{var a=S[g]=S[g]||[],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);if(!a.length)delete S[g]}render()}
+document.addEventListener('click',function(e){var c=e.target.closest('.chip[data-g]');if(c&&!c.disabled){toggle(c.dataset.g,c.dataset.v)}var h=e.target.closest('.hint button');if(h){document.getElementById('q').value=h.dataset.q;go()}});
+function go(){var t=document.getElementById('q').value.trim();var f=parse(t);S=f;
+ var rest=t.toLowerCase().replace(/ё/g,'е').split(/\s+/).filter(function(w){return w.length>3&&!RX.some(function(r){return r[0].test(' '+w+' ')})&&!/^(шир|габар|разм|метр|мягк|для|на|с|без|под|около|ножк|ножках|хром|см|мм)/.test(w)&&D.some(function(x){return x.n.toLowerCase().indexOf(w)>=0})});
+ if(rest.length)S._q=rest;render();if(innerWidth<=900)document.getElementById('grid').scrollIntoView({behavior:'smooth',block:'start'})}
+document.getElementById('qf').onsubmit=function(e){e.preventDefault();go()};
+document.getElementById('rst').onclick=function(){S={};document.getElementById('q').value='';render()};
+document.getElementById('fbtn').onclick=function(){document.getElementById('side').classList.toggle('open')};
+window.FSU_CTX=function(){return D.filter(function(x){return match(x,S)}).slice(0,40).map(function(x){return x.n+' ('+x.k+'; '+[x.op,(x.m||[]).join('/'),(x.f||[]).join('/'),x.w&&('Ш'+x.w+' Г'+(x.dp||'?')+' В'+(x.h||'?')+' мм')].filter(Boolean).join('; ')+') /fsu'+x.u}).join('\n')};
+Promise.all([fetch('/fsu/podbor.json').then(function(r){return r.json()}),fetch('/fsu/_img.json').then(function(r){return r.ok?r.json():{}}).catch(function(){return{}})]).then(function(a){D=a[0];IM=a[1]||{};
+ try{var h=decodeURIComponent(location.hash.slice(1));if(h)S=JSON.parse(h)}catch(e){S={}}render()}).catch(function(){document.getElementById('grid').innerHTML='<div class="empty">Не загрузился список товаров. Обновите страницу.</div>'});
+})();
+</script>
+</body></html>

@@ -44,6 +44,14 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   ('transport.html', '/home/claude/build/transport_frag.html'),
                   # 04.11.2026, Т. В. (опрос): «раздел с показаниями счётчиков и откачки сточных вод» — под «Картой производства»
                   ('utils.html', '/home/claude/build/utils_frag.html'),
+                  ('cams.html', '/home/claude/build/cams_frag.html'),
+                  # 19.11.2026, Т. В.: «база знаний… помимо данных на портал нужны выводы» — итоги года по выгрузке 1С ЖПС (build/jps/kb_2026.json)
+                  ('jps.html', '/home/claude/build/jps_frag.html'),
+                  # 19.11.2026, Т. В.: «звонки МТС — на портал по сим-картам, особый контроль; соединить с базой клиентов»
+                  ('mts.html', '/home/claude/build/mts_frag.html'),
+                  # 19.11.2026, Т. В.: «по FTP лежит сайт — отобразить на портале отдельным разделом»
+                  ('ftp.html', '/home/claude/build/ftp_frag.html'),
+                  ('site.html', '/home/claude/build/site_frag.html'),   # 20.11.2026, Т. В.: раздел «Сайт» в «Продукции» — витрина fabrikant.su из FTP
                   # 13.11.2026, Т. В.: «обнови портал по последним правкам его структуры» — страница раздела (10 разделов, отчёты списком)
                   ('razdel.html', '/home/claude/build/razdel_frag.html'),
                   ('poruch.html', '/home/claude/build/poruch_frag.html'),
@@ -54,7 +62,7 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
     frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
 _TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
-           'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'struct.html': 'Фабрика — структура', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — энергоресурсы и счётчики'}
+           'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'cams.html': 'Фабрика — видеонаблюдение', 'jps.html': 'Фабрика — Жилпромсервис', 'mts.html': 'Фабрика — звонки МТС', 'ftp.html': 'Фабрика — файлы FTP сайта', 'site.html': 'Фабрика — сайт', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'struct.html': 'Фабрика — структура', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — энергоресурсы и счётчики'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
 # one look for every page (22.10.2026): the model's colours, type and glass (assets/ui.css) and the tab bar below (assets/site.js); no address
@@ -78,7 +86,7 @@ for _n in frags:
 with open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8') + "\nwindow.T14SKY && T14SKY.mount('right');\n")
 frags['plan.html'] += '\n<script src="assets/sky.js"></script>\n'
-# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник11 Сотрудник26); ядро погоды без плашки — assets/sky0.js
+# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник12 Сотрудник27); ядро погоды без плашки — assets/sky0.js
 with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
@@ -172,12 +180,12 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник14 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
-    _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Офис продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник15 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Имя2 продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
     print('график отгрузки:', _e); _SHIP = None
-# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник25 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
+# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник26 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
 try:
     _spl = sorted(_gl.glob('/home/claude/build/ship_plan/2*.json'))
     if _spl and _SHIP is not None:
@@ -201,7 +209,7 @@ try:
             _T = _pl.get('total') or {}; _S = _T.get('s') or 1
             _oa, _ob = _ords(_pl), _ords(_pv)
             _car = [k for k in _oa if k in _ob]
-            _int = sum(v for k, v in _cl.items() if _re2.match(r'(Офис продаж|Склад)', k))
+            _int = sum(v for k, v in _cl.items() if _re2.match(r'(Имя2 продаж|Склад)', k))
             _exp = [k for k in _cl if _re2.search(r'\((Беларусь|Армения|Казахстан|Узбекистан|Кыргызстан|Киргизия|Таджикистан)', k)]
             _pl['an'] = {'s': _T.get('s'), 'q': _T.get('q'), 'avg': round((_T.get('s') or 0) / (_T.get('q') or 1)),
                          'prev': ({'s': _pv['total']['s'], 'q': _pv['total']['q'], 'from': _pv.get('from'), 'to': _pv.get('to')} if _pv and _pv.get('total') else None),
@@ -217,7 +225,7 @@ try:
                     for _it in _o.get('items', []): _it.pop('ch', None)
         _SHIP['plan'] = _pl
 except Exception as _e: print('план отгрузки:', _e)
-# 11.11.2026, Сотрудник7 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
+# 11.11.2026, Сотрудник8 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
@@ -255,6 +263,25 @@ if 'ppr.html' in frags: frags['ppr.html'] = frags['ppr.html'].replace('__PPR__',
 try: _IG = _cg1_read_json('/home/claude/build/infografika/infografika.json', encoding='utf-8')
 except Exception: _IG = {}
 if 'infografika.html' in frags: frags['infografika.html'] = frags['infografika.html'].replace('__INFOGR__', _js.dumps(_IG, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+try: _JK = _cg1_read_json('/home/claude/build/jps/kb_2026.json', encoding='utf-8')
+except Exception as _e: print('ЖПС база:', _e); _JK = None
+# 19.11.2026, Т. В.: «изменения из базы 1С не применяй, применяй те данные, которые у тебя были» — месяцы, по которым у портала
+#   есть принятый итог (sales_1c/month_override.json: октябрь 124,52 млн по отчёту Сотрудник11), берутся оттуда, а не из выгрузки
+try:
+    _MOV = _cg1_read_json('/home/claude/build/sales_1c/month_override.json', encoding='utf-8')
+    if _JK:
+        _fix = []
+        for _r in _JK.get('month', []):
+            _o = _MOV.get(_r['m'])
+            if isinstance(_o, dict) and _o.get('v'):
+                _nv = round(_o['v'] / 1e6, 1); _JK['kpi']['rev'] = round(_JK['kpi']['rev'] - _r['v'] + _nv, 1)
+                _r['src'] = _o.get('src'); _r['v1c'] = _r['v']; _r['v'] = _nv; _fix.append(_r['m'])
+        _JK['month_fixed'] = _fix
+except Exception as _e: print('ЖПС месяцы:', _e)
+try: _MP = _cg1_read_json('/home/claude/build/calls_mts/phones.json', encoding='utf-8')
+except Exception as _e: print('звонки МТС, справочник:', _e); _MP = {'cl': {}, 'st': {}, 'src': ''}
+if 'mts.html' in frags: frags['mts.html'] = frags['mts.html'].replace('__MTSPH__', _js.dumps(_MP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
+if 'jps.html' in frags: frags['jps.html'] = frags['jps.html'].replace('__JPSKB__', _js.dumps(_JK, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__PLANM__', _js.dumps(_PM, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 11.11.2026, Т. В.: «отчёт по менеджерам в разрезе ОП (базис поставки), ФТС и ПКС отдельно, накопленным итогом» (build/sales_mgr_op/<ГГГГ-ММ>.json) → #mgrop;
 # «отдельный раздел онлайн-продажи» (build/online/online.json — обновляет ежедневное облачное задание по ценам) → #online
@@ -262,7 +289,7 @@ try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
     _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
-# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник7 из папки «Планы» itm@)
+# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник8 из папки «Планы» itm@)
 try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -281,7 +308,7 @@ try:
     if _ON is not None and _ON.get('runet') and os.path.exists('/home/claude/build/online/client_check.json'):
         _ON['runet']['check'] = _cg1_read_json('/home/claude/build/online/client_check.json', encoding='utf-8')
 except Exception as _e: print('рунет:', _e)
-# 14.11.2026, Т. В.: «по Онлайн Имя5 и ВсеИнструментам — их склад, продажи, динамика… подсветки, рекомендации» — витрина ВИ (ежедневная
+# 14.11.2026, Т. В.: «по Онлайн Имя6 и ВсеИнструментам — их склад, продажи, динамика… подсветки, рекомендации» — витрина ВИ (ежедневная
 #   проверка vi_*.json: есть / мало / нет / под заказ) против нашего склада (ctx.json → our_stock), ошибки карточек ВИ (weekly_extra)
 try:
     if _ON is not None:
@@ -306,6 +333,10 @@ try:
         _wx = sorted(_gvi.glob('/home/claude/fabrika/work/vi_week_*/weekly_extra_*.json'))
         if _wx and _ON.get('vi') is not None: _ON['vi']['cards'] = len((_cg1_read_json(_wx[-1], encoding='utf-8') or {}).get('Карточки') or [])
 except Exception as _e: print('витрина ВИ:', _e)
+# 20.11.2026, Т. В.: «аналитика по ЖПС через корпоративный кабинет ВсеИнструменты… конкуренты, акции для корпоративных клиентов» — online/vi_corp.json
+try:
+    if _ON is not None and os.path.exists('/home/claude/build/online/vi_corp.json'): _ON['vicorp'] = _cg1_read_json('/home/claude/build/online/vi_corp.json', encoding='utf-8')
+except Exception as _e: print('кабинет ВИ:', _e)
 frags['sales.html'] = frags['sales.html'].replace('null/*__ONLINE__*/', _js.dumps(_ON, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 # 13.11.2026: «Главная» — шестая карточка «Онлайн · наши модели» (сводка мониторинга сайтов)
 try:
@@ -358,7 +389,7 @@ except Exception as _e:
     print('отзывы ВИ:', _e); _virj = 'null'
 assert frags['sales.html'].count('__VIREV__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__VIREV__', _virj, 1)
-# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник8 02.11, build/sales_op/spb_clients.json)
+# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник9 02.11, build/sales_op/spb_clients.json)
 try: _spbj = _js.dumps(_cg1_read_json('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('клиенты СПб:', _e); _spbj = 'null'
 assert frags['struct.html'].count('__SPB__') == 1   # 16.11.2026: клиенты СПб — в «Структуре» (карточка ОП СПб у коммерческого отдела)
@@ -367,7 +398,7 @@ frags['struct.html'] = frags['struct.html'].replace('__SPB__', _spbj, 1)
 try: _tz1 = _js.dumps(_cg1_read_json('/home/claude/build/tz/tz_1c.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('ТЗ 1С:', _e); _tz1 = 'null'
 frags['sales.html'] = frags['sales.html'].replace('__TZ1C__', _tz1, 1)
-# 30.10.2026: «Продажи» → «Офисы продаж — октябрь 2026» — письмо М. И. Сотрудник8 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
+# 30.10.2026: «Продажи» → «Имя2 продаж — октябрь 2026» — письмо М. И. Сотрудник9 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
 # план продаж по менеджерам октябрь → ноябрь с группами производства (build/sales_op/2026-10.json). Нет файла — пустой объект, блок не показывается
 _sopp = '/home/claude/build/sales_op/2026-10.json'
 def _sop_clean(d):
@@ -427,7 +458,7 @@ if(document.readyState==='complete')setTimeout(go,400);else addEventListener('lo
 # ---- портал (27.10.2026, пользователь: «из плана сайта сделаем портал»; макет «Fabrikant_portal.html» и промт): home.html, products.html,
 # assets/portal.css, оболочка в assets/site.js; тема по умолчанию тёмная — выставляется до отрисовки (выбор пользователя — в браузере)
 # 28.10.2026 (утверждённые макеты): тема по умолчанию — «Авто» (как в системе), выбор «Светлая / Тёмная» — t14.theme;
-# производительность «Авто / Сотрудник16 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
+# производительность «Авто / Сотрудник17 / Экономно» — t14.power; уровень устройства, выученный assets/site.js (видеокарта, замер кадров
 # при прокрутке), — t14.dev. Всё ставится на <html> до отрисовки: data-theme, data-perf (max|mid|eco; eco = прежний data-fx="lite"), data-plat.
 _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.userAgent||'',L=null;"
           "function g(k){try{return localStorage.getItem(k)}catch(e){return null}}"
@@ -457,7 +488,7 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           "else if((dm&&dm<=2)||(hc&&hc<=2)||cn.effectiveType==='3g'||rm||((screen.width*screen.height*(devicePixelRatio||1)*(devicePixelRatio||1))>8.3e6&&dm&&dm<=4))L='mid';"
           # 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра, поэтому iOS
           # всегда получал «max» (стекло с размытием на всю боковую панель). По умолчанию для iOS — «mid» (размытие только на малых поверхностях);
-          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник16» — вручную в «Профиль и настройки».
+          # замер кадров при прокрутке (site.js) опустит до «eco», «Сотрудник17» — вручную в «Профиль и настройки».
           "else if(d.getAttribute('data-plat')==='ios'&&!dm)L='mid'}}"
           "d.setAttribute('data-perf',L);if(L==='eco')d.setAttribute('data-fx','lite')})()</script>\n")
 # 04.11.2026, замечание Т. В. («Назад» водит по кругу): после шага «назад» по истории на другую страницу — сразу, до отрисовки, уровень выше того места,
@@ -571,7 +602,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник11) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -614,7 +645,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         _AW = _SD.get('allwh') or {}
         if _AW.get('list'): _PU['stock']['allwh'] = {'date': _AW.get('date'), 'list': [{'n': w.get('n'), 'q': w.get('q'), 'd': w.get('d')} for w in _AW['list']]}
     except Exception as _e4: print('пульс, все склады:', _e4)
-    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник13; свежий — smvs.bin)
+    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник14; свежий — smvs.bin)
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:
@@ -813,6 +844,8 @@ _lib = '/home/claude/library/raw'
 #   brand_all.py ставит новые и заменённые файлы library/raw на фирменный бланк (оригиналы — library/orig), уже оформленные пропускает
 if os.path.exists(os.path.join(SITE, 'library')): shutil.rmtree(os.path.join(SITE, 'library'))
 if os.path.isdir(_lib) and any(f for _, _, fs in os.walk(_lib) for f in fs): shutil.copytree(_lib, os.path.join(SITE, 'library'))
+# 20.11.2026, Т. В.: раздел «Сайт» — копия fabrikant.su один к одному (fabrika/work/fsu/fsu_build.py → build/fsu)
+if os.path.isdir('/home/claude/build/fsu'): shutil.rmtree(os.path.join(SITE, 'fsu'), ignore_errors=True); shutil.copytree('/home/claude/build/fsu', os.path.join(SITE, 'fsu'), copy_function=os.link)
 shutil.copy2(_staged_price, pathlib.Path(SITE) / 'library' / 'prices' / _staged_price.name)
 frags['library.html'] = update_library_sizes(frags['library.html'], SITE)
 # 28.10.2026, пользователь: «у тебя или день потерялся» — на «Производстве» и «ОМТС» не было live.js, страницы показывали запасные данные.
@@ -858,7 +891,8 @@ for name, frag in frags.items():
 # standalone form
 if os.path.exists(ZIP):
     shutil.rmtree(ZIP)
-shutil.copytree(SITE, ZIP)
+shutil.copytree(SITE, ZIP, ignore=lambda d, n: ['fsu'] if os.path.abspath(d) == os.path.abspath(SITE) else [])
+if os.path.isdir(os.path.join(SITE, 'fsu')): shutil.copytree(os.path.join(SITE, 'fsu'), os.path.join(ZIP, 'fsu'), copy_function=os.link)   # 20.11.2026: копия fabrikant.su ≈400 МБ — жёсткими ссылками, без второй копии на диске
 for name, frag in frags.items():
     with open(os.path.join(ZIP, name), 'w', encoding='utf-8') as _cg1_output_file:
         _cg1_output_file.write(full(frag))

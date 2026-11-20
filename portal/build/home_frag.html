@@ -80,6 +80,10 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 <script src="assets/edits.js"></script>
 <script src="assets/site.js"></script>
 <script>
+// 16.11.2026, Т. В.: «карта не кликабельная — тап по карте территории в любой точке, кроме кнопок, должен открывать 2D»
+(function () { var c = document.querySelector('.fh-map'); if (!c) return; c.style.cursor = 'pointer';
+  c.addEventListener('click', function (e) { if (e.defaultPrevented || (e.target.closest && e.target.closest('a,button,input,select,textarea,summary,[role=button]'))) return;
+    if (window.getSelection && String(window.getSelection())) return; location.href = 'plan.html'; }); })();
 /* «Пульс фабрики» (28.10.2026): снимок сборки → сразу; свежие данные хостинга (assets/live.js) → по мере загрузки. Счётчики «требует
    внимания» уходят в боковую панель (T14Site.badges) и запоминаются в браузере для остальных страниц. */
 (function () {
@@ -106,7 +110,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var el = document.getElementById('fhSub'), wxs = '';
     function day() { var d = new Date(), w = WD[d.getDay()]; return w.charAt(0).toUpperCase() + w.slice(1) + ', ' + d.getDate() + ' ' + MG[d.getMonth()]; }
     function put() { el.textContent = day() + (wxs ? ' · ' + wxs : ''); }
-    // погода — Сотрудник10 Сотрудник26 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник10 убираем только из поиска и ИИ)
+    // погода — Сотрудник12 Сотрудник27 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник12 убираем только из поиска и ИИ)
     window.addEventListener('t14sky', function (e) { var w = e.detail && e.detail.wx; if (!w || w.temp == null) return;
       var t = Math.round(w.temp); wxs = (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '°' + (w.text ? ', ' + String(w.text).toLowerCase() : ''); put(); });
     put(); setInterval(put, 60e3);
@@ -242,7 +246,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     if (!ONS || !ONS.total) { card('pkOnl', '—', 'мониторинг сайтов ещё не собран', 'none'); return; }
     card('pkOnl', n(ONS.total) + '<small>предложений</small>', 'на ' + n(ONS.sites) + ' сайтах · проверено моделей ' + n(ONS.checked) + (ONS.low ? ' · ниже РРЦ — ' + n(ONS.low) : '') + (ONS.t ? ' · на ' + dd(ONS.t) : ''), ONS.low ? 'warn' : 'ok');
   }
-  // ---------- «Пульс фабрики» (13.11.2026): три Имя2 цифры первой строкой — зелёный / оранжевый / красный ----------
+  // ---------- «Пульс фабрики» (13.11.2026): три Имя1 цифры первой строкой — зелёный / оранжевый / красный ----------
   function fbSet(id, v, s, tn) { var a = document.getElementById(id); if (!a) return; a.setAttribute('data-tone', tn); a.querySelector('.fb-v').innerHTML = v; a.querySelector('.fb-s').textContent = s; }
   function fbTop(O, R) {
     if (R && !R.noRep && R.groups) {
@@ -308,7 +312,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   }
   // ---------- разделы: быстрый вход — подписи из того же модуля (T14M.card), что и плитки ----------
   function secs() {
-    var L = (window.T14_PORTAL || []).filter(function (p) { return p[0] !== 'home.html'; });
+    var L = (window.T14_PORTAL || []).filter(function (p) { return p[0] !== 'home.html' && p[0] !== 'razdel.html#people'; });   // 20.11.2026, Т. В.: «здесь убери раздел Люди» (в меню «Разделы» остаётся)
     var I = window.T14_ICONS || {};
     var h = L.map(function (p) {
       // 13.11.2026: разделы новой структуры (razdel.html#…) берут цифры со страницы из 6-го элемента (Продажи, Производство, Снабжение и склад, Площадка)

@@ -13,24 +13,34 @@
  3) по каждому офису продаж: ежедневные отчёты (вечернее сообщение менеджера со списком клиентов, правило группы с 07.10),
     сдача по рабочим дням, письма → st/sales.bin (зашифровано, как st/ls.bin)."""
 import datetime, email, email.policy, email.utils, imaplib, json, os, re, ssl, time
+
+def _sday_keep(days):
+    """19.11.2026, Т. В.: «данные некорректные» — октябрь на портале 121,45 вместо 124,52: срез «последние 40 дней» выбросил 01.10.
+    Держим все дни с 1-го числа прошлого месяца (месяц на портале — всегда целиком), но не больше 70 дней."""
+    ks = sorted(days)
+    if not ks: return {}
+    y, m = int(ks[-1][:4]), int(ks[-1][5:7]); y, m = (y - 1, 12) if m == 1 else (y, m - 1)
+    start = '%04d-%02d-01' % (y, m)
+    return dict((k, days[k]) for k in ks if k >= start and k in ks[-70:])
+
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
 import mx_ctl as MC, itm as IT
 
 SINCE = datetime.date(2026, 10, 1)
-RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежедневные» 06.10, правило М. Сотрудник6 — с 07.10
+RULE_FROM = datetime.date(2026, 10, 7)          # «где отчёты ежедневные» 06.10, правило М. Сотрудник9 — с 07.10
 MSK = MC.MSK
 # офис продаж: ключ, название, имя в MAX (рег. выражение), признаки в тексте, адреса почты
 OPS = [
-    ('ekb', 'ОП Екатеринбург', r'^Имя5$|Сотрудник15', r'\bЕКБ\b|Екатеринбург', ('user44@example.org', 'user45@example.org')),
-    ('sam', 'ОП Самара', r'Сотрудник18', r'\bСамар', ('user46@example.org', 'user47@example.org')),
-    ('nn', 'ОП Сотрудник12 Имя2', r'Сотрудник17', r'\bНН\b|Сотрудник12\w* Имя2', ('user48@example.org', 'user49@example.org')),
-    ('krd', 'ОП Краснодар', r'Сотрудник16|Сотрудник48', r'склад\w* Краснодар|\bОП Краснодар', ('user50@example.org', 'user51@example.org')),
-    ('sim', 'ОП Симферополь', r'Сотрудник19', r'Симферопол|\bКрым', ('user52@example.org', 'user53@example.org')),
-    ('msk', 'ОП Москва', r'Сотрудник22', r'\bОП Москва', ('user20@example.org',)),
+    ('ekb', 'ОП Екатеринбург', r'^Сотрудник51$|Сотрудник18', r'\bЕКБ\b|Екатеринбург', ('user46@example.org', 'user47@example.org')),
+    ('sam', 'ОП Самара', r'Сотрудник21', r'\bСамар', ('user48@example.org', 'user49@example.org')),
+    ('nn', 'ОП Сотрудник15 Имя3', r'Сотрудник20', r'\bНН\b|Сотрудник15\w* Имя3', ('user50@example.org', 'user51@example.org')),
+    ('krd', 'ОП Краснодар', r'Сотрудник19|Сотрудник36', r'склад\w* Краснодар|\bОП Краснодар', ('user52@example.org', 'user53@example.org')),
+    ('sim', 'ОП Симферополь', r'Сотрудник22', r'Симферопол|\bКрым', ('user54@example.org', 'user55@example.org')),
+    ('msk', 'ОП Москва', r'Сотрудник24', r'\bОП Москва', ('user21@example.org',)),
     # 02.11.2026, замечания Т. В.: «Узбекистан исключи из всего портала» — офис не показывается (исходная переписка не трогается)
-    # ('uz', 'Узбекистан', r'Сотрудник42|Имя13|Fakhriddin|Kodirov', r'Узбекистан|Ташкент', ('user54@example.org',)),
-    ('net', 'Сеть офисов продаж', r'Сотрудник6', r'', ('user9@example.org', 'user43@example.org')),
+    # ('uz', 'Узбекистан', r'Сотрудник57|Имя12|Fakhriddin|Kodirov', r'Узбекистан|Ташкент', ('user56@example.org',)),
+    ('net', 'Сеть офисов продаж', r'Сотрудник9', r'', ('user10@example.org', 'user45@example.org')),
 ]
 MGR_RX = {k: re.compile(rx) for k, _, rx, _, _ in OPS}
 HEAD_RE = re.compile(r'^\s*ОП\s+[А-ЯЁA-Z][\w\- ]{2,30}?\s+(\d{1,2})\.(\d{1,2})')
@@ -255,7 +265,7 @@ def run(L, CFG, log, jload, jsave, publish, iso):
     data.update({'v': 1, 't': res['t'], 'since': SINCE.isoformat(), 'rule_from': RULE_FROM.isoformat(), 'src': {'max': res.get('max'), 'mail': res.get('mail')}})
     try:                                                   # 30.10.2026: продажи за день — рассылки 1С (live.py → state/sales_day.json, sales_day.py)
         sd = jload('sales_day.json', {})
-        if sd.get('days'): data['sday'] = {'src': sd.get('src') or 'рассылки 1С «Продажи в разрезе типов товаров» и «… мощностей производства»', 'days': dict(sorted(sd['days'].items())[-40:]),
+        if sd.get('days'): data['sday'] = {'src': sd.get('src') or 'рассылки 1С «Продажи в разрезе типов товаров» и «… мощностей производства»', 'days': _sday_keep(sd['days']),
                                           'months': {k: v for k, v in sorted((sd.get('months') or {}).items())[-3:]}}   # 30.10.2026: отчёт «за месяц» пришёл — сумма месяца по дням
         res['sday'] = max(sd['days']) if sd.get('days') else None
     except Exception as e: res['sday'] = 'ошибка: %s' % str(e)[:80]

@@ -3,13 +3,13 @@
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — движение по складам в разрезе филиалов: отчёт 1С «Товары на складах» (03.11.2026).
-Т. В. Сотрудник1 03.11.2026: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник10, используй его как базу.
+Т. В. Сотрудник1 03.11.2026: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник14, используй его как базу.
 То есть движение по складу в разрезе филиалов то же самое. Склады брака тоже можно указать уже внутри отчета. На главной плашке…
-должно быть указано общее количество согласно того отчета.» Образец — письмо М. М. Сотрудник10 02.11.2026 «Октябрь 2026 Запасы ГП»
-(«Запасы ГП 01_30.10.2026.xlsx»). Отчество44 рассылка этого отчёта на user1@example.org запрошена у В. В. Сотрудник6 03.11.2026.
+должно быть указано общее количество согласно того отчета.» Образец — письмо М. М. Сотрудник14 02.11.2026 «Октябрь 2026 Запасы ГП»
+(«Запасы ГП 01_30.10.2026.xlsx»). Отчество42 рассылка этого отчёта на user1@example.org запрошена у В. В. Сотрудник11 03.11.2026.
 Отчёт: показатели — Начальный остаток, Приход, Расход, Конечный остаток (шт, базовые единицы); группировки строк — Склад →
 Вид номенклатуры сбыт → Номенклатура → Характеристика (уровни структуры строк 0…3); последняя строка «Итог».
-Филиал: склады «Офис продаж <город> [Выставка|Рекламации|брак]» → «ОП <город>», остальные склады → «Рязань».
+Филиал: склады «Имя2 продаж <город> [Выставка|Рекламации|брак]» → «ОП <город>», остальные склады → «Рязань».
 Брак и рекламации — склады с «брак»/«рекламац» в названии, внутри своего филиала (отметка k='brak'), выставки — k='vyst'.
 Сборка портала (build/stock_move.py) и робот хостинга (live.py) разбирают файл этим же кодом. Python 3.6: без f-строк с «=»."""
 import calendar, io, re, zipfile
@@ -102,7 +102,7 @@ def parse(data, fname='', got_date=None, src=None):
     wb = openpyxl.load_workbook(io.BytesIO(fix_xlsx(data)))        # не read_only: нужны уровни структуры строк
     ws = wb.worksheets[0]
     head = [[ws.cell(i, c).value for c in range(1, 9)] for i in range(1, 15)]
-    nc, cols = 2, [3, 4, 5, 6]                                      # форма Сотрудник10: имена — B, числа — C…F
+    nc, cols = 2, [3, 4, 5, 6]                                      # форма Сотрудник14: имена — B, числа — C…F
     if not any(str(c or '').strip() == 'Товары на складах' for row in head for c in row):
         # 06.11.2026 (Т. В., опрос: «Без Материалов»): рассылка 1С «Товары на складах за месяц вчерашним днём … claude.xlsx» —
         #   без заголовка и строки «Период»: шапка «Склад | … | Количество Начальный остаток | Приход | Расход | Конечный остаток»
@@ -188,10 +188,32 @@ def parse(data, fname='', got_date=None, src=None):
             'npos': sum(len(mo['c']) for w in W for t in w['t'] for mo in t['m']), 'g': G, 'neg': neg}
 
 
+EXCL_RX = re.compile(r'\(стан\)', re.I)   # 19.11.2026, Т. В.: «почему склад минусовой» — «Склад ГП (стан)»: трубы в п/м, −224 402 (выпуск стана не проведён); в штуки ГП не считаем
+
+
+def drop_excl(J):
+    """убрать из месяца склады не в штуках ГП (стан: трубы, п/м) — итог, филиалы; убранное — в J['excl'] для вопроса бухгалтерии"""
+    if not J or not J.get('g'): return J
+    ex = []
+    for g in J['g']:
+        keep = [w for w in g['w'] if not EXCL_RX.search(w.get('src') or w.get('n') or '')]
+        for w in g['w']:
+            if w not in keep: ex.append({'n': w.get('src') or w.get('n'), 'br': g['n'], 'v': w['v']})
+        if len(keep) != len(g['w']):
+            g['w'] = keep; g['v'] = [_r(sum(w['v'][k] for w in keep)) for k in range(4)]
+    if ex:
+        J['tot'] = [_r(J['tot'][k] - sum(e['v'][k] for e in ex)) for k in range(4)]
+        J['excl'] = ex; J['nw'] = max(0, (J.get('nw') or 0) - len(ex))
+        J['neg'] = [x for x in (J.get('neg') or []) if not EXCL_RX.search(str(x[0]))]
+        J['g'] = [g for g in J['g'] if g['w']]
+    return J
+
+
 def summary(J):
     """коротко — для плитки на главной и таблицы по дням: итог, брак, филиалы [имя, начало, приход, расход, конец]"""
+    J = drop_excl(J)
     return {'m': J['m'], 'from': J['from'], 'to': J['to'], 'tot': J['tot'], 'brak': J.get('brak'), 'nw': J.get('nw'),
-            'g': [[g['n']] + g['v'] for g in J['g']]}
+            'g': [[g['n']] + g['v'] for g in J['g']], 'excl': J.get('excl')}
 
 
 # ---------- робот хостинга (live.py)
@@ -223,8 +245,9 @@ def bins(st):
     """state → (smv.bin: месяцы подробно, свежий первым; smvs.bin: коротко для главной и таблица по дням)"""
     M = st.get('months') or {}
     if not M: return None, None
-    ms = [M[k] for k in sorted(M, reverse=True)]
+    ms = [drop_excl(M[k]) for k in sorted(M, reverse=True)]
     D = st.get('days') or {}
+    if ms: D[ms[0]['to']] = dict(summary(ms[0]), got=ms[0].get('got'))   # 19.11.2026: итог дня — без склада стана
     full = {'v': 2, 't': st.get('got'), 'months': ms, 'days': [D[k] for k in sorted(D)]}
     short = {'v': 2, 't': st.get('got'), 'last': summary(ms[0]), 'days': [D[k] for k in sorted(D)][-40:]}
     return full, short
@@ -233,11 +256,11 @@ def bins(st):
 def publish_all(jload, jsave, publish, exists):
     """st/smv.bin и st/smvs.bin (ключ сайта, как sales.bin): после нового отчёта или если файлов на сайте ещё нет"""
     pend = jload('stock_mv_pub.json', {}) or {}
-    if not pend.get('p') and exists('smv.bin') and exists('smvs.bin'): return []
+    if not pend.get('p') and not pend.get('stan1911') is None and exists('smv.bin') and exists('smvs.bin'): return []
     full, short = bins(jload('stock_mv.json', {}) or {})
     if not full: return []
     done = []
     if publish('smv.bin', full): done.append('smv.bin')
     if publish('smvs.bin', short): done.append('smvs.bin')
-    if len(done) == 2: jsave('stock_mv_pub.json', {})
+    if len(done) == 2: jsave('stock_mv_pub.json', {'stan1911': 1})
     return done

@@ -424,7 +424,7 @@ document.getElementById('meta').innerHTML=`<b>${cams.length}</b> камер · $
 document.getElementById('magn').setAttribute('transform',`rotate(${G.decl})`);
 document.getElementById('declTxt').textContent=`магн. +${G.decl.toFixed(1).replace('.',',')}°`;
 function llAt(x,y){const a=G.ll;return [a[0][0]*x+a[0][1]*y+a[0][2],a[1][0]*x+a[1][1]*y+a[1][2]]}
-const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник11 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
+const mapLinks=(la,lo)=>`<div class="maplinks"><a href="https://yandex.ru/maps/?ll=${lo},${la}&z=19&l=sat&pt=${lo},${la},pm2rdm" target="_blank" rel="noopener">Сотрудник12 Карты</a><a href="https://www.google.com/maps/search/?api=1&query=${la},${lo}" target="_blank" rel="noopener">Google Карты</a></div>`;
 
 // ---- draw cameras ----
 const camEls={};
@@ -762,8 +762,8 @@ function ndvCard(k,o){
   if(k==='ndvb'){const s=ND.summary,c=ND.comp,mx=s.maxes,mxs=(t,l)=>`<tr><td>${l}</td><td>${esc(subN25(mx[t].sub[0]))} — <b>${nfz(mx[t].sub[1],2)}</b> (Р${mx[t].sub[2]})</td><td class="m">${nfz(mx[t].grp[1],2)}</td></tr>`;
     return [`Выбросы в атмосферу · 2025`,`Инвентаризация и НДВ, 2025 г.`,`<p class="note" style="color:var(--ink)">${esc(s.dev)}; ${esc(s.date)}.</p>
       ${s.objects.map(o=>`<span class="lbl">${esc(o.name)} · НВОС ${o.cat} кат. · ${o.code}</span><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org,'организованный','организованных','организованных')}, ${ruN(o.unorg,'неорганизованный','неорганизованных','неорганизованных')})</dd><dt>Выброс</dt><dd>${nfz(o.ty,3)} т/год; ${esc(o.subst)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd></dl>`).join('')}
-      <p class="note" style="color:var(--ink)">С проектом СЗЗ 2019 г.: было ${ruN(c.n19,'источник','источника','источников')} и ${nfz(c.ty19,1)} т/год, стало ${c.n25} и ${nfz(c.ty25,1)} т/год. Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, нет в 2025 г. — ${c.gone.length} (${c.gone.join(', ')}).</p>
-      <span class="lbl">Сотрудник16, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
+      <p class="note" style="color:var(--ink)">С проектом СЗЗ 2019 г.: было ${ruN(c.n19,'источник','источника','источников')} и ${nfz(c.ty19,1)} т/год, стало ${c.n25} и ${nfz(c.ty25,1)} т/год. Сотрудник6 — ${c.new.length}, изменились — ${c.changed.length}, нет в 2025 г. — ${c.gone.length} (${c.gone.join(', ')}).</p>
+      <span class="lbl">Сотрудник17, доли ПДК (промплощадка № 1)</span><table class="szzt"><tr><th>Где</th><th>вещество</th><th>группа</th></tr>${mxs('szz','граница СЗЗ')}${mxs('zhil','жилая зона')}${mxs('park','парк')}${mxs('prom','забор')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.result)}</p>
       <span class="lbl">НДВ гальванического цеха, 2026–2032 гг.</span><table class="szzt"><tr><th>Вещество</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c,n,kl,gs,ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td class="m">${fgz(gs)}</td><td class="m">${fgz(ty)}</td></tr>`).join('')}</table>
       <p class="note" style="color:var(--ink)">${esc(s.szz)} ${esc(s.prod)} ${esc(s.heat)}</p><p class="note">${esc(s.org.head)}. ${esc(s.org.eco)}. ${esc(s.meas)}</p>${ndvSrc}`]}
@@ -1014,9 +1014,74 @@ if(north){north.removeAttribute('aria-hidden');north.setAttribute('role','button
     if(still){theta=0;at();apply();return}
     (function step(now){const q=Math.min(1,(now-T0)/340), e=1-Math.pow(1-q,3); theta=t0*(1-e); at(); if(q<1){preview();requestAnimationFrame(step)} else {theta=0;at();apply()}})(T0);
   });}
+window.T14PlanCams={els:camEls,cams:cams,sel:function(){return selId}};   // 19.11.2026: события камер (cam.bin)
 window.T14PlanHome=fitHome;
 
 renderIntro(); renderList(''); fitHome();
 requestAnimationFrame(()=>{fitHome()});
+})();
+</script>
+<script src="assets/live.js"></script>
+<style>
+.cam.ev .dot{fill:#ff3b30;stroke:#fff}
+.cam.ev.night .dot{animation:camPulse 1.6s ease-in-out infinite}
+@keyframes camPulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.cam.ev.night .dot{animation:none}}
+.camev{margin-top:14px;border-top:1px solid var(--line,#d8dbe2);padding-top:10px}
+.camev h3{font-size:15px;margin:0 0 6px}
+.camev ul{list-style:none;margin:0;padding:0}
+.camev li{display:flex;gap:8px;align-items:baseline;padding:4px 0;font-size:14px;border-bottom:1px solid var(--line,#eceef3)}
+.camev li .tm{font-variant-numeric:tabular-nums;min-width:96px;color:var(--mute,#6b7280)}
+.camev li .nt{color:#ff3b30;font-weight:600}
+.camev button.snap{margin-left:auto;font:inherit;font-size:13px;border:0;background:none;color:var(--acc,#0a84ff);cursor:pointer;padding:0 2px}
+.camev img{display:block;width:100%;border-radius:10px;margin:8px 0}
+.camev .sub{font-size:13px;color:var(--mute,#6b7280);margin:4px 0 0}
+</style>
+<script>
+/* 19.11.2026: события камер (письма регистраторов Dahua → робот → st/cam.bin, cctv.py): красная точка — событие за сутки, мигает — ночью;
+   в карточке камеры — последние события и снимки (зашифрованные файлы st/f/). */
+(function(){
+  var P=window.T14PlanCams; if(!P||!window.T14Live||!T14Live.bin) return;
+  var Z=null, byId={};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function norm(s){return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/g,' ').trim()}
+  function match(name){
+    var m=/^(\d{3})_?(.*)$/.exec(name||''); if(!m) return null;
+    var num=m[1], tt=norm(m[2]), hit=null, byNum=[];
+    P.cams.forEach(function(c){ if(c.num===num){ byNum.push(c); if(norm(c.title)===tt||(tt&&norm(c.title).indexOf(tt)===0)) hit=c; } });
+    return hit||(byNum.length===1&&!tt?byNum[0]:null);
+  }
+  function when(t){var d=t.slice(8,10)+'.'+t.slice(5,7);return d+' '+t.slice(11,16)}
+  var KIND={motion:'движение',line:'пересечение линии',zone:'вторжение в зону',human:'человек/машина',sys:'системное',other:'событие'};
+  function paint(){
+    if(!Z||!Z.items) return; byId={};
+    var day=new Date(Date.now()-864e5), dayS=day.getFullYear()+'-'+('0'+(day.getMonth()+1)).slice(-2)+'-'+('0'+day.getDate()).slice(-2)+'T'+('0'+day.getHours()).slice(-2)+':'+('0'+day.getMinutes()).slice(-2);
+    Z.items.forEach(function(e){ var c=match(e.name); if(!c) return; (byId[c.id]=byId[c.id]||[]).push(e); });
+    Object.keys(P.els).forEach(function(id){
+      var g=P.els[id].g, L=byId[id]||[], recent=L.filter(function(e){return e.t>=dayS});
+      g.classList.toggle('ev',recent.length>0); g.classList.toggle('night',recent.some(function(e){return e.night}));
+    });
+    var h=document.querySelector('#card h2 .n'); if(h&&P.sel()) addCard(P.sel());
+  }
+  function addCard(id){
+    var card=document.getElementById('card'); if(!card||card.querySelector('.camev')) return;
+    var L=byId[id]||[], c=P.els[id]&&P.els[id].c; if(!c) return;
+    var box=document.createElement('div'); box.className='camev';
+    if(!L.length){ box.innerHTML='<h3>События</h3><p class="sub">'+(Z?'За '+(Z.days||3)+' сут. писем от регистратора по этой камере не было. Уведомления включены не на всех камерах.':'Загружаю…')+'</p>'; card.appendChild(box); return; }
+    box.innerHTML='<h3>События за '+(Z.days||3)+' сут. — '+L.length+'</h3><ul>'+L.slice(0,25).map(function(e,i){
+      return '<li><span class="tm">'+when(e.t)+'</span><span'+(e.night?' class="nt"':'')+'>'+esc(KIND[e.k]||e.ev)+(e.night?' · ночь':'')+'</span>'+(e.snap?'<button class="snap" data-i="'+i+'">снимок</button>':'')+'</li>';
+    }).join('')+'</ul><p class="sub">Обновлено '+esc(when(Z.t))+'. Ночью события периметра и ворот приходят в бот.</p>';
+    card.appendChild(box);
+    box.querySelectorAll('button.snap').forEach(function(b){ b.onclick=function(){
+      var e=L[+b.dataset.i]; b.textContent='загружаю…';
+      T14Live.file(e.snap).then(function(bytes){
+        if(!bytes){b.textContent='нет снимка';return}
+        var img=document.createElement('img'); img.alt='Снимок '+e.name+' '+when(e.t); img.src=URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+        b.closest('li').after(img); b.remove();
+      });
+    }; });
+  }
+  new MutationObserver(function(){ var id=P.sel(); if(id) addCard(id); }).observe(document.getElementById('card'),{childList:true});
+  T14Live.bin('cam.bin').then(function(d){ if(d){Z=d;paint();} }).catch(function(){});
 })();
 </script>

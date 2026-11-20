@@ -8,15 +8,30 @@
    сообщение (точный user_id бота из /me) и только в известной группе. op tgcall (вместо max/relay.php): {op:'tgcall', key:<общий ключ>, method, params}
    в виде Telegram → MAX Bot API → ответ в виде Telegram {ok, result}; принимается и как JSON-тело (формат relay.php), и внутри подписанного d. */
 
+// 14.11.2026: второй ключ команд — Рекса (ChatGPT). Выводится из K_CMD (свойство не нужно): HMAC(K_CMD, 'fabrika-rex-cmd-v1').
+//   Отозвать — сменить метку v1 → v2 и выложить. Рексу — то же, что Claude, кроме настроек: удаления, групп, settings, import, ownercheck.
+var MX_ACTOR = 'claude';
+var MX_REX_OPS = { ping: 1, chats: 1, read: 1, hist: 1, post: 1, dm: 1, price: 1, tgcall: 1 };
+function mx_rexKey_(k) { return hmacHex_(k, 'fabrika-rex-cmd-v1'); }
+function mx_actorName_() { return MX_ACTOR === 'rex' ? 'Рекс' : 'Claude'; }
+
 var MX_POLL_Q_MIN = 5, MX_POLL_Q_MAX = 7, MX_POLL_OPTS = 3;
 
 function mx_cmd(e) {
   var k = kcmd_(); if (!k) return { ok: false, error: 'ключ команд не установлен' };
   var t = Number(e.parameter.t || 0), d = String(e.parameter.d || ''), s = String(e.parameter.s || '').toLowerCase();
   if (!t || Math.abs(Date.now() / 1000 - t) > 600 || !d || d.length > 12000 || !/^[0-9a-f]{64}$/.test(s)) return { ok: false, error: 'нет доступа' };
-  if (hmacHex_(k, 'mx:' + t + ':' + sha256hex_(d)) !== s) return { ok: false, error: 'нет доступа' };
+  var mxMsg = 'mx:' + t + ':' + sha256hex_(d), who = hmacHex_(k, mxMsg) === s ? 'claude' : hmacHex_(mx_rexKey_(k), mxMsg) === s ? 'rex' : '';
+  if (!who) return { ok: false, error: 'нет доступа' };
   var q; try { q = JSON.parse(d); } catch (x) { return { ok: false, error: 'bad' }; }
   if (!q || typeof q !== 'object') return { ok: false, error: 'bad' };
+  MX_ACTOR = who;
+  if (who === 'rex') {   // 14.11.2026, Т. В.: «зеркальный доступ GPT к ботам» — Рекс пишет в группы и лично, как Claude, без одобрения на каждое сообщение
+    var rop = String(q.op || 'post');
+    if (!MX_REX_OPS[rop]) return { ok: false, error: 'ключу Рекса доступны: ' + Object.keys(MX_REX_OPS).join(', ') };
+    if (rop === 'tgcall' && !/^(sendMessage|sendPhoto|sendDocument)$/.test(String(q.method || ''))) return { ok: false, error: 'Рексу в Telegram: sendMessage, sendPhoto, sendDocument' };
+    mx_log('rex', 'Рекс: ' + rop + ' ' + String(q.g || q.cid || q.uid || q.name || q.method || '').slice(0, 60));
+  }
   var ca = CacheService.getScriptCache(), nk = 'mxs' + s.slice(0, 32);                           // одна подпись — один раз (повтор запроса без id)
   if (ca.get(nk)) {
     if (q.op === 'tgcall' && q.params && q.params._g4fx && /^(sendMessage|sendPhoto|sendDocument)$/.test(String(q.method)))
@@ -33,6 +48,14 @@ function mx_cmd(e) {
     if (op === 'hist') { var fh = mx_opGroup(q); if (!fh.ok) return fh; return { ok: true, title: fh.title, msgs: mx_histRead(fh.cid, q.since, q.n) }; }
     if (op === 'post') return q.poll ? mx_opPoll(q) : mx_opPost(q);
     if (op === 'dm') return mx_opDm(q);
+    if (op === 'members') return mx_opMembers(q);
+    if (op === 'pin') return mx_opPin(q);
+    if (op === 'edit') return mx_opEdit(q);
+    if (op === 'mtload') return mt_load_(q);         // 16.11.2026: поручения совещания (MeetTasks.gs)
+    if (op === 'mtsend') return mt_send_(q);
+    if (op === 'mtday') return mt_day_();
+    if (op === 'mtredraw') return mt_redrawAll_();
+    if (op === 'subrep') return mx_subRep_();        // 16.11.2026: кто в группах подписан на бота лично (MaxSubRep.gs)          // 16.11.2026, Т. В.: «поручение по протечкам убери — выполнено» — правка своего сообщения в группе            // 16.11.2026, Т. В.: «закрепи поручения в группах по совещанию»
     if (op === 'delete') return mx_opDelete(q);
     if (op === 'group') { if (!/^-?\d{1,20}$/.test(String(q.cid || '')) || !mx_groupGet(String(q.cid))) return { ok: false, error: 'нет такой группы' }; mx_groupSave(String(q.cid), { on: !!q.on, appr: !!q.on }); mx_log('admin', 'группа ' + q.cid + ' — пересылка ' + (q.on ? 'включена' : 'выключена')); return { ok: true }; }
     if (op === 'settings') { if (!q.k || !/^[a-z_]{2,30}$/.test(String(q.k))) return { ok: false, error: 'k' }; mx_setPut(String(q.k), q.v); return { ok: true }; }
@@ -76,13 +99,50 @@ function mx_opPost(q) {
   if (rs === 'dup') return { ok: false, error: 'уже отправлено (id)', title: f.title };
   if (rs !== 'ok') return { ok: false, error: 'не удалось зарезервировать id (замок/таблица)' };
   var extra = {}; if (q.mid) extra.link = { type: 'reply', mid: String(q.mid) };
-  var r = mx_sendChat(f.cid, text, extra);
-  if (!ok_(r[0]) && q.mid && r[0] === 400) r = mx_sendChat(f.cid, text);              // сообщение для ответа уже удалено — без ссылки
+  if (q.img) {                                                                          // 20.11.2026: картинка с Диска 1c@ (id файла) — инфографика к инструкции
+    var att = mx_opImgAtt_(String(q.img)); if (!att.ok) { postMark_(id, 'failed', '', att.error); return { ok: false, error: att.error, title: f.title }; }
+    extra.attachments = [att.att];
+  }
+  var r = mx_opSendRetry_(f.cid, text, extra);
+  if (!ok_(r[0]) && q.mid && r[0] === 400) { delete extra.link; r = mx_opSendRetry_(f.cid, text, extra); }   // сообщение для ответа уже удалено — без ссылки
   if (!ok_(r[0])) { postMark_(id, 'failed', '', 'MAX ' + r[0]); return { ok: false, error: 'MAX ' + r[0], title: f.title }; }
   var mid = String((((r[1] || {}).message || {}).body || {}).mid || '');
   if (!postMark_(id, 'sent', mid)) mx_log('err', 'post_ids: метка ' + id + ' не записана');
-  mx_log('post', 'Claude → группа «' + f.title + '» (' + id + ')' + (q.mid ? ' ответ' : ''));
+  mx_log('post', mx_actorName_() + ' → группа «' + f.title + '» (' + id + ')' + (q.mid ? ' ответ' : ''));
   return { ok: true, title: f.title, mid: mid };
+}
+/** 20.11.2026: вложение-картинка из файла Диска 1c@ (id) → {ok, att}. Токен кэшируется на 6 ч по id файла. */
+function mx_opImgAtt_(fid) {
+  if (!/^[\w-]{20,80}$/.test(fid)) return { ok: false, error: 'img: неверный id файла' };
+  var ca = CacheService.getScriptCache(), ck = 'mx_img:' + fid, c = ca.get(ck);
+  if (c) { try { return { ok: true, att: { type: 'image', payload: JSON.parse(c) } }; } catch (x) {} }
+  var bl; try { bl = DriveApp.getFileById(fid).getBlob(); } catch (e) { return { ok: false, error: 'img: файл не открыт: ' + mx_errText(e) }; }
+  var pl = mx_tgUpload('image', bl.getName() || 'image.png', bl.getBytes());
+  if (!pl) return { ok: false, error: 'img: MAX не принял картинку' };
+  try { ca.put(ck, JSON.stringify(pl), 21600); } catch (x) {}
+  return { ok: true, att: { type: 'image', payload: pl } };
+}
+/** отправка с повтором, пока вложение обрабатывается (attachment.not.ready) */
+function mx_opSendRetry_(cid, text, extra) {
+  var r = mx_sendChat(cid, text, extra);
+  for (var i = 0; i < 4 && extra && extra.attachments && r[0] === 400 && /not\.ready/.test(JSON.stringify(r[1] || {})); i++) { Utilities.sleep(1500 + 1500 * i); r = mx_sendChat(cid, text, extra); }
+  return r;
+}
+/** 20.11.2026: участники группы для проверки профилей — uid, имя, фамилия, есть ли «О себе» и фото (без телефонов). */
+function mx_opMembers(q) {
+  var f = mx_opGroup(q); if (!f.ok) return f;
+  var out = [], marker = null;
+  for (var n = 0; n < 10; n++) {
+    var p = { count: 100 }; if (marker) p.marker = marker;
+    var r = api_('GET', '/chats/' + encodeURIComponent(f.cid) + '/members', p); if (!ok_(r[0])) return { ok: false, error: 'MAX ' + r[0] };
+    (r[1].members || []).forEach(function (m) {
+      out.push({ uid: m.user_id, fn: String(m.first_name || '').slice(0, 60), ln: String(m.last_name || '').slice(0, 60), name: String(m.name || '').slice(0, 80),
+                 un: String(m.username || '').slice(0, 60), desc: mx_maskPhones(String(m.description || '')).slice(0, 160), ava: !!(m.avatar_url || m.full_avatar_url),
+                 bot: !!m.is_bot, adm: !!(m.is_admin || m.is_owner) });
+    });
+    marker = r[1].marker; if (!marker) break;
+  }
+  return { ok: true, title: f.title, members: out };
 }
 /** Личное сообщение по uid или имени (замечание 10). */
 function mx_opDm(q) {
@@ -105,13 +165,14 @@ function mx_opDm(q) {
   }
   if (!uid) return { ok: false, error: 'человек не найден среди участников групп бота' };
   if (mx_isBanned(who)) return { ok: false, error: 'этому человеку лично бот не пишет (правило 04.11)' };
+  var gate = mx_dmGate_(uid, who); if (gate) return { ok: false, blocked: true, error: 'нельзя лично: ' + gate };   // 16.11.2026, Т. В. (DmGate.gs)
   var rs = postReserve_(id, 'u' + uid, who);
   if (rs === 'dup') return { ok: false, error: 'уже отправлено (id)' };
   if (rs !== 'ok') return { ok: false, error: 'не удалось зарезервировать id' };
   var r = mx_sendUser(uid, text);
   if (!ok_(r[0])) { postMark_(id, 'failed', '', 'MAX ' + r[0]); return { ok: false, error: 'MAX ' + r[0] }; }
   postMark_(id, 'sent', String((((r[1] || {}).message || {}).body || {}).mid || ''));
-  mx_log('post', 'Claude → личное ' + (who || uid) + ' (' + id + ')');
+  mx_log('post', mx_actorName_() + ' → личное ' + (who || uid) + ' (' + id + ')');
   return { ok: true, uid: uid, who: who };
 }
 /** Удаление сообщений бота (замечание 12): без точного user_id бота — ничего; только своё и только в известной группе. */
@@ -132,7 +193,7 @@ function mx_opDelete(q) {
   return { ok: true, res: out };
 }
 
-// REDACTED_B64_38 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
+// REDACTED_B64_9 опросы в группах (перенос lib.php: mx_poll_*; файлы «Фабрика — боты/MAX/polls/<id>.json»)
 function mx_pollId(s) { s = String(s || ''); return /^[A-Za-z0-9_.-]{1,32}$/.test(s) ? s : ''; }
 function mx_pollGet(id) { id = mx_pollId(id); if (!id) return null; var p = jget_('polls', id + '.json', null); return p && p.id ? p : null; }
 function mx_pollMsk(t) { return mx_msk('dd.MM HH:mm', new Date(Number(t) * 1000)); }
@@ -239,7 +300,7 @@ function mx_pollSummary(p) {
   return L.join('\n');
 }
 
-// REDACTED_B64_38 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
+// REDACTED_B64_9 op tgcall: Telegram-скрипт → MAX (перенос relay.php: mx_relay и помощники)
 function mx_tgErr(d) { return { ok: false, error_code: 400, description: String(d) }; }
 function mx_tgUid(chat) { var c = Number(chat) || 0; return c >= MX_ID_BASE ? c - MX_ID_BASE : 0; }
 /** HTML Telegram → HTML MAX: теги, которых в MAX нет, убираем, текст оставляем. */
@@ -356,7 +417,7 @@ function mx_tgcallRaw(method, p) {
   return mx_tgErr('метод ' + method + ' в MAX не поддерживается');
 }
 
-// REDACTED_B64_38 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
+// REDACTED_B64_9 импорт состояния с хостинга (шаг 0 → Google). НЕ запускать до переключения.
 /** Копия «Фабрика — портал/Перенос MAX <id>» (max_move.py) → листы и файлы этого проекта: группы, настройки, владелец, зеркало, опросы, справка,
     журнал обращений, история групп (hist/<cid>.json и history_all.json → Диск «история»). Повторный запуск ничего не дублирует. → {ok, done:[…], skipped:[…]}. */
 function mx_importState(id) {
@@ -400,7 +461,7 @@ function mx_importState(id) {
     if (!/^max\/hist\/-?\d+\.json$/.test(nm) && nm !== 'max/history_all.json') return;
     if (Date.now() - t0 > 270000) { late = true; return; }           // не влезаем в 6 минут — остальное при повторном запуске (повтор ничего не дублирует)
     var h = J(nm); if (!h || !h.msgs) return;
-    var cid = nm === 'max/history_all.json' ? String(h.cid || '-100000000003') : nm.replace(/^max\/hist\/|\.json$/g, ''), title = String(h.title || mx_groupTitle(cid));
+    var cid = nm === 'max/history_all.json' ? String(h.cid || '-100000000004') : nm.replace(/^max\/hist\/|\.json$/g, ''), title = String(h.title || mx_groupTitle(cid));
     nh += mx_histImport(cid, title, Object.keys(h.msgs).map(function (k) { return h.msgs[k]; }), key);
   });
   if (nh) done.push('history: ' + nh);
@@ -500,4 +561,26 @@ function mx_tgcallDo(method, p) {
   if (r && r.ok) return r;
   if (rejected && Number(match[1]) === 429 && cleared) return retry('max_rate_limit', 429);
   return rejected && cleared ? r : uncertain();
+}
+
+/** 16.11.2026, Т. В.: «Закрепи поручения в группах». {op:'pin', g|cid, mid, notify?} — закрепить сообщение бота в шапке группы
+ *  (прежнее закреплённое MAX заменяет само). {op:'pin', g|cid, off:true} — снять закреп. */
+function mx_opPin(q) {
+  var f = mx_opGroup(q); if (!f.ok) return f;
+  if (q.off) { var d = api_('DELETE', '/chats/' + f.cid + '/pin'); mx_log('post', mx_actorName_() + ' → снят закреп в «' + f.title + '»'); return { ok: ok_(d[0]), code: d[0], title: f.title }; }
+  var mid = String(q.mid || ''); if (!/^mid\.[A-Za-z0-9_.:-]{6,90}$/.test(mid)) return { ok: false, error: 'нужен mid сообщения' };
+  var r = api_('PUT', '/chats/' + f.cid + '/pin', null, { message_id: mid, notify: !!q.notify });
+  mx_log('post', mx_actorName_() + ' → закреп в «' + f.title + '» (' + mid.slice(0, 20) + '…) ' + r[0]);
+  return { ok: ok_(r[0]), code: r[0], title: f.title };
+}
+
+/** {op:'edit', g|cid, mid, text} — заменить текст сообщения бота в группе (HTML, как post). Только своё сообщение (чужое MAX не даст). */
+function mx_opEdit(q) {
+  var f = mx_opGroup(q); if (!f.ok) return f;
+  var mid = String(q.mid || ''), text = String(q.text || '').trim();
+  if (!/^mid\.[A-Za-z0-9_.:-]{6,90}$/.test(mid)) return { ok: false, error: 'нужен mid сообщения' };
+  if (!text) return { ok: false, error: 'пустой текст' };
+  var r = api_('PUT', '/messages', { message_id: mid }, mx_msgBody(text));
+  mx_log('post', mx_actorName_() + ' → правка сообщения в «' + f.title + '» (' + mid.slice(0, 20) + '…) ' + r[0]);
+  return { ok: ok_(r[0]), code: r[0], title: f.title, resp: ok_(r[0]) ? undefined : JSON.stringify(r[1] || '').slice(0, 200) };
 }

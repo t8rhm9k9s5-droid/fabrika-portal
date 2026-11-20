@@ -36,7 +36,8 @@ FILES = [('lb.bin', 'st'), ('bd.bin', 'site'), ('mq.bin', 'st'), ('gl.bin', 'st'
          ('wx_f.json', 'wx'), ('site_ver.json', 'ver'),
          ('rem.bin', 'st'), ('poll.bin', 'st'), ('grp.bin', 'st'), ('grpp.bin', 'st'), ('diag.bin', 'st'), ('hs.bin', 'st'), ('recl.bin', 'st'),
          ('kb.bin', 'st'), ('ls.bin', 'st'), ('sales.bin', 'st'), ('omts.bin', 'st'), ('smvs.bin', 'st'), ('mxsurvey.bin', 'st'), ('docs.bin', 'st'), ('staff.bin', 'st'),
-         ('bot_rules.json', 'code'), ('bot_prompt.txt', 'code'), ('price_now.json', 'code'), ('ko_staff.json', 'code'), ('unans_org.json', 'code')]
+         ('bot_rules.json', 'code'), ('bot_prompt.txt', 'code'), ('price_now.json', 'code'), ('ko_staff.json', 'code'), ('unans_org.json', 'code'),
+         ('mx_direct.json', 'code')]   # 20.11.2026, Т. В.: личные сообщения из mx_direct.json шлёт бот Google (DirectFile.gs) — участок bots хостинга выключен
 DOWN = ('ev.bin', 'hb.json', 'mx_direct.json', 'poruch.bin')   # 13.11: poruch.bin — раздел «Поручения» (бот MAX, ключ сайта)                           # из «От ботов» (плюс папка dr/)
 GD = None                                                               # модуль gdrive_1c (подставляется в тестах)
 
@@ -270,7 +271,7 @@ def _drafts(L, st, dr_id, res, deadline, log):
     return n
 
 
-# REDACTED_B64_37 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
+# REDACTED_B64_8 флаг bots_off: оповещения и письма робота → очереди для ботов (Р4)
 def queue_alert(L, subject, text, critical=False):
     """оповещение владельцу → state/bots_alerts.json (на Диск — следующим прогоном; бот Telegram пишет Т. В.). Повтор того же текста за час — не дублируется."""
     h = _sha(str(text).encode('utf-8'))[:16]                            # повтор — по тексту: alert() зовёт и mail_send, и max_send с одним текстом

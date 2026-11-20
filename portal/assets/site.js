@@ -47,6 +47,8 @@
   // ---------- the tab bar below (22.10.2026): the same as in the model; the last tab «Ещё» holds the sections, the edits and the service ----------
   var SVG = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
   var ICON = {
+    s_shop: SVG('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="6" cy="6.5" r=".6"/><circle cx="8.5" cy="6.5" r=".6"/><path d="M7 13h4v4H7z M14 13h3 M14 16h3"/>'),   // 20.11.2026: «Сайт» — окно сайта (у «Онлайн-продаж» глобус)
+    s_check: SVG('<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.5 1.5L7.5 5 M3.5 12l1.5 1.5 2.5-2.5 M3.5 18l1.5 1.5 2.5-2.5"/>'),   // 20.11.2026: «Поручения» — список с отметками (у «Документов» лист)
     s_star: SVG('<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.6l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>'),   // 13.11.2026: «Сохранённое»
     trend: SVG('<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>'),
     phone: SVG('<path d="M5 3.5h3.2l1.6 4.2-2 1.4a11.5 11.5 0 0 0 7.1 7.1l1.4-2 4.2 1.6v3.2A1.8 1.8 0 0 1 18.7 21 16 16 0 0 1 3 5.3 1.8 1.8 0 0 1 5 3.5z"/>'),
@@ -126,6 +128,33 @@
     s_info: SVG('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>')
   };
   window.T14_ICONS = ICON;
+  // 20.11.2026, Т. В.: «снимок камеры открывается, а назад вернуться или закрыть нельзя» — общий просмотр снимка поверх страницы:
+  //   ✕, Esc, касание мимо снимка и системное «Назад» (запись в истории) закрывают его; страница под ним остаётся как была.
+  window.T14Snap = (function () {
+    var ov = null, url = null, pushed = false;
+    function close(fromPop) {
+      if (!ov) return; ov.remove(); ov = null; document.documentElement.style.overflow = '';
+      if (url) { try { URL.revokeObjectURL(url); } catch (e) {} url = null; }
+      if (pushed && !fromPop) { pushed = false; try { history.back(); } catch (e) {} } else pushed = false;
+    }
+    window.addEventListener('popstate', function () { if (ov) close(true); });
+    document.addEventListener('keydown', function (e) { if (ov && e.key === 'Escape') close(false); });
+    return { close: function () { close(false); }, open: function (bytes, title, type) {
+      close(false);
+      url = URL.createObjectURL(new Blob([bytes], { type: type || 'image/jpeg' }));
+      ov = document.createElement('div'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', title || 'Снимок');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 56px) max(12px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(12px,env(safe-area-inset-left,0px))';
+      ov.innerHTML = '<button type="button" aria-label="Закрыть снимок" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:max(12px,env(safe-area-inset-right,0px));width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,.18);color:#fff;font:600 22px/40px -apple-system,sans-serif;cursor:pointer">×</button>' +
+        '<img alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;display:block">' +
+        '<div style="color:#fff;font:500 14px -apple-system,sans-serif;margin-top:10px;text-align:center;opacity:.9"></div>';
+      ov.querySelector('img').src = url; ov.querySelector('img').alt = title || 'Снимок'; ov.querySelector('div').textContent = title || '';
+      ov.querySelector('button').onclick = function () { close(false); };
+      ov.onclick = function (e) { if (e.target === ov) close(false); };
+      document.body.appendChild(ov); document.documentElement.style.overflow = 'hidden';
+      try { history.pushState({ t14snap: 1 }, ''); pushed = true; } catch (e) { pushed = false; }
+      ov.querySelector('button').focus();
+    } };
+  })();
   var LOGO = '<svg viewBox="0 0 163 29" role="img" aria-label="Фабрикант"><path fill="currentColor" d="M15.12 7.06c3.15 0 5.47.47 5.47.47l1.25-4.92-3.5 1.18L15.11 0l-3.2 3.79L8.4 2.6l1.25 4.92s2.33-.47 5.47-.47Zm4.58 6.57c-1.2 0-1.76.3-2.03 1.48l-.21.87 2.24-.19c1.35-.11 2.16-.97 2.16-2.16H19.7Zm4.85 1.49c0 1.1-.04 2-.12 2.77l4.9 2.28c.55-1.34.89-3.12.91-5.52l-5.69.47Zm-.01-1.5h5.7c-.08-2.43-.47-4.2-1.13-5.5l-4.88 2.8c.15.66.27 1.54.31 2.7Zm-.83-10.0.0.2 4.79-2.24c-1.34-1.79-3.4-2.32-5.97-2.41l-.71 2.82-.05.2c1.2.35 1.6.8 1.87 1.46ZM5.69 15.12 0 14.65c.02 2.4.36 4.18.92 5.52l4.89-2.28c-.08-.77-.11-1.68-.12-2.77Zm.32-4.21L1.13 8.12C.47 9.43.07 11.2.01 13.63H5.7c.04-1.16.16-2.04.31-2.7Zm.52-1.58c.27-.66.68-1.1 1.87-1.47l-.05-.19-.72-2.82c-2.56.1-4.63.62-5.96 2.41L6.45 9.5l.08-.17Zm11.83 10.68a22.76 22.76 0 0 1-5.75.1l.43-1.74c.1-.41.1-1.02-.01-1.43l-.46-1.81v-.02c-.27-1.18-.83-1.48-2.03-1.48H8.38c0 1.2.8 2.05 2.16 2.16l.54.05.38 1.5c.04.16.04.5 0 .65l-.83 3.43 3.68 1.7v2.77a8.9 8.9 0 0 0-2.4.36 1.24 1.24 0 0 0 .38 2.42c.7 0 1.24-.58 1.24-1.24h3.19a1.24 1.24 0 1 0 1.62-1.18 9.6 9.6 0 0 0-2.4-.36v-2.77l3.66-1.7h.01l-.2-.85s-.14-.72-1.05-.56Zm-12.3-.67-4.7 1.73a6.83 6.83 0 0 0 3.71 2.96c1.05.4 1.92.62 2.73.8l.82-2.9-.99-.47a3.24 3.24 0 0 1-1.57-2.12Zm16.54 2.12c-.14.08-.56.27-.99.48l.83 2.89c.81-.18 1.68-.4 2.73-.8a6.83 6.83 0 0 0 3.7-2.96l-4.69-1.73c-.28 1-.76 1.64-1.57 2.12ZM53.06 6.85a13.9 13.9 0 0 0-1.9-.16V5.02h-3.41v1.67c-.84.02-1.27.08-1.91.16-3.9.54-5.42 1.75-5.42 6.16 0 4.4 1.53 5.6 5.42 10.0.0.3 1.07.15 1.9.17v1.27h3.41v-1.27a14.6 14.6 0 0 0 1.9-.17c3.9-.54 5.43-1.74 5.43-6.14 0-4.41-1.53-5.62-5.42-6.16ZM47.75 17.2c-.82-.1-1.23-.15-1.66-.27-1.68-.43-1.85-1.4-1.85-3.9 0-2.51.18-3.5 1.85-3.93.42-.12.84-.18 1.66-.28v8.38Zm5.06-.27c-.43.12-.84.17-1.66.27V8.81c.82.1 1.23.17 1.66.28 1.73.43 1.85 1.42 1.85 3.92s-.18 3.48-1.85 3.91Zm69.25-1.03c.34-.31.63-.74.88-1.34l.6-1.46c.2-.47.4-.47.84-.47h.52l.09-2.13c-.72-.07-1.2-.1-1.73-.1-1.13 0-1.9.27-2.45 1.57l-.72 1.69c-.23.57-.29.7-1 .77l-1.36.13v-4.02h-3.53V20.6h3.53v-3.75l1.82-.13 1.93 3.88h4.01l-1.87-3.31c-.53-.94-.94-1.18-1.56-1.38Zm25.1-1.25h-3.78v-4.13h-3.53v10.07h3.53V17h3.78v3.59h3.52V10.52h-3.52v4.13Zm12.47-4.13h-6.91v2.45h3.38v7.62h3.53v-7.62H163v-2.45h-3.37Zm-56.22 6.18v-6.16h-3.5V20.6h3.41l4.58-6.16v6.16h3.53V10.54H108l-4.58 6.16Zm-25.1-7.38 3.33-.5c1.84-.28 2.3-.9 2.3-1.95 0-.83-.12-1.82-.12-1.82l-1.98-.15-.09.52c-.07.5-.07.58-.92.74l-3.36.62c-3.91.7-4.78 2.95-4.78 6.62v.18c0 4.26.42 7.17 5.62 7.19 3.44 0 5.62-1.51 5.62-5.08 0-2.99-.99-4.8-4.03-4.8-1.2 0-2.53.3-10.0.0.4-1.3.16-1.96 2.11-2.24Zm.24 4.05c1.46 0 1.89.72 1.89 2.32 0 2.07-.47 3.01-2.13 3.01-1.71 0-2.1-1.04-2.1-3.15V13.6c.9-.13 1.9-.24 2.34-.24Zm-8.65 4.37V14.1c0-3.28-2.46-3.78-4.35-3.78-.75 0-2.5.13-4.6.36v2.5a38.7 38.7 0 0 1 3.86-.3c1.4 0 1.77.38 1.77 1.42v.39c-.36-.02-.73-.03-1.12-.03-3.02 0-5.4.04-5.4 3.23 0 2.3 1.19 2.8 2.81 2.8 1.37 0 2.78-.28 4.01-.75.32.53.88.65 1.5.65h2.67l.2-1.86-.96-.14c-.38-.05-.4-.1-.4-.85Zm-3.32.69a8.2 8.2 0 0 1-2.07.36c-.65 0-.97-.2-.97-1.05 0-1.31.83-1.33 2.1-1.4.25-.02.58-.03.94-.03v2.12Zm27.22-8.09c-1.27 0-2.56.3-3.76.68-.33-.4-.83-.5-1.38-.5h-2.88l-.2 10.0.0.5c.38.06.4.11.4.85v10.4h3.51v-3.11c.61.06 1.24.1 1.79.1 3.76 0 5.65-1.8 5.65-5.25 0-3.15-.8-5.17-4.09-5.17Zm-1.97 8.36c-.5 0-1-.02-1.39-.04v-5.68c.76-.1 1.52-.17 2.02-.17 1.8 0 1.9 1.24 1.9 2.7 0 2.15-.39 3.2-2.53 3.2Zm44.89-.96V14.1c0-3.28-2.45-3.78-4.34-3.78-.75 0-2.5.13-4.61.36v2.5c1.98-.21 3.06-.3 3.87-.3 1.41 0 1.77.38 1.77 1.42v.4a18.9 18.9 0 0 0-1.12-.04c-3.02 0-5.4.04-5.4 3.23 0 2.3 1.18 2.8 2.8 2.8 1.37 0 2.79-.28 4.02-.74.32.52.88.64 1.5.64h2.66l.2-1.85-.95-.15c-.38-.05-.4-.1-.4-.85Zm-3.31.69a7.7 7.7 0 0 1-2.07.36c-.65 0-.97-.2-.97-1.05 0-1.31.82-1.33 2.1-1.4l.94-.04v2.13Z"/></svg>';
   // лев — знак компании перед словом «Фабрика» (тот же, что brand-mark у заголовков): левая часть логотипа
   var LION = LOGO.replace('viewBox="0 0 163 29" role="img" aria-label="Фабрикант"', 'viewBox="0 0 31 29" class="brand-mark" aria-hidden="true" width="15" height="14"');
@@ -136,7 +165,7 @@
   // (проект 12.11: work/portal_struct/struct.json); раздел — razdel.html#<id>: отчёты списком, ведут на прежние страницы. 6-й элемент — страница,
   // чьи цифры показывает карточка раздела на главной (T14M.card). Прежний список (до 13.11) — build/site.before-razdel1311.js
   var PORTAL = [['home.html', 'Главная', 's_home', 'var(--ic-home)', 'Пульс компании и что требует решения'],
-    ['poruch.html', 'Поручения', 's_docs', 'var(--ic-err)', 'Невыполненное: отметки бота, совещания, руководство, офисы'],
+    ['poruch.html', 'Поручения', 's_check', 'var(--ic-err)', 'Невыполненное: отметки бота, совещания, руководство, офисы'],
     ['razdel.html#sales', 'Продажи', 's_sales', 'var(--ic-sales)', 'Деньги: план-факт, ФТС, ПКС, ЖПС, ПК Регин, клиенты, отгрузки', 'sales.html'],
     ['razdel.html#online', 'Онлайн-продажи', 's_web', 'var(--ic-items)', 'Маркетплейсы, интернет-партнёры, цены и отзывы'],   // 13.11.2026, Т. В.: «онлайн-продажи — отдельный блок»
     ['razdel.html#prod', 'Производство', 's_prod', 'var(--ic-prod)', 'Выпуск, участки, мощность', 'staff.html'],
@@ -145,6 +174,7 @@
     ['razdel.html#log', 'Логистика', 's_omts', 'var(--ic-omts)', 'Автотранспорт, перемещение грузов, ГСМ'],
     ['razdel.html#fin', 'Финансы и экономика', 's_sliders', 'var(--ic-ai)', 'Экономика ПЭО: цены, объёмы, мощность'],
     ['razdel.html#items', 'Продукция', 's_items', 'var(--ic-items)', 'Каталог, модели, материалы, прайсы'],
+    ['fsu/', 'Сайт', 's_shop', 'var(--ic-items)', 'Сайт fabrikant.su — копия один к одному, на весь экран'],   // 20.11.2026, Т. В.: «отдельный раздел меню, как план»
     ['razdel.html#people', 'Люди', 's_org', 'var(--ic-calls)', 'Структура, контакты, кадры'],
     ['razdel.html#docs', 'Документы', 's_docs', 'var(--ic-docs)', 'Договоры, регламенты, чертежи, архив'],
     ['razdel.html#site', 'Площадка', 's_map', 'var(--ic-map)', 'Инженерная служба: ППР и ТО, энергоресурсы; план и 3D-модель', 'plan.html']];
@@ -153,8 +183,8 @@
   var OWNER_ID = 'REDACTED_HEX_1';
   function isOwner() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'); return !!(p && p.id === OWNER_ID && p.st !== 'pending'); } catch (e) { return false; } }
   var SUBS = [['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'plan.html'], ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'plan.html'], ['stores.html', 'Остатки ОП', 's_store', 'var(--ic-stock)', 'stock.html'],
-    ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
-  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
+    ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['cams.html', 'Видеонаблюдение', 's_map', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
+  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'cams.html': 'razdel.html#site', 'jps.html': 'razdel.html#sales', 'mts.html': 'razdel.html#people', 'ftp.html': 'site.html', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
   // чат-боты (один список для листа «Разделы», профиля и боковой панели) и приложение для Android (28.10.2026: «меню «Скачать APK» пропало»).
   // APK лежит в корне сайта (build_enc.py → fabrika.apk); на iPhone/iPad строка не показывается — там приложение ставится с экрана «Домой»
   var BOTS = [['https://t.me/example1', 'plane', 'var(--ic-items)', 'Бот в Telegram'], ['https://max.ru/example1', 'chat', 'var(--ic-chat)', 'Бот в MAX']];
@@ -240,6 +270,51 @@
   // 14.11.2026, Т. В.: «когда я в разделе захожу в документ, он не должен отправлять меня в общий архив — я должен в разделе его посмотреть;
   //   в «Документы» я сам схожу». T14Doc.open(href, title, meta) — PDF (или PDF-копия Word/Excel: <файл>.pdf) открывается поверх текущей
   //   страницы в просмотрщике портала (assets/pdfview.js, «‹ Назад» возвращает в раздел); ссылки a[data-pdf] на любой странице — так же.
+  // 19.11.2026: панель файла (Word, Excel, архив…) — «‹ Назад» в раздел и «Сохранить / Отправить»
+  window.T14Sheet = function (f, title, meta, dl) {
+    var o = document.createElement('div'); o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', title);
+    o.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
+    var b = document.createElement('div');
+    b.style.cssText = 'width:100%;max-width:520px;background:var(--ios-bg2,#fff);color:var(--ios-1,#111);border-radius:18px 18px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom,0px));font:16px/1.35 -apple-system,system-ui,sans-serif;box-shadow:0 -6px 24px rgba(0,0,0,.25)';
+    function btn(t, primary) { var x = document.createElement('button'); x.type = 'button'; x.textContent = t; x.style.cssText = 'display:block;width:100%;margin-top:10px;padding:13px;border:0;border-radius:12px;font:600 16px -apple-system,system-ui,sans-serif;' + (primary ? 'background:#c8102e;color:#fff' : 'background:rgba(120,120,128,.16);color:inherit'); return x; }
+    var bk = document.createElement('button'); bk.type = 'button'; bk.textContent = '‹ Назад'; bk.style.cssText = 'border:0;background:none;color:#c8102e;font:600 16px -apple-system,system-ui,sans-serif;padding:4px 0';
+    var h = document.createElement('div'); h.style.cssText = 'font-weight:600;margin-top:8px;word-break:break-word'; h.textContent = title;
+    var m = document.createElement('div'); m.style.cssText = 'opacity:.65;font-size:14px;margin-top:2px'; m.textContent = meta;
+    var sv = btn('Сохранить / Отправить', true), op = btn('Скачать', false);
+    b.appendChild(bk); b.appendChild(h); b.appendChild(m); if (f) b.appendChild(sv); var app = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (!app || !f) b.appendChild(op);
+    o.appendChild(b); document.body.appendChild(o);
+    function close() { o.remove(); }
+    bk.onclick = close; o.onclick = function (e) { if (e.target === o) close(); };
+    sv.onclick = function () { navigator.share({ files: [f], title: title }).then(close, function (e) { if (e && e.name !== 'AbortError') m.textContent = 'Не получилось — попробуйте ещё раз'; }); };
+    op.onclick = function () { dl(); close(); };
+    return true;
+  };
+  // 19.11.2026: в приложении со значка ссылка «download» (Word, Excel без PDF-копии, бланки) открывала файл во весь экран без «Назад» —
+  //   перехватываем: файл загружается здесь же и показывается панель «‹ Назад» / «Сохранить / Отправить»
+  window.addEventListener('click', function (e) {             // на window — после обработчиков страниц (PDF-копия в «Документах» открывается своим просмотрщиком)
+    var a = e.target.closest && e.target.closest('a[href]'); if (!a || e.defaultPrevented) return;
+    if (!a.hasAttribute('download') && !/\.(docx?|xlsx?|pptx?|zip|rar|7z|ai|cdr|dwg|dxf|eps|psd|tiff?|csv|txt)(\?|#|$)/i.test(a.getAttribute('href') || '')) return;
+    var app = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if (!app) return;
+    var href = a.getAttribute('href') || ''; if (!href || /^(https?:)?\/\//i.test(href) && href.indexOf(location.origin) !== 0 || /^(blob|data|#)/.test(href)) return;
+    if (/\.pdf(\?|#|$)/i.test(href) && window.T14Doc) { e.preventDefault(); var tt = a.querySelector('.ititle'); T14Doc.open(href.split('#')[0], (tt ? tt.textContent : a.textContent || 'Документ').trim(), ''); return; }   // PDF — в просмотрщик
+    e.preventDefault();
+    var name = a.getAttribute('download') || decodeURIComponent(href.split('/').pop().split('?')[0]), t = a.querySelector('.ititle'), title = (t ? t.textContent : a.textContent || name).trim();
+    fetch(href, { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.blob() : null; }).then(function (b) {
+      if (!b) { location.href = href; return; }
+      var ext = String(name).split('.').pop().toLowerCase(), f = null;
+      try { f = new File([b], name, { type: b.type || 'application/octet-stream' }); if (!(navigator.canShare && navigator.canShare({ files: [f] }))) f = null; } catch (x) { f = null; }
+      if (!f) { location.href = href; return; }
+      window.T14Sheet(f, title || name, Math.round(b.size / 1024) + ' КБ · ' + ext.toUpperCase(), function () { location.href = href; });
+    }).catch(function () { location.href = href; });
+  });
+  // 19.11.2026: в приложении со значка простая ссылка на PDF (без data-pdf, часто target=_blank) открывала файл во весь экран без «Назад» — в просмотрщик портала
+  window.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]'); if (!a || e.defaultPrevented || a.hasAttribute('data-pdf')) return;
+    var app = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if (!app) return;
+    var href = a.getAttribute('href') || ''; if (!/\.pdf(\?|#|$)/i.test(href) || (/^(https?:)?\/\//i.test(href) && href.indexOf(location.origin) !== 0)) return;
+    e.preventDefault(); var t = a.querySelector('.ititle'); T14Doc.open(href.split('#')[0], (t ? t.textContent : a.textContent || 'Документ').trim(), '');
+  });
   window.T14Doc = {
     open: function (href, title, meta) {
       var src = /\.pdf$/i.test(href) ? href : href + '.pdf';
@@ -257,7 +332,7 @@
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   // 28.10.2026 (утверждённые макеты): тема «Светлая / Тёмная / Авто» (по умолчанию «Авто» — как в системе), производительность
-  // «Авто / Сотрудник16 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
+  // «Авто / Сотрудник17 / Экономно» (по умолчанию «Авто»). Скрипт до отрисовки (build_site.py → _THEME) ставит то же самое, что здесь.
   function theme() { var t = getPref('t14.theme', 'auto'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function applyLook() {
     var de = document.documentElement, t = theme();
@@ -276,7 +351,7 @@
   // Уровни на <html data-perf>: max — стекло с размытием, тени, движение; mid — размытие слабее, движение короче; eco — без размытия
   // (непрозрачный фон), без теней и анимаций (data-fx="lite"). Выученный уровень устройства — localStorage «t14.dev» (на 30 дней, свой для браузера).
   var FX = (function () {
-    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник16', eco: 'Экономно', mid: 'Среднее' };
+    var de = document.documentElement, ua = navigator.userAgent || '', LV = ['eco', 'mid', 'max'], NM = { auto: 'Авто', max: 'Сотрудник17', eco: 'Экономно', mid: 'Среднее' };
     function rdJ(k) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
     var mem = rdJ('t14.dev'); if (!mem || mem.ua !== ua) mem = { ua: ua };
     function save() { mem.ua = ua; mem.t = Date.now(); try { localStorage.setItem('t14.dev', JSON.stringify(mem)); } catch (e) { } }
@@ -295,7 +370,7 @@
       if (rm) return ['mid', 'в системе включено «Уменьшение движения»'];
       if ((screen.width || 0) * (screen.height || 0) * dpr * dpr > 8.3e6 && dm && dm <= 4) return ['mid', 'большой экран при небольшой памяти'];
       // 28.10.2026 23:00, пользователь: «лаги при скроллинге — и это только iPhone и iPad». Safari не сообщает память и ядра — iOS всегда
-      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник16» — вручную
+      // выходил на «max» (размытие стекла на всю боковую панель iPad). По умолчанию iOS — «mid»; замер кадров опустит ниже, «Сотрудник17» — вручную
       if (de.getAttribute('data-plat') === 'ios' && !dm) return ['mid', 'iPhone/iPad: размытие стекла только на малых поверхностях'];
       return ['max', ''];
     }
@@ -350,7 +425,7 @@
       subs.forEach(function (f) { try { f(); } catch (e) { } });
       return L;
     }
-    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник16» → высокое, «Авто» — по замеру
+    // выбор человека; качество модели и плана (perf.js, «t14.quality») — следом: «Экономно» → низкое, «Сотрудник17» → высокое, «Авто» — по замеру
     function set(c) {
       if (c !== 'auto' && c !== 'max' && c !== 'eco') return;
       setPref('t14.power', c);
@@ -459,7 +534,7 @@
   }
   window.T14Search = { rank: rank, stem: stem, terms: terms, index: function () { return loadIndex(); } };
   var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
-      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'struct.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'transport.html': 'log' };
+      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'struct.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'cams.html': 'site', 'jps.html': 'sales', 'mts.html': 'people', 'ftp.html': 'items', 'site.html': 'items', 'transport.html': 'log' };
   function sectionFor(route) {
     var page = route.split('#')[0];
     var sections = { 'sales.html#recl': 'quality', 'sales.html#rev': 'online', 'sales.html#mp': 'online',
@@ -471,7 +546,7 @@
   function loadIndex() {
     if (SIDX) return SIDX;
     // 28.10.2026, пользователь: «почему нет перехода к списку камер, плану или карте» — ключевые слова разделов и строки «Камеры»
-    var KW = { 'plan.html': 'карта план здания территория камеры видеонаблюдение сети', 'staff.html': 'производство участки выпуск люди мастера',
+    var KW = { 'fsu/': 'сайт fabrikant.su копия главная каталог проекты о компании', 'site.html': 'сайт fabrikant витрина каталог модели обивки ткани цвета проекты где купить клиенты логотипы', 'plan.html': 'карта план здания территория камеры видеонаблюдение сети', 'ftp.html': 'сайт fabrikant ftp каталог логотипы клиентов проекты магазины файлы', 'mts.html': 'звонки мтс детализация сим карты корпоративные номера клиенты переговоры', 'jps.html': 'жилпромсервис жпс база 1с итоги года клиенты ушедшие рекламации заказы склад', 'cams.html': 'видеонаблюдение камеры события регистратор ночь периметр ворота снимки', 'staff.html': 'производство участки выпуск люди мастера',
       'stock.html': 'склад остатки', 'omts.html': 'снабжение заявки поставки просрочка', 'sales.html': 'продажи офисы отчеты', 'library.html': 'документы регламенты инструкции формы прайс',
       'calls.html': 'телефоны кому звонить контакты', 'products.html': 'изделия материалы каталог', 'transport.html': 'транспорт машины глонасс грузовики доставки пробег стоянки', 'utils.html': 'счетчики счётчики показания электроэнергия газ вода откачка септик выгреб жбо сточные воды' };
     var base = PORTAL.slice(1).map(function (p) { return { t: p[1], x: p[4], u: p[0], g: 'Разделы', i: p[2], c: p[3], k: KW[p[0]] || '' }; })
@@ -492,7 +567,7 @@
     ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['struct.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
     ['sales.html#mp', 'Маркетплейсы', 'маркетплейсы ozon озон wildberries вайлдберриз яндекс маркет'], ['sales.html#ship', 'График отгрузки', 'отгрузки график объекты'], ['sales.html#cp', 'Контрольные точки', 'контрольные точки сроки'],
     ['sales.html#prom', 'Обещанные визиты и звонки', 'визиты звонки обещания'], ['sales.html#buf', 'Буфер заказов', 'буфер заказы'], ['sales.html#prod', 'Заказы на производство', 'заказы производство'],
-    ['sales.html#cls', 'Сотрудник9', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
+    ['sales.html#cls', 'Сотрудник10', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
     ['sales.html#tz1c', 'ТЗ в работе · 1С', 'тз 1с в работе'], ['stock.html#move', 'Все склады и филиалы — движение за месяц', 'все склады филиалы товары на складах движение приход расход'],
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
@@ -652,8 +727,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник11 (пользователь: «Берем Gemini и Сотрудник11 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник11 из поиска и ИИ-интеграций портала» (Сотрудник11 Имя4 и Сотрудник11 Сотрудник26 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник12 (пользователь: «Берем Gemini и Сотрудник12 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник12 из поиска и ИИ-интеграций портала» (Сотрудник12 Имя4 и Сотрудник12 Сотрудник27 не трогаем)
         // 15.11.2026 ~20:00, Т. В.: «Gemini выключай, если он не работает» — не работает: модели Gemini 2.5 закрыты для ключа (404), 3.x — 429 без
         //   оплаченной квоты (проверка 12.11, SnabGpt). Кнопка убрана; сохранённый выбор gemini сбрасывается на «Авто» (проверка ниже).
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT']], prov = '';
@@ -692,7 +767,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник11' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник12' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '', my = (go.n = (go.n || 0) + 1);
           // 15.11.2026 ~20:00, Т. В. (видео 19:43): «ChatGPT вообще никакого поиска не делает» — «Помощник думает…» висел без конца: у запроса не было
@@ -741,7 +816,7 @@
         var adm = irow('a', ICON.gear, 'var(--ic-grey)', 'Управление', cur === 'admin.html' ? 'сейчас' : 'люди, доступ, боты'); adm.href = 'admin.html'; if (cur === 'admin.html') adm.setAttribute('aria-current', 'page'); ga.appendChild(adm);
       }
       s.appendChild(h4('Оформление'));
-      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник16 / Экономно»; по умолчанию — «Авто» и «Авто»
+      // 28.10.2026: «Тема: Светлая / Тёмная / Авто», «Производительность: Авто / Сотрудник17 / Экономно»; по умолчанию — «Авто» и «Авто»
       function seg(label, get, opts, put) {
         s.appendChild(el('p', 'psub', label));
         var w = el('div', 'pseg'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', label); s.appendChild(w);
@@ -751,10 +826,10 @@
       }
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
       // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
-      seg('Вид', function () { return skinNow(); }, [['v22', 'Сотрудник5'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
-      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник16'], ['eco', 'Экономно']], function (v) { FX.set(v); });
+      seg('Вид', function () { return skinNow(); }, [['v22', 'Сотрудник6'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
+      var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник17'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
-      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник16» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
+      var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник17» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };
       pfs(); FX.on(pfs);
       s.appendChild(h4('Сервис'));
       var g3 = el('div', 'igroup'); s.appendChild(g3);
@@ -943,7 +1018,9 @@
       var a = new URL(U.u, location.href), tk = relKey(U.u), st = history.state || {};
       if (U.sheet) try { sessionStorage.setItem('t14.sheet', U.sheet); } catch (e) { }
       if (!panel.hidden) close();
-      if (st.t14p && st.t14p === tk) { history.back(); return; }          // на шаг назад в истории — как раз уровень выше
+      // 19.11.2026, Т. В.: «кнопка назад не работает ни в одном меню». Был шаг history.back(), если «откуда пришли» = уровень выше;
+      //   но в приложении с экрана «Домой», после location.replace и в новой вкладке предыдущая запись истории — не та страница
+      //   (или чужая), и кнопка «ничего не делала». Теперь всегда идём по адресу сами: та же страница — смена вида, другая — replace.
       if (a.pathname === location.pathname && a.search === location.search) {
         RS({ t14u: tk, t14p: st.t14p || null, t14s: st.t14s || '' }, '', a.href);
         window.dispatchEvent(new HashChangeEvent('hashchange'));

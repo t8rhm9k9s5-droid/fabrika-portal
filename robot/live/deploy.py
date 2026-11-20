@@ -11,7 +11,7 @@ Claude кладёт в папку «Fabrikant» на компьютере пол
 раскладывает (папка — cfg.json → drive_folder или файл ~/.fabrika_live/drive_folder со ссылкой): в корень сайта — только известные файлы сборки; code/… — в ~/.fabrika_live/code; host/… — PHP-файлы хостинга (st/, max/, wx/).
 Без подписи, с чужой подписью или с неизвестными путями — не ставится ничего. Ничего не удаляется: старые блобы остаются (их убирает Claude
 в ~/_удалить). Пока drive_folder не задан — выключено.
-28.10.2026, пользователь: «перенеси на Фабрика — Диск 1c@ вместо моего owner@ всю работу портала» — Имя2 источник теперь Диск user1@example.org,
+28.10.2026, пользователь: «перенеси на Фабрика — Диск 1c@ вместо моего owner@ всю работу портала» — Имя1 источник теперь Диск user1@example.org,
 папка «Фабрика — портал/Обновления», через скрипт Google от имени 1c@ (gdrive_1c.py; без открытой ссылки). Старая папка owner@ (drive_folder) —
 запасная, пока в code/gdrive_1c.json не стоит "old_off": true.
 30.10.2026 аудит P4–P6: подпись .sig v2 (имя + sha256 пакета), только пакеты новее установленного, копии и откат, битый пакет не держит
@@ -24,7 +24,7 @@ def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — фай
 SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|manifest\.webmanifest|'
                         r'robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess|'
                         r'menutest/(?:full/)?(?:index\.html|manifest\.webmanifest)|'   # 15.11.2026: тест нижнего меню (Т. В.), без данных портала
-                        # 16.11.2026: тестовая копия портала с доступом по группам (опрос Т. В. «Да, выкладывай копию»; проверка Сотрудник81 И. В. 17.11)
+                        # 16.11.2026: тестовая копия портала с доступом по группам (опрос Т. В. «Да, выкладывай копию»; проверка Сотрудник89 И. В. 17.11)
                         r'gtest/(?:b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|'
                         r'manifest\.webmanifest|robots\.txt|applink\.js))$')
 HOST_FILES = re.compile(r'^host/((st|max|wx)/[\w.-]+\.(php|htaccess)|(st|max|wx)/\.htaccess)$')
@@ -389,7 +389,7 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
         except Exception as e: log('  ! оповещение об откате:', e)
         state_save('deploy.json', st); return st
     files, errs = {}, []
-    try:                                                   # 1) Диск 1c@ (Имя2)
+    try:                                                   # 1) Диск 1c@ (Имя1)
         g = g1c_listing(L, st)
         if g: files.update(g)
     except Exception as e:
@@ -420,9 +420,13 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
             break
         try:
             want = get(files[sig]); zb = get(files[name])
+        except MemoryError:                                # 20.11.2026: пакет 389 МБ не влез в память хостинга — весь проход падал и очередь стояла
+            fail(name, 'пакет слишком большой для памяти хостинга — пропущен (собирать drive_pack --split)'); continue
         except Exception as e:                             # сеть / Диск — временно
             if fail(name, 'не скачался: %s' % (str(e)[:160] or e.__class__.__name__), permanent=False): continue
             break
+        if zb is not None and len(zb) > 150 * 1024 * 1024:   # 20.11.2026: больше 150 МБ хостинг не распакует — сразу в пропуск
+            zb = None; fail(name, 'пакет больше 150 МБ — пропущен (собирать drive_pack --split)'); continue
         ok, how = verify(kb, name, zb, want, st)
         if not ok:
             fail(name, how); continue
@@ -431,6 +435,8 @@ def check(CFG, L, site, state_load, state_save, log, alert=None):
         #   ставится только после успешной установки всех предыдущих. Пакеты без описи — как раньше.
         rel = st.setdefault('rel', {})
         try: zraw = unpack(zb, kb)
+        except MemoryError:
+            zb = None; fail(name, 'пакет слишком большой для памяти хостинга — пропущен (собирать drive_pack --split)'); continue
         except (DeployError, zipfile.BadZipFile, ValueError) as e:
             fail(name, str(e)[:300] or e.__class__.__name__); continue
         rp = release_part(zraw)
