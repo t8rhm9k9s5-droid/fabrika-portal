@@ -143,7 +143,7 @@ iv = secrets.token_bytes(12)
 pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, zpack('m.json', m), None))
 
 # public part
-login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
+login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter'])).replace('__VERSION__', VERSION)   # 20.11.2026 (Рекс, CG-52): вход сверяет версию Service Worker'а
 # personal logins: switched on once the script has the accounts part (touch /home/claude/push/acct_live)
 ACFG = None
 if ACCT_ON:

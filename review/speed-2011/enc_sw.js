@@ -43,10 +43,10 @@ async function unz(ab) {
   catch (e) { throw new Error('Файл портала повреждён при загрузке — откройте страницу ещё раз.'); }
 }
 // 15.11.2026: доступ по группам — k/<id>.bin = 32 байта ключа сайта, дальше JSON {набор групп: ключ hex} (без групп — только ключ сайта)
-async function keyring() {                       // the personal keyring of this device: {key, sets} or null
+async function keyring(signal) {                       // the personal keyring of this device: {key, sets} or null
   const uk = await kvGet('uk'), id = await kvGet('uid');
   if (!uk || !id) return null;
-  const r = await fetch(BASE + 'k/' + id + '.bin', { cache: 'no-cache' });
+  const r = await fetch(BASE + 'k/' + id + '.bin', { cache: 'no-cache', signal });
   if (!r.ok) return null;
   const buf = await r.arrayBuffer();
   const raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(buf, 0, 12), additionalData: new TextEncoder().encode('fabrika-kr') }, uk, new Uint8Array(buf, 12)));
@@ -61,8 +61,8 @@ async function rekey() { const k = await keyring(); return k && k.key; }   // th
 const fkey = (st, f) => (f[3] ? (st.sets || {})[f[3]] : st.key);           // a group page — the key of its set; a common one — the site key
 const NOGROUP = () => new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><p style="font:16px system-ui;padding:24px">Этот раздел открыт только своей группе. Доступ даёт администратор портала (раздел «Управление»).</p>',
   { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
-async function loadMap(key) {                     // the newest map from the host; throws if the password no longer fits
-  const r = await fetch(BASE + 'm.bin', { cache: 'no-cache' });
+async function loadMap(key, signal) {                     // the newest map from the host; throws if the password no longer fits
+  const r = await fetch(BASE + 'm.bin', { cache: 'no-cache', signal });
   if (!r.ok) throw new Error('m.bin ' + r.status);
   return JSON.parse(new TextDecoder().decode(await decrypt(key, await r.arrayBuffer())));
 }
@@ -98,7 +98,10 @@ async function pruneOld(st) {                     // 20.11.2026 (Рекс, CG-51
     const oc = await caches.open(k);
     if (st) for (const q of await oc.keys()) {
       const p = decodeURIComponent(q.url.slice(BASE.length)), f = st.map.files[p], r = f && await oc.match(q);
-      if (r && r.headers.get('X-T14-Blob') === f[0] && !(await c.match(q))) { try { await c.put(q, r); } catch (e) { if (isQuota(e)) return; } }
+      if (!r || r.headers.get('X-T14-Blob') !== f[0]) continue;
+      const cur = await c.match(q);
+      if (cur && cur.headers.get('X-T14-Blob') === f[0]) continue;
+      try { await c.put(q, r); } catch (e) { return; }   // не перенеслось — старую версию не удаляем
     }
     await caches.delete(k);
   }
@@ -122,7 +125,8 @@ async function precache(st, report, prev, until, bytes) {  // until — не д�
       if (until) { while (Date.now() - LAST_REQ < 4000 && !ac.signal.aborted) await new Promise(r => setTimeout(r, 500)); }
       if (ac.signal.aborted || (bytes != null && got >= bytes)) { full = true; break; }
       await Promise.all(pre.slice(i, i + N).map(async p => {
-        if (!full && !ac.signal.aborted && !(await c.match(BASE + p))) {
+        const hit0 = await c.match(BASE + p);
+        if (!full && !ac.signal.aborted && !(hit0 && hit0.headers.get('X-T14-Blob') === st.map.files[p][0])) {
           try {
             let r = await fromOld(olds, p, st.map.files[p][0]);
             if (!r) {
@@ -146,33 +150,43 @@ async function precache(st, report, prev, until, bytes) {  // until — не д�
 //   долгой загрузке. Раньше она скачивала весь сайт (~300 МБ) прямо при установке: в Safari не успевала, в облачном браузере не хватало места —
 //   установка срывалась, и браузер навсегда оставался на старой версии со старой страницей входа. Теперь при установке — не дольше 20 с,
 //   остальное докачивается фоном при открытии страниц (fillLater), а чего нет в кэше — расшифровывается с хостинга.
-async function refresh(until) {                     // a new version on a device that is signed in: the newest map (and keys), the cache filled as far as time and space allow
+let GEN = 0;                                       // поколение обновления: опоздавший проход не перезаписывает карту (Рекс, CG-52)
+async function refresh(until, signal) {
+  const g = ++GEN;                     // a new version on a device that is signed in: the newest map (and keys), the cache filled as far as time and space allow
   const key = await kvGet('key');
   if (!(key instanceof CryptoKey)) return;
   // 15.11.2026: пока шла проверка старого ключа, человек мог войти заново — новый ключ (он открывает карту сайта) не стираем
   const signOut = async () => { try { const cur = await kvGet('key'); if (cur) { await loadMap(cur); return; } } catch (e0) { /* старый ключ — стираем */ }
     await kvDel('key'); await kvDel('map'); await kvDel('sets'); ST = null; };
   let k = key, map = null, kr = null;
-  try { map = await loadMap(key); }
+  try { map = await loadMap(key, signal); }
   catch (err) {
     if (!(err && err.name === 'OperationError')) throw err;
     // the site key changed: a personal login opens the new one; otherwise sign in again
-    let k2 = null; try { kr = await keyring(); k2 = kr && kr.key; } catch (e2) { k2 = null; }
-    if (k2) { try { map = await loadMap(k2); k = k2; } catch (e3) { if (!(e3 && e3.name === 'OperationError')) throw e3; } }
+    let k2 = null; try { kr = await keyring(signal); k2 = kr && kr.key; } catch (e2) { k2 = null; }
+    if (k2) { try { map = await loadMap(k2, signal); k = k2; } catch (e3) { if (!(e3 && e3.name === 'OperationError')) throw e3; } }
     if (!map) { await signOut(); return; }
   }
   // ключи групп — свежие с каждой версией: выдали или сняли группу — телефон узнаёт при следующем обновлении
-  if (!kr) { try { kr = await keyring(); } catch (e4) { kr = null; } }
+  if (!kr) { try { kr = await keyring(signal); } catch (e4) { kr = null; } }
+  if (signal && signal.aborted) return;
   const sets = kr ? kr.sets : ((await kvGet('sets')) || {});
   const next = { key: k, map, docs: new Set(map.docs), sets };
   try { await precache(next, null, await kvGet('map'), until, budget()); } catch (e5) { /* связь или место — докачается позже */ }
+  if (g !== GEN || (signal && signal.aborted)) return;   // срок вышел или пошёл новый проход — карту не трогаем
   await kvPut({ key: k, map, sets }); ST = next;
 }
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
-    const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
-    try { await pub(); } catch (e0) { try { await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
-    try { await Promise.race([refresh(Date.now() + 8000), new Promise((ok, bad) => setTimeout(() => bad(new Error('срок')), 10000))]); } catch (err) { /* ключ и карта остаются прежними; обновятся при входе или открытии страницы */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
+    // 20.11.2026 (Рекс, CG-52): один срок 10 с на всю установку — страница входа, карта, ключи, докачка; по сроку загрузки обрываются
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 10000);
+    try {
+      try {   // новая страница входа заменяет старую только если пришла целиком; старая копия не удаляется заранее
+        const r = await fetch(BASE + 'login.html', { cache: 'reload', signal: ac.signal });
+        if (r.ok) { const b = await r.arrayBuffer(); await (await caches.open(PUB)).put(BASE + 'login.html', new Response(b, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })); }
+      } catch (e0) { /* без новой копии — остаётся прежняя */ }
+      try { await refresh(Date.now() + 8000, ac.signal); } catch (err) { /* ключ и карта остаются прежними; обновятся при входе или открытии страницы */ }
+    } finally { clearTimeout(tm); }
     await self.skipWaiting();
   })());
 });

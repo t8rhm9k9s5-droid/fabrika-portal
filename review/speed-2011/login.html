@@ -244,6 +244,7 @@ window.T14Lite = (function () {
         });
       });
     }
+    var SWV = '__VERSION__';
     function ver(sw) {                           // ответ Service Worker'а {v, z} или null (старый не отвечает), не дольше 3 с
       return new Promise(function (ok) {
         if (!sw) return ok(null);
@@ -257,7 +258,7 @@ window.T14Lite = (function () {
       return newest().then(function (r) { R = r; return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); })
         .then(function (k) { return put('key', k); }).then(function () { return ver(R.active || navigator.serviceWorker.controller); }).then(function (v) {
           // 20.11.2026 (Рекс, CG-51): Service Worker не назвал версию — это старый; даём новому встать ещё раз (до 10 с), потом входим тем, что есть
-          if (v) return R;
+          if (v && v.v === SWV) return R;   // ответил именно Service Worker этой сборки (версия подставляется при сборке)
           return Promise.resolve(R.update && R.update()).catch(function () { }).then(function () { return new Promise(function (ok) { setTimeout(ok, 10000); }); }).then(function () { return navigator.serviceWorker.ready; }).then(function (r2) { R = r2; return R; });
         }).then(function () { var r = R;
           btn.textContent = 'Открываю портал…'; bar.hidden = false;
@@ -280,10 +281,10 @@ window.T14Lite = (function () {
         });
     }
     return attempt().catch(function (e) {
-      // 20.11.2026 (Рекс, CG-51): долгий ответ или обрыв связи — не повод стирать сохранённое; сброс — только кнопкой «Сбросить»
-      if (tried || (e && (e.message === 'pw' || e.message === 'net' || e.message === 'Сайт долго не отвечает' || /network|fetch|связ/i.test(e.message || '')))) throw e;
-      tried = true; btn.textContent = 'Обновляю сайт на устройстве…';
-      return resetDevice(true).then(function () { reg = navigator.serviceWorker.register('sw.js'); return attempt(); });
+      // 20.11.2026 (Рекс, CG-52): сохранённое на устройстве не стирается само; один повтор после обновления Service Worker'а, сброс — только кнопкой «Сбросить»
+      if (tried || (e && (e.message === 'pw' || e.message === 'net'))) throw e;
+      tried = true; btn.textContent = 'Повторяю вход…';
+      return Promise.resolve(reg).then(function (rg) { return rg && rg.update && rg.update(); }).catch(function () { }).then(function () { return attempt(); });
     }).then(function () {
         try { localStorage.setItem('t14.pwa.ready', '1'); } catch (e) {}
         location.replace(location.pathname.endsWith('/login.html') || location.pathname.endsWith('/404.html') ? './' : location.href);

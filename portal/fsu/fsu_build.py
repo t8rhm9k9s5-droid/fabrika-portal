@@ -13,6 +13,8 @@ def _wr(p, t):
 def _jl(p): return json.loads(_rd(p))
 def _jd(o, p, **kw): _wr(p, json.dumps(o, **kw))
 SRC = sys.argv[1]; M = os.path.join(SRC, 'm'); FINAL = '/home/claude/build/fsu'; OUT = FINAL + '.new'
+import fcntl
+_LOCK = open(FINAL + '.lock', 'w'); fcntl.flock(_LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)   # 20.11.2026 (Рекс, CG-52): вторая сборка параллельно — сразу ошибка, не порча
 # 20.11.2026 (Рекс): сначала проверить входы, собрать рядом (fsu.new) и только целую сборку поставить на место старой
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _need = [M, os.path.join(SRC, 'shell.html'), os.path.join(M, '_api')] + [os.path.join(_HERE, f) for f in ('fsu_shim.js', 'fsu_back.html', 'podbor.html', 'podbor.json', 'dims_extra.json', 'fsu_img.py')]
