@@ -5,10 +5,15 @@
 шифруется вместе с порталом (build_enc). Пути сайта переписаны под /fsu/, запросы API — на снимки _api/<md5>.json.
   python3 fsu_build.py <папка обхода>
 """
-import sys, os, re, json, shutil, hashlib, subprocess, io
-from PIL import Image
+import sys, os, re, json, shutil, subprocess
+def _rd(p, **kw):
+    with open(p, encoding='utf-8', **kw) as f: return f.read()
+def _wr(p, t):
+    with open(p, 'w', encoding='utf-8') as f: f.write(t)
+def _jl(p): return json.loads(_rd(p))
+def _jd(o, p, **kw): _wr(p, json.dumps(o, **kw))
 SRC = sys.argv[1]; M = os.path.join(SRC, 'm'); OUT = '/home/claude/build/fsu'
-st = json.load(open(os.path.join(SRC, sys.argv[2] if len(sys.argv) > 2 else 'state3.json')))
+st = _jl(os.path.join(SRC, sys.argv[2] if len(sys.argv) > 2 else 'state3.json'))
 shutil.rmtree(OUT, ignore_errors=True); os.makedirs(OUT)
 P = '/fsu/'
 def rw(t):   # абсолютные пути сайта → под /fsu/
@@ -25,7 +30,7 @@ for root, _, fs in os.walk(M):
         os.makedirs(os.path.dirname(d), exist_ok=True)
         ext = os.path.splitext(f)[1].lower()
         if ext in ('.js', '.css', '.json', '.svg', '.html', '.txt'):
-            t = open(s, encoding='utf-8', errors='replace').read(); open(d, 'w', encoding='utf-8').write(rw(t)); rep['txt'] += 1; continue
+            t = _rd(s, errors='replace'); _wr(d, rw(t)); rep['txt'] += 1; continue
         if ext in ('.png', '.jpg', '.jpeg', '.webp'):
             JOBS.append((s, d, rel)); continue
         if ext == '.mp4' and os.path.getsize(s) > 1_500_000:   # видео: 720p, H.264 veryfast — в разы легче
@@ -35,11 +40,11 @@ for root, _, fs in os.walk(M):
                 rep['vid'] = rep.get('vid', 0) + os.path.getsize(s) - os.path.getsize(d); continue
         shutil.copy2(s, d)
 # 20.11.2026: габариты, которых нет на сайте, — из других источников (dims_extra.json: инфографика FTP), в карточку как у остальных
-_X = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dims_extra.json'), encoding='utf-8'))
+_X = _jl(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dims_extra.json'))
 def _mm(v): return '%d&nbsp;мм' % v
 for _f in os.listdir(os.path.join(OUT, '_api')):
     _p = os.path.join(OUT, '_api', _f)
-    try: _j = json.load(open(_p, encoding='utf-8'))
+    try: _j = _jl(_p)
     except Exception: continue
     _dc = _j.get('dynamicContent') if isinstance(_j, dict) else None
     if not (isinstance(_dc, dict) and _dc.get('type') == 'products_catalog_detail'): continue
@@ -54,7 +59,7 @@ for _f in os.listdir(os.path.join(OUT, '_api')):
         _d.setdefault('widthMin', _e['w']); _d.setdefault('depthMin', _e['dp'])
         if not _d.get('widthMin'): _d['widthMin'] = _e['w']
         if not _d.get('depthMin'): _d['depthMin'] = _e['dp']
-        json.dump(_j, open(_p, 'w', encoding='utf-8'), ensure_ascii=False); rep['dims_extra'] = rep.get('dims_extra', 0) + 1
+        _jd(_j, _p, ensure_ascii=False); rep['dims_extra'] = rep.get('dims_extra', 0) + 1
         continue
     _v = [{'name': 'Глубина', 'value': _mm(_e['dp']), 'icon': 'depth'}, {'name': 'Ширина', 'value': _mm(_e['w']), 'icon': 'width'},
           {'name': 'Высота', 'value': _mm(_e['h']) if not _e.get('hM') else '%d–%d&nbsp;мм' % (_e['h'], _e['hM']), 'icon': 'height'}]
@@ -62,7 +67,7 @@ for _f in os.listdir(os.path.join(OUT, '_api')):
     if _e.get('seat'): _d['characteristics'].append({'title': 'Посадочное место', 'values': [{'name': 'Высота посадочного места', 'value': _mm(_e['seat']) if not _e.get('seatM') else '%d–%d&nbsp;мм' % (_e['seat'], _e['seatM']), 'icon': 'height'}]})
     if _e.get('note'): _d['characteristics'].append({'title': 'Дополнительно', 'values': [{'name': 'Спальное место', 'value': _e['note'].replace('спальное место ', '')}]})
     _d['heightMin'], _d['widthMin'], _d['depthMin'] = _e['h'], _e['w'], _e['dp']
-    json.dump(_j, open(_p, 'w', encoding='utf-8'), ensure_ascii=False); rep['dims_extra'] = rep.get('dims_extra', 0) + 1
+    _jd(_j, _p, ensure_ascii=False); rep['dims_extra'] = rep.get('dims_extra', 0) + 1
 # 20.11.2026: фото — варианты под экран (fsu_img.py), параллельно
 import multiprocessing as MP
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -76,7 +81,7 @@ with MP.Pool(int(os.environ.get('FSU_PROC', '4'))) as pool:
     for rel, (b0, b1, m) in pool.imap_unordered(_job, JOBS, chunksize=8):
         rep['img'] += 1; rep['img_before'] += b0; rep['img_after'] += b1
         if m: IMAP[('~' + rel[len('upload/als-1c/catalog/products/'):]) if rel.startswith('upload/als-1c/catalog/products/') else rel] = m
-json.dump(IMAP, open(os.path.join(OUT, '_img.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+_jd(IMAP, os.path.join(OUT, '_img.json'), ensure_ascii=False, separators=(',', ':'))
 rep['img_map'] = len(IMAP)
 # карта API: путь+запрос → файл
 amap = {k: v for k, v in st['api'].items() if os.path.exists(os.path.join(M, '_api', v + '.json'))}
@@ -85,21 +90,21 @@ for k, v in amap.items():
     if k.startswith('/api/i18n/'):
         os.makedirs(os.path.join(OUT, 'api', 'i18n'), exist_ok=True); shutil.copy2(os.path.join(M, '_api', v + '.json'), os.path.join(OUT, k[1:]))
 # оболочка
-shell = rw(open(os.path.join(SRC, 'shell.html'), encoding='utf-8').read()).replace('<base href="/">', '<base href="/fsu/">')
-shim = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_shim.js'), encoding='utf-8').read().replace('__AMAP__', json.dumps(amap, ensure_ascii=False))
+shell = rw(_rd(os.path.join(SRC, 'shell.html'))).replace('<base href="/">', '<base href="/fsu/">')
+shim = _rd(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_shim.js')).replace('__AMAP__', json.dumps(amap, ensure_ascii=False))
 shell = re.sub(r'<link[^>]+rel="preload"[^>]+/fsu/api/[^>]*>', '', shell)
 shell = shell.replace('<head>', '<head><script>' + shim + '</script>', 1)
-shell = shell.replace('</body>', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_back.html'), encoding='utf-8').read() + '</body>')
-open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(shell)
+shell = shell.replace('</body>', _rd(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_back.html')) + '</body>')
+_wr(os.path.join(OUT, 'index.html'), shell)
 # 20.11.2026: подбор мебели по свойствам (Т. В.: «я потребитель, не знаю, что такое стул, кресло… ищу по набору свойств»)
 HERE = os.path.dirname(os.path.abspath(__file__))
-pb = open(os.path.join(HERE, 'podbor.html'), encoding='utf-8').read().replace('</body>', open(os.path.join(HERE, 'fsu_back.html'), encoding='utf-8').read() + '</body>')
-open(os.path.join(OUT, 'podbor.html'), 'w', encoding='utf-8').write(pb)
+pb = _rd(os.path.join(HERE, 'podbor.html')).replace('</body>', _rd(os.path.join(HERE, 'fsu_back.html')) + '</body>')
+_wr(os.path.join(OUT, 'podbor.html'), pb)
 shutil.copy2(os.path.join(HERE, 'podbor.json'), os.path.join(OUT, 'podbor.json'))
 # 20.11.2026: инфографика с FTP к карточкам (info_prep.py → work/fsu/info/ и info.json)
 if os.path.isdir(os.path.join(HERE, 'info')):
     shutil.copytree(os.path.join(HERE, 'info'), os.path.join(OUT, 'info'), copy_function=os.link)
     shutil.copy2(os.path.join(HERE, 'info.json'), os.path.join(OUT, 'info.json'))
 rep['api'] = len(amap); rep['pages'] = len(st['seen'])
-json.dump(rep, open(os.path.join(SRC, 'build_report.json'), 'w'), ensure_ascii=False, indent=1)
+_jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))

@@ -75,12 +75,13 @@ if os.path.exists(OUT):
 os.makedirs(f'{OUT}/b')
 files = {}
 # 20.11.2026, Т. В. «на 1–2 Мбит/с должно летать»: текст (html, js, css, json, svg…) сжимается ПЕРЕД шифрованием — зашифрованное уже не сжать,
-#   хостинг отдавал такие файлы целиком. Формат: b'Z1' + raw deflate; JSON и HTML никогда не начинаются с «Z1», поэтому старые файлы читаются как раньше.
+#   хостинг отдавал такие файлы целиком. Формат: MAGIC (4 байта, первый — NUL, его нет в начале текста) + zlib (deflate с заголовком и контрольной суммой).
 import zlib
 ZTYPES = ('.html', '.htm', '.js', '.mjs', '.css', '.json', '.svg', '.txt', '.xml', '.geojson', '.kml', '.csv', '.md')
+ZMAGIC = b'\x00Z1\x00'
 def zpack(rel, data):
-    if len(data) < 1024 or not rel.lower().endswith(ZTYPES): return data
-    co = zlib.compressobj(9, zlib.DEFLATED, -15); z = b'Z1' + co.compress(data) + co.flush()
+    if len(data) < 1024 or not rel.lower().endswith(ZTYPES) or data[:4] == ZMAGIC: return data
+    z = ZMAGIC + zlib.compress(data, 9)
     return z if len(z) < len(data) * 0.9 else data
 for root, _, names in os.walk(SRC):
     for n in names:
@@ -89,8 +90,8 @@ for root, _, names in os.walk(SRC):
         data = pathlib.Path(os.path.join(root, n)).read_bytes()
         sid = ACC.set_of(rel, AMAP) if ACC_ON else None
         fa, fiv = set_aes(sid) if sid else (aes, ivkey)
-        iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
-        pdat = zpack(rel, data)
+        pdat = zpack(rel, data)   # 20.11.2026 (ревью GPT): IV — от того, что реально шифруется: сжатая и несжатая версии одного файла не делят IV
+        iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(pdat).digest(), hashlib.sha256).digest()[:12]
         blob = iv + fa.encrypt(iv, pdat, None)
         name = hashlib.sha256(blob).hexdigest()[:24] + '.bin'
         pathlib.Path(f'{OUT}/b/{name}').write_bytes(blob)

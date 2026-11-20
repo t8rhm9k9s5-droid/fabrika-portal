@@ -137,7 +137,9 @@ window.T14Lite = (function () {
     var u = new URL(h || './', location.href).href.replace(/#tgWebApp.*$/, '');
     if (inTg()) tg('web_app_open_link', { url: u }); else window.open(u, '_blank', 'noopener');
   }
-  function unz(ab) { var u = new Uint8Array(ab); if (u.length < 2 || u[0] !== 0x5A || u[1] !== 0x31) return Promise.resolve(ab); return new Response(new Blob([u.subarray(2)]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer(); }   // 20.11.2026: сжатый текст (build_enc.zpack)
+  function unz(ab) { var u = new Uint8Array(ab); if (u.length < 4 || u[0] !== 0 || u[1] !== 0x5A || u[2] !== 0x31 || u[3] !== 0) return Promise.resolve(ab);   // 20.11.2026: сжатый текст (build_enc.zpack: 00 5A 31 00 + zlib)
+    try { return new Response(new Blob([u.subarray(4)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer().catch(function () { throw new Error('Файл портала повреждён при загрузке — откройте страницу ещё раз.'); }); }
+    catch (e) { return Promise.reject(new Error('Браузер не умеет распаковывать файлы портала — обновите iOS/браузер.')); } }
   function dec(key, buf) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(buf, 0, 12) }, key, new Uint8Array(buf, 12)).then(unz); }
   function get(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status === 404 ? 'нет файла ' + u : 'net'); return r.arrayBuffer(); }); }
   function map(key) { return get('m.bin').then(function (b) { return dec(key, b); }).then(function (x) { return JSON.parse(td.decode(x)); }); }
@@ -284,8 +286,8 @@ window.T14Lite = (function () {
   function run(form, work, wait) {
     form.addEventListener('submit', function (ev) {
       ev.preventDefault(); err.textContent = ''; var btn = form.querySelector('.go'); btn.disabled = true; var t0 = btn.textContent; btn.textContent = wait;
-      Promise.resolve().then(work).then(function (raw) { return unlock(raw, QST || btn); }).catch(function (e) {
-        btn.disabled = false; btn.textContent = t0; bar.hidden = true; QST = null;
+      Promise.resolve().then(work).then(function (raw) { return unlock(raw, btn); }).catch(function (e) {
+        btn.disabled = false; btn.textContent = t0; bar.hidden = true;
         if (!$('fq').hidden) { $('fq').hidden = true; form.hidden = false; $('seg').hidden = false; }
         err.textContent = e && e.message === 'pw' ? 'Неверный пароль.' : e && e.message === 'net' ? 'Нет связи с сайтом — проверьте интернет.' : (e && e.message) || String(e);
         $('rst').hidden = !!(e && /^(pw|net)$/.test(e.message)) || /неверн|парол|логин|связи|подтвердили/i.test(err.textContent);
@@ -307,7 +309,6 @@ window.T14Lite = (function () {
   //   клавиатуры». Раньше портал после этой страницы показывал свой замок «Вход: … личный пароль портала» (быстрого входа на новом
   //   устройстве ещё нет). Теперь быстрый вход (Face ID, где есть, иначе код из 4 цифр — на цифровой клавиатуре) включается здесь же,
   //   паролем, который только что ввели; портал после входа замок не показывает (отметка активности — сейчас).
-  var QST = null;
   // 15.11.2026, Т. В.: «убери пока Face ID, оставь на усмотрение пользователя — включить или отключить; по умолчанию его нет». После входа
   //   паролем — сразу на портал, без предложения Face ID / кода; включает их сам человек: «Профиль» → «Пароль приложения». Портал после этой
   //   страницы второй раз пароль не спрашивает (отметка активности — сейчас).
@@ -315,7 +316,7 @@ window.T14Lite = (function () {
     try { var n = String(Date.now()); localStorage.setItem('t14.lact', n); localStorage.setItem('t14.linp', n); localStorage.removeItem('t14.locked'); } catch (e) { }
     return Promise.resolve();
   }
-  run(forms.fp, function () { var l = $('lg').value, p = $('lp').value; return A.signIn(l, p).then(function (raw) { return quick(l, p).then(function () { return raw; }); }); }, 'Проверяю…');
+  run(forms.fp, function () { var l = $('lg').value, p = $('lp').value; return A.signIn(l, p).then(function (raw) { return quick().then(function () { return raw; }); }); }, 'Проверяю…');
   run(forms.fr, function () {
     var o = { name: $('rn').value, login: $('rl').value, pw: $('rp').value, shared: $('rs').value };
     if (o.name.trim().length < 3 || !/^[a-zA-Z0-9._-]{3,30}$/.test(o.login.trim())) throw new Error('Укажите имя и логин латиницей (3–30 знаков).');

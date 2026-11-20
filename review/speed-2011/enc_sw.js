@@ -32,11 +32,14 @@ async function decrypt(key, buf) {
   const iv = new Uint8Array(buf, 0, 12), ct = new Uint8Array(buf, 12);
   return unz(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct));
 }
-// 20.11.2026: текст сжат перед шифрованием (b'Z1' + raw deflate, build_enc.zpack) — распаковка встроенным DecompressionStream
+// 20.11.2026: текст сжат перед шифрованием (MAGIC 00 5A 31 00 + zlib, build_enc.zpack) — распаковка встроенным DecompressionStream('deflate')
+const HAS_DS = (() => { try { new DecompressionStream('deflate'); return true; } catch (e) { return false; } })();
 async function unz(ab) {
   const u = new Uint8Array(ab);
-  if (u.length < 2 || u[0] !== 0x5A || u[1] !== 0x31) return ab;
-  return new Response(new Blob([u.subarray(2)]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+  if (u.length < 4 || u[0] !== 0 || u[1] !== 0x5A || u[2] !== 0x31 || u[3] !== 0) return ab;
+  if (!HAS_DS) throw new Error('Браузер не умеет распаковывать файлы портала — обновите iOS/браузер.');
+  try { return await new Response(new Blob([u.subarray(4)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer(); }
+  catch (e) { throw new Error('Файл портала повреждён при загрузке — откройте страницу ещё раз.'); }
 }
 // 15.11.2026: доступ по группам — k/<id>.bin = 32 байта ключа сайта, дальше JSON {набор групп: ключ hex} (без групп — только ключ сайта)
 async function keyring() {                       // the personal keyring of this device: {key, sets} or null
@@ -80,7 +83,7 @@ async function precache(st, report, prev, until) {  // prev: the map of the vers
   let done = 0;
   const N = until ? 2 : 6;                         // 20.11.2026, Т. В. «на 1–2 Мбит/с должно летать»: фоном — по 2 файла и только пока человек ничего не открывает
   for (let i = 0; i < pre.length; i += N) {
-    if (until) { while (Date.now() - LAST_REQ < 4000) { if (Date.now() > until) { full = true; break; } await new Promise(r => setTimeout(r, 500)); } }
+    if (until) { while (Date.now() - LAST_REQ < 4000 && Date.now() <= until) await new Promise(r => setTimeout(r, 500)); if (Date.now() > until) { full = true; break; } }
     await Promise.all(pre.slice(i, i + N).map(async p => {
       if (until && Date.now() > until) full = true;
       if (!full && !(await c.match(BASE + p))) {
@@ -134,7 +137,7 @@ function fillLater(e) {                            // докачать сайт 
   if (Date.now() - FILLED < 120000) return; FILLED = Date.now();
   const cn = self.navigator && self.navigator.connection;   // экономия трафика или 2G/3G — фоном не качаем вовсе, только то, что открыли
   if (cn && (cn.saveData || /(^|-)2g|3g/.test(cn.effectiveType || ''))) return;
-  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 6000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 25000); } catch (x) { /* в другой раз */ } })());
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000); } catch (x) { /* в другой раз */ } })());
 }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
@@ -143,6 +146,7 @@ self.addEventListener('activate', e => {
   })());
 });
 self.addEventListener('message', e => {
+  if (!e.source || (e.origin && e.origin !== self.location.origin)) return;   // 20.11.2026 (CodeQL js/missing-origin-check): только свои страницы
   const d = e.data || {}, src = e.source;
   if (d.type === 'unlock') e.waitUntil((async () => {
     try {
@@ -156,7 +160,7 @@ self.addEventListener('message', e => {
       // ключи наборов групп — тоже в сообщении (Safari не даёт Service Worker'у ключи, записанные страницей)
       if (d.sets && typeof d.sets === 'object') {
         const sets = {};
-        for (const s in d.sets) if (/^[0-9a-f]{64}$/.test(d.sets[s])) sets[s] = await crypto.subtle.importKey('raw', new Uint8Array(d.sets[s].match(/../g).map(h => parseInt(h, 16))), 'AES-GCM', false, ['decrypt']);
+        for (const s of Object.keys(d.sets)) if (/^[A-Za-z0-9_-]{1,64}$/.test(s) && s !== '__proto__' && s !== 'constructor' && s !== 'prototype' && /^[0-9a-f]{64}$/.test(d.sets[s])) sets[s] = await crypto.subtle.importKey('raw', new Uint8Array(d.sets[s].match(/../g).map(h => parseInt(h, 16))), 'AES-GCM', false, ['decrypt']);
         await kvSet('sets', sets);
       }
       const map = await loadMap(key), prev = await kvGet('map');
