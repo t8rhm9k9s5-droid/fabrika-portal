@@ -12,8 +12,14 @@ def _wr(p, t):
     with open(p, 'w', encoding='utf-8') as f: f.write(t)
 def _jl(p): return json.loads(_rd(p))
 def _jd(o, p, **kw): _wr(p, json.dumps(o, **kw))
-SRC = sys.argv[1]; M = os.path.join(SRC, 'm'); OUT = '/home/claude/build/fsu'
+SRC = sys.argv[1]; M = os.path.join(SRC, 'm'); FINAL = '/home/claude/build/fsu'; OUT = FINAL + '.new'
+# 20.11.2026 (Рекс): сначала проверить входы, собрать рядом (fsu.new) и только целую сборку поставить на место старой
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_need = [M, os.path.join(SRC, 'shell.html'), os.path.join(M, '_api')] + [os.path.join(_HERE, f) for f in ('fsu_shim.js', 'fsu_back.html', 'podbor.html', 'podbor.json', 'dims_extra.json', 'fsu_img.py')]
+_miss = [x for x in _need if not os.path.exists(x)]
+if _miss: sys.exit('нет входных файлов: ' + ', '.join(_miss))
 st = _jl(os.path.join(SRC, sys.argv[2] if len(sys.argv) > 2 else 'state3.json'))
+if not (isinstance(st, dict) and st.get('api') and st.get('seen')): sys.exit('state: нет api/seen — обход неполный')
 shutil.rmtree(OUT, ignore_errors=True); os.makedirs(OUT)
 P = '/fsu/'
 def rw(t):   # абсолютные пути сайта → под /fsu/
@@ -74,7 +80,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fsu_img
 def _job(a):
     try: return a[2], fsu_img.process(*a)
-    except Exception as e:
+    except Exception:
         shutil.copy2(a[0], a[1]); n = os.path.getsize(a[0]); return a[2], (n, n, None)
 IMAP = {}
 with MP.Pool(int(os.environ.get('FSU_PROC', '4'))) as pool:
@@ -106,5 +112,9 @@ if os.path.isdir(os.path.join(HERE, 'info')):
     shutil.copytree(os.path.join(HERE, 'info'), os.path.join(OUT, 'info'), copy_function=os.link)
     shutil.copy2(os.path.join(HERE, 'info.json'), os.path.join(OUT, 'info.json'))
 rep['api'] = len(amap); rep['pages'] = len(st['seen'])
+_bad = [f for f in ('index.html', 'podbor.html', '_img.json') if not os.path.getsize(os.path.join(OUT, f))]
+if _bad or not rep['img'] or not amap: sys.exit('сборка неполная, старая оставлена: ' + json.dumps({'empty': _bad, 'img': rep['img'], 'api': len(amap)}))
+if os.path.exists(FINAL): os.rename(FINAL, FINAL + '.old')
+os.rename(OUT, FINAL); shutil.rmtree(FINAL + '.old', ignore_errors=True)
 _jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))

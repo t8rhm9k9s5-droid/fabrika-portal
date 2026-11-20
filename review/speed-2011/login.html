@@ -237,8 +237,9 @@ window.T14Lite = (function () {
         return Promise.resolve(rg.update && rg.update()).catch(function () { }).then(function () {
           var w = rg.installing || rg.waiting; if (!w) return navigator.serviceWorker.ready;
           return new Promise(function (ok) {
-            var t = setTimeout(ok, 20000);
-            w.addEventListener('statechange', function () { if (w.state === 'activated' || w.state === 'redundant') { clearTimeout(t); ok(); } });
+            function sc() { if (w.state === 'activated' || w.state === 'redundant') { clearTimeout(t); w.removeEventListener('statechange', sc); ok(); } }
+            var t = setTimeout(function () { w.removeEventListener('statechange', sc); ok(); }, 20000);
+            w.addEventListener('statechange', sc);
           }).then(function () { return navigator.serviceWorker.ready; });
         });
       });
@@ -247,17 +248,21 @@ window.T14Lite = (function () {
       var R = null;   // сначала встаёт новейший Service Worker (без ключа — быстро), потом ключ и сохранение сайта
       return newest().then(function (r) { R = r; return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); })
         .then(function (k) { return put('key', k); }).then(function () { var r = R;
-          btn.textContent = 'Сохраняю сайт на устройстве…'; bar.hidden = false;
+          btn.textContent = 'Открываю портал…'; bar.hidden = false;
           var sw = r.active || navigator.serviceWorker.controller;
           if (!sw) throw new Error('Service Worker не запустился');
           return new Promise(function (ok, bad) {
-            var t = setTimeout(function () { bad(new Error('Сайт долго не отвечает')); }, 90000);
-            navigator.serviceWorker.addEventListener('message', function (e) {
+            // 20.11.2026 (Рекс, CG-50): один слушатель на попытку, снимается по ответу — повторные входы не копят обработчики
+            function end(f, x) { clearTimeout(t); navigator.serviceWorker.removeEventListener('message', on); f(x); }
+            var t = setTimeout(function () { end(bad, new Error('Сайт долго не отвечает')); }, 45000);
+            function on(e) {
+              if (e.source && e.source !== sw && e.source !== navigator.serviceWorker.controller) return;   // только ответ своего Service Worker'а
               var d = e.data || {};
               if (d.type === 'progress') { bi.style.width = Math.round(d.n / d.all * 100) + '%'; btn.textContent = 'Сохраняю сайт на устройстве: ' + d.n + ' из ' + d.all; }
-              if (d.type === 'unlocked') { clearTimeout(t); ok(); }
-              if (d.type === 'error') { clearTimeout(t); bad(new Error(d.text)); }
-            });
+              if (d.type === 'unlocked') end(ok);
+              if (d.type === 'error') end(bad, new Error(d.text));
+            }
+            navigator.serviceWorker.addEventListener('message', on);
             sw.postMessage({ type: 'unlock', raw: raw, sets: (A && A._kr) || null });   // 15.11.2026: ключ — и в сообщении (Safari: «Argument 2 ('key')…»)
           });
         });

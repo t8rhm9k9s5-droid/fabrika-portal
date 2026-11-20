@@ -44,12 +44,19 @@
   }
   function glData() {
     if (!glOk()) return null;
-    if (GLC === undefined) { GLC = null; try { GLC = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); } catch (e) { } }
-    if (!GLQ) {
-      GLQ = true;
-      T14Acct.api('gl', { tok: T14Acct.tok(), fresh: 0 }).then(function (r) {
-        if (!r || !r.gl) return; GLC = glSum(r.gl); try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
-      }, function () { });
+    // 16.11.2026, проверка Рекса (PR №2, п. 2 / №24): сводка «Транспорта» — только своего входа; ответ, пришедший после выхода или смены входа, не пишется
+    var uid = (T14Acct.me() || {}).id, tk = T14Acct.tok();
+    if (GLC === undefined || (GLC && GLC.u !== uid)) { GLC = null; try { var c = JSON.parse(localStorage.getItem('t14.glsum') || 'null'); if (c && c.u === uid) GLC = c; } catch (e) { } }
+    // 16.11 (Рекс, CG-32 п. 2): GLQ — ключ входа (id + tok): новый вход делает свой запрос; сбой или пустой ответ — повтор не раньше чем через 60 с
+    var qk = uid + '|' + tk;
+    if (GLQ !== qk && !(GLQ && GLQ.err === qk && Date.now() - GLQ.t < 60e3)) {
+      GLQ = qk;
+      var fail = function () { if (GLQ === qk) GLQ = { err: qk, t: Date.now() }; };
+      T14Acct.api('gl', { tok: tk, fresh: 0 }).then(function (r) {   // один запрос на вход (again() перерисовывает — повторного запроса нет)
+        if (T14Acct.tok() !== tk || (T14Acct.me() || {}).id !== uid) return;   // ответ чужого (прошлого) входа не пишем
+        if (!r || !r.gl) return fail();
+        GLC = glSum(r.gl); GLC.u = uid; try { localStorage.setItem('t14.glsum', JSON.stringify(GLC)); } catch (e) { } again();
+      }, fail);
     }
     return GLC;
   }
@@ -68,11 +75,11 @@
       var P = ST.planm || {}, T = P.tot || {}, S = bin('sales.bin'), Ld = bin('leads.bin'), SD = salesDays(S), ld = lastDay(SD), NC = ST.newcl || {};
       var ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null, td = MSK(), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null;
       var SH = ST.ship || {};
-      var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на дату надо ' + mln(T.need) : 'нет данных', T.pct, 'sales.html#planm'),
+      var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? d1(T.pct) + ' % от плана месяца: ' + mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на ' + ((P.asof || T.asof) ? (P.asof || T.asof).slice(8, 10) + '.' + (P.asof || T.asof).slice(5, 7) : 'дату') + ' надо ' + mln(T.need) : 'нет данных', T.pct, 'sales.html#planm'),
         K('Продажи за день', C.b, ld ? d1(ld[1].types.tot[1] / 1e6) : '—', 'млн ₽', ld ? dd(ld[0]) + ' · ' + n(ld[1].types.tot[0]) + ' шт' : 'данные робота ещё не пришли', null, 'sales.html#s-s1c'),
         K('Отчёты офисов', C.g, rep != null ? rep : '—', ops ? 'из ' + ops.length : '', ops ? 'сдали вечерний отчёт сегодня' : 'данные робота ещё не пришли', ops && ops.length ? Math.round(rep / ops.length * 100) : null, 'sales.html#s-days-' + td),
         K('Лиды выставок', C.v, Ld && Ld.tot ? n(Ld.tot.done) : '—', Ld && Ld.tot ? 'из ' + n(Ld.tot.rows) : '', Ld && Ld.tot ? 'отмечено ' + Math.round(Ld.tot.done / Ld.tot.rows * 100) + ' % · сверка 20.11' : 'робот собирает раз в час', Ld && Ld.tot ? Ld.tot.done / Ld.tot.rows * 100 : null, 'sales.html#leads'),
-        K('Сотрудник5 клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
+        K('Сотрудник6 клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
         K('Отгрузка недели', C.r, SH.tot && SH.tot.s ? d1(SH.tot.s / 1e6) : '—', 'млн ₽', SH.from ? n(SH.tot.q) + ' шт · ' + dd(SH.from) + '–' + dd(SH.to) : 'график отгрузки 1С', null, 'sales.html#ship')];   // 13.11.2026: отгрузки — в продажах
       var D = SD && SD.days, ym = MSK().slice(0, 7), days = D ? Object.keys(D).filter(function (x) { return x.slice(0, 7) === ym && D[x].types && D[x].types.tot && D[x].types.tot[1] > 1e5 && D[x].types.tot[1] < 6e7; }).sort().slice(-12) : [];
       var b1 = ['Продажи по дням — ' + ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'][+ym.slice(5) - 1], 'млн ₽ · рассылки 1С «Продажи по номенклатурным группам»', 'bars',
@@ -104,7 +111,7 @@
       var k = [K('Рекламации', C.r, R.all != null ? n(R.all) : '—', 'открыто', R.all_sum ? 'на ' + mln(R.all_sum) + ' млн ₽ · ' + (R.date ? 'на ' + dd(R.date) : '') : 'реестр 1С', null, 'sales.html#s-recl'),
         K('Старше 30 дней', C.o, R.old30 != null ? n(R.old30) : '—', 'шт', R.age_med ? 'медиана ' + R.age_med + ' дн.' : '', R.all ? R.old30 / R.all * 100 : null, 'sales.html#s-recl'),
         K('Старше 90 дней', C.r, R.old90 != null ? n(R.old90) : '—', 'шт', 'нужно закрыть в первую очередь', R.all ? R.old90 / R.all * 100 : null, 'sales.html#s-recl'),
-        K('Сотрудник5 за месяц', C.y, R.n != null ? n(R.n) : '—', 'шт', R.sum ? 'ущерб ' + n(R.sum) + ' ₽' : '', null, 'sales.html#s-recl'),
+        K('Сотрудник6 за месяц', C.y, R.n != null ? n(R.n) : '—', 'шт', R.sum ? 'ущерб ' + n(R.sum) + ' ₽' : '', null, 'sales.html#s-recl'),
         K('Отзывы — оценка', C.g, X.avg != null ? d1(X.avg) : '—', '★', X.n ? n(X.n) + ' отзывов · не обработано ' + n(X.unproc) : 'выгрузка кабинетов', X.avg ? X.avg / 5 * 100 : null, 'sales.html#rev'),
         K('Плохие без ответа', C.r, X.neg_unproc != null ? X.neg_unproc : '—', 'шт', X.neg != null ? 'плохих всего ' + X.neg + (X.oldest_neg_unproc ? ' · самый ранний ' + dd(X.oldest_neg_unproc) : '') : '', null, 'sales.html#rev')];
       var b1 = ['Рекламации по возрасту', 'шт · реестр рекламаций 1С', 'bars', R.all != null ? [['до 30 дн.', R.all - R.old30, n(R.all - R.old30)], ['30–90 дн.', R.old30 - R.old90, n(R.old30 - R.old90)], ['больше 90', R.old90, n(R.old90)]] : []];
@@ -116,7 +123,7 @@
       var t = A.tot || [], b = A.brak || [];
       var k = [K('Остатки всех складов', C.o, A.v != null ? n(A.v) : '—', 'шт', A.date ? 'на ' + dd(A.date) : 'отчёт 1С', null, 'stock.html#s-whs'),
         K('Рязань', C.b, A.rz != null ? n(A.rz) : '—', 'шт', R.rub ? 'ГП Рязань ' + mln(R.rub) + ' млн ₽' : '', A.v ? A.rz / A.v * 100 : null, 'stock.html#s-whs'),
-        K('Офисы продаж', C.g, A.op != null ? n(A.op) : '—', 'шт', 'остатки складов офисов', A.v ? A.op / A.v * 100 : null, 'stores.html'),
+        K('Имя2 продаж', C.g, A.op != null ? n(A.op) : '—', 'шт', 'остатки складов офисов', A.v ? A.op / A.v * 100 : null, 'stores.html'),
         K('Брак на складах', C.r, b.length ? n(b[b.length - 1]) : '—', 'шт', b.length ? 'на начало месяца ' + n(b[0]) : '', null, 'stock.html#brak'),
         K('Минусовые остатки', C.y, R.neg ? R.neg.length : '—', 'позиций', R.neg && R.neg[0] ? R.neg[0][0] + ' ' + R.neg[0][2] : '', null, 'stock.html#s-mis'),
         K('Заявки ОМТС', C.v, O.v != null ? n(O.v) : '—', O.v != null ? 'в просрочке' : '', O.fail ? 'данные снабжения ещё не пришли' : (O.card || ''), null, 'omts.html#s-hist')];
@@ -199,7 +206,7 @@
       var days = S && S.days ? S.days.slice(-10) : [];
       var k = [K('Людей в структуре', C.o, Pp.n || '—', '', 'оргструктура портала', null, 'sales.html#struct'),
         K('Контактов', C.b, Pp.contacts || '—', '', 'справочник «Кому звонить»', null, 'calls.html#s-all'),
-        K('Офисов продаж', C.g, ops.length || '—', '', 'с вечерними отчётами', null, 'sales.html#s-days'),
+        K('Имя2 продаж', C.g, ops.length || '—', '', 'с вечерними отчётами', null, 'sales.html#s-days'),
         K('Отчёты сегодня', C.v, ops.length ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : '—', ops.length ? 'из ' + ops.length : '', 'вечерние отчёты офисов', null, 'sales.html#s-days-' + td),
         K('Поручения открыты', C.y, cp ? cp.open : '—', '', cp ? 'всего ' + cp.n : 'данные робота ещё не пришли', null, 'poruch.html'),
         K('Поручения просрочены', C.r, cp ? cp.late : '—', '', cp && cp.open ? Math.round(cp.late / cp.open * 100) + ' % открытых' : '', cp && cp.open ? cp.late / cp.open * 100 : null, 'poruch.html')];
@@ -211,7 +218,7 @@
       var Dd = ST.docs || {}, cats = Dd.cats || [], mx = cats.length ? cats[0][1] : 1;
       var NM = { regs: 'Регламенты', dog: 'Договоры', marketing: 'Имя4', reports: 'Отчёты и сводки', prices: 'Прайсы', catalogs: 'Каталоги', memo: 'Служебные записки', other: 'Прочее', cards: 'Карточки предприятий', hr: 'Кадры', forms: 'Бланки', econ: 'Экономика', recl: 'Рекламации', certs: 'Сертификаты', brand: 'Фирменный стиль', kp: 'КП' };
       var k = [K('Документов', C.o, Dd.n || '—', '', 'в разделе «Документы»', null, 'library.html'),
-        K('Сотрудник5 сегодня', C.y, Dd.today != null ? Dd.today : '—', '', 'подсвечены до полуночи', null, 'library.html'),
+        K('Сотрудник6 сегодня', C.y, Dd.today != null ? Dd.today : '—', '', 'подсвечены до полуночи', null, 'library.html'),
         K('Договоров', C.b, Dd.dog || '—', '', 'типовые и действующие', null, 'library.html#dog'),
         K('Регламентов', C.v, Dd.regs || '—', '', 'инструкции и положения', null, 'library.html#regs'),
         K('Категорий', C.g, cats.length || '—', '', 'договоры, отчёты, прайсы…', null, 'library.html'),

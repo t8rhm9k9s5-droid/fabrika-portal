@@ -19,16 +19,10 @@ A = []
 sp = sorted(glob.glob(B + '/ship_plan/2*.json'))
 if len(sp) > 1:
     a, b = J(sp[-1]) or {}, J(sp[-2]) or {}
-    def ords(P):
-        o = {}
-        for d in P.get('days', []):
-            for c in d.get('clients', []):
-                for x in c.get('orders', []): o[x['no']] = o.get(x['no'], 0) + (x.get('s') or 0)
-        return o
-    oa, ob = ords(a), ords(b)
-    car = [k for k in oa if k in ob]
+    import ship_carry   # 20.11.2026: перенос — по позициям, один расчёт с карточкой «Продажи» (ship_carry.py)
+    _cr = ship_carry.carry(a, b); car = _cr['orders']
     S = (a.get('total') or {}).get('s') or 0
-    cs = sum(oa[k] for k in car)
+    cs = _cr['s']
     p = 100.0 * cs / S if S else 0
     R = RULES['carry']
     if p >= R['warn']:
@@ -36,11 +30,11 @@ if len(sp) > 1:
                  
                   'href': 'sales.html#ship', 'card': 'sales.html#ship', 'ic': 'omts', 'v': pct(p) + ' %',
                   't': pct(p) + ' % недели — перенос с прошлой', 'short': 'перенос с прошлой недели',
-                  's': '%d %s на %s млн ₽ из графика %s–%s не отгружены и снова стоят в графике %s–%s' % (
+                  's': '%d %s на %s млн ₽ из графика %s–%s не отгружены и снова стоят в графике %s–%s (те же позиции)' % (
                       len(car), 'заказ' if len(car) % 10 == 1 and len(car) % 100 != 11 else ('заказа' if 2 <= len(car) % 10 <= 4 and not 12 <= len(car) % 100 <= 14 else 'заказов'),
                       mln(cs), dm(b.get('from')), dm(b.get('to')), dm(a.get('from')), dm(a.get('to'))),
                   'rule': 'тревога от %s %%, критично от %s %% графика недели' % (pct(R['warn']), pct(R['crit'])), 'since': a.get('from')})
-# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник20, build/sales_plan_mgr/<ГГГГ-ММ>.json)
+# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник8, build/sales_plan_mgr/<ГГГГ-ММ>.json)
 pm = sorted(glob.glob(B + '/sales_plan_mgr/2*.json'))
 if pm:
     x = J(pm[-1]) or {}; T = x.get('total') or {}
@@ -49,7 +43,7 @@ if pm:
         if r < R['warn']:
             A.append({'id': 'plan-' + (x.get('asof') or ''), 'lvl': 'crit' if r < R['crit'] else 'warn', 'cat': 'Продажи', 'secs': ['sales'],
                       'href': 'sales.html#planm', 'card': 'sales.html#planm', 'ic': 'sales', 'v': '−' + mln(abs(T.get('diff') or 0)) + ' млн',
-                      't': 'План продаж на дату: ' + pct(r) + ' %', 'short': 'план продаж на дату', 'kpi': 'plan',
+                      't': 'От плана на сегодня: ' + pct(r) + ' %', 'short': 'план продаж на дату', 'kpi': 'plan',
                       's': '%s из %s млн ₽, которые должны быть на %s (%s из %s раб. дн.) · план месяца %s млн ₽' % (
                           mln(T.get('fact') or 0), mln(T['need']), dm(x.get('asof')), x.get('wd_passed'), x.get('wd_month'), mln(T.get('plan') or 0)),
                       'rule': 'внимание ниже %s %%, критично ниже %s %% плана на дату' % (pct(R['warn']), pct(R['crit'])), 'since': x.get('asof')})

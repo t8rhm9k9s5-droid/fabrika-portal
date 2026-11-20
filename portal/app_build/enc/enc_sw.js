@@ -72,8 +72,10 @@ async function precache(st, report, prev, until) {  // prev: the map of the vers
   const c = await caches.open(CORE), pre = st.map.pre.filter(p => st.map.files[p] && fkey(st, st.map.files[p]));   // разделы чужих групп на телефон не сохраняются
   const olds = prev && prev.files ? await Promise.all((await caches.keys()).filter(k => k.startsWith('t14-core-') && k !== CORE).map(k => caches.open(k))) : [];
   let done = 0;
-  for (let i = 0; i < pre.length; i += 6) {
-    await Promise.all(pre.slice(i, i + 6).map(async p => {
+  const N = until ? 2 : 6;                         // 20.11.2026, срочно (Т. В.: «плохо грузится, не могу запустить»): фоном — по 2 файла и только пока страница ничего не просит
+  for (let i = 0; i < pre.length; i += N) {
+    if (until) { while (Date.now() - LAST_REQ < 4000 && Date.now() <= until) await new Promise(r => setTimeout(r, 500)); if (Date.now() > until) { full = true; break; } }
+    await Promise.all(pre.slice(i, i + N).map(async p => {
       if (until && Date.now() > until) full = true;
       if (!full && !(await c.match(BASE + p))) {
         let r = null;
@@ -117,14 +119,14 @@ self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
     try { await pub(); } catch (e0) { try { for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
-    try { await refresh(Date.now() + 20000); } catch (err) { /* ключ и карта остаются прежними */ }
+    try { await refresh(Date.now() + 8000); } catch (err) { /* ключ и карта остаются прежними */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
     await self.skipWaiting();
   })());
 });
-let FILLED = 0;
+let FILLED = 0, LAST_REQ = 0;   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
 function fillLater(e) {                            // докачать сайт в кэш фоном, понемногу: не чаще раза в 2 минуты, не дольше 25 с за раз
   if (Date.now() - FILLED < 120000) return; FILLED = Date.now();
-  e.waitUntil((async () => { try { const st = await state(); if (st) await precache(st, null, null, Date.now() + 25000); } catch (x) { /* в другой раз */ } })());
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000); } catch (x) { /* в другой раз */ } })());
 }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
@@ -151,7 +153,7 @@ self.addEventListener('message', e => {
       }
       const map = await loadMap(key), prev = await kvGet('map');
       const next = { key, map, docs: new Set(map.docs), sets: (await kvGet('sets')) || {} };
-      const pc = await precache(next, (n, all) => src && src.postMessage({ type: 'progress', n, all }), prev, Date.now() + 40000);
+      const pc = await precache(next, (n, all) => src && src.postMessage({ type: 'progress', n, all }), prev, Date.now() + 5000);   // 20.11.2026 (Т. В.: «не могу запустить»): вход не ждёт сохранения сайта — не дольше 5 с, остальное фоном (fillLater), чего нет в кэше — с хостинга
       await kvSet('map', map); ST = next;
       src && src.postMessage({ type: 'unlocked', partial: !!(pc && pc.partial) });
     } catch (err) { src && src.postMessage({ type: 'error', text: String(err && err.message || err) }); }
@@ -173,6 +175,7 @@ self.addEventListener('fetch', e => {
   if (u.origin !== self.location.origin) return;
   const p = relPath(u);
   if (p === null || isPublic(p)) return;
+  LAST_REQ = Date.now();
   e.respondWith(serve(p, req));
   if (req.mode === 'navigate') fillLater(e);
 });

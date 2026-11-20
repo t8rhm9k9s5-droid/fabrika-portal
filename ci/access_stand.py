@@ -24,7 +24,9 @@ def seal(K, pub_b64):
 
 
 def main(d):
-    d = pathlib.Path(d); shutil.rmtree(d, ignore_errors=True); src = d / 'src'; src.mkdir(parents=True)
+    d = pathlib.Path(d)
+    if os.environ.get('T14_STAND_KEEP') and (d / 'users.json').exists(): return rebuild(d)   # тот же стенд, новая сборка (старый SW → новый)
+    shutil.rmtree(d, ignore_errors=True); src = d / 'src'; src.mkdir(parents=True)
     P = pathlib.Path(A + '/pwa/terekhina14')
     for f in ['sw.js', 'manifest.webmanifest'] + PAGES: shutil.copy(P / f, src / f)
     for sub in ('icons', 'assets'): shutil.copytree(P / sub, src / sub)
@@ -37,12 +39,23 @@ def main(d):
     pathlib.Path(d / 'keyring.json').write_text(json.dumps({'ok': True, 'now': int(time.time() * 1000), 'rev': 0, 'shared': True, 'users': kr}))
     pathlib.Path(d / 'people.json').write_text(json.dumps(people))
     env = dict(os.environ, T14_ENC_SRC=str(src), T14_ENC_SECRET=str(d / 'enc_secret.json'), T14_KEYRING=str(d / 'keyring.json'), T14_ACCESS='1',
-               T14_ACCESS_PEOPLE=str(d / 'people.json'), T14_ACCT_URL='https://example.invalid/acct')
-    r = subprocess.run(['python3', A + '/build_enc.py', '--base', '/', '--out', str(d / 'out')], env=env, capture_output=True, text=True)
+               T14_ACCESS_PEOPLE=str(d / 'people.json'), T14_ACCT_URL='https://example.invalid/acct', PYTHONPATH=A)
+    r = subprocess.run(['python3', os.environ.get('T14_BUILD_ENC', A + '/build_enc.py'),   # 20.11.2026: проверка кандидата сборки (work/speed2011)
+                     '--base', '/', '--out', str(d / 'out')], env=env, capture_output=True, text=True)
     print(r.stdout[-1200:], r.stderr[-1200:])
     if r.returncode: sys.exit('build_enc: ошибка')
     pathlib.Path(d / 'users.json').write_text(json.dumps(users))
     print('stand ok:', d)
+
+
+
+def rebuild(d):
+    env = dict(os.environ, T14_ENC_SRC=str(d / 'src'), T14_ENC_SECRET=str(d / 'enc_secret.json'), T14_KEYRING=str(d / 'keyring.json'), T14_ACCESS='1',
+               T14_ACCESS_PEOPLE=str(d / 'people.json'), T14_ACCT_URL='https://example.invalid/acct', PYTHONPATH=A)
+    r = subprocess.run(['python3', os.environ.get('T14_BUILD_ENC', A + '/build_enc.py'), '--base', '/', '--out', str(d / 'out')], env=env, capture_output=True, text=True)
+    print(r.stdout[-600:], r.stderr[-600:])
+    if r.returncode: sys.exit('build_enc: ошибка')
+    print('stand rebuilt:', d)
 
 
 if __name__ == '__main__': main(sys.argv[1] if len(sys.argv) > 1 else '/tmp/t14_access_stand')

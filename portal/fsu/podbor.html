@@ -44,6 +44,7 @@ h1{font:500 clamp(22px,3.4vw,34px)/1.15 ALSGorizont,system-ui,sans-serif;margin:
 .ct{padding:12px 14px 14px}.ct b{display:block;font:500 16px/1.2 ALSGorizont,system-ui,sans-serif;margin:0 0 4px}
 .k{font-size:13px;color:var(--mut)}.dm{font-size:14px;margin-top:6px}.tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.tg span{font-size:12px;background:#fff;border-radius:10px;padding:3px 8px;color:#333}
 .empty{padding:40px 0;color:var(--mut)}
+.more{grid-column:1/-1;justify-self:center;margin:8px 0 24px;padding:12px 22px;border-radius:12px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;cursor:pointer}.more:hover{background:rgba(127,127,127,.12)}.more:focus-visible{outline:2px solid;outline-offset:2px}
 .fbtn{display:none}
 @media (max-width:900px){.lay{grid-template-columns:1fr}.side{position:fixed;inset:auto 0 0 0;top:auto;max-height:78vh;background:#fff;z-index:40;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);padding:18px 16px calc(90px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .22s ease-out}
  .side.open{transform:none}.fbtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ink);background:#fff;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
@@ -85,39 +86,44 @@ function srcset(p){var k=p.replace(PF,'~').replace(/^\/fsu\//,''),v=IM[k];if(!v)
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 /* разбор фразы покупателя → свойства */
 var RX=[[/хром/,'f','Хром'],[/ч[её]рн/,'f','Чёрный'],[/бел/,'f','Белый'],[/дерев|массив|бук|под дерево/,'f','Дерево'],
- [/велюр|бархат/,'m','Велюр'],[/экокож|кожзам|искусств\w* кож/,'m','Экокожа'],[/натуральн\w* кож/,'m','Натуральная кожа'],[/(^|\s)кож/,'m','Экокожа'],[/рогожк/,'m','Рогожка'],[/ткан/,'m','Ткань'],[/сетк/,'m','Сетка'],[/букле/,'m','Букле'],
- [/(4|четыр\w*)\s*(ножк|ног)|на ножках|ножк/,'op','Ножки'],[/колес|колёс|ролик|крестовин|на колесах/,'op','На колёсиках'],[/полоз/,'op','Полозья'],[/вращ|поворот/,'op','Одна опора, вращается'],
- [/жестк|жёстк|пластиков\w* сид|деревянн\w* сид/,'soft','Жёсткое'],[/мягк/,'soft','Мягкое'],
+ [/велюр|бархат/,'m','Велюр'],[/экокож|кожзам|искусств[а-яa-z]* кож/,'m','Экокожа'],[/натуральн[а-яa-z]* кож/,'m','Натуральная кожа'],[/(^|\s)кож/,'m','Кожа?'],[/рогожк/,'m','Рогожка'],[/ткан/,'m','Ткань'],[/сетк/,'m','Сетка'],[/букле/,'m','Букле'],
+ [/(4|четыр[а-яa-z]*)\s*(ножк|ног)|на ножках|ножк/,'op','Ножки'],[/колес|колёс|ролик|крестовин|на колесах/,'op','На колёсиках'],[/полоз/,'op','Полозья'],[/вращ|поворот/,'op','Одна опора, вращается'],
+ [/жестк|жёстк|пластиков[а-яa-z]* сид|деревянн[а-яa-z]* сид/,'soft','Жёсткое'],[/мягк/,'soft','Мягкое'],
  [/с подлокотник/,'arm','Есть'],[/без подлокотник/,'arm','Нет'],
- [/диван/,'k','Диван'],[/барн|полубар|для стойки/,'k','Барный стул'],[/табурет/,'k','Табурет'],[/банкетк|скамь|кушетк/,'k','Банкетка / скамья'],[/пуф/,'k','Пуф'],[/компьют|рабоч|офисн\w* кресл|руководител/,'k','Рабочее кресло'],[/кресл\w* для отдых|в гостин|лаунж/,'k','Кресло для отдыха'],[/урн/,'k','Урна'],[/вешалк/,'k','Вешалка'],[/секци|зал\w* ожидан/,'k','Секции'],[/(^|\s)стул/,'k','Стул']];
-function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={};RX.forEach(function(r){if(r[0].test(t)){if(r[1]==='m'&&r[2]==='Экокожа'&&f.m&&f.m.indexOf('Натуральная кожа')>=0)return;(f[r[1]]=f[r[1]]||[]).indexOf(r[2])<0&&f[r[1]].push(r[2])}});
+ [/диван/,'k','Диван'],[/барн|полубар|для стойки/,'k','Барный стул'],[/табурет/,'k','Табурет'],[/банкетк|скамь|кушетк/,'k','Банкетка / скамья'],[/пуф/,'k','Пуф'],[/компьют|рабоч|офисн[а-яa-z]* кресл|руководител/,'k','Рабочее кресло'],[/кресл[а-яa-z]* для отдых|в гостин|лаунж/,'k','Кресло для отдыха'],[/урн/,'k','Урна'],[/вешалк/,'k','Вешалка'],[/секци|зал[а-яa-z]* ожидан/,'k','Секции'],[/(^|\s)стул/,'k','Стул']];
+function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={};RX.forEach(function(r){if(r[0].test(t)){(f[r[1]]=f[r[1]]||[]).indexOf(r[2])<0&&f[r[1]].push(r[2])}});
+ /* 20.11.2026 (Рекс): «кожа» без уточнения — обе; «натуральная кожа» — не экокожа; «барный стул» — без обычных стульев */
+ if(f.m){var q=f.m.indexOf('Кожа?');if(q>=0){f.m.splice(q,1);if(f.m.indexOf('Натуральная кожа')<0&&f.m.indexOf('Экокожа')<0)f.m.push('Экокожа','Натуральная кожа')}if(!f.m.length)delete f.m}
+ if(f.k&&f.k.length>1&&f.k.indexOf('Стул')>=0)f.k.splice(f.k.indexOf('Стул'),1);
  if(/кресл/.test(t)&&!f.k){f.k=/колес|колёс|компьют|рабоч|офис/.test(t)?['Рабочее кресло']:['Кресло для отдыха','Рабочее кресло']}
- var m=/(?:шир\w*|габарит\w*|размер\w*)?\s*(?:на|в|до|около)?\s*(\d+(?:[.,]\d+)?)\s*(м|метр\w*|см|мм)\b/.exec(t);
- if(/метр/.test(t)&&!m)m=[0,'1','м'];
- if(m){var v=parseFloat(String(m[1]).replace(',','.')),u=m[2];var mm=/^мм/.test(u)?v:/^см/.test(u)?v*10:v*1000;f._w=mm}
+ var m=/(до|не больше|не более|не шире|меньше|уже|от|больше|более|шире|не меньше|на|в|около)?\s*(\d+(?:[.,]\d+)?)\s*(мм|см|метр[а-я]*|м)(?![а-яa-z])/.exec(t);
+ if(!m&&/(^|\s)(в |на )?метр(?![а-я])|метровы/.test(t))m=[0,'','1','м'];
+ if(m){var v=parseFloat(String(m[2]).replace(',','.')),u=m[3];var mm=u==='мм'?v:u==='см'?v*10:v*1000;
+  if(mm>=30&&mm<=5000){f._w=Math.round(mm);var w=m[1]||'';if(/^(до|не больше|не более|не шире|меньше|уже)$/.test(w))f._wm='le';else if(/^(от|больше|более|шире|не меньше)$/.test(w))f._wm='ge'}}
  return f}
 function match(x,f){for(var i=0;i<G.length;i++){var g=G[i],sel=f[g[0]];if(!sel||!sel.length)continue;var vs=val(g,x);if(!sel.some(function(s){return vs.indexOf(s)>=0}))return false}
- if(f._w){if(!x.w)return false;var lo=f._w*0.85,hi=f._w*1.15;if(x.w<lo||x.w>hi)return false}
+ if(f._w){if(!x.w)return false;var lo=f._wm==='le'?0:f._w*(f._wm==='ge'?1:0.85),hi=f._wm==='ge'?1e9:f._w*(f._wm==='le'?1:1.15);if(x.w<lo||x.w>hi)return false}
  if(f._q){var n=(x.n+' '+x.k+' '+x.s).toLowerCase();if(f._q.some(function(w){return n.indexOf(w)<0}))return false}return true}
-function count(g,v){var f=JSON.parse(JSON.stringify(S));f[g[0]]=[v];return D.filter(function(x){return match(x,f)}).length}
-function side(){var h='';G.forEach(function(g){var all={};D.forEach(function(x){val(g,x).forEach(function(v){all[v]=1})});var ks=Object.keys(all);if(g[0]==='w')ks=['до 50 см','50–70 см','70–100 см','100–150 см','больше 150 см'].filter(function(v){return all[v]});if(g[0]==='seat')ks=['обычная (до 60 см)','полубарная (60–70 см)','барная (от 70 см)'].filter(function(v){return all[v]});
- h+='<div class="g"><h3>'+g[1]+'</h3><div class="chips">'+ks.map(function(v){var on=(S[g[0]]||[]).indexOf(v)>=0,c=count(g,v);return '<button type="button" class="chip" data-g="'+g[0]+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"'+(c||on?'':' disabled')+'>'+esc(v)+'<span class="n">'+c+'</span></button>'}).join('')+'</div></div>'});
- if(S._w)h='<div class="g"><h3>Ширина около</h3><div class="chips"><button type="button" class="chip" aria-pressed="true" data-g="_w">'+Math.round(S._w/10)+' см ±15 % ×</button></div></div>'+h;
+function counts(g){var f={};for(var k in S)if(k!==g[0])f[k]=S[k];var c={};D.forEach(function(x){if(match(x,f))val(g,x).forEach(function(v){c[v]=(c[v]||0)+1})});return c}
+function side(){var h='';G.forEach(function(g){var C=counts(g);var all={};D.forEach(function(x){val(g,x).forEach(function(v){all[v]=1})});var ks=Object.keys(all);if(g[0]==='w')ks=['до 50 см','50–70 см','70–100 см','100–150 см','больше 150 см'].filter(function(v){return all[v]});if(g[0]==='seat')ks=['обычная (до 60 см)','полубарная (60–70 см)','барная (от 70 см)'].filter(function(v){return all[v]});
+ h+='<div class="g"><h3>'+g[1]+'</h3><div class="chips">'+ks.map(function(v){var on=(S[g[0]]||[]).indexOf(v)>=0,c=C[v]||0;return '<button type="button" class="chip" data-g="'+g[0]+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"'+(c||on?'':' disabled')+'>'+esc(v)+'<span class="n">'+c+'</span></button>'}).join('')+'</div></div>'});
+ if(S._w)h='<div class="g"><h3>Ширина около</h3><div class="chips"><button type="button" class="chip" aria-pressed="true" data-g="_w">'+(S._wm==='le'?'до ':S._wm==='ge'?'от ':'')+Math.round(S._w/10)+' см'+(S._wm?'':' ±15 %')+' ×</button></div></div>'+h;
  document.getElementById('side').innerHTML=h}
 function card(x){var p=img(x.p),ss=p?srcset(p):'',dm=[x.w&&('Ш '+x.w),x.dp&&('Г '+x.dp),x.h&&('В '+x.h)].filter(Boolean).join(' × ');
  var tg=[].concat(val(G[2],x),val(G[4],x).slice(0,2),val(G[3],x).slice(0,1));
  return '<article class="card"><a href="/fsu'+esc(x.u)+'"><div class="ph">'+(p?'<img loading="lazy" decoding="async" alt="'+esc(x.n)+'" src="'+esc(p)+'"'+(ss?' srcset="'+esc(ss)+'" sizes="(max-width:900px) 46vw, 240px"':'')+'>':'')+'</div><div class="ct"><b>'+esc(x.n)+'</b><div class="k">'+esc(x.k)+'</div>'+(dm?'<div class="dm">'+dm+' мм</div>':'')+(tg.length?'<div class="tg">'+tg.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>':'')+'</div></a></article>'}
-function render(){var r=D.filter(function(x){return match(x,S)});
+var LIM=60;
+function render(keep){if(!keep)LIM=60;var r=D.filter(function(x){return match(x,S)});
  r.sort(function(a,b){return (b.p?1:0)-(a.p?1:0)});
  document.getElementById('cnt').textContent=r.length?('Подходит: '+r.length):'';
- document.getElementById('grid').innerHTML=r.length?r.slice(0,240).map(card).join(''):'<div class="empty">Ничего не нашлось. Уберите одно из свойств или измените размер.</div>';
- var a=[];Object.keys(S).forEach(function(k){if(k==='_w'||k==='_q')return;(S[k]||[]).forEach(function(v){a.push('<button type="button" class="chip" data-g="'+k+'" data-v="'+esc(v)+'" aria-pressed="true">'+esc(v)+' ×</button>')})});
+ document.getElementById('grid').innerHTML=r.length?r.slice(0,LIM).map(card).join('')+(r.length>LIM?'<button type="button" class="more" id="more">Показать ещё '+Math.min(60,r.length-LIM)+(r.length-LIM>60?' (осталось '+(r.length-LIM)+')':'')+'</button>':''):'<div class="empty">Ничего не нашлось. Уберите одно из свойств или измените размер.</div>';
+ var a=[];Object.keys(S).forEach(function(k){if(k.charAt(0)==='_')return;(S[k]||[]).forEach(function(v){a.push('<button type="button" class="chip" data-g="'+k+'" data-v="'+esc(v)+'" aria-pressed="true">'+esc(v)+' ×</button>')})});
  document.getElementById('act').innerHTML=a.join('');side();
  try{history.replaceState(null,'','#'+encodeURIComponent(JSON.stringify(S)))}catch(e){}}
-function toggle(g,v){if(g==='_w'){delete S._w}else{var a=S[g]=S[g]||[],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);if(!a.length)delete S[g]}render()}
-document.addEventListener('click',function(e){var c=e.target.closest('.chip[data-g]');if(c&&!c.disabled){toggle(c.dataset.g,c.dataset.v)}var h=e.target.closest('.hint button');if(h){document.getElementById('q').value=h.dataset.q;go()}});
+function toggle(g,v){if(g==='_w'){delete S._w;delete S._wm}else{var a=S[g]=S[g]||[],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);if(!a.length)delete S[g]}render()}
+document.addEventListener('click',function(e){if(e.target.id==='more'){LIM+=60;render(true);return}var c=e.target.closest('.chip[data-g]');if(c&&!c.disabled){toggle(c.dataset.g,c.dataset.v)}var h=e.target.closest('.hint button');if(h){document.getElementById('q').value=h.dataset.q;go()}});
 function go(){var t=document.getElementById('q').value.trim();var f=parse(t);S=f;
- var rest=t.toLowerCase().replace(/ё/g,'е').split(/\s+/).filter(function(w){return w.length>3&&!RX.some(function(r){return r[0].test(' '+w+' ')})&&!/^(шир|габар|разм|метр|мягк|для|на|с|без|под|около|ножк|ножках|хром|см|мм)/.test(w)&&D.some(function(x){return x.n.toLowerCase().indexOf(w)>=0})});
+ var rest=t.toLowerCase().replace(/ё/g,'е').split(/\s+/).filter(function(w){return w.length>3&&!RX.some(function(r){return r[0].test(' '+w+' ')})&&!/^(шир|габар|разм|метр|мягк|для|на|с|без|под|около|ножк|ножках|хром|см|мм|натур|искус|четыр|больш|более|меньш|кожи|кожа)/.test(w)&&!/\d/.test(w)&&D.some(function(x){return x.n.toLowerCase().indexOf(w)>=0})});
  if(rest.length)S._q=rest;render();if(innerWidth<=900)document.getElementById('grid').scrollIntoView({behavior:'smooth',block:'start'})}
 document.getElementById('qf').onsubmit=function(e){e.preventDefault();go()};
 document.getElementById('rst').onclick=function(){S={};document.getElementById('q').value='';render()};

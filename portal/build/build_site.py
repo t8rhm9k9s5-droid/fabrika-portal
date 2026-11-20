@@ -208,7 +208,7 @@ try:
                         for i in o.get('items', []): _it[i['n']] += i.get('s') or 0; _iq[i['n']] += i.get('q') or 0
             _T = _pl.get('total') or {}; _S = _T.get('s') or 1
             _oa, _ob = _ords(_pl), _ords(_pv)
-            _car = [k for k in _oa if k in _ob]
+            import ship_carry as _shc; _cr = _shc.carry(_pl, _pv)   # 20.11.2026: перенос — по позициям, один расчёт с тревогой (ship_carry.py)
             _int = sum(v for k, v in _cl.items() if _re2.match(r'(Имя2 продаж|Склад)', k))
             _exp = [k for k in _cl if _re2.search(r'\((Беларусь|Армения|Казахстан|Узбекистан|Кыргызстан|Киргизия|Таджикистан)', k)]
             _pl['an'] = {'s': _T.get('s'), 'q': _T.get('q'), 'avg': round((_T.get('s') or 0) / (_T.get('q') or 1)),
@@ -217,7 +217,7 @@ try:
                          'top5': round(100.0 * sum(v for k, v in _cl.most_common(5)) / _S, 1),
                          'top_it': [[k, round(v), int(_iq[k])] for k, v in _it.most_common(8)],
                          'must': [round(_mu[0]), _mu[1]], 'int': round(_int), 'exp': [[k, round(_cl[k])] for k in _exp],
-                         'car': [len(_car), round(sum(_oa[k][0] for k in _car))], 'new_cl': len(set(_cl) - {c['n'] for d in (_pv or {}).get('days', []) for c in d.get('clients', [])})}
+                         'car': [_cr['n'], _cr['s']], 'car_o': _cr['orders'][:12], 'new_cl': len(set(_cl) - {c['n'] for d in (_pv or {}).get('days', []) for c in d.get('clients', [])})}
         except Exception as _e2: print('аналитика плана отгрузки:', _e2)
         for _dd in _pl.get('days', []):
             for _c in _dd.get('clients', []):

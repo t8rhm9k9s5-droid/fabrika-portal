@@ -32,7 +32,8 @@ async function decrypt(key, buf) {
   const iv = new Uint8Array(buf, 0, 12), ct = new Uint8Array(buf, 12);
   return unz(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct));
 }
-// 20.11.2026: текст сжат перед шифрованием (MAGIC 00 5A 31 00 + zlib, build_enc.zpack) — распаковка встроенным DecompressionStream('deflate')
+// 20.11.2026: текст может быть сжат перед шифрованием (MAGIC 00 5A 31 00 + zlib, build_enc.zpack) — распаковка встроенным DecompressionStream('deflate').
+//   Выкладка в два шага (Рекс, CG-50): сначала эта версия Service Worker'а и входа (умеет оба формата, сайт ещё не сжат), потом — сжатие сайта.
 const HAS_DS = (() => { try { new DecompressionStream('deflate'); return true; } catch (e) { return false; } })();
 async function unz(ab) {
   const u = new Uint8Array(ab);
@@ -65,36 +66,63 @@ async function loadMap(key) {                     // the newest map from the hos
   if (!r.ok) throw new Error('m.bin ' + r.status);
   return JSON.parse(new TextDecoder().decode(await decrypt(key, await r.arrayBuffer())));
 }
-async function plain(st, p) {                     // decrypted response for a site path
+async function plain(st, p, signal) {                     // decrypted response for a site path
   const f = st.map.files[p], k = fkey(st, f);
   if (!k) throw new Error(p + ' — раздел другой группы');
-  const r = await fetch(BASE + 'b/' + f[0]);
+  const r = await fetch(BASE + 'b/' + f[0], signal ? { signal } : undefined);
   if (!r.ok) throw new Error(p + ' ' + r.status);
-  const body = await decrypt(k, await r.arrayBuffer());
-  return new Response(body, { status: 200, headers: { 'Content-Type': f[1], 'Content-Length': String(body.byteLength), 'X-T14-Blob': f[0] } });   // the blob name = the version of the file
+  const buf = await r.arrayBuffer(), body = await decrypt(k, buf);
+  return new Response(body, { status: 200, headers: { 'Content-Type': f[1], 'Content-Length': String(body.byteLength), 'X-T14-Blob': f[0], 'X-T14-Net': String(buf.byteLength) } });   // X-T14-Net — байт из сети (бюджет докачки)   // the blob name = the version of the file
 }
 // 15.11.2026 (облачный браузер Рекса: «Quota exceeded.» при входе): места в браузере мало — сохраняем, сколько влезает, вход не ломаем;
 //   остальные страницы расшифровываются с хостинга при открытии (serve0), как документы архива.
 const isQuota = e => !!e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || e)));
-async function precache(st, report, prev, until) {  // prev: the map of the version on the phone — its unchanged files are copied, not downloaded; until — не дольше этого времени
-  let full = false;
-  const c = await caches.open(CORE), pre = st.map.pre.filter(p => st.map.files[p] && fkey(st, st.map.files[p]));   // разделы чужих групп на телефон не сохраняются
-  const olds = prev && prev.files ? await Promise.all((await caches.keys()).filter(k => k.startsWith('t14-core-') && k !== CORE).map(k => caches.open(k))) : [];
-  let done = 0;
-  const N = until ? 2 : 6;                         // 20.11.2026, Т. В. «на 1–2 Мбит/с должно летать»: фоном — по 2 файла и только пока человек ничего не открывает
-  for (let i = 0; i < pre.length; i += N) {
-    if (until) { while (Date.now() - LAST_REQ < 4000 && Date.now() <= until) await new Promise(r => setTimeout(r, 500)); if (Date.now() > until) { full = true; break; } }
-    await Promise.all(pre.slice(i, i + N).map(async p => {
-      if (until && Date.now() > until) full = true;
-      if (!full && !(await c.match(BASE + p))) {
-        let r = null;
-        if (olds.length && prev.files[p] && prev.files[p][0] === st.map.files[p][0]) for (const oc of olds) { r = await oc.match(BASE + p); if (r) break; }
-        try { await c.put(BASE + p, r || await plain(st, p)); } catch (e) { if (isQuota(e)) full = true; else throw e; }
-      }
-      done++; if (report) report(done, pre.length);
-    }));
-  }
-  return { partial: full };
+// 20.11.2026 (Рекс, CG-50): сохранение сайта фоном — отменяемое (сроки и запросы страницы обрывают загрузку, а не ждут её), с бюджетом байт;
+//   файл, который не менялся, берётся из кэша прошлой версии (по имени блоба), а не качается заново.
+let BG = null;                                     // AbortController текущей фоновой загрузки
+let OLDS = null, OLDS_T = 0;                      // список кэшей прошлых версий — не чаще раза в минуту (Safari медленно перечисляет кэши)
+async function oldCaches() {
+  if (OLDS && Date.now() - OLDS_T < 60000) return OLDS;
+  OLDS = await Promise.all((await caches.keys()).filter(k => k.startsWith('t14-core-') && k !== CORE).map(k => caches.open(k))); OLDS_T = Date.now();
+  return OLDS;
+}
+async function fromOld(olds, p, blob) {
+  for (const oc of olds) { const r = await oc.match(BASE + p); if (r && r.headers.get('X-T14-Blob') === blob) return r; }
+  return null;
+}
+async function pruneOld() { OLDS = null; for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); }
+function budget() {                                // байт за один фоновый проход: без сведений о связи считаем её медленной
+  const cn = self.navigator && self.navigator.connection;
+  if (!cn) return 3e6;
+  if (cn.saveData || /(^|-)2g|3g/.test(cn.effectiveType || '')) return 0;
+  return cn.effectiveType === '4g' && (cn.downlink || 0) >= 5 ? 15e6 : 3e6;
+}
+async function precache(st, report, prev, until, bytes) {  // until — не дольше этого времени; bytes — не больше стольких байт из сети
+  let full = false, got = 0, done = 0;
+  if (BG) BG.abort();
+  const ac = new AbortController(); BG = ac;
+  const tm = until ? setTimeout(() => ac.abort(), Math.max(0, until - Date.now())) : 0;
+  try {
+    const c = await caches.open(CORE), pre = st.map.pre.filter(p => st.map.files[p] && fkey(st, st.map.files[p]));   // разделы чужих групп на телефон не сохраняются
+    const olds = await oldCaches();
+    const N = until ? 2 : 6;
+    for (let i = 0; i < pre.length && !full; i += N) {
+      if (until) { while (Date.now() - LAST_REQ < 4000 && !ac.signal.aborted) await new Promise(r => setTimeout(r, 500)); }
+      if (ac.signal.aborted || (bytes != null && got >= bytes)) { full = true; break; }
+      await Promise.all(pre.slice(i, i + N).map(async p => {
+        if (!full && !ac.signal.aborted && !(bytes != null && got >= bytes) && !(await c.match(BASE + p))) {
+          try {
+            let r = await fromOld(olds, p, st.map.files[p][0]);
+            if (!r) { r = await plain(st, p, ac.signal); got += +(r.headers.get('X-T14-Net') || 0); }
+            await c.put(BASE + p, r);
+          } catch (e) { if (isQuota(e)) { full = true; pruneOld().catch(() => {}); } else if (ac.signal.aborted || (e && e.name === 'AbortError')) full = true; else throw e; }
+        }
+        done++; if (report) report(done, pre.length);
+      }));
+    }
+    if (!full && done >= pre.length) await pruneOld();   // всё есть в новой версии — прошлые больше не нужны
+  } finally { clearTimeout(tm); if (BG === ac) BG = null; }
+  return { partial: full, bytes: got };
 }
 
 // ---------- life cycle ----------
@@ -121,33 +149,33 @@ async function refresh(until) {                     // a new version on a device
   if (!kr) { try { kr = await keyring(); } catch (e4) { kr = null; } }
   const sets = kr ? kr.sets : ((await kvGet('sets')) || {});
   const next = { key: k, map, docs: new Set(map.docs), sets };
-  try { await precache(next, null, await kvGet('map'), until); } catch (e5) { /* связь или место — докачается позже */ }
+  try { await precache(next, null, await kvGet('map'), until, budget()); } catch (e5) { /* связь или место — докачается позже */ }
   await kvPut({ key: k, map, sets }); ST = next;
 }
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
     try { await pub(); } catch (e0) { try { for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
-    try { await refresh(Date.now() + 20000); } catch (err) { /* ключ и карта остаются прежними */ }
+    try { await refresh(Date.now() + 8000); } catch (err) { /* ключ и карта остаются прежними */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
     await self.skipWaiting();
   })());
 });
 let FILLED = 0, LAST_REQ = 0;   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
 function fillLater(e) {                            // докачать сайт в кэш фоном, понемногу: не чаще раза в 2 минуты, не дольше 25 с за раз
-  if (Date.now() - FILLED < 120000) return; FILLED = Date.now();
-  const cn = self.navigator && self.navigator.connection;   // экономия трафика или 2G/3G — фоном не качаем вовсе, только то, что открыли
-  if (cn && (cn.saveData || /(^|-)2g|3g/.test(cn.effectiveType || ''))) return;
-  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000); } catch (x) { /* в другой раз */ } })());
+  if (Date.now() - FILLED < 120000) return;
+  const b = budget(); if (!b) return;                // экономия трафика или 2G/3G — фоном не качаем вовсе, только то, что открыли
+  FILLED = Date.now();
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000, b); } catch (x) { /* в другой раз */ } })());
 }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k);
-    await self.clients.claim();
+    await self.clients.claim();   // 20.11.2026 (Рекс): кэши прошлых версий не удаляются здесь — из них берутся неизменённые файлы; удаляет pruneOld()
   })());
 });
 self.addEventListener('message', e => {
-  if (!e.source || (e.origin && e.origin !== self.location.origin)) return;   // 20.11.2026 (CodeQL js/missing-origin-check): только свои страницы
   const d = e.data || {}, src = e.source;
+  if (!src || (e.origin && e.origin !== self.location.origin)) return;   // 20.11.2026 (CodeQL js/missing-origin-check): только свои страницы
+  if (d.type === 'ver') { src.postMessage({ type: 'ver', v: VERSION, z: HAS_DS }); return; }   // 20.11.2026 (Рекс): страница входа узнаёт версию и формат
   if (d.type === 'unlock') e.waitUntil((async () => {
     try {
       ST = null;
@@ -165,9 +193,11 @@ self.addEventListener('message', e => {
       }
       const map = await loadMap(key), prev = await kvGet('map');
       const next = { key, map, docs: new Set(map.docs), sets: (await kvGet('sets')) || {} };
-      const pc = await precache(next, (n, all) => src && src.postMessage({ type: 'progress', n, all }), prev, Date.now() + 40000);
+      // 20.11.2026 (Рекс, CG-50): вход открывается сразу после карты сайта; сохранение — фоном после ответа (не дольше 20 с, в пределах бюджета),
+      //   чего нет в кэше — расшифровывается с хостинга при открытии
       await kvSet('map', map); ST = next;
-      src && src.postMessage({ type: 'unlocked', partial: !!(pc && pc.partial) });
+      src && src.postMessage({ type: 'unlocked', partial: true, v: VERSION });
+      try { await precache(next, null, prev, Date.now() + 20000, budget()); } catch (e6) { /* докачается позже */ }
     } catch (err) { src && src.postMessage({ type: 'error', text: String(err && err.message || err) }); }
   })());
   if (d.type === 'lock') e.waitUntil((async () => { await kvDel('key'); await kvDel('map'); await kvDel('sets'); ST = null; for (const k of await caches.keys()) if (k.startsWith('t14-core-') || k === DOCS) await caches.delete(k); src && src.postMessage({ type: 'locked' }); })());
@@ -187,7 +217,7 @@ self.addEventListener('fetch', e => {
   if (u.origin !== self.location.origin) return;
   const p = relPath(u);
   if (p === null || isPublic(p)) return;
-  LAST_REQ = Date.now();
+  LAST_REQ = Date.now(); if (BG && req.mode === 'navigate') BG.abort();   // 20.11.2026 (Рекс): открыли страницу — фоновая загрузка уступает сеть сразу
   e.respondWith(serve(p, req));
   if (req.mode === 'navigate') fillLater(e);
 });
@@ -241,6 +271,7 @@ async function serve0(p, req) {
   const c = await caches.open(name);
   const hit = await c.match(BASE + p);
   if (hit && (name === CORE || hit.headers.get('X-T14-Blob') === st.map.files[p][0])) return hit;   // a document changed on the site: download it again
+  if (name === CORE) { try { const o = await fromOld(await oldCaches(), p, st.map.files[p][0]); if (o) { try { await c.put(BASE + p, o.clone()); } catch (e0) { /* места нет */ } return o; } } catch (e1) { /* нет — из сети */ } }
   try {
     const r = await plain(st, p);
     try { await c.put(BASE + p, r.clone()); } catch (e) { /* 15.11.2026: места в браузере нет — страница всё равно открывается */ }

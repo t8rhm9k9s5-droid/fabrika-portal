@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 B = '/home/claude/app_build'
 STAND = bool(os.environ.get('T14_ENC_SRC'))   # стенд: рабочие файлы сборки (enc_map, release_state, news) не трогаем
 SRC = os.environ.get('T14_ENC_SRC') or f'{B}/pwa/terekhina14'   # 15.11.2026: стенд доступа по группам собирает из своей малой копии
-ENC = f'{B}/enc'
+ENC = os.environ.get('T14_ENC_TPL') or f'{B}/enc'   # 20.11.2026 (Рекс, CG-50): шаблоны Service Worker'а и входа — из проверяемой папки, а не всегда из app_build/enc
 SECRET = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'
 ITER = 250000
 args = sys.argv[1:]
@@ -79,8 +79,10 @@ files = {}
 import zlib
 ZTYPES = ('.html', '.htm', '.js', '.mjs', '.css', '.json', '.svg', '.txt', '.xml', '.geojson', '.kml', '.csv', '.md')
 ZMAGIC = b'\x00Z1\x00'
+# Шаг 2 выкладки (Рекс, CG-50): включается только FABRIKA_ZPACK=1 — когда у всех уже стоит Service Worker, умеющий распаковку (шаг 1).
+ZON = os.environ.get('FABRIKA_ZPACK') == '1'
 def zpack(rel, data):
-    if len(data) < 1024 or not rel.lower().endswith(ZTYPES) or data[:4] == ZMAGIC: return data
+    if not ZON or len(data) < 1024 or not rel.lower().endswith(ZTYPES) or data[:4] == ZMAGIC: return data
     z = ZMAGIC + zlib.compress(data, 9)
     return z if len(z) < len(data) * 0.9 else data
 for root, _, names in os.walk(SRC):
@@ -90,7 +92,7 @@ for root, _, names in os.walk(SRC):
         data = pathlib.Path(os.path.join(root, n)).read_bytes()
         sid = ACC.set_of(rel, AMAP) if ACC_ON else None
         fa, fiv = set_aes(sid) if sid else (aes, ivkey)
-        pdat = zpack(rel, data)   # 20.11.2026 (ревью GPT): IV — от того, что реально шифруется: сжатая и несжатая версии одного файла не делят IV
+        pdat = zpack(rel, data)   # 20.11.2026 (ревью GPT): IV — от того, что реально шифруется
         iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(pdat).digest(), hashlib.sha256).digest()[:12]
         blob = iv + fa.encrypt(iv, pdat, None)
         name = hashlib.sha256(blob).hexdigest()[:24] + '.bin'
@@ -138,7 +140,7 @@ try:
 except Exception as _e: print('news:', _e)
 m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news}, ensure_ascii=False).encode()
 iv = secrets.token_bytes(12)
-pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, zpack('m.json', m), None))   # карта ~1 МБ → ~150 КБ
+pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, zpack('m.json', m), None))
 
 # public part
 login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
