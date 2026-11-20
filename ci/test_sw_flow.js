@@ -9,7 +9,7 @@ const { chromium } = require('playwright'), fs = require('fs'), path = require('
 const D = process.argv[2], OUT = path.join(D, 'out'), PORT = 8125, BASE = 'http://localhost:' + PORT + '/';
 const CAND = process.env.T14_CAND || '/home/claude/work/speed2011', REB = process.argv.slice(3), USERS = JSON.parse(fs.readFileSync(path.join(D, 'users.json'), 'utf8')), U = USERS.admin;
 const PAGES = ['home.html', 'calls.html', 'sales.html', 'staff.html'];
-let RATE = 0, LOG = [];   // RATE — байт/с (0 — без ограничения)
+let RATE = 0, LOG = [], FREE = 0;   // RATE — байт/с на ВЕСЬ канал (общая очередь, Рекс CG-51), FREE — когда канал освободится
 const srv = http.createServer((q, s) => {
   let p = decodeURIComponent(new URL(q.url, BASE).pathname); if (p === '/') p = '/index.html';
   const f = path.join(OUT, p); if (!f.startsWith(OUT)) { s.writeHead(403); return s.end(); }
@@ -18,8 +18,12 @@ const srv = http.createServer((q, s) => {
     LOG.push([p, b.length]);
     s.writeHead(200, { 'Content-Type': f.endsWith('.html') ? 'text/html; charset=utf-8' : f.endsWith('.js') ? 'application/javascript' : 'application/octet-stream', 'Cache-Control': 'no-cache' });
     if (!RATE) return s.end(b);
-    let i = 0; const step = Math.max(1024, Math.round(RATE / 10));
-    (function tick() { if (s.destroyed) return; if (i >= b.length) return s.end(); s.write(b.subarray(i, i + step)); i += step; setTimeout(tick, 100); })();
+    let i = 0; const step = 4096;
+    (function tick() {
+      if (s.destroyed) return; if (i >= b.length) return s.end();
+      const now = Date.now(), at = Math.max(now, FREE); FREE = at + step / RATE * 1000;
+      setTimeout(() => { if (s.destroyed) return; s.write(b.subarray(i, i + step)); i += step; tick(); }, at - now);
+    })();
   });
 }).listen(PORT);
 const bad = [], ok = m => console.log('  ✓', m), no = m => { bad.push(m); console.log('  ✗', m); };
@@ -107,8 +111,10 @@ async function waitNewSw(pg, prevVer) {   // новая сборка: обнов
   const t0 = Date.now(); await pg.goto(BASE + 'login.html', { timeout: 120000 }); await pg.evaluate(() => navigator.serviceWorker.ready);
   const tLogin = Date.now() - t0; LOG = []; u = await unlock(pg);
   if (u.res.type !== 'unlocked') no('вход на медленной связи: ' + JSON.stringify(u.res));
-  const t1 = Date.now(); await pg.goto(BASE + 'home.html', { timeout: 120000 }).catch(e => no('главная на медленной связи: ' + e.message.slice(0, 80)));
+  const t1 = Date.now(); const rh = await pg.goto(BASE + 'home.html', { timeout: 120000 }).catch(e => { no('главная на медленной связи: ' + e.message.slice(0, 80)); return null; });
   const tHome = Date.now() - t1;
+  const body = rh ? ((await pg.content().catch(() => '')) || '') : '';
+  if (!rh || rh.status() !== 200 || body.length < 2000 || /font:16px system-ui;padding:24px">/.test(body)) no('главная на медленной связи: статус ' + (rh && rh.status()) + ', ' + body.length + ' байт');
   ok('страница входа ' + tLogin + ' мс; вход ' + u.ms + ' мс (' + kb(LOG) + ' КБ); главная после входа ' + tHome + ' мс');
   if (u.ms > 20000) no('вход дольше 20 с на 1 Мбит/с: ' + u.ms + ' мс');
   await ctx.close(); await br.close(); srv.close();

@@ -1,12 +1,17 @@
 {
  "portal_version": "2.22.0",
- "exported_utc": "2026-11-20T20:46Z",
- "files_sha": "34df39008fb30b90",
+ "exported_utc": "2026-11-20T21:06Z",
+ "files_sha": "83a4ef8f559c1d4b",
  "files": [
-  "ci/access_stand.py",
   "ci/test_sw_flow.js",
+  "portal/build/gen_alerts.py",
+  "portal/build/sales_frag.html",
   "portal/fsu/fsu_back.html",
-  "portal/fsu/podbor.html"
+  "portal/fsu/fsu_build.py",
+  "portal/fsu/fsu_shim.js",
+  "portal/fsu/podbor.html",
+  "review/speed-2011/enc_sw.js",
+  "review/speed-2011/login.html"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }

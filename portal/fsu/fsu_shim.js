@@ -1,12 +1,10 @@
 /* fsu: запросы сайта к API → снимки в /fsu/_api/ (сайт работает внутри портала без связи с fabrikant.su) */
 (function(){var A=__AMAP__,K=Object.keys(A);
-function norm(k){return k.replace(/([?&])rand=[^&]*&?/,'$1').replace(/[?&]$/,'')}
+function norm(k){var i=k.indexOf('?');if(i<0)return k;var q=k.slice(i+1).split('&').filter(function(x){return x&&!/^rand=/.test(x)}).sort();return k.slice(0,i)+(q.length?'?'+q.join('&'):'')}
 var N={};K.forEach(function(k){N[norm(k)]=A[k]});
-function act(k){var m=/action=([^&]+)/.exec(k);return m?m[1]:''}
+/* 20.11.2026 (Рекс, CG-51): только точное совпадение пути и всех параметров, кроме rand — похожий снимок другой страницы или фильтра не подставляем */
 function find(u){try{var x=new URL(u,document.baseURI);if(x.pathname.indexOf('/fsu/api/')!==0)return null;
- var k=x.pathname.slice(4)+x.search;if(A[k])return A[k];if(N[norm(k)])return N[norm(k)];
- var a=act(k),pg=/[?&]page=(\d+)/.exec(k);for(var i=0;i<K.length;i++)if(act(K[i])===a&&a&&(!pg||new RegExp('[?&]page='+pg[1]+'(&|$)').test(K[i]))&&k.split('&url=')[1]===K[i].split('&url=')[1])return A[K[i]];
- return '';}catch(e){return null}}
+ var k=x.pathname.slice(4)+x.search;if(A[k])return A[k];return N[norm(k)]||'';}catch(e){return null}}
 function to(h){return h?'/fsu/_api/'+h+'.json':'data:application/json,%7B%7D'}
 var O=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){var h=find(u);if(h!==null){arguments[0]='GET';arguments[1]=to(h)}return O.apply(this,arguments)};
 var F=window.fetch;window.fetch=function(i,o){var u=typeof i==='string'?i:(i&&i.url);if(/(^|\/fsu\/)acct\.json$/.test(u||''))return F('/acct.json',o);var h=find(u);if(h!==null)return F(to(h));return F.apply(this,arguments)};

@@ -244,10 +244,22 @@ window.T14Lite = (function () {
         });
       });
     }
+    function ver(sw) {                           // ответ Service Worker'а {v, z} или null (старый не отвечает), не дольше 3 с
+      return new Promise(function (ok) {
+        if (!sw) return ok(null);
+        function on(e) { if (e.data && e.data.type === 'ver') { clearTimeout(t); navigator.serviceWorker.removeEventListener('message', on); ok(e.data); } }
+        var t = setTimeout(function () { navigator.serviceWorker.removeEventListener('message', on); ok(null); }, 3000);
+        navigator.serviceWorker.addEventListener('message', on); sw.postMessage({ type: 'ver' });
+      });
+    }
     function attempt() {
       var R = null;   // сначала встаёт новейший Service Worker (без ключа — быстро), потом ключ и сохранение сайта
       return newest().then(function (r) { R = r; return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); })
-        .then(function (k) { return put('key', k); }).then(function () { var r = R;
+        .then(function (k) { return put('key', k); }).then(function () { return ver(R.active || navigator.serviceWorker.controller); }).then(function (v) {
+          // 20.11.2026 (Рекс, CG-51): Service Worker не назвал версию — это старый; даём новому встать ещё раз (до 10 с), потом входим тем, что есть
+          if (v) return R;
+          return Promise.resolve(R.update && R.update()).catch(function () { }).then(function () { return new Promise(function (ok) { setTimeout(ok, 10000); }); }).then(function () { return navigator.serviceWorker.ready; }).then(function (r2) { R = r2; return R; });
+        }).then(function () { var r = R;
           btn.textContent = 'Открываю портал…'; bar.hidden = false;
           var sw = r.active || navigator.serviceWorker.controller;
           if (!sw) throw new Error('Service Worker не запустился');
@@ -268,7 +280,8 @@ window.T14Lite = (function () {
         });
     }
     return attempt().catch(function (e) {
-      if (tried || (e && (e.message === 'pw' || e.message === 'net'))) throw e;
+      // 20.11.2026 (Рекс, CG-51): долгий ответ или обрыв связи — не повод стирать сохранённое; сброс — только кнопкой «Сбросить»
+      if (tried || (e && (e.message === 'pw' || e.message === 'net' || e.message === 'Сайт долго не отвечает' || /network|fetch|связ/i.test(e.message || '')))) throw e;
       tried = true; btn.textContent = 'Обновляю сайт на устройстве…';
       return resetDevice(true).then(function () { reg = navigator.serviceWorker.register('sw.js'); return attempt(); });
     }).then(function () {

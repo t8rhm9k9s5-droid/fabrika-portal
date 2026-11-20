@@ -115,6 +115,10 @@ rep['api'] = len(amap); rep['pages'] = len(st['seen'])
 _bad = [f for f in ('index.html', 'podbor.html', '_img.json') if not os.path.getsize(os.path.join(OUT, f))]
 if _bad or not rep['img'] or not amap: sys.exit('сборка неполная, старая оставлена: ' + json.dumps({'empty': _bad, 'img': rep['img'], 'api': len(amap)}))
 if os.path.exists(FINAL): os.rename(FINAL, FINAL + '.old')
-os.rename(OUT, FINAL); shutil.rmtree(FINAL + '.old', ignore_errors=True)
+try: os.rename(OUT, FINAL)
+except Exception:   # 20.11.2026 (Рекс, CG-51): вторая замена не удалась — вернуть прежнюю сборку
+    if os.path.exists(FINAL + '.old') and not os.path.exists(FINAL): os.rename(FINAL + '.old', FINAL)
+    raise
+shutil.rmtree(FINAL + '.old', ignore_errors=True)
 _jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))

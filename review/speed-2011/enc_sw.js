@@ -90,7 +90,19 @@ async function fromOld(olds, p, blob) {
   for (const oc of olds) { const r = await oc.match(BASE + p); if (r && r.headers.get('X-T14-Blob') === blob) return r; }
   return null;
 }
-async function pruneOld() { OLDS = null; for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); }
+async function pruneOld(st) {                     // 20.11.2026 (Рекс, CG-51): неизменённые страницы (и открытые раньше вне PRE) — в новую версию, потом удалить
+  OLDS = null;
+  const c = await caches.open(CORE);
+  for (const k of await caches.keys()) {
+    if (!k.startsWith('t14-core-') || k === CORE) continue;
+    const oc = await caches.open(k);
+    if (st) for (const q of await oc.keys()) {
+      const p = decodeURIComponent(q.url.slice(BASE.length)), f = st.map.files[p], r = f && await oc.match(q);
+      if (r && r.headers.get('X-T14-Blob') === f[0] && !(await c.match(q))) { try { await c.put(q, r); } catch (e) { if (isQuota(e)) return; } }
+    }
+    await caches.delete(k);
+  }
+}
 function budget() {                                // байт за один фоновый проход: без сведений о связи считаем её медленной
   const cn = self.navigator && self.navigator.connection;
   if (!cn) return 3e6;
@@ -110,17 +122,21 @@ async function precache(st, report, prev, until, bytes) {  // until — не д�
       if (until) { while (Date.now() - LAST_REQ < 4000 && !ac.signal.aborted) await new Promise(r => setTimeout(r, 500)); }
       if (ac.signal.aborted || (bytes != null && got >= bytes)) { full = true; break; }
       await Promise.all(pre.slice(i, i + N).map(async p => {
-        if (!full && !ac.signal.aborted && !(bytes != null && got >= bytes) && !(await c.match(BASE + p))) {
+        if (!full && !ac.signal.aborted && !(await c.match(BASE + p))) {
           try {
             let r = await fromOld(olds, p, st.map.files[p][0]);
-            if (!r) { r = await plain(st, p, ac.signal); got += +(r.headers.get('X-T14-Net') || 0); }
+            if (!r) {
+              const est = +st.map.files[p][2] || 0;              // заявленный размер — резерв до скачивания (Рекс, CG-51)
+              if (bytes != null && got + est > bytes) { full = true; done++; return; }
+              got += est; r = await plain(st, p, ac.signal); got += (+(r.headers.get('X-T14-Net') || 0)) - est;
+            }
             await c.put(BASE + p, r);
-          } catch (e) { if (isQuota(e)) { full = true; pruneOld().catch(() => {}); } else if (ac.signal.aborted || (e && e.name === 'AbortError')) full = true; else throw e; }
+          } catch (e) { if (isQuota(e)) full = true; else if (ac.signal.aborted || (e && e.name === 'AbortError')) full = true; else throw e; }
         }
         done++; if (report) report(done, pre.length);
       }));
     }
-    if (!full && done >= pre.length) await pruneOld();   // всё есть в новой версии — прошлые больше не нужны
+    if (!full && done >= pre.length) await pruneOld(st);   // всё есть в новой версии — прошлые больше не нужны
   } finally { clearTimeout(tm); if (BG === ac) BG = null; }
   return { partial: full, bytes: got };
 }
@@ -155,8 +171,8 @@ async function refresh(until) {                     // a new version on a device
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
-    try { await pub(); } catch (e0) { try { for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
-    try { await refresh(Date.now() + 8000); } catch (err) { /* ключ и карта остаются прежними */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
+    try { await pub(); } catch (e0) { try { await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
+    try { await Promise.race([refresh(Date.now() + 8000), new Promise((ok, bad) => setTimeout(() => bad(new Error('срок')), 10000))]); } catch (err) { /* ключ и карта остаются прежними; обновятся при входе или открытии страницы */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
     await self.skipWaiting();
   })());
 });
@@ -270,7 +286,7 @@ async function serve0(p, req) {
   const name = st.docs.has(p) ? DOCS : CORE;
   const c = await caches.open(name);
   const hit = await c.match(BASE + p);
-  if (hit && (name === CORE || hit.headers.get('X-T14-Blob') === st.map.files[p][0])) return hit;   // a document changed on the site: download it again
+  if (hit && (hit.headers.get('X-T14-Blob') === st.map.files[p][0] || (name === CORE && !hit.headers.get('X-T14-Blob')))) return hit;   // 20.11.2026 (Рекс, CG-51): и в CORE сверять версию файла   // a document changed on the site: download it again
   if (name === CORE) { try { const o = await fromOld(await oldCaches(), p, st.map.files[p][0]); if (o) { try { await c.put(BASE + p, o.clone()); } catch (e0) { /* места нет */ } return o; } } catch (e1) { /* нет — из сети */ } }
   try {
     const r = await plain(st, p);
