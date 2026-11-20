@@ -2,7 +2,7 @@
    python3 access_stand.py <каталог>  → <каталог>/out — зашифрованная малая копия портала (ТЕСТОВЫЙ пароль и ключи групп),
    <каталог>/users.json — тестовые люди: id, личный ключ K (hex), группы. Дальше: node test_access_groups.js <каталог>.
    Только здесь, в рабочей копии: личные ключи запечатаны открытым ключом Claude (acct_secret.json), как на портале."""
-import os, sys, json, time, shutil, secrets, subprocess, base64, pathlib
+import os, sys, json, time, shutil, secrets, subprocess, pathlib
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes, serialization
@@ -25,7 +25,7 @@ def seal(K, pub_b64):
 
 def main(d):
     d = pathlib.Path(d)
-    if os.environ.get('T14_STAND_KEEP') and (d / 'users.json').exists(): return rebuild(d)   # тот же стенд, новая сборка (старый SW → новый)
+    if os.environ.get('T14_STAND_KEEP') and (d / 'users.json').exists(): rebuild(d); return   # тот же стенд, новая сборка (старый SW → новый)
     shutil.rmtree(d, ignore_errors=True); src = d / 'src'; src.mkdir(parents=True)
     P = pathlib.Path(A + '/pwa/terekhina14')
     for f in ['sw.js', 'manifest.webmanifest'] + PAGES: shutil.copy(P / f, src / f)

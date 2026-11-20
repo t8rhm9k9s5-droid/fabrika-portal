@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /* «Фабрика» — проверка Service Worker'а портала на стенде (20.11.2026, Рекс CG-50: приёмочные проверки).
    Стенд: access_stand.py <каталог> (тестовый пароль и ключи — только стенд). Шаги, между ними сборка меняется командой из аргументов:
-     node test_sw_flow.js <каталог> <команда пересборки 1> [<команда пересборки 2> …]
+     node test_sw_flow.js <каталог> <режим 1> [<режим 2> …]   режимы: plain (кандидат без сжатия), zpack (кандидат со сжатием)
    1) старая сборка: вход (unlock) → время до «вход открыт» и до первой страницы, байты; 2) после каждой пересборки: обновление Service
    Worker'а без нового входа, страницы открываются, текст верный, сколько блоков скачано заново; 3) две вкладки; 4) без сети — сохранённое
    открывается; 5) медленная связь (сервер отдаёт ~1 Мбит/с): вход и первая страница. Итог — «ALL OK» или список ошибок. */
-const { chromium } = require('playwright'), fs = require('fs'), path = require('path'), http = require('http'), { execSync } = require('child_process');
+const { chromium } = require('playwright'), fs = require('fs'), path = require('path'), http = require('http'), { execFileSync } = require('child_process');
 const D = process.argv[2], OUT = path.join(D, 'out'), PORT = 8125, BASE = 'http://localhost:' + PORT + '/';
-const REB = process.argv.slice(3), USERS = JSON.parse(fs.readFileSync(path.join(D, 'users.json'), 'utf8')), U = USERS.admin;
+const CAND = process.env.T14_CAND || '/home/claude/work/speed2011', REB = process.argv.slice(3), USERS = JSON.parse(fs.readFileSync(path.join(D, 'users.json'), 'utf8')), U = USERS.admin;
 const PAGES = ['home.html', 'calls.html', 'sales.html', 'staff.html'];
 let RATE = 0, LOG = [];   // RATE — байт/с (0 — без ограничения)
 const srv = http.createServer((q, s) => {
@@ -84,8 +84,10 @@ async function waitNewSw(pg, prevVer) {   // новая сборка: обнов
   await pg.waitForTimeout(6000);
   let ver = await swVer(pg); console.log('   Service Worker:', JSON.stringify(ver));
   for (let k = 0; k < REB.length; k++) {
-    console.log((k + 2) + ') пересборка: ' + REB[k].slice(0, 90));
-    execSync(REB[k], { stdio: 'pipe', shell: '/bin/bash' });
+    console.log((k + 2) + ') пересборка кандидатом: ' + REB[k]);
+    const mode = REB[k]; if (mode !== 'plain' && mode !== 'zpack') throw new Error('режим: plain или zpack');
+    const env = Object.assign({}, process.env, { T14_STAND_KEEP: '1', T14_BUILD_ENC: CAND + '/build_enc.py', T14_ENC_TPL: CAND }, mode === 'zpack' ? { FABRIKA_ZPACK: '1' } : {});
+    execFileSync('python3', [path.join(__dirname, 'access_stand.py'), D], { stdio: 'pipe', env });
     LOG = [];
     const nv = await waitNewSw(pg, ver && ver.v);
     if (!nv || !nv.v || (ver && nv.v === ver.v)) no('новая версия Service Worker\'а не встала: ' + JSON.stringify(nv)); else ok('встала версия ' + nv.v + ' (распаковка: ' + nv.z + ')');

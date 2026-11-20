@@ -1,26 +1,12 @@
 {
  "portal_version": "2.22.0",
- "exported_utc": "2026-11-20T20:41Z",
- "files_sha": "2728fe431f8e68b1",
+ "exported_utc": "2026-11-20T20:46Z",
+ "files_sha": "34df39008fb30b90",
  "files": [
-  "bots/telegram/ClaudeGpt.gs.js",
   "ci/access_stand.py",
   "ci/test_sw_flow.js",
-  "portal/app_build/enc/enc_sw.js",
-  "portal/assets/pulse.js",
-  "portal/build/assort_frag.html",
-  "portal/build/build_site.py",
-  "portal/build/gen_alerts.py",
-  "portal/build/sales_frag.html",
-  "portal/build/ship_carry.py",
   "portal/fsu/fsu_back.html",
-  "portal/fsu/fsu_build.py",
-  "portal/fsu/fsu_shim.js",
-  "portal/fsu/podbor.html",
-  "review/speed-2011/applink.js",
-  "review/speed-2011/build_enc.py",
-  "review/speed-2011/enc_sw.js",
-  "review/speed-2011/login.html"
+  "portal/fsu/podbor.html"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }
