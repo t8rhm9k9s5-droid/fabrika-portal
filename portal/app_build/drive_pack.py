@@ -132,13 +132,15 @@ def main():
     #   m.bin / sw.js / index.html … (LAST) — в последнем пакете. Диск 1c@ отдаёт хостингу файл через веб-приложение (base64) —
     #   пакет 16,8 МБ 29.10 не скачался; deploy.py с 30.10 битый пакет пропускает и ставит следующие (аудит P6).
     groups = [items]
-    if '--split' in sys.argv:
-        lim = float(sys.argv[sys.argv.index('--split') + 1]) * 1e6
+    # 21.11.2026: пакет 202 МБ / >5000 файлов хостинг молча пропустил (deploy.py: >150 МБ и >5000 файлов) — крупный выпуск делится сам по 60 МБ
+    _auto = '--split' not in sys.argv and (sum(os.path.getsize(it[1]) for it in items) > 120e6 or len(items) > 4500)
+    if '--split' in sys.argv or _auto:
+        lim = (float(sys.argv[sys.argv.index('--split') + 1]) if '--split' in sys.argv else 60) * 1e6
         tail = [it for it in items if it[0] in LAST]; head = [it for it in items if it[0] not in LAST]
         groups, cur_g, size = [], [], 0
         for it in head:
             sz = os.path.getsize(it[1])
-            if cur_g and size + sz > lim: groups.append(cur_g); cur_g, size = [], 0
+            if cur_g and (size + sz > lim or len(cur_g) >= 4500): groups.append(cur_g); cur_g, size = [], 0
             cur_g.append(it); size += sz
         if tail:
             if cur_g and size + sum(os.path.getsize(t[1]) for t in tail) > lim: groups.append(cur_g); cur_g = []

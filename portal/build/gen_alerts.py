@@ -40,7 +40,9 @@ if len(sp) > 1:
 pm = sorted(glob.glob(B + '/sales_plan_mgr/2*.json'))
 if pm:
     x = J(pm[-1]) or {}; T = x.get('total') or {}
-    if T.get('need'):
+    import datetime as _dt   # 21.11.2026 (Т. В.: «продажи 73, а тут 45»): файл плана старше 2 дней — тревогу по нему не поднимаем, карточка считает по продажам 1С
+    _fresh = bool(x.get('asof')) and (_dt.date.today() - _dt.date.fromisoformat(x['asof'][:10])).days <= 2
+    if T.get('need') and _fresh:
         r = 100.0 * (T.get('fact') or 0) / T['need']; R = RULES['plan']
         if r < R['warn']:
             A.append({'id': 'plan-' + (x.get('asof') or ''), 'lvl': 'crit' if r < R['crit'] else 'warn', 'cat': 'Продажи', 'secs': ['sales'],

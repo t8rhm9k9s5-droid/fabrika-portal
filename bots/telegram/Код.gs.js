@@ -802,6 +802,7 @@ function g4_kbAnswer_(question, ctx, g, n) {
 }
 function g4_gdId_(mid) { return String(mid || '').replace(/[^0-9a-zA-Z]/g, '').slice(-24); }
 function g4_gdDraft_(q, chat) {
+  if (props().getProperty('GD_TG') !== 'on') return;   // 21.11.2026, Т. В.: «эту фигню прекрати присылать в Телеграм» — черновики ответов GPT выключены; включить: свойство GD_TG=on (позже, на запасном номере)
   var id = g4_gdId_(q.mid), cid = String(q.cid || ''), x = String(q.x || '').trim();
   if (!id || !/^-?\d{1,20}$/.test(cid) || x.length < 5) return;
   var p = props(); if (!p.getProperty('AI_KEY')) return;
@@ -1008,6 +1009,7 @@ function tgUpdate0_(u) {
   if (cb && /^tmx:/.test(String(cb.data || ''))) return tmx_callback_(cb.message && cb.message.chat && cb.message.chat.id, from, cb);
   var chat = msg ? msg.chat.id : cb.message.chat.id;
   if (msg && msg.chat.type !== 'private') return;
+  if (msg && /^\/(aikey|ключ_ии)(?=\s|@|$)/i.test(String(msg.text || '').trim())) return cg_setKey_(chat, from, msg);   // 21.11.2026, Т. В.: новый ключ OpenAI с телефона — до журнала обращений, сообщение с ключом удаляется
   if (cb) tg_('answerCallbackQuery', { callback_query_id: cb.id });
   if (pingAns_(chat, from, msg, cb)) return;   // 01.11.2026: ответ на тест связи (pingAll) — записать и не вести в меню
   var users = tgUsers_(), me = users[from.id];
@@ -1339,7 +1341,7 @@ var DB_SS = null;
 // перестали открываться («нет доступа»). Таблица людей теперь записана здесь, в коде: сброс свойств её больше не теряет.
 // 03.11.2026 перенос на 1c@: таблица — копия на Диске 1c@ (папка «Фабрика — боты»); id — в свойстве SHEET_ID (ставит importProps), в коде — запасной;
 //   старая таблица на Диске owner@ — архив и источник снимка свойств (props_move)
-var OLD_SS_ID = 'REDACTED_ID_7', NEW_SS_ID = 'REDACTED_ID_4';
+var OLD_SS_ID = 'REDACTED_ID_8', NEW_SS_ID = 'REDACTED_ID_4';
 var ACCT_SS_ID = (function () { try { return PropertiesService.getScriptProperties().getProperty('SHEET_ID') || ''; } catch (e) { return ''; } })() || NEW_SS_ID;
 function db_() {
   if (DB_SS) return DB_SS;
@@ -1373,7 +1375,15 @@ function saveUser_(o) {
 }
 function dropUser_(o) { var U = users_(); if (o._row) U.sh.getRange(o._row, 1, 1, 2).setValues([['', '']]); delete U.map[o.id]; }
 function log_(who, what) { try { db_().getSheetByName('log').appendRow([new Date(), who, String(what).slice(0, 500)]); } catch (e) { /* skip */ } }
-function pub_(o) { return { id: o.id, login: o.login, name: o.name, role: o.role, st: o.st, t: o.t, push: !!o.push, last: o.last || 0 }; }
+function pub_(o) { return { id: o.id, login: o.login, name: o.name, role: o.role, st: o.st, t: o.t, push: !!o.push, last: o.last || 0, g: o.g || [] }; }
+// 21.11.2026, Т. В.: «группы доступа включи и в Управление поставь» — группы человека (build/access_map.json); суперадминистратора назначает только владелец
+var ACC_GROUPS = ['super', 'admin', 'sales', 'prod', 'auto', 'cams', 'glonass'];
+function grp_(v, adm) {
+  var a = Array.isArray(v) ? v : String(v || '').split(','), out = [];
+  a.forEach(function (x) { x = String(x || '').trim(); if (ACC_GROUPS.indexOf(x) >= 0 && out.indexOf(x) < 0) out.push(x); });
+  if (out.indexOf('super') >= 0 && !ownerAcct_(adm)) throw new Error('суперадминистратора назначает только владелец');
+  return out;
+}
 function tokUser_(tok, admin) {
   if (typeof tok !== 'string' || !/^[0-9a-f]{32,64}$/.test(tok)) throw new Error('войдите заново');
   var u = users_().byTok[hex_(sha256_(utf8_(tok)))];
@@ -1517,8 +1527,9 @@ function userAdd_(adm, q) {
     var U = users_(); if (U.map[c.id] && U.map[c.id].st !== 'pending') throw new Error('такой логин уже есть');
     var u = U.map[c.id] || { id: c.id };
     u.login = login; u.name = name; u.role = q.role === 'admin' ? 'admin' : 'user'; u.st = 'active'; u.t = Date.now(); u.by = adm.login; delete u.appr;
+    if (q.g != null) u.g = grp_(q.g, adm);
     ['salt', 'iter', 'ver', 'slot', 'kr', 'seal', 'tokh'].forEach(function (k) { u[k] = c[k]; });
-    saveUser_(u); log_(adm.login, 'добавил ' + login + ' (' + u.role + ')');
+    saveUser_(u); log_(adm.login, 'добавил ' + login + ' (' + u.role + (u.g && u.g.length ? '; группы ' + u.g.join(',') : '') + ')');
     return { ok: true, user: pub_(u) };
   });
 }
@@ -1538,7 +1549,8 @@ function userSet_(adm, q) {
       u.role = q.role;
     }
     if (q.name) u.name = cleanName_(q.name, 80);
-    saveUser_(u); log_(adm.login, 'изменил ' + u.login + ': ' + [q.st, q.role, q.name].filter(Boolean).join(', '));
+    if (q.g != null) u.g = grp_(q.g, adm);   // 21.11.2026: группы доступа — ключи групп человек получит со следующей выкладкой (k/<id>.bin)
+    saveUser_(u); log_(adm.login, 'изменил ' + u.login + ': ' + [q.st, q.role, q.name, q.g != null ? 'группы ' + (u.g.join(',') || 'нет') : ''].filter(Boolean).join(', '));
     return { ok: true, user: pub_(u) };
   });
 }
@@ -1723,7 +1735,7 @@ function docMail_(adm, q) {
 /** Для Claude при обновлении сайта: K включённых людей, зашифрованные его открытым ключом (без них — ничего секретного). */
 function keyring_() {
   var m = users_().map, L = [];
-  for (var k in m) if (m[k].st === 'active' && m[k].seal) L.push({ id: m[k].id, seal: m[k].seal });
+  for (var k in m) if (m[k].st === 'active' && m[k].seal) L.push({ id: m[k].id, seal: m[k].seal, g: m[k].g || [] });   // 21.11.2026: группы — для сборки (access.py)
   return { ok: true, now: Date.now(), rev: Number(props().getProperty('acct_rev') || 0), shared: acctShared_(), users: L };   // 30.10.2026 аудит G14
 }
 /** Список людей — в журнал выполнения (для владельца). */

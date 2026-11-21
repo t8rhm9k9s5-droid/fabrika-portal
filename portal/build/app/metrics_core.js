@@ -77,7 +77,15 @@
     var A = agg('types') || agg('cap'); if (!A) return null;
     var got = ks.reduce(function (a, x) { var g = sdGot(D[x]); return g > a ? g : a; }, S(((SD.months || {})[ym] || {}).got));
     var MM = (SD.months || {})[ym], whole = !!(MM && MM.to && got.slice(0, 10) > ym + '-' + String(mend(ym)).padStart(2, '0'));
-    return { ym: ym, v: A.s, q: A.q, to: ks[ks.length - 1], asof: got, whole: whole, n: ks.length };
+    // 16.11.2026, Т. В. (42,65 на портале против ~45,4 в 1С): дневные рассылки не видят проведённое задним числом. Есть накопительный отчёт
+    //   «Выполнение плана» (SNAP.pmgr: факт с 1-го числа на дату) — берём его + дни после его даты, если так больше.
+    var P = SNAP.pmgr, mix = null;
+    if (P && P.ym === ym && P.fact && P.asof) {
+      var after = 0, lastA = ''; ks.forEach(function (x) { if (x > S(P.asof)) { var R = (D[x] || {}).types || (D[x] || {}).cap; if (R && R.tot) { after += R.tot[1] || 0; lastA = x; } } });
+      // 21.11.2026 (Рекс CG-56): накопительный отчёт — Имя1 (в нём и корректировки вниз), а не «что больше»; период — его дата или последний день после неё
+      mix = { v: P.fact + after, asof: P.asof, to: lastA || S(P.asof).slice(0, 10) };
+    }
+    return { ym: ym, v: mix ? mix.v : A.s, q: A.q, to: mix ? mix.to : ks[ks.length - 1], asof: got, whole: whole, n: ks.length, daily: A.s, pm: mix };
   }
   function sales() {
     var SD = sday(), R = SNAP.rev || null, bars = {}, ag = {};
@@ -95,7 +103,7 @@
     var when = A.asof && A.to && S(A.asof).slice(0, 10) > S(A.to).slice(0, 10) ? 'по ' + dd(A.to) + ' (рассылка ' + dd(A.asof) + ' ' + S(A.asof).slice(11, 16) + ')' : A.asof ? 'на ' + dd(A.asof) + ' ' + S(A.asof).slice(11, 16) : (A.to ? 'по ' + dd(A.to) : '');
     return { k: 'sales', v: A.v, ym: cur, m: m, to: A.to, asof: A.asof, whole: A.whole, date: A.to, when: when, live: live,
       prev: pv ? { ym: pv, m: +pv.slice(5), v: bars[pv] } : null, bars: keys.slice(-6).map(function (k) { return [+k.slice(5), bars[k]]; }),
-      src: live ? 'рассылки 1С «Продажи» (робот хостинга)' : 'отчёт 1С «Продажи» по дням (снимок сборки)',
+      src: (A.pm ? 'отчёт «Выполнение плана» на ' + dd(A.pm.asof) + ' + ' : '') + (live ? 'рассылки 1С «Продажи» (робот хостинга)' : 'отчёт 1С «Продажи» по дням (снимок сборки)'),
       card: mln2(A.v) + ' млн ₽ · ' + MN[m - 1] + ' ' + (A.whole ? 'весь месяц' : 'по ' + dd(A.to)) };
   }
 
@@ -215,8 +223,14 @@
     var K = {}; (D.kinds || []).forEach(function (x) { K[x.k] = x; });
     var z = K.zps && K.zps.total, f = K.fts && K.fts.total;
     if (z == null && f == null) return { k: 'omts', none: true };
-    var tot = (z || 0) + (f || 0), t = (K.zps && K.zps.t) || (K.fts && K.fts.t);
-    return { k: 'omts', v: tot, z: z, f: f, t: t, date: t, live: true, src: 'рассылки 1С о просрочке (робот хостинга)', card: n(tot) + ' ' + pl(tot, 'позиция', 'позиции', 'позиций') + ' в просрочке' + (t ? ' · на ' + dd(t) : '') };
+    // 16.11.2026 (R5-11 Рекса): общий итог — только когда есть обе рассылки за один день; иначе «частично» и каждая компания со своей датой
+    //   (раньше ЖПС на 15.11 + ФТС на 10.11 складывались в одно число «на 15.11», а одна ЖПС выглядела полной картиной)
+    var tot = (z || 0) + (f || 0), tz = K.zps && K.zps.t, tf = K.fts && K.fts.t;
+    var same = z != null && f != null && S(tz).slice(0, 10) === S(tf).slice(0, 10), t = same ? tz : [tz, tf].filter(Boolean).sort()[0];
+    var part = function (nm, v, d) { return v == null ? nm + ' — нет данных' : nm + ' ' + n(v) + (d ? ' на ' + dd(d) : ''); };
+    return { k: 'omts', v: tot, z: z, f: f, t: t, date: t, live: true, partial: !same, src: 'рассылки 1С о просрочке (робот хостинга)',
+      card: same ? n(tot) + ' ' + pl(tot, 'позиция', 'позиции', 'позиций') + ' в просрочке' + (t ? ' · на ' + dd(t) : '')
+        : 'частично: ' + part('ЖПС', z, tz) + ' · ' + part('ФТС', f, tf) };
   }
 
   // ---------- качество: незакрытые рекламации (1С «Закрыта = Нет»; recl.bin робота, если не старше снимка) ----------
@@ -297,7 +311,54 @@
     ['sales', 'prod', 'stock', 'omts', 'recl', 'rev'].forEach(function (k) { var M = get(k); if (M && M.card) o.push(k + ': ' + M.card + ' (' + M.src + ')'); });
     return o.length ? 'Цифры портала (один источник для всех страниц):\n' + o.join('\n') : '';
   }
-  window.T14M = { get: get, on: function (f) { SUBS.push(f); }, start: start, verify: verify, journal: journal, card: card, ctx: ctx, sdMerge: sdMerge, sday: sday,
+  // 21.11.2026 (аудит, Т. В.: «одни исходные данные у всех»): общие расчёты для главной, «Продаж» и «Поручений»
+  //   plan() — выполнение плана месяца: план — файл Сотрудник8 (SNAP.planm), факт — get('sales'), рабочие дни — производственный календарь
+  var HOL = { '2026-11-04': 1, '2026-12-31': 1, '2027-01-01': 1, '2027-01-02': 1, '2027-01-05': 1, '2027-01-06': 1, '2027-01-07': 1, '2027-01-08': 1 };
+  function wdays(mon, to) { var n = 0; for (var d = new Date(mon + '-01T12:00:00Z'); d.toISOString().slice(0, 7) === mon && (!to || d.toISOString().slice(0, 10) <= to); d.setUTCDate(d.getUTCDate() + 1)) { var w = d.getUTCDay(); if (w > 0 && w < 6 && !HOL[d.toISOString().slice(0, 10)]) n++; } return n; }
+  function plan(P) {
+    P = P || SNAP.planm || {}; var T = P.tot || P.total || {}; if (!T.plan) return null;
+    var mon = P.month || S(P.asof).slice(0, 7), Sm = get('sales'); if (!Sm || Sm.v == null || Sm.ym !== mon) return { plan: T.plan, fact: T.fact, pct: T.pct, asof: P.asof, live: 0 };
+    var last = S(Sm.to).slice(0, 10), wd = wdays(mon), wp = Math.min(wd, Math.max(1, wdays(mon, last))), need = T.plan * wp / wd;
+    return { plan: T.plan, fact: Sm.v, need: need, diff: Sm.v - need, pct: 100 * Sm.v / T.plan, onDate: 100 * Sm.v / need, asof: last, live: 1, wd: wd, wp: wp };
+  }
+  //   poruch(d) — поручения из poruch.bin: тот же список и счёт, что страница «Поручения» (совещания — по единому протоколу)
+  var RX_INC = /происшеств|авари|травм|пожар|возгоран|задымл|(^|[^а-я])чп([^а-я]|$)|кража|хищен|протеч|затоп|порыв|обрушен|нарушен[а-я]* (периметр|охран|техник[а-я]* безопасн)|несчастн/i;
+  function poruch(d) {
+    if (!d) return null; var td = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), L = [];
+    function add(text, who, due, src) { L.push({ text: S(text), who: S(who), due: S(due), src: src, late: /^\d{4}-\d\d-\d\d/.test(S(due)) && S(due).slice(0, 10) < td, inc: RX_INC.test(S(text) + ' ' + S(who)) }); }
+    (d.ctl || []).forEach(function (e) { if ((e.who || []).some(function (w) { return w.st === 'open' || w.st === 'stale'; })) add(e.text, e.g, e.due, 'ctl'); });
+    (d.lead || []).forEach(function (r) { add(r.what, r.who, r.due, 'lead'); }); (d.cp || []).forEach(function (r) { add(r.what, r.who, r.due, 'cp'); });
+    var M = d.meet || [], pr = M.filter(function (m) { return m.id === 'ctl_protocol'; }); (pr.length ? pr : M).forEach(function (m) { (m.tasks || []).forEach(function (x) { if (x.st !== 'done') add(x.what, x.who, x.due, 'meet'); }); });
+    // журнал происшествий и охраны (таблица, бот MAX → ev): происшествия — открытые; периметр и машины — за 7 дней
+    var E = d.ev || null, ER = E && E.ok ? E.rows || [] : [], d7 = new Date(Date.now() + 3 * 3600e3 - 7 * 864e5).toISOString().slice(0, 10);
+    var Ptxt = L.map(function (x) { return x.text; }).join(' ');   // строка журнала из совещания (P-007…) уже посчитана в поручениях — второй раз не считаем
+    var evInc = ER.filter(function (r) { var m = /P-\d{3}/.exec(S(r.who)); return r.k === 'inc' && r.st !== 'done' && !(m && Ptxt.indexOf(m[0]) >= 0); }).length;
+    return { open: L.length + evInc, late: L.filter(function (x) { return x.late; }).length, inc: L.filter(function (x) { return x.inc; }).length + evInc, items: L, t: d.t,
+      ev: E ? { ok: !!E.ok, err: E.err || '', per7: ER.filter(function (r) { return r.k === 'per' && r.d > d7 && r.d <= td; }).length, car7: ER.filter(function (r) { return r.k === 'car' && r.d > d7 && r.d <= td; }).length,   // 21.11.2026 (Рекс CG-56): ровно 7 дат, включая сегодня
+        carToday: ER.filter(function (r) { return r.k === 'car' && r.d === td; }).length, inc: evInc, last: ER[0] || null } : null };
+  }
+  //   21.11.2026, Т. В. («периметр — камеры»): perim(cam) — события камер периметра и ворот вне рабочего графика (cam.bin, 3 суток).
+  //   Эпизод — подряд идущие события одной камеры с разрывом меньше 15 минут. Это сигнал для проверки, а не подтверждённое нарушение — те вносит охрана в журнал.
+  function perim(c) {
+    if (!c || !c.items) return null; var ev = c.items.filter(function (e) { return e.perim && e.off && /motion|line|zone|human/.test(e.k || ''); }).sort(function (a, b) { return a.t < b.t ? -1 : 1; });
+    var last = {}, ep = [], byCam = {};
+    ev.forEach(function (e) { var t = Date.parse(e.t + '+03:00'), L0 = last[e.name]; if (!L0 || t - L0.t1 > 15 * 60e3) { L0 = { cam: e.name, t0: t, t1: t, n: 0, night: !!e.night }; ep.push(L0); last[e.name] = L0; } L0.t1 = t; L0.n++; byCam[e.name] = (byCam[e.name] || 0) + 1; });
+    var td = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+    return { n: ep.length, ev: ev.length, today: ep.filter(function (x) { return new Date(x.t0 + 3 * 3600e3).toISOString().slice(0, 10) === td; }).length, cams: Object.keys(byCam).length, days: c.days || 3, t: c.t,
+      top: Object.keys(byCam).sort(function (a, b) { return byCam[b] - byCam[a]; }).slice(0, 3).map(function (k) { return [k, byCam[k]]; }) };
+  }
+  //   21.11.2026 («машины — ГЛОНАСС и график отгрузки»): fleet(gl) — грузовые машины компании сегодня: в рейсе (больше 5 км) / стоят;
+  //   перенос по графику отгрузки (заказы прошлой недели, снова стоящие в графике, — не уехали) — SNAP.shipcar (ship_carry.py, тот же расчёт, что «Продажи»)
+  var RX_CAR_PASS = /audi|chery|тойота|toyota|kia|hyundai solaris|škoda|skoda|lada|лада/i;
+  function fleet(g) {
+    var sc = SNAP.shipcar || null, out = { ship: sc };
+    if (g && g.cars) {
+      var td = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), km = (g.km || {})[td] || {}, cargo = g.cars.filter(function (c) { return !RX_CAR_PASS.test(c.name || ''); });
+      out.cargo = cargo.length; out.go = cargo.filter(function (c) { return (km[c.id] || 0) > 5; }).length; out.t = g.t;
+    }
+    return out;
+  }
+  window.T14M = { perim: perim, fleet: fleet, plan: plan, poruch: poruch, wdays: wdays, get: get, on: function (f) { SUBS.push(f); }, start: start, verify: verify, journal: journal, card: card, ctx: ctx, sdMerge: sdMerge, sday: sday,
     snap: function (k) { return SNAP[k]; }, failed: function (nm) { return !!FAIL[nm]; }, fmt: { n: n, nf: nf, dd: dd, mln: mln, mln2: mln2, pc: pc, pl: pl, MN: MN, MNP: MNP, MNR: MNR },
     _live: LIVE, _put: put };
 })();

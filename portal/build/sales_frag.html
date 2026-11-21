@@ -740,12 +740,17 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
   // заполнено тем, что есть: Ozon по неделям (аналитика кабинета ПКС) и остатки ОП (снимок fabrikant.su/stock); остальное — «запрошено».
   var SHIP = (function () { try { return JSON.parse(document.getElementById('ship-data').textContent || 'null'); } catch (e) { return null; } })();
   // 11.11.2026, Сотрудник8 К. В.: «загрузи данный формат отчёта в раздел ПРОДАЖИ, чтобы отслеживать ежедневное выполнение плана по менеджерам»
+  try { if (window.T14M && T14M.on) T14M.on(function () { if (location.hash === '#planm') planm(); }); } catch (eP) { }   // 21.11.2026: факт 1С пришёл — итог месяца в таблице обновляется
   var PLANM = (function () { try { return JSON.parse(document.getElementById('planm-data').textContent || 'null'); } catch (e) { return null; } })();
   function planm() {
     var P = PLANM, h = '<a class="back" href="#">Продажи</a><h1>Выполнение плана по менеджерам</h1>';
     if (!P || !P.rows) { V.innerHTML = h + '<p class="lead">Данных пока нет.</p>'; return; }
-    var k = P.wd_passed / P.wd_month, dd = P.asof.slice(8, 10) + '.' + P.asof.slice(5, 7);
-    h += '<p class="lead">На ' + dd + ': прошло ' + P.wd_passed + ' из ' + P.wd_month + ' рабочих дней месяца. «Должно быть» = план месяца ÷ ' + P.wd_month + ' × ' + P.wd_passed + '.</p>';
+    // 21.11.2026 (Рекс CG-56): рабочие дни — единый календарь портала (T14M.wdays), итог месяца — тот же расчёт, что на главной (T14M.plan, факт 1С);
+    //   таблица менеджеров — их файл (другой охват и дата среза), это подписано, а не смешано
+    var M = window.T14M, mon = P.asof.slice(0, 7), wdM = M && M.wdays ? M.wdays(mon) : P.wd_month, wdP = M && M.wdays ? Math.min(wdM, Math.max(1, M.wdays(mon, P.asof))) : P.wd_passed;
+    var k = wdP / wdM, dd = P.asof.slice(8, 10) + '.' + P.asof.slice(5, 7), PL = M && M.plan ? M.plan() : null;
+    if (PL && PL.live) h += '<div class="igroup"><div class="irow"><span class="ibody"><span class="ititle">Итог месяца по 1С — как на главной</span><span class="isub">' + rub(PL.fact) + ' из ' + rub(PL.need) + ' на ' + PL.asof.slice(8, 10) + '.' + PL.asof.slice(5, 7) + ' · ' + Math.round(PL.onDate) + ' % плана на дату · план месяца ' + rub(PL.plan) + '</span></span></div></div>';
+    h += '<p class="lead">Таблица менеджеров — их файл на ' + dd + ' (отгрузки по менеджерам; охват и дата среза могут отличаться от 1С выше). Прошло ' + wdP + ' из ' + wdM + ' рабочих дней. «Должно быть» = план месяца ÷ ' + wdM + ' × ' + wdP + '.</p>';
     var groups = [];
     P.rows.forEach(function (r) { var g = groups.filter(function (x) { return x.g === r.g; })[0]; if (!g) { g = { g: r.g, rows: [] }; groups.push(g); } g.rows.push(r); });
     var line = function (n, f, p, b) { var need = p * k, gap = f - need, pct = p ? f / p : null;

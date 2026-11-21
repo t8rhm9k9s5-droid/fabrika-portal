@@ -155,7 +155,7 @@
   function addUser(o) {                         // {name, login, role} → {login, pw} to hand over in person
     var c, pw = genPw(), id;
     return cfg().then(function (x) { c = x; return myM(); }).then(function (M) { return uid(o.login).then(function (x) { id = x; return makeCreds(id, o.login.trim(), o.name.trim(), pw, M, c.pub); }); })
-      .then(function (C) { return api('useradd', { tok: tok(), id: id, login: o.login.trim(), name: o.name.trim(), role: o.role, salt: C.salt, iter: C.iter, ver: C.ver, slot: C.slot, kr: C.kr, seal: C.seal, tokh: C.tokh }); })
+      .then(function (C) { return api('useradd', { tok: tok(), id: id, login: o.login.trim(), name: o.name.trim(), role: o.role, g: o.g || [], salt: C.salt, iter: C.iter, ver: C.ver, slot: C.slot, kr: C.kr, seal: C.seal, tokh: C.tokh }); })
       .then(function (r) { return { login: o.login.trim(), pw: pw, user: r.user }; });
   }
   function resetPw(u) {                         // a new password (and key) for someone: {login, pw}
