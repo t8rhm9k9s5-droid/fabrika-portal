@@ -172,3 +172,8 @@ for _d in os.listdir(os.path.dirname(FINAL)):
         shutil.rmtree(_p, ignore_errors=True)
 _jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))
+# 21.11.2026 (Т. В.: «новый сайт на /fsu/, начнём с каталога»): поверх свежей копии — новый каталог (work/fsu2: build_new.py → fsu_build_new.py);
+#   FSU_NEW=0 — оставить только копию. Блокировку отпускаем: fsu_build_new берёт её сам.
+_NEW = '/home/claude/fabrika/work/fsu2/fsu_build_new.py'
+if os.environ.get('FSU_NEW') != '0' and os.path.exists(_NEW):
+    _LOCK.close(); subprocess.run([sys.executable, _NEW], check=True)

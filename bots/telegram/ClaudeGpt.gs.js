@@ -8,6 +8,8 @@
 // Почты, телефоны и IP во входе заменяются заглушками (решение Т. В. 04.11: во внешние ИИ — без контактов).
 // Не больше CG_DAY_LIMIT задач в сутки (защита от лишних трат). В журнал g4_log — только id, модель и размер, без текста.
 var CG_DEF_MODEL = 'gpt-5', CG_DAY_LIMIT = 40, CG_MAX_IN = 190000;
+// 21.11.2026, Т. В.: картинки для карточек сайта — «без ограничения, как можно быстрее»: свой счётчик cnt.img (40 текстовых задач не тратятся), CG_IMG_LIMIT — только предохранитель от зацикливания
+var CG_IMG_LIMIT = 3000;
 
 function cg_post_(q) {
   var sg = g4_sigCheck_(q, ['cg']);
@@ -26,8 +28,8 @@ function cg_post_(q) {
   if (q.op !== 'gptask') return { ok: false, error: 'неизвестная команда' };
   var day = Utilities.formatDate(new Date(), 'Europe/Moscow', 'yyyy-MM-dd'), cnt = pj_(p.getProperty('cg_day'), null) || {};
   if (cnt.day !== day) cnt = { day: day, n: 0 };
+  if (d.img) { if ((cnt.img || 0) >= CG_IMG_LIMIT) return { ok: false, error: 'предохранитель картинок на сутки (' + CG_IMG_LIMIT + ')' }; return cg_img_(d.img, H, p, cnt); }
   if (cnt.n >= CG_DAY_LIMIT) return { ok: false, error: 'лимит задач на сутки (' + CG_DAY_LIMIT + ')' };
-  if (d.img) return cg_img_(d.img, H, p, cnt);
   var ins = String(d.instructions || ''), inp = String(d.input || '');
   if (!inp) return { ok: false, error: 'пусто' };
   if (ins.length + inp.length > CG_MAX_IN) return { ok: false, error: 'слишком большой запрос' };
@@ -54,9 +56,9 @@ function cg_img_(g, H, p, cnt) {   // картинка: текст задани�
   var r = UrlFetchApp.fetch('https://api.openai.com/v1/responses', { method: 'post', muteHttpExceptions: true, contentType: 'application/json', headers: H, payload: JSON.stringify(body) });
   var j = cg_json_(r);
   if (r.getResponseCode() !== 200) return { ok: false, error: cg_err_(r, j) };
-  cnt.n++; p.setProperty('cg_day', JSON.stringify(cnt));
+  cnt.img = (cnt.img || 0) + 1; p.setProperty('cg_day', JSON.stringify(cnt));
   try { g4_log_('cg', 'картинка GPT ' + j.id + ' · ' + size + ' · ' + quality + ' · фото ' + ims.length); } catch (e) { /* журнал не обязателен */ }
-  return { ok: true, id: j.id, status: j.status, left: CG_DAY_LIMIT - cnt.n };
+  return { ok: true, id: j.id, status: j.status, left: CG_IMG_LIMIT - cnt.img };
 }
 function cg_json_(r) { try { return JSON.parse(r.getContentText() || '{}'); } catch (e) { return {}; } }
 function cg_err_(r, j) { return (r.getResponseCode() + ' ' + String((j && j.error && j.error.message) || '').slice(0, 300)).trim(); }
