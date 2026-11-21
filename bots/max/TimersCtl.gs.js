@@ -616,8 +616,9 @@ function tm_events_(ctx) {
       var seen = {}; rows.forEach(function (x) { seen[String(x.what).slice(0, 60).toLowerCase()] = 1; });
       var Q = 'newer_than:30d -from:user1@example.org -from:user32@example.org -subject:"NVR ALERT" (происшествие OR авария OR травма OR пожар OR возгорание OR задымление OR кража OR хищение OR протечка OR затопление OR "несчастный случай" OR ДТП OR "машина не подана" OR "не подали машину" OR "машину не подали")';
       GmailApp.search(Q, 0, 40).forEach(function (th) {
-        var sub = String(th.getFirstMessageSubject() || ''); if (/поручени[яй] на|видеонаблюдени|сводк|отчёт|отчет/i.test(sub)) return;
+        var sub = String(th.getFirstMessageSubject() || ''); if (/поручени[яй] на|видеонаблюдени|сводк|отчёт|отчет|совещани|протокол|договор|служебн|сч[её]т|замечани/i.test(sub)) return;   // повестки, договоры, счета — не происшествия
         var m = th.getMessages()[0], dt = m.getDate(), txt = (sub + ' ' + m.getPlainBody().slice(0, 1500)).toLowerCase();
+        if (!/происшеств|авари[яи]|травм|пожар|возгоран|задымл|краж[аиу]|хищени|протечк|затоплен|несчастн[а-я]* случа|(^|[^а-я])дтп([^а-я]|$)|машин[а-я]* не подан|не подали машин|проникновени/.test(txt)) return;   // поиск Gmail нестрогий — слово должно быть в теме или начале письма
         var d2 = Utilities.formatDate(dt, 'Europe/Moscow', 'yyyy-MM-dd'); if (d2 < from) return;
         var key = sub.replace(/^(re|fwd?|fw):\s*/ig, '').slice(0, 60).toLowerCase(); if (seen[key]) return; seen[key] = 1;
         var kind = /машин[а-я]* не подан|не подали машин|машину не подал/.test(txt) ? 'car' : /периметр|проникн|посторон/.test(txt) ? 'per' : 'inc';

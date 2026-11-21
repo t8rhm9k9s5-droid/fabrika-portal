@@ -81,13 +81,14 @@ def code_map():
 
 def make(send='smtp', read='imap', passwords=True, k_owner=True, trap='trap', sock='mail', cfg=None):
     """→ dict: T (корень, как ~), FL (~/.fabrika_live), C (code), SITE, ENV (для subprocess), TRAPF (журнал ловушки)"""
-    T = tempfile.mkdtemp(); FL = os.path.join(T, '.fabrika_live'); C = os.path.join(FL, 'code')
+    T = tempfile.mkdtemp(); import atexit, shutil as _sh; atexit.register(_sh.rmtree, T, True)   # 21.11.2026: временный дом теста удаляется после прогона (14 тыс. папок заняли 16 ГБ)
+    FL = os.path.join(T, '.fabrika_live'); C = os.path.join(FL, 'code')
     for d in ('code', 'state', 'log', 'out', 'stock', 'py'): os.makedirs(os.path.join(FL, d))
     for n in code_map():
         p = os.path.join(HERE, n)
         if os.path.isfile(p): shutil.copy(p, os.path.join(C, n))
     for n, body in STUBS.items(): _wr(body, os.path.join(FL, 'py', n), 'w', encoding='utf-8')
-    c = {'k_live': KL, 'k_deploy': KD, 'site': os.path.join(T, 'www'), 'mail': 'user124@example.org'}
+    c = {'k_live': KL, 'k_deploy': KD, 'site': os.path.join(T, 'www'), 'mail': 'user128@example.org'}
     c.update(cfg or {})
     _wr(json.dumps(c), os.path.join(FL, 'cfg.json'), 'w')
     if k_owner: _wr(KO, os.path.join(C, 'k_owner.txt'), 'w')

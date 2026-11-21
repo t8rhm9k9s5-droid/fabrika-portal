@@ -1,16 +1,12 @@
 {
  "portal_version": "2.22.9",
- "exported_utc": "2026-11-21T08:30Z",
- "files_sha": "ef7f7c783e27423a",
+ "exported_utc": "2026-11-21T09:19Z",
+ "files_sha": "af3226ec4a31f6ef",
  "files": [
   "bots/max/TimersCtl.gs.js",
-  "portal/app_build/enc/enc_sw.js",
-  "portal/assets/acct.js",
-  "portal/assets/live.js",
-  "portal/assets/versions_full.js",
-  "portal/build/assort_frag.html",
   "portal/fsu/fsu_fidx.py",
-  "portal/fsu/fsu_fidx_put.py"
+  "portal/fsu/fsu_fidx_put.py",
+  "robot/live/test/mock_home.py"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }
