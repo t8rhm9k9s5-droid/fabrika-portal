@@ -626,7 +626,7 @@ function tm_events_(ctx) {
       });
     } catch (em) { /* почта недоступна — журнал без писем */ }
     rows.sort(function (a, b) { return a.d < b.d ? 1 : -1; });
-    return { ok: true, rows: rows };
+    return { ok: true, rows: rows.slice(0, 200) };   // 21.11.2026 (GPT): не больше 200 строк и с письмами
   } catch (e) { return { ok: false, err: String(e && e.message || e).slice(0, 120) }; }
 }
 function tm_poruch_(ctx, st, ctl) {

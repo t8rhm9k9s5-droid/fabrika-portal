@@ -1,34 +1,16 @@
 {
- "portal_version": "2.22.8",
- "exported_utc": "2026-11-21T08:03Z",
- "files_sha": "0c84d3b4f2e4318e",
+ "portal_version": "2.22.9",
+ "exported_utc": "2026-11-21T08:30Z",
+ "files_sha": "ef7f7c783e27423a",
  "files": [
   "bots/max/TimersCtl.gs.js",
-  "bots/telegram/Код.gs.js",
-  "ci/pulse_expect.json",
-  "ci/test_pulse_live.sh",
-  "portal/app_build/build_enc.py",
   "portal/app_build/enc/enc_sw.js",
   "portal/assets/acct.js",
   "portal/assets/live.js",
-  "portal/assets/pulse.js",
   "portal/assets/versions_full.js",
-  "portal/build/acct/acct_core.js",
-  "portal/build/admin_frag.html",
-  "portal/build/app/live.js",
-  "portal/build/app/metrics_core.js",
   "portal/build/assort_frag.html",
-  "portal/build/build_site.py",
-  "portal/build/gen_alerts.py",
-  "portal/build/home_frag.html",
-  "portal/build/poruch_frag.html",
-  "portal/fsu/fsu_build.py",
   "portal/fsu/fsu_fidx.py",
-  "portal/fsu/fsu_fidx_put.py",
-  "portal/fsu/fsu_img.py",
-  "portal/fsu/fsu_shim.js",
-  "portal/fsu/podbor.html",
-  "robot/live/live.py"
+  "portal/fsu/fsu_fidx_put.py"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }

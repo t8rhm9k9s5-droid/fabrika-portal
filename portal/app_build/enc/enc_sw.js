@@ -246,7 +246,8 @@ async function serve(p, req) {
 // 21.11.2026 (аудит): Safari на iPhone и Mac запрашивает видео частями (Range) — отвечаем 206 с нужным отрезком
 async function range(req, r) {
   const h = req.headers.get('Range');
-  if (!h || !r || r.status !== 200 || !/^(video|audio)\//.test(r.headers.get('Content-Type') || '')) return r;
+  if (!r || r.status !== 200 || !/^(video|audio)\//.test(r.headers.get('Content-Type') || '')) return r;
+  if (!h) { if (r.headers.get('Accept-Ranges')) return r; const h0 = new Headers(r.headers); h0.set('Accept-Ranges', 'bytes'); return new Response(r.body, { status: 200, headers: h0 }); }   // 21.11.2026 (GPT): Safari перематывает видео, если видит Accept-Ranges и в полном ответе
   const m = /^bytes=(\d*)-(\d*)$/.exec(h.trim()); if (!m) return r;
   const buf = await r.arrayBuffer(), size = buf.byteLength;
   let a = m[1] === '' ? Math.max(0, size - +m[2]) : +m[1], b = m[1] !== '' && m[2] !== '' ? Math.min(+m[2], size - 1) : size - 1;
@@ -267,6 +268,7 @@ async function withApp(p, r) {                     // 24.10.2026: each page gets
 const FQ = {};
 async function fq(st, req) {
   const v = st.map.v;
+  for (const k in FQ) if (k !== String(v)) delete FQ[k];   // 21.11.2026 (GPT): индекс прошлой версии из памяти убираем
   if (!FQ[v]) FQ[v] = (async () => { const r = await serve0('fsu/_api/_fidx.json', { mode: 'cors' }); if (!r.ok) throw new Error('fidx ' + r.status); return r.json(); })().catch(e => { delete FQ[v]; throw e; });
   let X; try { X = await FQ[v]; } catch (e) { return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }); }
   const q = new URL(req.url).searchParams; let f = {}; try { f = JSON.parse(q.get('filter') || '{}') || {}; } catch (e) { }
@@ -281,7 +283,7 @@ async function fq(st, req) {
   const total = its.length, lim = +q.get('limit') || 0, ps = +q.get('pageSize') || 0, pg = Math.max(1, +q.get('page') || 1);
   if (lim) its = its.slice(0, lim); else if (ps) its = its.slice((pg - 1) * ps, pg * ps);
   const body = q.get('withTotal') ? { items: its, total } : its;
-  return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 async function serve0(p, req) {
   const st = await state();
