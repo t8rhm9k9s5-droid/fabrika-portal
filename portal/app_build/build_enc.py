@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 B = '/home/claude/app_build'
 STAND = bool(os.environ.get('T14_ENC_SRC'))   # стенд: рабочие файлы сборки (enc_map, release_state, news) не трогаем
 SRC = os.environ.get('T14_ENC_SRC') or f'{B}/pwa/terekhina14'   # 15.11.2026: стенд доступа по группам собирает из своей малой копии
-ENC = f'{B}/enc'
+ENC = os.environ.get('T14_ENC_TPL') or f'{B}/enc'   # 21.11.2026: стенд проверяет шаблоны из своей папки
 SECRET = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'
 ITER = 250000
 args = sys.argv[1:]
@@ -78,7 +78,12 @@ for root, _, names in os.walk(SRC):
     for n in names:
         rel = os.path.relpath(os.path.join(root, n), SRC).replace(os.sep, '/')
         if rel in SKIP or rel.startswith(PUBLIC_DIRS): continue
+        if re.search(r'\.before[-_]|\.(bak|orig)$', n) or n.startswith('_mock'): continue   # 21.11.2026 (аудит): резервные копии и макеты не публикуются
         data = pathlib.Path(os.path.join(root, n)).read_bytes()
+        if not data: continue   # пустой файл — не публикуем
+        if n.endswith('.html') and b'applink.js' not in data:   # 21.11.2026 (аудит): строка «Приложение для Android» — при сборке, а не в Service Worker на каждом переходе
+            _i = data.rfind(b'</body>'); _tag = b'<script src="applink.js?v=20261025" defer></script>'
+            data = data[:_i] + _tag + data[_i:] if _i >= 0 else data + _tag
         sid = ACC.set_of(rel, AMAP) if ACC_ON else None
         fa, fiv = set_aes(sid) if sid else (aes, ivkey)
         iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
@@ -94,15 +99,25 @@ docs = [p for p in DOCS if p in files]
 _H8 = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:8]
 # 28.10.2026: уведомления всем — только «крупный выпуск» (решает build_pwa.py → release_state.json → last.public). Скрипт уведомлений шлёт пуш всем,
 #   когда меняется хвост VERSION (после «-»), поэтому для обычной сборки хвост остаётся прежним (enc_pub), а метка времени меняется — sw.js обновляется тихо.
-try:
-    _RS = json.loads(pathlib.Path('/home/claude/app_build/release_state.json').read_text(encoding='utf-8'))
-except Exception: _RS = {}
+# 16.11.2026 (R5-05 Рекса): тот же порядок, что в build_pwa — блокировка, копия .bak, атомарная запись, повреждённый файл не превращается в «{}»
+import fcntl as _fcntl, shutil as _sh
+_RSP = '/home/claude/app_build/release_state.json'
+_rs_lock = open(_RSP + '.lock', 'w'); _fcntl.flock(_rs_lock, _fcntl.LOCK_EX)
+_RS = None
+for _p in (_RSP, _RSP + '.bak'):
+    if os.path.exists(_p):
+        try: _RS = json.loads(pathlib.Path(_p).read_text(encoding='utf-8')); break
+        except Exception: continue
+if _RS is None:
+    if os.path.exists(_RSP): sys.exit('release_state.json повреждён (и .bak) — сборку не продолжаю')
+    _RS = {}
 # 28.10.2026 20:05: хвост меняется ОДИН раз на крупный выпуск (метка enc_for = last.t). Раньше каждая следующая сборка build_host после крупного
 #   выпуска давала новый хвост → пуш всем повторялся (28.10: 18:30 и 19:50, с устаревшим текстом news.txt от 26.10).
 _last = _RS.get('last') or {}
 if not STAND and (not _RS.get('enc_pub') or (_last.get('public') and _RS.get('enc_for') != _last.get('t'))):
     _RS['enc_pub'] = _H8; _RS['enc_for'] = _last.get('t')
-    pathlib.Path('/home/claude/app_build/release_state.json').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8')
+    if os.path.exists(_RSP): _sh.copy2(_RSP, _RSP + '.bak')
+    pathlib.Path(_RSP + '.tmp').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8'); os.replace(_RSP + '.tmp', _RSP)
 VERSION = time.strftime('%Y%m%d%H%M%S') + '-' + (_RS.get('enc_pub') or 'stand')
 NEWS = f'{B}/news.txt'                    # «что нового» for the push notification text (private: lives only inside m.bin)
 news = pathlib.Path(NEWS).read_text(encoding='utf-8').strip()[:300] if os.path.exists(NEWS) else ''

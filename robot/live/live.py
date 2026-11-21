@@ -25,6 +25,7 @@
    send="bot" — очередь outbox/ отдаётся скрипту бота в st/mo.bin (mail_q.bot_work), подтверждения — st/mo.php → outbox/acks/;
    read="gas" — ни imap.gmail.com, ни imap.mail.ru: отчёты приносит скрипт бота (st/in.php → ~/.fabrika_live/inbox_gas/*.json),
    участок reports разбирает их тем же ingest_message, что письма из Gmail (gas_inbox); блоки itm@, которым нужен IMAP, — «отключено»."""
+import zlib
 import base64, datetime, email, email.header, email.policy, email.utils, fcntl, hashlib, hmac, imaplib, json, os, re, secrets, smtplib, socket, ssl, sys, time
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
@@ -774,8 +775,25 @@ def expected_x(day, last):
     return rows
 
 
+# 21.11.2026 (аудит): T14B2 — JSON сжат zlib до шифрования (живые файлы в ~10 раз меньше), ключи потока и подписи разделены.
+#   Шаг 2 выкладки: включается файлом zlive.on рядом с роботом, когда у всех страницы с поддержкой T14B2 (live.js от 21.11).
+ZLIVE = os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zlive.on'))
+
+
+def seal2(obj, key=None):
+    key = key or KEY
+    raw = zlib.compress(json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8'), 9)
+    ke = hmac.new(key, b't14-enc', hashlib.sha256).digest(); km = hmac.new(key, b't14-mac', hashlib.sha256).digest()
+    nonce = secrets.token_bytes(16)
+    ks = b''.join(hmac.new(ke, nonce + i.to_bytes(4, 'big'), hashlib.sha256).digest() for i in range((len(raw) + 31) // 32))[:len(raw)]
+    ct = (int.from_bytes(raw, 'big') ^ int.from_bytes(ks, 'big')).to_bytes(len(raw), 'big') if raw else b''
+    tag = hmac.new(km, nonce + ct, hashlib.sha256).digest()
+    return 'T14B2.' + base64.b64encode(nonce + tag + ct).decode()
+
+
 def seal(obj, key=None):
     key = key or KEY
+    if globals().get('ZLIVE') and 'seal2' in globals() and key == globals().get('KEY'): return globals()['seal2'](obj, key)   # 21.11.2026: сжатый формат — только по флагу zlive.on
     raw = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     nonce = secrets.token_bytes(16)
     ks = bytearray(); i = 0

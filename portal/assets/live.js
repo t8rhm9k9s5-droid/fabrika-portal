@@ -35,20 +35,20 @@
     }
     O[0] = (H[0] + a) | 0; O[1] = (H[1] + b) | 0; O[2] = (H[2] + c) | 0; O[3] = (H[3] + d) | 0; O[4] = (H[4] + e) | 0; O[5] = (H[5] + f) | 0; O[6] = (H[6] + g) | 0; O[7] = (H[7] + h) | 0;
   }
-  var PADS = null;
-  function pads() {                              // состояния SHA-256 после блоков key^ipad и key^opad
-    if (PADS) return PADS;
+  var PADS = {};
+  function pads(kb) {                            // состояния SHA-256 после блоков key^ipad и key^opad (kb — 32 байта ключа; по умолчанию ключ сайта)
+    var id = kb ? Array.prototype.join.call(kb, ',') : ''; if (PADS[id]) return PADS[id];
     var k = new Uint8Array(64), W = new Int32Array(64), IV = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-    k.set(hex(KEY_HEX));
+    k.set(kb || hex(KEY_HEX));
     var si = new Int32Array(8), so = new Int32Array(8), i;
     for (i = 0; i < 16; i++) W[i] = ((k[4 * i] ^ 0x36) << 24) | ((k[4 * i + 1] ^ 0x36) << 16) | ((k[4 * i + 2] ^ 0x36) << 8) | (k[4 * i + 3] ^ 0x36);
     comp(IV, W, si);
     for (i = 0; i < 16; i++) W[i] = ((k[4 * i] ^ 0x5c) << 24) | ((k[4 * i + 1] ^ 0x5c) << 16) | ((k[4 * i + 2] ^ 0x5c) << 8) | (k[4 * i + 3] ^ 0x5c);
     comp(IV, W, so);
-    return (PADS = [si, so]);
+    return (PADS[id] = [si, so]);
   }
-  function xorStream(nonce, ct) {                // ct ^ HMAC(key, nonce ‖ номер блока), блоки по 32 байта — как seal() на хостинге
-    var P = pads(), si = P[0], so = P[1], W = new Int32Array(64), I = new Int32Array(8), O = new Int32Array(8), out = new Uint8Array(ct.length);
+  function xorStream(nonce, ct, kb) {            // ct ^ HMAC(key, nonce ‖ номер блока), блоки по 32 байта — как seal() на хостинге
+    var P = pads(kb), si = P[0], so = P[1], W = new Int32Array(64), I = new Int32Array(8), O = new Int32Array(8), out = new Uint8Array(ct.length);
     var n0 = (nonce[0] << 24) | (nonce[1] << 16) | (nonce[2] << 8) | nonce[3], n1 = (nonce[4] << 24) | (nonce[5] << 16) | (nonce[6] << 8) | nonce[7],
       n2 = (nonce[8] << 24) | (nonce[9] << 16) | (nonce[10] << 8) | nonce[11], n3 = (nonce[12] << 24) | (nonce[13] << 16) | (nonce[14] << 8) | nonce[15];
     for (var b = 0, n = Math.ceil(ct.length / 32); b < n; b++) {
@@ -63,7 +63,34 @@
     }
     return out;
   }
+  // 21.11.2026 (аудит): формат T14B2 — JSON сжат zlib до шифрования (живые файлы в ~10 раз меньше), ключи потока и подписи разделены:
+  //   kE = HMAC(K, «t14-enc»), kM = HMAC(K, «t14-mac»). Шаг 1 — страницы понимают оба формата; шаг 2 — робот хостинга пишет T14B2.
+  var KS = null;
+  function subkeys() {
+    if (KS) return KS; var S = crypto.subtle, te = new TextEncoder();
+    return (KS = S.importKey('raw', hex(KEY_HEX), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (k) {
+      return Promise.all([S.sign('HMAC', k, te.encode('t14-enc')), S.sign('HMAC', k, te.encode('t14-mac'))]);
+    }).then(function (a) { return { e: new Uint8Array(a[0]), m: new Uint8Array(a[1]) }; }));
+  }
+  function inflate(u) {
+    if (!window.DecompressionStream) return Promise.reject(new Error('Браузер не умеет распаковку — обновите iOS/браузер'));
+    return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function unseal2(txt) {
+    var all = b64(txt.slice(6)), nonce = all.slice(0, 16), tag = all.slice(16, 48), ct = all.slice(48), S = crypto.subtle;
+    return subkeys().then(function (K) {
+      return S.importKey('raw', K.m, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (km) {
+        var m = new Uint8Array(16 + ct.length); m.set(nonce); m.set(ct, 16);
+        return S.sign('HMAC', km, m);
+      }).then(function (t) {
+        t = new Uint8Array(t); var d = 0; for (var i = 0; i < 32; i++) d |= t[i] ^ tag[i];
+        if (d) throw new Error('подпись не сошлась');
+        return inflate(xorStream(nonce, ct, K.e));
+      });
+    });
+  }
   function unseal(txt) {
+    if (txt && txt.indexOf('T14B2.') === 0 && window.crypto && crypto.subtle) return unseal2(txt);
     if (!txt || txt.indexOf('T14B1.') !== 0 || !(window.crypto && crypto.subtle)) return null;
     var all = b64(txt.slice(6)), nonce = all.slice(0, 16), tag = all.slice(16, 48), ct = all.slice(48), S = crypto.subtle;
     return S.importKey('raw', hex(KEY_HEX), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (k) {
@@ -78,8 +105,12 @@
   //   (как он лежит на хостинге) держим в sessionStorage вкладки: моложе 2 мин — берём сразу; моложе 10 мин (цикл хостинга) — показываем сразу и тут же
   //   скачиваем свежий; если он другой — страница получает событие «t14live» (ls.bin) или «t14bin» {name, data} и перерисовывается.
   var FRESH = 120000, STALE = 600000;
-  function cget(name) { try { var v = sessionStorage.getItem('t14b.' + name); if (!v) return null; var i = v.indexOf('|'); return { at: +v.slice(0, i), t: v.slice(i + 1) }; } catch (e) { return null; } }
-  function cput(name, txt) { try { sessionStorage.setItem('t14b.' + name, Date.now() + '|' + txt); } catch (e) { try { sessionStorage.removeItem('t14b.' + name); } catch (x) { } } }
+  // 21.11.2026 (аудит): текст файлов больше не кладётся в sessionStorage (до 4 млн знаков, запись в основном потоке, у Safari предел ~5 млн —
+  //   файлы молча не сохранялись). На странице — память, между страницами и запусками — Cache Storage (pget/pput ниже).
+  var MEM = {};
+  function cget(name) { return MEM[name] || null; }
+  function cput(name, txt) { MEM[name] = { at: Date.now(), t: txt }; }
+  try { for (var si = sessionStorage.length - 1; si >= 0; si--) { var sk = sessionStorage.key(si); if (sk && sk.indexOf('t14b.') === 0) sessionStorage.removeItem(sk); } } catch (e) { }
   // 14.11.2026, Т. В.: «если я зашёл на портал, он должен быть уже прогружен по максимуму — не хочу ждать загрузки; раздел пустой, потом
   //   прогрузился». Зашифрованный текст файлов (тот же, что на хостинге; расшифровать можно только внутри сайта) держим ещё и в хранилище
   //   браузера (Cache Storage) — между запусками приложения: страница сразу рисует последнее, что было, и тут же скачивает свежее
@@ -94,10 +125,17 @@
   function pput(name, txt) {
     try { if (window.caches) caches.open(PC).then(function (c) { return c.put('/__t14bin/' + name, new Response(txt, { headers: { 'x-at': String(Date.now()), 'content-type': 'text/plain' } })); }).catch(function () { }); } catch (e) { }
   }
-  function net(name) {
-    return fetch('st/' + name + '?m=' + Math.floor(Date.now() / FRESH), { cache: 'no-store', credentials: 'same-origin' })
-      .then(function (r) { return r.ok ? r.text() : null; }).then(function (t) { if (t && t.indexOf('T14B1.') === 0) { cput(name, t); pput(name, t); } return t; });
+  // 21.11.2026 (аудит): условный запрос — браузер спрашивает хостинг «изменился ли файл» (ETag) и получает 304 без тела, если нет.
+  //   Раньше метка ?m= и cache:'no-store' заставляли каждый раз качать файл целиком (4 МБ на все разделы).
+  var NETC = {};
+  function net(name, signal) {
+    if (NETC[name]) return NETC[name];   // один запрос на файл одновременно
+    var p = NETC[name] = fetch('st/' + name, { cache: 'no-cache', credentials: 'same-origin', signal: signal })
+      .then(function (r) { return r.ok ? r.text() : null; }).then(function (t) { if (t && OK(t)) { cput(name, t); pput(name, t); } return t; })
+      .then(function (t) { delete NETC[name]; return t; }, function (e) { delete NETC[name]; throw e; });
+    return p;
   }
+  function OK(t) { return t.indexOf('T14B1.') === 0 || t.indexOf('T14B2.') === 0; }
   function get(name, onNew) {                    // → Promise<данные | null>; onNew(данные) — если после быстрого показа пришёл другой файл
     var c = cget(name), age = c ? Date.now() - c.at : 1e12;
     if (c && age < FRESH) return Promise.resolve(open(c.t)).catch(function () { return net(name).then(open); });
@@ -107,28 +145,35 @@
       return shown;
     }
     return pget(name).then(function (pc) {        // во вкладке нет — из хранилища браузера: показать сразу, свежий — следом
-      if (!pc || !pc.t || pc.t.indexOf('T14B1.') !== 0) return net(name).then(open);
-      try { sessionStorage.setItem('t14b.' + name, pc.at + '|' + pc.t); } catch (e) { }
+      if (!pc || !pc.t || !OK(pc.t)) return net(name).then(open);
+      MEM[name] = { at: pc.at, t: pc.t };
       var shown = Promise.resolve(open(pc.t)).catch(function () { return null; });
       if (Date.now() - pc.at >= FRESH) net(name).then(function (t) { if (t && t !== pc.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
       return shown.then(function (d) { return d || net(name).then(open); });
     });
   }
   // все файлы разделов — заранее, в фоне, после отрисовки страницы (не чаще раза в 5 минут; по одному, чтобы не мешать странице)
-  var ALL = ['ls.bin', 'sales.bin', 'pf.bin', 'omts.bin', 'recl.bin', 'oz.bin', 'ozrev.bin', 'ozh.bin', 'ozd.bin', 'promises.bin', 'smv.bin', 'smvs.bin',
-    'leads.bin', 'docs.bin', 'tz1c.bin', 'svc.bin', 'staff.bin', 'pub.bin', 'poruch.bin', 'mps.bin'];
+  // 21.11.2026 (аудит): ozrev.bin и mps.bin на хостинге нет (каждый раз качалась страница 404) — убраны. Предзагрузка: не чаще раза в 30 мин,
+  //   не при экономии трафика и на 2G/3G, останавливается при уходе со страницы; с условными запросами неизменённый файл — 304 без тела.
+  var ALL = ['ls.bin', 'sales.bin', 'poruch.bin', 'pf.bin', 'omts.bin', 'recl.bin', 'oz.bin', 'ozh.bin', 'ozd.bin', 'promises.bin', 'smv.bin', 'smvs.bin',
+    'leads.bin', 'docs.bin', 'tz1c.bin', 'svc.bin', 'staff.bin', 'pub.bin'];
+  var PAC = null;
   function prefetch() {
     if (window.__T14_FILE || location.protocol === 'file:') return;
-    var last = 0; try { last = +(localStorage.getItem('t14.pref') || 0); localStorage.setItem('t14.pref', String(Date.now())); } catch (e) { }
-    if (Date.now() - last < 300000) return;
+    var cn = navigator.connection; if (cn && (cn.saveData || /(^|-)2g|3g/.test(cn.effectiveType || ''))) return;
+    var last = 0; try { last = +(localStorage.getItem('t14.pref') || 0); } catch (e) { }
+    if (Date.now() - last < 1800000) return;
+    try { localStorage.setItem('t14.pref', String(Date.now())); } catch (e) { }
+    PAC = window.AbortController ? new AbortController() : null;
     var i = 0;
     (function next() {
-      if (i >= ALL.length) return;
+      if (i >= ALL.length || (PAC && PAC.signal.aborted)) return;
       var nm = ALL[i++], c = cget(nm);
       if (c && Date.now() - c.at < FRESH) return next();
-      net(nm).catch(function () { }).then(function () { setTimeout(next, 150); });
+      net(nm, PAC && PAC.signal).catch(function () { }).then(function () { setTimeout(next, 150); });
     })();
   }
+  try { addEventListener('pagehide', function () { if (PAC) PAC.abort(); }); } catch (e) { }
   try {
     var kick = function () { (window.requestIdleCallback || function (f) { return setTimeout(f, 1200); })(prefetch, { timeout: 4000 }); };
     if (document.readyState === 'complete') kick(); else window.addEventListener('load', kick);

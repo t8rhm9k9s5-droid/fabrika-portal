@@ -45,6 +45,8 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   <!-- 14.11.2026, Т. В.: «звёздочку отмечаю в мобильной версии — с главного экрана его не видно» — «Сохранённое» на главной (assets/fav.js) -->
   <section class="fh-fav" id="fhFav" aria-labelledby="favH" hidden><div class="fh-cap"><h2 id="favH">Сохранённое</h2><a class="fh-all" id="favAll" href="razdel.html#saved">Все</a></div><div class="igroup fav-mini" id="favHome"></div></section>
 
+  <!-- 21.11.2026, Т. В. (аудит, вариант «Пульт»): щекотливое — за 1 нажатие; видят администраторы; нет источника — так и написано, не ноль -->
+  <section class="fh-attn" id="fhSens" aria-labelledby="sensH" hidden><div class="fh-cap"><h2 id="sensH">Щекотливое</h2></div><div class="igroup" id="sens"></div></section>
   <div class="fh-cap"><h2 id="pulseH">Контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество и отзывы → онлайн</p></div>
   <ul class="pk-grid" id="pulse" aria-labelledby="pulseH">
     <li><a class="pk" id="pkSales" href="sales.html#s1c" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Продажи</span><b class="pk-v">…</b><span class="pk-s">сумма продаж</span></a></li>
@@ -254,8 +256,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       var pv = wp ? Math.round(gs.reduce(function (a, g) { return a + g.v * g.p; }, 0) / wp) : null;
       fbSet('fbProd', pv != null ? pv + '<small>%</small>' : '—', pv != null ? 'к плану на дату · ' + MN[+R.m.slice(5) - 1] + (R.last ? ', по ' + dd(R.last) : '') : 'нет факта выпуска', pv == null ? 'none' : pv >= 95 ? 'ok' : pv >= 85 ? 'warn' : 'bad');
     } else fbSet('fbProd', '—', R ? 'отчётов ПДО за ' + MN[+R.m.slice(5) - 1] + ' ещё нет' : 'план-факт ПДО ещё не пришёл', 'none');
-    var KP = (window.T14_ALERTS && T14_ALERTS.kpi && T14_ALERTS.kpi.plan) || null;
-    if (KP && KP.need) fbSet('fbSales', KP.pct_need + '<small>%</small>', 'к плану на ' + dd(KP.asof) + ' · ' + String(KP.pct_month).replace('.', ',') + ' % месяца', KP.pct_need >= 90 ? 'ok' : KP.pct_need >= 75 ? 'warn' : 'bad');
+    var KP = (window.T14_ALERTS && T14_ALERTS.kpi && T14_ALERTS.kpi.plan) || null, PL0 = M.plan ? M.plan() : null;   // 21.11.2026 (аудит, «единый источник»): план на дату — тот же расчёт, что «Продажи» и «Щекотливое» (T14M.plan: факт 1С, рабочие дни)
+    if (PL0 && PL0.live) { var pn = Math.round(PL0.onDate); fbSet('fbSales', pn + '<small>%</small>', 'к плану на ' + dd(PL0.asof) + ' · ' + String(Math.round(PL0.pct * 10) / 10).replace('.', ',') + ' % месяца', pn >= 90 ? 'ok' : pn >= 75 ? 'warn' : 'bad'); }
+    else if (KP && KP.need) fbSet('fbSales', KP.pct_need + '<small>%</small>', 'к плану на ' + dd(KP.asof) + ' · ' + String(KP.pct_month).replace('.', ',') + ' % месяца', KP.pct_need >= 90 ? 'ok' : KP.pct_need >= 75 ? 'warn' : 'bad');
     else fbSet('fbSales', '—', 'план менеджеров ещё не пришёл', 'none');
     if (O) fbSet('fbOmts', n(O.tot), O.tot ? 'позиций в просрочке · ЖПС ' + n(O.z) + ', ФТС ' + n(O.f) : 'просрочек нет' + (O.t ? ' · на ' + dd(O.t) : ''), !O.tot ? 'ok' : O.tot <= 10 ? 'warn' : 'bad');
     else fbSet('fbOmts', '—', 'отчёт ОМТС ещё не пришёл', 'none');
@@ -339,6 +342,34 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     });
   }
   render();
+  // 21.11.2026: «Щекотливое» — числа из того же модуля (T14M.poruch, T14M.plan), что «Поручения» и «Продажи»
+  var SENS = {};
+  function sens() {
+    var me = null; try { me = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { }
+    var box = document.getElementById('fhSens'); if (!box || !me || me.role !== 'admin' || me.st === 'pending') return;
+    var PC = M.poruch && SENS.poruch ? M.poruch(SENS.poruch) : null, PL = M.plan ? M.plan() : null, S = SENS.sales, ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null;
+    var td = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null, R = [];
+    R.push(row('poruch.html#due', 'chat', 'var(--ic-err)', 'Поручения: просрочено', PC ? 'открыто ' + n(PC.open) + ' · по сроку и службам' : 'загружаю…', PC ? n(PC.late) : '—', PC && PC.late ? 'bad' : ''));
+    R.push(row('poruch.html#svc:inc', 'prod', 'var(--ic-err)', 'Происшествия', PC ? PC.ev && PC.ev.ok ? 'совещания, письма 1c@ и журнал охраны' : 'из поручений совещаний · журнал охраны подключается' : 'загружаю…', PC ? n(PC.inc) : '—', PC && PC.inc ? 'bad' : ''));
+    var EV = PC && PC.ev && PC.ev.ok ? PC.ev : null;   // журнал охраны и диспетчера (таблица); камеры и ГЛОНАСС — следующим шагом
+    var PM = M.perim && SENS.cam ? M.perim(SENS.cam) : null, FL = M.fleet ? M.fleet(SENS.gl) : null, SC = FL && FL.ship;   // 21.11.2026: периметр — камеры + журнал охраны; машины — журнал + график отгрузки + ГЛОНАСС
+    R.push(row(PM ? 'cams.html' : EV ? 'poruch.html#ev' : 'cams.html', 'stock', 'var(--ic-omts)', 'Периметр: движение вне графика',
+      (PM ? 'камеры за ' + PM.days + ' сут.: ' + n(PM.cams) + ' камер' + (PM.top[0] ? ', больше всего — ' + esc(PM.top[0][0]) : '') : 'камеры: загружаю…') + (EV ? ' · журнал охраны за 7 дней — ' + n(EV.per7) : ''),
+      PM ? n(PM.n) : EV ? n(EV.per7) : '—', (EV && EV.per7) ? 'bad' : PM && PM.n ? 'warn' : ''));
+    R.push(row(SC ? 'sales.html#ship' : 'transport.html', 'omts', 'var(--ic-omts)', 'Машины не поданы / заказы не уехали',
+      (SC ? 'не уехали на прошлой неделе, снова в графике ' + dd(SC.from) + '–' + dd(SC.to) + ': ' + n(SC.n) + ' зак. на ' + mln(SC.s) + ' млн ₽' : 'график отгрузки: нет переноса') + (EV ? ' · журнал диспетчера за 7 дней — ' + n(EV.car7) : '') + (FL && FL.cargo ? ' · ГЛОНАСС: в рейсе ' + FL.go + ' из ' + FL.cargo : ''),
+      SC ? n(SC.n + (EV ? EV.car7 : 0)) : EV ? n(EV.car7) : '—', (SC && SC.n) || (EV && EV.car7) ? 'warn' : ''));
+    R.push(row('sales.html#ship', 'omts', 'var(--ic-sales)', 'Заказы в двух графиках отгрузки подряд', 'уехали ли — сверка с отгрузками 1С', 'список', ''));
+    R.push(row('sales.html#s-days', 'sales', 'var(--ic-sales)', 'Вечерние отчёты офисов сегодня', ops ? 'сдали ' + rep + ' из ' + ops.length + ' · контакты с клиентами — в отчётах' : 'загружаю…', ops ? rep + ' / ' + ops.length : '—', ops && rep < ops.length ? 'warn' : ''));
+    R.push(row('sales.html#planm', 'sales', 'var(--ic-sales)', 'План продаж на дату', PL && PL.live ? mln(PL.fact) + ' из ' + mln(PL.need) + ' млн ₽ на ' + dd(PL.asof) : 'загружаю…', PL && PL.live ? Math.round(PL.onDate) + ' %' : '—', PL && PL.live && PL.onDate < 90 ? 'warn' : ''));
+    R.push(row('mts.html', 'chat', 'var(--ic-calls)', 'Звонки менеджеров', 'по выгрузке МТС', 'открыть', ''));
+    document.getElementById('sens').innerHTML = R.join(''); box.hidden = false;
+  }
+  try {
+    if (window.T14Live && T14Live.bin) ['poruch.bin', 'sales.bin', 'cam.bin', 'gl.bin'].forEach(function (nm) { T14Live.bin(nm).then(function (D) { if (D) { SENS[nm.replace('.bin', '')] = D; sens(); } }, function () { }); });
+    window.addEventListener('t14bin', function (e) { var d = e.detail || {}; if (/^(poruch|sales|cam|gl)\.bin$/.test(d.name)) { SENS[d.name.replace('.bin', '')] = d.data; sens(); } });
+  } catch (e) { }
+  M.on(sens);
   M.on(render);
   M.start();
   // для помощника: что сейчас на главной (тексты плиток — из того же модуля)

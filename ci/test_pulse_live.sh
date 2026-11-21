@@ -8,7 +8,7 @@ D=$(mktemp -d)
 trap 'rm -rf "$D"' EXIT
 # 14.11.2026: gl.bin дважды пришёл как null (робот в эту минуту переписывал файл / сеть) — проверка ложно запрещала выкладку.
 #   Пустой ответ (null) — ещё две попытки через 20 с.
-for b in pf sales leads omts recl ozrev oz promises ls smv smvs gl; do
+for b in pf sales leads omts recl oz promises ls smv smvs gl poruch; do   # 21.11.2026: poruch — карточка «Поручения открыты» считает по нему; ozrev на хостинге нет
   for try in 1 2 3; do
     (cd fabrika/work/plans_fts && timeout 100 python3 stget.py $b.bin "$D/$b.json" >/dev/null 2>&1)
     [ -s "$D/$b.json" ] && [ "$(head -c 4 "$D/$b.json")" != 'null' ] && break
