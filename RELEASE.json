@@ -1,8 +1,9 @@
 {
- "portal_version": "2.22.0",
- "exported_utc": "2026-11-20T21:54Z",
- "files_sha": "98c6f3303971460c",
+ "portal_version": "2.22.1",
+ "exported_utc": "2026-11-21T04:05Z",
+ "files_sha": "184227b3eb5df90c",
  "files": [
+  "portal/assets/versions_full.js",
   "portal/build/assort_frag.html",
   "portal/fsu/fsu_build.py",
   "portal/fsu/fsu_shim.js",

@@ -101,7 +101,7 @@ function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={};RX.forE
  while((mm2=RXD.exec(t))){var nm=mm2[1]||'';if(nm&&nm!=='ширин')continue;var v=parseFloat(mm2[3].replace(',','.')),u=mm2[4],mm=(u==='мм'?v:u==='см'?v*10:v*1000)+(mm2[5]&&u!=='см'&&u!=='мм'?+mm2[5]*10:0);
   if(mm<30||mm>5000)continue;var o={w:Math.round(mm),m:mm2[2]||''};if(nm){W=o;break}if(!U)U=o}
  var X=W||U;
- if(!X&&/(^|\s)(в |на )?метр(?![а-я])|метровы/.test(t))X={w:1000,m:''};
+ if(!X&&/(^|\s)(в |на )?метр(?![а-я])|метровы/.test(t)&&!/(глубин|высот)[а-я]*(\s+сиден[а-я]*)?\s*:?\s*(в |на |около |до )?(1 |один )?метр/.test(t))X={w:1000,m:''};   /* 21.11.2026 (Рекс, CG-53): «глубина метр» — не ширина */
  if(X){f._w=X.w;if(/^(до|не больше|не более|не шире|меньше|уже)$/.test(X.m))f._wm='le';else if(/^(от|больше|более|шире|не меньше|не менее)$/.test(X.m))f._wm='ge'}
  return f}
 function match(x,f){for(var i=0;i<G.length;i++){var g=G[i],sel=f[g[0]];if(!sel||!sel.length)continue;var vs=val(g,x);if(!sel.some(function(s){return vs.indexOf(s)>=0}))return false}

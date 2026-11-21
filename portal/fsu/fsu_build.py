@@ -116,11 +116,15 @@ if os.path.isdir(os.path.join(HERE, 'info')):
 rep['api'] = len(amap); rep['pages'] = len(st['seen'])
 _bad = [f for f in ('index.html', 'podbor.html', '_img.json') if not os.path.getsize(os.path.join(OUT, f))]
 if _bad or not rep['img'] or not amap: sys.exit('сборка неполная, старая оставлена: ' + json.dumps({'empty': _bad, 'img': rep['img'], 'api': len(amap)}))
-if os.path.exists(FINAL): os.rename(FINAL, FINAL + '.old')
-try: os.rename(OUT, FINAL)
-except Exception:   # 20.11.2026 (Рекс, CG-51): вторая замена не удалась — вернуть прежнюю сборку
-    if os.path.exists(FINAL + '.old') and not os.path.exists(FINAL): os.rename(FINAL + '.old', FINAL)
-    raise
-shutil.rmtree(FINAL + '.old', ignore_errors=True)
+# 21.11.2026 (Рекс, CG-53): атомарное переключение — build/fsu — ссылка на проверенный каталог fsu.<время>; os.replace ссылки — один шаг
+import time as _t
+VER = FINAL + '.' + _t.strftime('%Y%m%d%H%M%S'); os.rename(OUT, VER)
+if os.path.isdir(FINAL) and not os.path.islink(FINAL): os.rename(FINAL, FINAL + '.' + 'pre-link')   # один раз: прежний каталог становится версией
+_tmp = FINAL + '.lnk'
+if os.path.lexists(_tmp): os.remove(_tmp)
+os.symlink(os.path.basename(VER), _tmp); os.replace(_tmp, FINAL)
+for _d in sorted(x for x in os.listdir(os.path.dirname(FINAL)) if x.startswith(os.path.basename(FINAL) + '.') and x[len(os.path.basename(FINAL)) + 1:][:1].isdigit() or x == os.path.basename(FINAL) + '.pre-link'):
+    _p = os.path.join(os.path.dirname(FINAL), _d)
+    if _p != VER and os.path.isdir(_p) and not os.path.islink(_p): shutil.rmtree(_p, ignore_errors=True)   # оставить только текущую версию (место на диске)
 _jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))

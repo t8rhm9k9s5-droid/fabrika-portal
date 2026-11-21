@@ -112,10 +112,11 @@ function budget() {                                // байт за один ф�
   if (cn.saveData || /(^|-)2g|3g/.test(cn.effectiveType || '')) return 0;
   return cn.effectiveType === '4g' && (cn.downlink || 0) >= 5 ? 15e6 : 3e6;
 }
-async function precache(st, report, prev, until, bytes) {  // until — не дольше этого времени; bytes — не больше стольких байт из сети
+async function precache(st, report, prev, until, bytes, outer) {  // until — не дольше этого времени; bytes — не больше стольких байт из сети
   let full = false, got = 0, done = 0;
   if (BG) BG.abort();
   const ac = new AbortController(); BG = ac;
+  if (outer) { if (outer.aborted) ac.abort(); else outer.addEventListener('abort', () => ac.abort(), { once: true }); }   // общий срок установки
   const tm = until ? setTimeout(() => ac.abort(), Math.max(0, until - Date.now())) : 0;
   try {
     const c = await caches.open(CORE), pre = st.map.pre.filter(p => st.map.files[p] && fkey(st, st.map.files[p]));   // разделы чужих групп на телефон не сохраняются
@@ -156,14 +157,20 @@ async function refresh(until, signal) {
   const key = await kvGet('key');
   if (!(key instanceof CryptoKey)) return;
   // 15.11.2026: пока шла проверка старого ключа, человек мог войти заново — новый ключ (он открывает карту сайта) не стираем
-  const signOut = async () => { try { const cur = await kvGet('key'); if (cur) { await loadMap(cur); return; } } catch (e0) { /* старый ключ — стираем */ }
+  // 21.11.2026 (Рекс, CG-53): выход только при ПОДТВЕРЖДЁННОЙ смене ключа (расшифровка не прошла); отмена, обрыв, 503 — сессию не трогают
+  const live = () => g === GEN && !(signal && signal.aborted);
+  const signOut = async () => {
+    try { const cur = await kvGet('key'); if (cur) { await loadMap(cur, signal); return; } }
+    catch (e0) { if (!(e0 && e0.name === 'OperationError')) return; }
+    if (!live()) return;
     await kvDel('key'); await kvDel('map'); await kvDel('sets'); ST = null; };
   let k = key, map = null, kr = null;
   try { map = await loadMap(key, signal); }
   catch (err) {
     if (!(err && err.name === 'OperationError')) throw err;
     // the site key changed: a personal login opens the new one; otherwise sign in again
-    let k2 = null; try { kr = await keyring(signal); k2 = kr && kr.key; } catch (e2) { k2 = null; }
+    let k2 = null; try { kr = await keyring(signal); k2 = kr && kr.key; } catch (e2) { return; }   // связь/отмена — не повод выходить
+    if (!live()) return;
     if (k2) { try { map = await loadMap(k2, signal); k = k2; } catch (e3) { if (!(e3 && e3.name === 'OperationError')) throw e3; } }
     if (!map) { await signOut(); return; }
   }
@@ -172,7 +179,7 @@ async function refresh(until, signal) {
   if (signal && signal.aborted) return;
   const sets = kr ? kr.sets : ((await kvGet('sets')) || {});
   const next = { key: k, map, docs: new Set(map.docs), sets };
-  try { await precache(next, null, await kvGet('map'), until, budget()); } catch (e5) { /* связь или место — докачается позже */ }
+  try { await precache(next, null, await kvGet('map'), until, budget(), signal); } catch (e5) { /* связь или место — докачается позже */ }
   if (g !== GEN || (signal && signal.aborted)) return;   // срок вышел или пошёл новый проход — карту не трогаем
   await kvPut({ key: k, map, sets }); ST = next;
 }
@@ -185,17 +192,19 @@ self.addEventListener('install', e => {
         const r = await fetch(BASE + 'login.html', { cache: 'reload', signal: ac.signal });
         if (r.ok) { const b = await r.arrayBuffer(); await (await caches.open(PUB)).put(BASE + 'login.html', new Response(b, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })); }
       } catch (e0) { /* без новой копии — остаётся прежняя */ }
-      try { await refresh(Date.now() + 8000, ac.signal); } catch (err) { /* ключ и карта остаются прежними; обновятся при входе или открытии страницы */ }
+      try { await refresh(Date.now() + 8000, ac.signal); MAPOK = !ac.signal.aborted; } catch (err) { MAPOK = false; /* ключ и карта прежние; повтор — fillLater */ }
     } finally { clearTimeout(tm); }
     await self.skipWaiting();
   })());
 });
-let FILLED = 0, LAST_REQ = 0;   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
+let FILLED = 0, LAST_REQ = 0, MAPOK = true, MAPTRY = 0;   // MAPOK=false — при установке карту обновить не удалось: fillLater повторит (не чаще раза в 2 мин, до 5 раз)   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
 function fillLater(e) {                            // докачать сайт в кэш фоном, понемногу: не чаще раза в 2 минуты, не дольше 25 с за раз
   if (Date.now() - FILLED < 120000) return;
   const b = budget(); if (!b) return;                // экономия трафика или 2G/3G — фоном не качаем вовсе, только то, что открыли
   FILLED = Date.now();
-  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000, b); } catch (x) { /* в другой раз */ } })());
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000));
+    if (!MAPOK && MAPTRY < 5) { MAPTRY++; const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 15000); try { await refresh(Date.now() + 10000, ac.signal); MAPOK = !ac.signal.aborted; } catch (x0) { /* связь — в другой раз */ } finally { clearTimeout(tm); } return; }
+    const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000, b); } catch (x) { /* в другой раз */ } })());
 }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {

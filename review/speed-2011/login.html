@@ -244,7 +244,7 @@ window.T14Lite = (function () {
         });
       });
     }
-    var SWV = '__VERSION__';
+    var SWV = '__VERSION__', ZP = '__ZPACK__' === '1';
     function ver(sw) {                           // ответ Service Worker'а {v, z} или null (старый не отвечает), не дольше 3 с
       return new Promise(function (ok) {
         if (!sw) return ok(null);
@@ -258,8 +258,13 @@ window.T14Lite = (function () {
       return newest().then(function (r) { R = r; return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); })
         .then(function (k) { return put('key', k); }).then(function () { return ver(R.active || navigator.serviceWorker.controller); }).then(function (v) {
           // 20.11.2026 (Рекс, CG-51): Service Worker не назвал версию — это старый; даём новому встать ещё раз (до 10 с), потом входим тем, что есть
-          if (v && v.v === SWV) return R;   // ответил именно Service Worker этой сборки (версия подставляется при сборке)
-          return Promise.resolve(R.update && R.update()).catch(function () { }).then(function () { return new Promise(function (ok) { setTimeout(ok, 10000); }); }).then(function () { return navigator.serviceWorker.ready; }).then(function (r2) { R = r2; return R; });
+          if (v && v.v === SWV && (!ZP || v.z)) return R;   // ответил именно Service Worker этой сборки (версия подставляется при сборке); сжатая сборка — он умеет распаковку
+          return Promise.resolve(R.update && R.update()).catch(function () { }).then(function () { return new Promise(function (ok) { setTimeout(ok, 10000); }); }).then(function () { return navigator.serviceWorker.ready; })
+            .then(function (r2) { R = r2; return ver(R.active || navigator.serviceWorker.controller); }).then(function (v2) {
+              // 21.11.2026 (Рекс, CG-53): повторная сверка у того, кто получит unlock; сжатая сборка и SW без распаковки — не входим, ничего не стирая
+              if (ZP && !(v2 && v2.z)) throw new Error('Портал обновляется — закройте вкладку и откройте снова через минуту.');
+              return R;
+            });
         }).then(function () { var r = R;
           btn.textContent = 'Открываю портал…'; bar.hidden = false;
           var sw = r.active || navigator.serviceWorker.controller;
