@@ -131,6 +131,8 @@ shell = shell.replace('</body>', _rd(os.path.join(os.path.dirname(os.path.abspat
 _wr(os.path.join(OUT, 'index.html'), shell)
 # 21.11.2026 (Т. В.): сверка с прайсом, характеристики 1С в карточки, недостающие модели прайса — карточками (fsu_enrich.py, отчёт — assort/)
 subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_enrich.py'), OUT], check=True)
+# 21.11.2026 (Т. В.): фото из других папок FTP, страницы, которые обход пропустил, и модели каталога 2025 (fsu_more.py; данные — fsu_ftp_fetch.py, fsu_catalog.py)
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_more.py'), OUT], check=True)
 # 20.11.2026: подбор мебели по свойствам (Т. В.: «я потребитель, не знаю, что такое стул, кресло… ищу по набору свойств»)
 HERE = os.path.dirname(os.path.abspath(__file__))
 pb = _rd(os.path.join(HERE, 'podbor.html')).replace('</body>', _rd(os.path.join(HERE, 'fsu_back.html')) + '</body>')

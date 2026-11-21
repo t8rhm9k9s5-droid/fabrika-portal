@@ -1,13 +1,20 @@
 {
- "portal_version": "2.22.11",
- "exported_utc": "2026-11-21T12:40Z",
- "files_sha": "35af374f2ad62bf6",
+ "portal_version": "2.22.12",
+ "exported_utc": "2026-11-21T13:31Z",
+ "files_sha": "98ac123ecc5b171c",
  "files": [
-  "ci/predeploy_check.sh",
+  "portal/assets/acct.js",
+  "portal/assets/live.js",
+  "portal/assets/versions_full.js",
+  "portal/build/assort_frag.html",
+  "portal/fsu/fsu_build.py",
+  "portal/fsu/fsu_catalog.py",
   "portal/fsu/fsu_enrich.py",
   "portal/fsu/fsu_fidx.py",
   "portal/fsu/fsu_fidx_put.py",
-  "robot/live/deploy.py"
+  "portal/fsu/fsu_ftp_fetch.py",
+  "portal/fsu/fsu_more.py",
+  "portal/fsu/fsu_shim.js"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }
