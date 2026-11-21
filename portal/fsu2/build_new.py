@@ -12,7 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ap = argparse.ArgumentParser(); ap.add_argument('--base', default='/home/claude/build/fsu'); ap.add_argument('--out', default=os.path.join(HERE, 'out'))
 ap.add_argument('--jobs', type=int, default=8); O = ap.parse_args()
 BASE = os.path.realpath(O.base); OUT = O.out; CACHE = os.path.join(HERE, 'cache'); FSU = '/home/claude/fabrika/work/fsu'
-AI = os.path.join(FSU, 'ai'); GAP = json.load(open(os.path.join(FSU, 'assort', 'photo_gap.json'), encoding='utf-8'))
+AI = os.path.join(FSU, 'ai'); INFO = json.load(open(os.path.join(FSU, 'assort', 'info_all.json'), encoding='utf-8')) if os.path.exists(os.path.join(FSU, 'assort', 'info_all.json')) else {}; REJ = json.load(open(os.path.join(FSU, 'ai', '_reject.json'), encoding='utf-8')) if os.path.exists(os.path.join(FSU, 'ai', '_reject.json')) else {}; GAP = json.load(open(os.path.join(FSU, 'assort', 'photo_gap.json'), encoding='utf-8'))
 # старая оболочка копии: после первой замены index.html — маршрутизатор, а оболочка лежит в old.html
 SHELL = os.path.join(BASE, 'old.html') if os.path.exists(os.path.join(BASE, 'old.html')) else os.path.join(BASE, 'index.html')
 SH = open(SHELL, encoding='utf-8').read(); A = json.JSONDecoder().raw_decode(SH[SH.index('var A=') + 6:])[0]
@@ -149,6 +149,10 @@ def dhash(im):   # 64 бит: повторы одного и того же сн�
     return sum(1 << i for i in range(64) if px[(i // 8) * 9 + i % 8] > px[(i // 8) * 9 + i % 8 + 1])
 
 
+LITK = ('sun', 'moon', 'day', 'night')   # 21.11.2026, Т. В.: «Солнце/Луна» — товар под солнцем / под луной, офис днём / ночью
+def LIT(p): return '/work/fsu/ai/' in p and os.path.basename(p)[:-4] in LITK
+
+
 def conv(p):
     k = key(p) + 'v2'; a, m, b, hf = [os.path.join(CACHE, d, k + '.webp') for d in ('i2', 'm2', 't2')] + [os.path.join(CACHE, 'h', k)]
     if os.path.exists(a) and os.path.exists(m) and os.path.exists(b):
@@ -159,8 +163,9 @@ def conv(p):
         if im.mode in ('P', 'LA', 'RGBA', 'PA') or 'transparency' in im.info:
             im = im.convert('RGBA'); bg = Image.new('RGB', im.size, (255, 255, 255)); bg.paste(im, mask=im.split()[3]); im = bg
         else:
-            im = im.convert('RGB'); im, _ = whiten(im)
-        bb = Image.eval(im.convert('L'), lambda v: 255 if v < 247 else 0).getbbox()   # белые поля вокруг предмета — срезать, оставив 5 %
+            im = im.convert('RGB')
+            if '/infographic/' not in p and not LIT(p): im, _ = whiten(im)   # инфографика и кадры «Солнце/Луна» — свой фон: не трогаем
+        bb = None if ('/infographic/' in p or LIT(p)) else Image.eval(im.convert('L'), lambda v: 255 if v < 247 else 0).getbbox()   # белые поля вокруг предмета — срезать, оставив 5 % (не у инфографики)
         if bb:
             pad = int(max(bb[2] - bb[0], bb[3] - bb[1]) * .05); bb = (max(0, bb[0] - pad), max(0, bb[1] - pad), min(im.width, bb[2] + pad), min(im.height, bb[3] + pad))
             if (bb[2] - bb[0]) * (bb[3] - bb[1]) < .97 * im.width * im.height: im = im.crop(bb)
@@ -179,7 +184,7 @@ def fpath(src):   # путь копии /fsu/upload/... → файл
     p = os.path.join(BASE, src.replace('/fsu/', '', 1).lstrip('/')); return p if os.path.exists(p) else None
 
 
-AIV = [('side', 'сбоку'), ('back', 'сзади'), ('rear34', 'три четверти сзади'), ('front34r', 'три четверти спереди'), ('detail', 'деталь')]
+AIV = [('side', 'сбоку'), ('back', 'сзади'), ('rear34', 'три четверти сзади'), ('front34r', 'три четверти спереди'), ('front34l', 'три четверти спереди слева'), ('detail', 'деталь')]
 gal = {}; need = set()
 for it in ITEMS:
     c = it['code']; d = PAGE.get(c, {}); g = GAP.get(c, {}); L = []; seen = set()
@@ -190,9 +195,20 @@ for it in ITEMS:
         seen.add(p); L.append({'p': p, 'ai': ai, 'k': kind})
     for ph in (d.get('photos') or it.get('photos') or []): add(fpath(ph.get('src')))
     for p in g.get('studio', []) + g.get('detail_files', []): add(fpath(p))
-    for v, _ in AIV: add(os.path.join(AI, c, v + '.png') if os.path.exists(os.path.join(AI, c, v + '.png')) else None, True, 'angle')
+    # 21.11.2026, Т. В. («Катрин»: спинка сзади нарисована неверно): «три четверти сзади» ИИ путает — переносит строчку лицевой стороны на спинку;
+    #   такие кадры не ставим совсем; отдельные неудачные кадры — в work/fsu/ai/_reject.json {"код": ["вид", …]}
+    for v, _ in AIV:
+        if v == 'rear34' or v in REJ.get(c, []): continue
+        add(os.path.join(AI, c, v + '.png') if os.path.exists(os.path.join(AI, c, v + '.png')) else None, True, 'angle')
     for p in g.get('interior', []): add(fpath(p), False, 'interior')
-    for v in ('interior', 'interior2'): add(os.path.join(AI, c, v + '.png') if os.path.exists(os.path.join(AI, c, v + '.png')) else None, True, 'interior')
+    for v in ('interior', 'interior2'):
+        if v in REJ.get(c, []): continue
+        add(os.path.join(AI, c, v + '.png') if os.path.exists(os.path.join(AI, c, v + '.png')) else None, True, 'interior')
+    for v in LITK:   # кадры тем: не в общую галерею — отдельно (сайт сам берёт свой под тему)
+        if v in REJ.get(c, []): continue
+        q = os.path.join(AI, c, v + '.png')
+        if os.path.exists(q): add(q, True, v)
+    for p in INFO.get(c, []): add(p, False, 'info')   # 21.11.2026, Т. В.: «где вся инфографика с FTP» — в галерею после фото и интерьеров
     gal[c] = L; need.update(x['p'] for x in L)
 for f in ('fsu_photo_gap',): pass
 K2 = {}; DH = {}; bad = []
@@ -204,8 +220,9 @@ DUPD = int(os.environ.get('FSU_DUPD', '3')); dups = 0
 for c, L in gal.items():   # повторы: расстояние Хэмминга ≤ 5 из 64 — оставляем первый (реальные фото идут раньше ИИ)
     keep = []
     for x in L:
+        if x['k'] in LITK: keep.append(x); continue   # кадры тем не сравниваем: они похожи на фото по замыслу
         h = DH.get(x['p'])
-        if h is not None and any(bin(h ^ DH[y['p']]).count('1') <= DUPD for y in keep if DH.get(y['p']) is not None): dups += 1; continue
+        if h is not None and any(bin(h ^ DH[y['p']]).count('1') <= DUPD for y in keep if y['k'] not in LITK and DH.get(y['p']) is not None): dups += 1; continue
         keep.append(x)
     gal[c] = keep
 
@@ -240,14 +257,15 @@ for it in ITEMS:
     if not subs: subs = [s[0] for s in G[3] if '*' in s[2]]
     sub = subs[0] if subs else ('drugie' if G[3] else '')
     gl = [{'k': img(x['p']), 'ai': x['ai'], 't': x['k']} for x in gal[c]]; gl = [x for x in gl if x['k']]
-    photos = [x for x in gl if x['t'] != 'interior']; inter = [x for x in gl if x['t'] == 'interior']
+    lit = {x['t']: x['k'] for x in gl if x['t'] in LITK}; gl = [x for x in gl if x['t'] not in LITK]
+    photos = [x for x in gl if x['t'] not in ('interior', 'info')]; inter = [x for x in gl if x['t'] == 'interior']; infg = [x for x in gl if x['t'] == 'info']
     h = [num(d.get('heightMin')) or None, num(d.get('heightMax')) or None]
     w = num(d.get('widthMax')) or num(d.get('widthMin')); dp = num(d.get('depthMax')) or num(d.get('depthMin'))
     pur = pt; mat = (tags.get(iid) or {}).get('lp-materials', [])
     sp = [s[0] for s in SPACES if set(pur) & set(s[2]) or it['sectionId'] in s[3]]
     url = '/fsu/catalog/%s/%s%s' % (gcode, (sub + '/') if sub else '', c)
     e = {'c': c, 'n': clean(it['name']), 'g': gcode, 's': sub, 'ss': subs, 'u': url, 'i': photos[0]['k'] if photos else (inter[0]['k'] if inter else None),
-         'i2': photos[1]['k'] if len(photos) > 1 else None, 'np': len(photos), 'nai': sum(1 for x in gl if x['ai']), 'ni': len(inter),
+         'i2': photos[1]['k'] if len(photos) > 1 else None, 'ia': bool((photos or inter) and (photos or inter)[0]['ai']), 'ia2': bool(len(photos) > 1 and photos[1]['ai']), 'ts': lit.get('sun'), 'tm': lit.get('moon'), 'np': len(photos), 'nai': sum(1 for x in gl if x['ai']), 'ni': len(inter),
          'hit': iid in POP or bool(d.get('hit')), 'pur': pur, 'mat': mat, 'sp': sp, 'f': fe, 'h': h, 'w': w, 'dp': dp,
          'st': len(d.get('inStores') or []), 'q': ' '.join([clean(it['name']), clean(d.get('articul')), ' '.join(pur), ' '.join(mat), G[1]]).lower().replace('ё', 'е')}
     idx.append(e)
@@ -255,7 +273,7 @@ for it in ITEMS:
     ft = [{'n': clean(f.get('name')), 'i': img(fpath((f.get('image') or {}).get('src'))) if f.get('image') else None} for f in ((d.get('features') or {}).get('items') or [])]
     desc = re.split(r'По прайсу', clean(d.get('description')))[0].strip()
     sim = [BYID[s]['code'] for s in SIM.get(iid, []) if s in BYID]
-    cards[c] = {'c': c, 'n': e['n'], 'art': clean(d.get('articul')), 'desc': desc, 'ph': photos, 'in': inter, 'ch': ch, 'ft': ft, 'st': d.get('inStores') or [], 'sim': sim}
+    cards[c] = {'c': c, 'n': e['n'], 'art': clean(d.get('articul')), 'desc': desc, 'ph': photos, 'in': inter, 'inf': infg, 'th': lit, 'ch': ch, 'ft': ft, 'st': d.get('inStores') or [], 'sim': sim}
 # похожие: из копии, иначе — тот же подраздел (хиты первыми)
 for e in idx:
     cd = cards[e['c']]
@@ -280,13 +298,13 @@ meta = {'v': X.get('t') or '', 'total': len(idx), 'groups': groups, 'spaces': sp
 json.dump({'meta': meta, 'items': idx}, open(os.path.join(N, 'd', 'idx.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 
 # ---------- оболочка: app.css, app.js, back.html, index.html (маршрутизатор) ----------
-for f in ('app.css', 'app.js', 'boot.js'): shutil.copy2(os.path.join(HERE, 'site', f), os.path.join(N, f))
+for f in ('ds.css', 'app.css', 'app.js', 'boot.js'): shutil.copy2(os.path.join(HERE, 'site', f), os.path.join(N, f))
 shutil.copy2(os.path.join(FSU, 'fsu_back.html'), os.path.join(N, 'back.html'))
 logo = open(os.path.join(BASE, 'f/media/brand/logo-black.svg'), encoding='utf-8').read()
 logo = re.sub(r'fill="#000(?:000)?"', 'fill="currentColor"', logo)
 logo = re.sub(r'<svg([^>]*?)\swidth="(\d+)"\s+height="(\d+)"', lambda m: '<svg class="logo" role="img" aria-label="Фабрикант" viewBox="0 0 %s %s"%s' % (m.group(2), m.group(3), m.group(1)), logo, count=1)
 open(os.path.join(N, 'logo.svg'), 'w', encoding='utf-8').write(logo)
-ver = hashlib.md5(b''.join(open(os.path.join(N, f), 'rb').read() for f in ('app.css', 'app.js', 'boot.js')) + open(os.path.join(N, 'd', 'idx.json'), 'rb').read()).hexdigest()[:10]
+ver = hashlib.md5(b''.join(open(os.path.join(N, f), 'rb').read() for f in ('ds.css', 'app.css', 'app.js', 'boot.js')) + open(os.path.join(N, 'd', 'idx.json'), 'rb').read()).hexdigest()[:10]
 # 21.11.2026 (B3): остальные страницы сайта — компания, новости, проекты, акции, остатки, подбор (pages_new.py; данные n/d/pg, pages.js/pages.css)
 sys.path.insert(0, HERE); import pages_new; ver = pages_new.build(BASE, OUT, N, A, idx, ver)
 ROUTE = r'^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$)|company(?:\/|$)|projects(?:\/|$)|shares(?:\/|$)|stock(?:\/|$)|podbor(?:\/|$))'

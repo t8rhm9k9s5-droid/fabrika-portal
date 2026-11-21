@@ -68,7 +68,7 @@ for _n, _t in _TITLES.items():
 # one look for every page (22.10.2026): the model's colours, type and glass (assets/ui.css) and the tab bar below (assets/site.js); no address
 for _n in frags:
     if _n == 'index.html': continue
-    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/portal.css">\n<link rel="stylesheet" href="assets/glass.css">', 1)   # 13.11: glass.css — стекло с бликом (Т. В.)
+    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/ds.css">\n<link rel="stylesheet" href="assets/portal.css">\n<link rel="stylesheet" href="assets/glass.css">', 1)   # 13.11: glass.css — стекло с бликом (Т. В.)
     # Чертежи and Архив live under «Документы» (22.10.2026): a back link instead of the eyebrow
     for _a, _b in (('<h1>План участка · Поляны, ул. Терехина, 14</h1>', '<h1>План участка</h1>'),
                    ('<p class="eyebrow">Поляны, ул. Терехина, 14 · архив</p>\n      <h1>Документы, по которым построены модель и сайт</h1>', '<a class="back" href="library.html">Документы</a>\n      <h1>Архив</h1>'),

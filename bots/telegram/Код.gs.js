@@ -1009,6 +1009,7 @@ function tgUpdate0_(u) {
   if (cb && /^tmx:/.test(String(cb.data || ''))) return tmx_callback_(cb.message && cb.message.chat && cb.message.chat.id, from, cb);
   var chat = msg ? msg.chat.id : cb.message.chat.id;
   if (msg && msg.chat.type !== 'private') return;
+  if (msg && /^\/(aikey|ключ_ии)(?=\s|@|$)/i.test(String(msg.text || '').trim())) return cg_setKey_(chat, from, msg);   // 21.11.2026, Т. В.: новый ключ OpenAI с телефона — до журнала обращений, сообщение с ключом удаляется
   if (cb) tg_('answerCallbackQuery', { callback_query_id: cb.id });
   if (pingAns_(chat, from, msg, cb)) return;   // 01.11.2026: ответ на тест связи (pingAll) — записать и не вести в меню
   var users = tgUsers_(), me = users[from.id];

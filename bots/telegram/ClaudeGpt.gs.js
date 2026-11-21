@@ -67,3 +67,23 @@ function cg_text_(j) {
   (j.output || []).forEach(function (o) { if (o && o.type === 'message') (o.content || []).forEach(function (c) { if (c && (c.type === 'output_text' || c.type === 'text') && c.text) out.push(c.text); }); });
   return out.join('\n');
 }
+
+
+/** 21.11.2026, Т. В. (нет компьютера): ключ OpenAI с телефона — «/aikey sk-…» в личку боту. Только владелец (ITM_TO).
+ *  Сообщение с ключом сразу удаляется из чата; ключ проверяется у OpenAI; прежний — в AI_KEY_PREV (откат: «/aikey откат»). Ключ нигде не печатается. */
+function cg_setKey_(chat, from, msg) {
+  try { tg_('deleteMessage', { chat_id: chat, message_id: msg.message_id }); } catch (e) { }
+  if (String(from.id) !== String(ITM_TO)) return tgMsg_(chat, 'Эта команда только для владельца.');
+  var arg = String(msg.text || '').trim().replace(/^\/\S+\s*/, ''), p = props();
+  if (/^откат$/i.test(arg)) {
+    var pv = p.getProperty('AI_KEY_PREV'); if (!pv) return tgMsg_(chat, 'Прежнего ключа нет.');
+    p.setProperty('AI_KEY_PREV', p.getProperty('AI_KEY') || ''); p.setProperty('AI_KEY', pv); return tgMsg_(chat, '↩️ Вернул прежний ключ OpenAI.');
+  }
+  var key = arg.replace(/\s+/g, '');
+  if (!/^sk-[A-Za-z0-9_\-]{20,}$/.test(key)) return tgMsg_(chat, 'Не похоже на ключ OpenAI. Пришлите так: /aikey sk-… (сообщение я сразу удалю).');
+  var r = UrlFetchApp.fetch('https://api.openai.com/v1/models', { headers: { Authorization: 'Bearer ' + key }, muteHttpExceptions: true }), c = r.getResponseCode();
+  if (c !== 200) return tgMsg_(chat, '❌ OpenAI не принял ключ (код ' + c + '). Ключ не сохранён, работает прежний.');
+  var old = p.getProperty('AI_KEY'); if (old && old !== key) p.setProperty('AI_KEY_PREV', old);
+  p.setProperty('AI_KEY', key); key = arg = null;
+  return tgMsg_(chat, '✅ Сотрудник6 ключ OpenAI сохранён и проверен. Сообщение с ключом удалено. Генерация фото начнётся в течение пары минут.');
+}

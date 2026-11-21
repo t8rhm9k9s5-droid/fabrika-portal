@@ -1,0 +1,200 @@
+/* «Фабрика 2030» — единая дизайн-система портала (techfabrikant.ru) и сайта (/fsu/). 21.11.2026, решение Т. В. «одна система для обоих».
+   Каркас — стекло и плавность портала; голос — фирменные шрифты ALS и цвет «Фабриканта». Светлая и тёмная тема, iPhone на весь экран.
+   Подключение: <link rel="stylesheet" href="ds.css"> до стилей раздела; разделы берут только переменные --ds-* и классы .ds-*. */
+
+@font-face { font-family: "ALS Gorizont"; src: url("fonts/als_gorizont/ALSGorizont2.1-MediumExpanded.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "ALS Departure"; src: url("fonts/als_departure/ALSDeparture-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "ALS Departure"; src: url("fonts/als_departure/ALSDeparture-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+:root {
+  /* цвет — роли, не оттенки */
+  --ds-ground: #EEEDEA;                 /* фон страницы: тёплый серый «бумага» */
+  --ds-ground-glow: radial-gradient(120% 70% at 85% -10%, #F6E3DD 0%, rgba(246,227,221,0) 55%), radial-gradient(90% 60% at -10% 0%, #E3E8F1 0%, rgba(227,232,241,0) 60%);
+  --ds-surface: #FFFFFF;                /* плотная карточка */
+  --ds-surface-2: #F5F4F1;              /* вложенный блок */
+  --ds-glass: rgba(255,255,255,.62);    /* стекло: шапка, док, листы */
+  --ds-glass-rim: rgba(255,255,255,.9);
+  --ds-glass-edge: rgba(35,36,33,.08);
+  --ds-photo: #FFFFFF;                  /* подложка фото товара — белая в обеих темах */
+  --ds-ink: #232421;                    /* основной текст (без чистого чёрного — брендбук) */
+  --ds-ink-2: #5E605A;                  /* вторичный */
+  --ds-ink-3: #8C8E87;                  /* подписи */
+  --ds-line: rgba(35,36,33,.12);
+  --ds-accent: #E2452B;                 /* фирменный красный: действие, активный пункт, бренд */
+  --ds-accent-soft: rgba(226,69,43,.12);
+  --ds-on-accent: #FFFFFF;
+  --ds-good: #1E8F5A; --ds-warn: #B97800; --ds-bad: #B4233C;   /* статусы — отдельно от акцента */
+  --ds-good-soft: rgba(30,143,90,.12); --ds-warn-soft: rgba(185,120,0,.13); --ds-bad-soft: rgba(180,35,60,.11);
+  --ds-shadow-1: 0 1px 2px rgba(35,36,33,.06);
+  --ds-shadow-2: 0 10px 30px rgba(35,36,33,.10), 0 1px 3px rgba(35,36,33,.06);
+  --ds-shadow-dock: 0 18px 40px rgba(35,36,33,.18), 0 2px 6px rgba(35,36,33,.08);
+  --ds-blur: saturate(1.7) blur(22px);
+
+  /* шрифты и шкала (1.2) */
+  --ds-font-display: "ALS Gorizont", "Helvetica Neue", Arial, sans-serif;
+  --ds-font-text: "ALS Departure", -apple-system, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif;
+  --ds-t-xs: 12px; --ds-t-s: 14px; --ds-t-m: 16px; --ds-t-l: 19px; --ds-t-xl: 23px; --ds-t-2xl: 28px; --ds-t-3xl: 34px; --ds-t-4xl: 44px;
+
+  /* сетка 4 px */
+  --ds-s1: 4px; --ds-s2: 8px; --ds-s3: 12px; --ds-s4: 16px; --ds-s5: 20px; --ds-s6: 24px; --ds-s8: 32px; --ds-s10: 40px; --ds-s12: 48px;
+  --ds-r-card: 26px; --ds-r-inner: 18px; --ds-r-chip: 14px; --ds-r-pill: 999px;
+
+  /* движение: одно на действие, ease-out, без задержки данных */
+  --ds-ease: cubic-bezier(.2,.8,.2,1); --ds-spring: cubic-bezier(.34,1.4,.5,1);
+  --ds-d-fast: 140ms; --ds-d: 200ms; --ds-d-slow: 320ms;
+
+  /* iPhone: док в 18 px от низа, шапка даёт отступ под часы один раз */
+  --ds-dock-b: max(18px, calc(env(safe-area-inset-bottom, 0px) - 16px));
+  --ds-gutter: max(16px, env(safe-area-inset-left, 0px));
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ds-ground: #121313;
+  --ds-ground-glow: radial-gradient(120% 70% at 85% -10%, rgba(226,69,43,.20) 0%, rgba(226,69,43,0) 55%), radial-gradient(90% 60% at -10% 0%, rgba(70,90,130,.22) 0%, rgba(70,90,130,0) 60%);
+  --ds-surface: #1D1E1D; --ds-surface-2: #262725;
+  --ds-glass: rgba(34,35,34,.62); --ds-glass-rim: rgba(255,255,255,.10); --ds-glass-edge: rgba(255,255,255,.06);
+  --ds-ink: #EDECE8; --ds-ink-2: #AAA9A3; --ds-ink-3: #7F7E79; --ds-line: rgba(255,255,255,.10);
+  --ds-accent: #FF5D41; --ds-accent-soft: rgba(255,93,65,.16);
+  --ds-good: #3CC783; --ds-warn: #E6A928; --ds-bad: #FF6B86;
+  --ds-good-soft: rgba(60,199,131,.16); --ds-warn-soft: rgba(230,169,40,.16); --ds-bad-soft: rgba(255,107,134,.15);
+  --ds-shadow-1: 0 1px 2px rgba(0,0,0,.4); --ds-shadow-2: 0 12px 34px rgba(0,0,0,.45); --ds-shadow-dock: 0 18px 44px rgba(0,0,0,.6);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --ds-ground: #121313;
+  --ds-ground-glow: radial-gradient(120% 70% at 85% -10%, rgba(226,69,43,.20) 0%, rgba(226,69,43,0) 55%), radial-gradient(90% 60% at -10% 0%, rgba(70,90,130,.22) 0%, rgba(70,90,130,0) 60%);
+  --ds-surface: #1D1E1D; --ds-surface-2: #262725;
+  --ds-glass: rgba(34,35,34,.62); --ds-glass-rim: rgba(255,255,255,.10); --ds-glass-edge: rgba(255,255,255,.06);
+  --ds-ink: #EDECE8; --ds-ink-2: #AAA9A3; --ds-ink-3: #7F7E79; --ds-line: rgba(255,255,255,.10);
+  --ds-accent: #FF5D41; --ds-accent-soft: rgba(255,93,65,.16);
+  --ds-good: #3CC783; --ds-warn: #E6A928; --ds-bad: #FF6B86;
+  --ds-good-soft: rgba(60,199,131,.16); --ds-warn-soft: rgba(230,169,40,.16); --ds-bad-soft: rgba(255,107,134,.15);
+  --ds-shadow-1: 0 1px 2px rgba(0,0,0,.4); --ds-shadow-2: 0 12px 34px rgba(0,0,0,.45); --ds-shadow-dock: 0 18px 44px rgba(0,0,0,.6);
+  color-scheme: dark; }
+
+/* основа */
+html { min-height: 100%; background: var(--ds-ground); -webkit-text-size-adjust: 100%; }
+body.ds { margin: 0; min-height: 100vh; background: var(--ds-ground-glow), var(--ds-ground); background-attachment: fixed; color: var(--ds-ink);
+  font: 400 var(--ds-t-m)/1.45 var(--ds-font-text); -webkit-font-smoothing: antialiased; }
+@media (pointer: coarse) { html, body.ds { overscroll-behavior: none; } }
+.ds-wrap { max-width: 1180px; margin: 0 auto; padding-inline: var(--ds-gutter) max(16px, env(safe-area-inset-right, 0px)); }
+.ds-h1 { font: 500 var(--ds-t-3xl)/1.08 var(--ds-font-display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.ds-h2 { font: 500 var(--ds-t-xl)/1.15 var(--ds-font-display); margin: 0; text-wrap: balance; }
+.ds-h3 { font: 700 var(--ds-t-l)/1.25 var(--ds-font-text); margin: 0; }
+.ds-eyebrow { font: 700 var(--ds-t-xs)/1 var(--ds-font-text); letter-spacing: .09em; text-transform: uppercase; color: var(--ds-ink-3); }
+.ds-muted { color: var(--ds-ink-2); }
+.ds-num { font-family: var(--ds-font-display); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* шапка — стекло, отступ под часы только здесь */
+.ds-top { position: sticky; top: 0; z-index: 70; padding: calc(10px + env(safe-area-inset-top, 0px)) 0 10px;
+  background: linear-gradient(var(--ds-ground) 0, transparent); }
+.ds-top .ds-wrap { display: flex; align-items: center; gap: var(--ds-s3); }
+.ds-logo { display: inline-flex; align-items: center; gap: 8px; color: var(--ds-ink); text-decoration: none; }
+.ds-logo svg { height: 26px; width: auto; }
+.ds-iconbtn { margin-left: auto; width: 44px; height: 44px; border-radius: var(--ds-r-pill); display: grid; place-items: center; color: var(--ds-ink);
+  background: var(--ds-glass); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); box-shadow: inset 0 0 0 1px var(--ds-glass-rim), var(--ds-shadow-1); border: 0; }
+
+/* карточки и плитки */
+.ds-card { background: var(--ds-surface); border-radius: var(--ds-r-card); padding: var(--ds-s5); box-shadow: var(--ds-shadow-1); }
+.ds-glass { background: var(--ds-glass); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); box-shadow: inset 0 0 0 1px var(--ds-glass-rim), var(--ds-shadow-2); border-radius: var(--ds-r-card); }
+a.ds-card, a.ds-tile { color: inherit; text-decoration: none; transition: transform var(--ds-d) var(--ds-ease), box-shadow var(--ds-d) var(--ds-ease); }
+a.ds-card:hover, a.ds-tile:hover { transform: translateY(-2px); box-shadow: var(--ds-shadow-2); }
+a.ds-card:active, a.ds-tile:active { transform: scale(.985); }
+.ds-photo { background: var(--ds-photo); border-radius: var(--ds-r-inner); display: grid; place-items: center; overflow: hidden; }
+.ds-photo img { width: 100%; height: 100%; object-fit: contain; padding: 8%; box-sizing: border-box; }
+.ds-tile { display: flex; flex-direction: column; gap: var(--ds-s3); background: var(--ds-surface); border-radius: var(--ds-r-card); padding: var(--ds-s2); box-shadow: var(--ds-shadow-1); }
+.ds-tile .ds-photo { aspect-ratio: 4/5; }
+.ds-tile .bd { padding: 0 var(--ds-s3) var(--ds-s3); display: grid; gap: 2px; }
+.ds-grid { display: grid; gap: var(--ds-s3); grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); }
+
+/* чипы, кнопки, поля */
+.ds-chips { display: flex; gap: var(--ds-s2); overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ds-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: var(--ds-r-pill);
+  background: var(--ds-surface); color: var(--ds-ink); font: 400 var(--ds-t-s)/1 var(--ds-font-text); box-shadow: inset 0 0 0 1px var(--ds-line); border: 0; }
+.ds-chip[aria-pressed="true"] { background: var(--ds-ink); color: var(--ds-surface); box-shadow: none; }
+.ds-chip .c { color: var(--ds-ink-3); font-variant-numeric: tabular-nums; }
+.ds-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: var(--ds-r-pill); border: 0;
+  background: var(--ds-accent); color: var(--ds-on-accent); font: 700 var(--ds-t-m)/1 var(--ds-font-text); transition: filter var(--ds-d-fast) var(--ds-ease), transform var(--ds-d-fast) var(--ds-ease); }
+.ds-btn:active { transform: scale(.97); filter: brightness(.92); }
+.ds-btn.ghost { background: var(--ds-glass); color: var(--ds-ink); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); box-shadow: inset 0 0 0 1px var(--ds-glass-rim), var(--ds-shadow-1); }
+.ds-input { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: var(--ds-r-chip); border: 0; padding: 0 16px; background: var(--ds-surface);
+  box-shadow: inset 0 0 0 1px var(--ds-line); color: var(--ds-ink); font: 400 var(--ds-t-m) var(--ds-font-text); }
+:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
+
+/* статус — форма + цвет */
+.ds-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--ds-r-pill); font: 700 var(--ds-t-xs)/1.2 var(--ds-font-text); }
+.ds-pill.good { background: var(--ds-good-soft); color: var(--ds-good); } .ds-pill.warn { background: var(--ds-warn-soft); color: var(--ds-warn); } .ds-pill.bad { background: var(--ds-bad-soft); color: var(--ds-bad); }
+.ds-vis { position: absolute; left: 10px; bottom: 10px; z-index: 2; padding: 3px 8px; border-radius: var(--ds-r-pill); font: 400 11px/1.2 var(--ds-font-text);
+  color: var(--ds-ink-2); background: var(--ds-glass); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); }
+
+/* док (нижнее меню) и кнопка «Портал» — одна на всё */
+.ds-dock { position: fixed; z-index: 60; left: max(18px, env(safe-area-inset-left, 0px)); right: max(18px, env(safe-area-inset-right, 0px)); bottom: var(--ds-dock-b);
+  height: 60px; border-radius: 30px; display: flex; align-items: center; justify-content: space-around; padding: 0 6px;
+  background: var(--ds-glass); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); box-shadow: inset 0 0 0 1px var(--ds-glass-rim), var(--ds-shadow-dock); }
+.ds-dock a { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 7px 0; border-radius: 24px; color: var(--ds-ink-2); text-decoration: none; font: 400 11px/1 var(--ds-font-text); transition: background var(--ds-d) var(--ds-ease), color var(--ds-d) var(--ds-ease); }
+.ds-dock a svg { width: 22px; height: 22px; }
+.ds-dock a[aria-current="page"] { color: var(--ds-accent); background: var(--ds-accent-soft); }
+.ds-back { position: fixed; z-index: 60; left: max(18px, env(safe-area-inset-left, 0px)); bottom: var(--ds-dock-b); display: inline-flex; align-items: center; gap: 8px;
+  height: 48px; padding: 0 18px 0 14px; border-radius: var(--ds-r-pill); color: var(--ds-ink); text-decoration: none; font: 700 var(--ds-t-m)/1 var(--ds-font-text);
+  background: var(--ds-glass); -webkit-backdrop-filter: var(--ds-blur); backdrop-filter: var(--ds-blur); box-shadow: inset 0 0 0 1px var(--ds-glass-rim), var(--ds-shadow-dock); }
+.ds-ai { position: fixed; z-index: 60; right: max(18px, env(safe-area-inset-right, 0px)); bottom: var(--ds-dock-b); height: 48px; padding: 0 18px; border-radius: var(--ds-r-pill);
+  display: inline-flex; align-items: center; gap: 6px; background: var(--ds-accent); color: var(--ds-on-accent); font: 700 var(--ds-t-m)/1 var(--ds-font-text); box-shadow: var(--ds-shadow-dock); text-decoration: none; }
+.ds-tail { height: calc(60px + 18px + 28px + env(safe-area-inset-bottom, 0px)); }
+
+/* тосты */
+.ds-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--ds-dock-b) + 72px); padding: 12px 16px; border-radius: var(--ds-r-chip);
+  background: var(--ds-ink); color: var(--ds-surface); font: 400 var(--ds-t-s)/1.3 var(--ds-font-text); box-shadow: var(--ds-shadow-2); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+@media (min-width: 900px) { .ds-h1 { font-size: var(--ds-t-4xl); } .ds-dock { left: 50%; right: auto; transform: translateX(-50%); width: 460px; } }
+
+/* ===================================================================== 21.11.2026 «Солнце / Луна» — решение Т. В.
+   Светлая тема — ясный солнечный день (тёплый песок, солнце справа вверху), тёмная — глубокая ясная лунная ночь
+   (почти чёрное небо, звёзды, луна с сиянием). Одна система для портала и сайта: меняются только токены --ds-* и небо. */
+:root {
+  --ds-ground: #FBF6EC;
+  --ds-ground-glow: radial-gradient(70vmax 55vmax at 92% -12%, rgba(255,232,176,.75) 0%, rgba(255,240,205,.35) 30%, rgba(255,246,226,0) 62%), linear-gradient(180deg, #FFFBF3 0%, #F6EEDF 100%);
+  --ds-surface: #FFFDF8; --ds-surface-2: #F8F1E4;
+  --ds-glass: rgba(255,251,243,.70); --ds-glass-rim: rgba(255,255,255,.92); --ds-glass-edge: rgba(90,65,25,.09);
+  --ds-photo: #FFFFFF;
+  --ds-ink: #2A2520; --ds-ink-2: #6E655A; --ds-ink-3: #978D80; --ds-line: rgba(80,58,25,.11);
+  --ds-accent: #E2452B; --ds-accent-soft: rgba(226,69,43,.11); --ds-on-accent: #FFFFFF;
+  --ds-shadow-1: 0 1px 2px rgba(120,85,30,.07);
+  --ds-shadow-2: 0 14px 34px rgba(150,110,40,.14), 0 1px 3px rgba(150,110,40,.09);
+  --ds-shadow-dock: 0 18px 40px rgba(120,85,30,.20), 0 2px 6px rgba(120,85,30,.10);
+  --ds-sky-stars: 0; --ds-moon: 0; --ds-sun: 1;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ds-ground: #050913;
+  --ds-ground-glow: radial-gradient(60vmax 60vmax at 90% -10%, rgba(196,214,245,.20) 0%, rgba(120,150,210,.07) 32%, rgba(5,9,19,0) 62%), radial-gradient(90% 50% at 50% 115%, rgba(40,70,130,.22) 0%, rgba(5,9,19,0) 70%);
+  --ds-surface: rgba(14,20,34,.86); --ds-surface-2: rgba(22,30,48,.82);
+  --ds-glass: rgba(8,12,22,.62); --ds-glass-rim: rgba(220,232,255,.10); --ds-glass-edge: rgba(200,215,240,.08);
+  --ds-photo: #E9EEF6;
+  --ds-ink: #EEF2F8; --ds-ink-2: #9AA6BA; --ds-ink-3: #6E7A90; --ds-line: rgba(200,215,240,.10);
+  --ds-accent: #FF6B4E; --ds-accent-soft: rgba(255,107,78,.16); --ds-on-accent: #FFFFFF;
+  --ds-shadow-1: 0 1px 2px rgba(0,0,0,.5); --ds-shadow-2: 0 0 0 1px rgba(200,215,240,.06), 0 18px 44px rgba(0,0,0,.55); --ds-shadow-dock: 0 0 0 1px rgba(200,215,240,.08), 0 18px 44px rgba(0,0,0,.65);
+  --ds-sky-stars: .55; --ds-moon: 1; --ds-sun: 0; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --ds-ground: #050913;
+  --ds-ground-glow: radial-gradient(60vmax 60vmax at 90% -10%, rgba(196,214,245,.20) 0%, rgba(120,150,210,.07) 32%, rgba(5,9,19,0) 62%), radial-gradient(90% 50% at 50% 115%, rgba(40,70,130,.22) 0%, rgba(5,9,19,0) 70%);
+  --ds-surface: rgba(14,20,34,.86); --ds-surface-2: rgba(22,30,48,.82);
+  --ds-glass: rgba(8,12,22,.62); --ds-glass-rim: rgba(220,232,255,.10); --ds-glass-edge: rgba(200,215,240,.08);
+  --ds-photo: #E9EEF6;
+  --ds-ink: #EEF2F8; --ds-ink-2: #9AA6BA; --ds-ink-3: #6E7A90; --ds-line: rgba(200,215,240,.10);
+  --ds-accent: #FF6B4E; --ds-accent-soft: rgba(255,107,78,.16); --ds-on-accent: #FFFFFF;
+  --ds-shadow-1: 0 1px 2px rgba(0,0,0,.5); --ds-shadow-2: 0 0 0 1px rgba(200,215,240,.06), 0 18px 44px rgba(0,0,0,.55); --ds-shadow-dock: 0 0 0 1px rgba(200,215,240,.08), 0 18px 44px rgba(0,0,0,.65);
+  --ds-sky-stars: .55; --ds-moon: 1; --ds-sun: 0; color-scheme: dark; }
+/* небо: фон на html (body прозрачный), звёзды и луна — неподвижные слои под содержимым */
+html { background: var(--ds-ground-glow), var(--ds-ground) !important; background-attachment: fixed !important; }
+html body { background: transparent !important; }
+html::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: var(--ds-sky-stars);
+  background-image: radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 27% 64%, #cfe0ff 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 46% 9%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 63% 37%, #dfe8ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 72%, #fff 50%, transparent 51%), radial-gradient(1.2px 1.2px at 91% 44%, #cfe0ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 83%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 37% 91%, #dfe8ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 56%, #fff 50%, transparent 51%);
+  background-size: 420px 420px; }
+html::after { content: ""; position: fixed; top: calc(-62px + env(safe-area-inset-top, 0px)); right: -30px; width: 110px; height: 110px; border-radius: 50%;
+  pointer-events: none; z-index: -1; opacity: var(--ds-moon);
+  background: radial-gradient(circle at 38% 36%, #FBFDFF 0, #E3EAF5 45%, #B9C6DA 100%);
+  box-shadow: 0 0 40px 12px rgba(210,225,255,.28), 0 0 160px 70px rgba(150,180,235,.13); }   /* луна в углу, за стеклом шапки — не перекрывает текст */
+@media (prefers-reduced-motion: no-preference) { html::before { transition: opacity .4s ease-out; } }

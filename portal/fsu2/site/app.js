@@ -9,6 +9,8 @@
   var IM = function (k) { return '/fsu/n/i/m/' + k + '.webp'; }, TH = function (k) { return '/fsu/n/i/t/' + k + '.webp'; };
   var SSG = function (k) { return ' srcset="/fsu/n/i/m/' + k + '.webp 1024w' + (SLOW ? '' : ', /fsu/n/i/' + k + '.webp 2048w') + '" sizes="(max-width: 900px) 100vw, 58vw"'; };
   var SST = function (k) { return ' srcset="/fsu/n/i/t/' + k + '.webp 480w' + (SLOW ? '' : ', /fsu/n/i/m/' + k + '.webp 1024w') + '" sizes="(max-width: 600px) 50vw, (max-width: 1100px) 33vw, 25vw"'; };
+  // 21.11.2026, Т. В. «Солнце/Луна»: светлая тема — товар под солнцем и офис днём, тёмная — под луной и офис ночью (кадры ts/tm, th.day/night)
+  var DK = function () { var t = d.documentElement.getAttribute('data-theme'); return t ? t === 'dark' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); };
   var I = {
     search: '<svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     menu: '<svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
@@ -46,9 +48,11 @@
   }
   function tile(x) {
     if (!x) return '';
-    return '<a class="pt" href="' + x.u + '"><div class="ph">' + (x.hit ? '<span class="badge">Хит</span>' : '') +
-      (x.i ? '<img class="a' + (x.i2 ? ' has2' : '') + '" src="' + TH(x.i) + '"' + SST(x.i) + ' alt="' + esc(x.n) + '" loading="lazy" decoding="async">' : '<span class="muted">нет фото</span>') +
+    var lk = DK() ? x.tm : x.ts, k0 = lk || x.i;
+    return '<a class="pt" href="' + x.u + '"><div class="ph' + (lk ? ' lit' : '') + '">' + (x.hit ? '<span class="badge">Хит</span>' : '') +
+      (k0 ? '<img class="a' + (x.i2 ? ' has2' : '') + '" src="' + TH(k0) + '"' + SST(k0) + ' alt="' + esc(x.n) + '" loading="lazy" decoding="async">' : '<span class="muted">нет фото</span>') +
       (x.i2 ? '<img class="b" src="' + TH(x.i2) + '"' + SST(x.i2) + ' alt="" loading="lazy" decoding="async">' : '') +
+      (x.ia || lk ? '<span class="vis va">визуализация</span>' : '') + (x.ia2 && !x.ia ? '<span class="vis vb">визуализация</span>' : '') +
       '<span class="cnt">' + pl(x.np + x.ni, 'фото', 'фото', 'фото') + '</span></div>' +
       '<div class="bd"><span class="nm">' + esc(x.n) + '</span><span class="mt num">' + esc(dims(x)) + '</span></div></a>';
   }
@@ -170,12 +174,15 @@
 
   // ---------- карточка ----------
   function fig(x, i, name) {
-    return '<figure' + (x.ai ? ' class="ai"' : '') + '><img src="' + IM(x.k) + '"' + SSG(x.k) + ' alt="' + esc(name) + ', фото ' + (i + 1) + (x.ai ? ' (визуализация)' : '') + '"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + ' decoding="async">' +
+    return '<figure class="' + (x.ai ? 'ai' : '') + (x.t === 'interior' ? ' int' : '') + (x.t === 'lit' ? ' lit' : '') + '"><img src="' + IM(x.k) + '"' + SSG(x.k) + ' alt="' + esc(name) + ', фото ' + (i + 1) + (x.ai ? ' (визуализация)' : '') + '"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + ' decoding="async">' +
       (x.ai ? '<span class="vis">визуализация</span>' : '') + '</figure>';
   }
   function vCard(x, c) {
     var g = G[x.g], sub = g && g.subs.filter(function (s) { return s.c === x.s; })[0];
-    var P = c.ph.length ? c.ph : c.in, ex = (c.ch.filter(function (q) { return q.t === 'Исполнения'; })[0] || { v: [] }).v;
+    var th = c.th || {}, dk = DK(), lt = dk ? th.moon : th.sun, li = dk ? th.night : th.day;
+    if (li) c = Object.assign({}, c, { in: [{ k: li, ai: true, t: 'interior' }].concat(c.in.filter(function (p) { return p.k !== th.day && p.k !== th.night; })) });
+    var P = (lt ? [{ k: lt, ai: true, t: 'lit' }] : []).concat(c.ph, c.in, c.inf || []),   // 21.11.2026, Т. В.: интерьер — в самой галерее, последними слайдами (не только блоком ниже)
+       ex = (c.ch.filter(function (q) { return q.t === 'Исполнения'; })[0] || { v: [] }).v;
     var opt = function (n) { var r = ex.filter(function (v) { return v[0] === n; })[0]; return r ? r[1].split(/,\s*(?![^()]*\))/).filter(Boolean).slice(0, 10) : []; };
     var vars = (ex.filter(function (v) { return v[0] === 'Вариантов в 1С'; })[0] || [])[1];
     var hh = (x.h || []).filter(Boolean), hs = hh.length === 2 && hh[0] !== hh[1] ? hh.join('–') : (hh[0] || '—');
@@ -252,6 +259,7 @@
     if (window.FSU_PAGES && window.FSU_PAGES.route(p, q)) return;   // 21.11.2026: страницы компании, проекты, остатки, подбор — pages.js
     show(vMiss('Страница не найдена.'));
   }
+  try { var mq = matchMedia('(prefers-color-scheme: dark)'); (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(function () { if (M) route(); }); } catch (e) { }
   function nav(u, push) { if (push) history.pushState(null, '', u); route(); if (!/#/.test(u)) window.scrollTo(0, 0); }
   var NEW = /^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$)|company(?:\/|$)|projects(?:\/|$)|shares(?:\/|$)|stock(?:\/|$)|podbor(?:\/|$))/;
   d.addEventListener('click', function (e) {

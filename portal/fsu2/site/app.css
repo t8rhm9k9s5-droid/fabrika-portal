@@ -1,17 +1,13 @@
 /* 21.11.2026 — новый каталог techfabrikant.ru/fsu/ (из прототипа work/fsu2/proto). Каталог «Фабрикант» /fsu/: тёплая светло-серая витрина, предметы на «каменной» подложке, один акцент — красный бренда; заголовки — широкий гротеск */
 :root{
-  --paper:#F3F2EF; --card:#FFFFFF; --stone:#E8E6E1; --ink:#2B2C29; --ink-2:#62645E; --line:#DEDCD6;
-  --accent:#EB493C; --accent-ink:#C3362B; --tint:#FBE6E2; --on-accent:#FFFFFF; --shade:rgba(43,44,41,.08);
-  --f-disp:"ALSGorizont","Arial Black",system-ui,sans-serif; --f-text:"ALSDeparture",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --r1:10px; --r2:16px; --r3:24px; --wrap:1240px; --hdr:64px;
-  color-scheme:light;
+  /* 21.11.2026 ds2030: старые имена — алиасы единой системы (ds.css грузится раньше); тёмная тема — в ds.css */
+  --paper:var(--ds-ground); --card:var(--ds-surface); --stone:var(--ds-surface-2); --ink:var(--ds-ink); --ink-2:var(--ds-ink-2); --line:var(--ds-line);
+  --accent:var(--ds-accent); --accent-ink:#C3362B; --tint:var(--ds-accent-soft); --on-accent:var(--ds-on-accent); --shade:rgba(35,36,33,.10);
+  --f-disp:var(--ds-font-display); --f-text:var(--ds-font-text);
+  --r1:12px; --r2:var(--ds-r-card); --r3:var(--ds-r-card); --wrap:1240px; --hdr:64px;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#171816; --card:#21221F; --stone:#2A2B27; --ink:#ECEBE7; --ink-2:#A6A59F; --line:#363733;
-  --accent:#F05A4C; --accent-ink:#FF8A7E; --tint:#3B231F; --on-accent:#FFFFFF; --shade:rgba(0,0,0,.35); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --paper:#171816; --card:#21221F; --stone:#2A2B27; --ink:#ECEBE7; --ink-2:#A6A59F; --line:#363733;
-  --accent:#F05A4C; --accent-ink:#FF8A7E; --tint:#3B231F; --on-accent:#FFFFFF; --shade:rgba(0,0,0,.35); color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--accent-ink:#FF8A7E;--shade:rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--accent-ink:#FF8A7E;--shade:rgba(0,0,0,.35)}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 @media (pointer:coarse){html{min-height:100%;overscroll-behavior:none}body{overscroll-behavior:none}}
@@ -250,8 +246,8 @@ main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 /* фото на белом фоне (и снимки ИИ) сливаются с подложкой: белое умножается на цвет плитки */
 .pt .ph img,.spc .im img,.ty img,.main figure img,.thumbs img,.heroA .pics img,.feat img{mix-blend-mode:multiply}
 .spc .im img{filter:none}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pt .ph,:root:not([data-theme="light"]) .main,:root:not([data-theme="light"]) .thumbs button,:root:not([data-theme="light"]) .ty i,:root:not([data-theme="light"]) .spc{background:#E8E6E1;--ink:#2B2C29;--ink-2:#62645E;color:#2B2C29}}
-:root[data-theme="dark"] .pt .ph,:root[data-theme="dark"] .main,:root[data-theme="dark"] .thumbs button,:root[data-theme="dark"] .ty i,:root[data-theme="dark"] .spc{background:#E8E6E1;--ink:#2B2C29;--ink-2:#62645E;color:#2B2C29}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pt .ph,:root:not([data-theme="light"]) .main,:root:not([data-theme="light"]) .thumbs button,:root:not([data-theme="light"]) .ty i,:root:not([data-theme="light"]) .spc{background:#FFFFFF;--ink:#2B2C29;--ink-2:#62645E;color:#2B2C29}}
+:root[data-theme="dark"] .pt .ph,:root[data-theme="dark"] .main,:root[data-theme="dark"] .thumbs button,:root[data-theme="dark"] .ty i,:root[data-theme="dark"] .spc{background:#FFFFFF;--ink:#2B2C29;--ink-2:#62645E;color:#2B2C29}
 .logo{color:var(--ink)}
 @media (max-width:860px){.spc .im{width:62%;height:62%}.spc{min-height:200px}.spc .tx{max-width:62%}}
 @media (max-width:420px){.spc .im{width:58%;height:56%}.spc h3{font-size:17px}}
@@ -267,8 +263,64 @@ main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .main figure{padding:4%}
 .main figure img{max-width:100%;max-height:100%;object-fit:contain}
 .main figure.ai.int,.main figure.int{padding:0}
-.main figure.int img{width:100%;height:100%;object-fit:cover}
+.main figure.int img{width:100%;height:100%;object-fit:contain;background:#F2F1EE}   /* 21.11.2026, Т. В.: интерьер не обрезать — кадр целиком */
 .inter2 figure img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:var(--r3)}
 .pt{border:1px solid var(--line)}
 .pt .ph .badge{z-index:2}
 .pt .ph img{position:relative;z-index:1}
+/* 21.11.2026 (Рекс CG-59/60): метка «визуализация» и в плитке списка — на обложке-ИИ всегда, на втором кадре — когда он показан при наведении */
+.pt .ph .vis{position:absolute;left:10px;right:auto;bottom:10px;z-index:2;font-size:10px}
+.pt .ph .vis.vb{opacity:0;transition:opacity .15s}
+.pt .ph:hover .vis.vb{opacity:1}
+
+/* ===== 21.11.2026 ds2030 — единая система портала и сайта (решение Т. В. «ставим сразу на оба») ===== */
+body{background:var(--ds-ground-glow),var(--ds-ground);background-attachment:fixed;font:400 16px/1.5 var(--ds-font-text)}
+.hdr{background:var(--ds-glass);-webkit-backdrop-filter:var(--ds-blur);backdrop-filter:var(--ds-blur);border-bottom:0;box-shadow:0 1px 0 var(--ds-glass-edge)}
+.btn{border:0;box-shadow:inset 0 0 0 1px var(--ds-line);transition:transform var(--ds-d-fast) var(--ds-ease),filter var(--ds-d-fast) var(--ds-ease)}
+.btn:active{transform:scale(.97)}
+.btn.pri{box-shadow:none}.btn.pri:hover{background:var(--accent);filter:brightness(.94)}
+.iconbtn{border:0;background:var(--ds-glass);-webkit-backdrop-filter:var(--ds-blur);backdrop-filter:var(--ds-blur);box-shadow:inset 0 0 0 1px var(--ds-glass-rim),var(--ds-shadow-1);width:44px;height:44px}
+.srch{border:0;box-shadow:inset 0 0 0 1px var(--ds-line);border-radius:var(--ds-r-pill)}
+.chip{border:0;box-shadow:inset 0 0 0 1px var(--ds-line)}
+.chip.on{box-shadow:none}
+.pt{border:0;box-shadow:var(--ds-shadow-1);padding:8px;transition:transform var(--ds-d) var(--ds-ease),box-shadow var(--ds-d) var(--ds-ease)}
+.pt:hover{box-shadow:var(--ds-shadow-2)}
+.pt:active{transform:scale(.985)}
+.pt .ph{border-radius:var(--ds-r-inner);overflow:hidden}
+.pt .bd{padding:10px 8px 6px}
+.pt .nm{font-family:var(--ds-font-display);font-weight:500;font-size:15px;letter-spacing:-.01em}
+.spc{box-shadow:var(--ds-shadow-1)}
+.main,.thumbs button,.inter2 figure{border-radius:var(--ds-r-card)}
+.thumbs button{border-radius:var(--ds-r-inner)}
+.vis,.pt .ph .vis{background:var(--ds-glass);-webkit-backdrop-filter:var(--ds-blur);backdrop-filter:var(--ds-blur);color:var(--ds-ink-2)}
+.main figure .vis,.pt .ph .vis{color:#5E605A;background:rgba(255,255,255,.78)}   /* на белой подложке фото — всегда светлая метка */
+.drawer{background:var(--ds-ground)}
+.stick{background:var(--ds-glass);-webkit-backdrop-filter:var(--ds-blur);backdrop-filter:var(--ds-blur);border-top:0;box-shadow:0 -1px 0 var(--ds-glass-edge)}
+.foot{border-top:1px solid var(--ds-line)}
+h1{font-size:clamp(30px,5.2vw,56px)}
+/* кнопки портала из back.html (общие с копией, стили там встроены) — в новом сайте выглядят как .ds-back/.ds-ai: стекло и красная пилюля, 18 px от низа */
+#fsu-back{left:max(18px,env(safe-area-inset-left,0px))!important;bottom:var(--ds-dock-b)!important;height:48px!important;border-radius:999px!important;background:var(--ds-glass)!important;-webkit-backdrop-filter:var(--ds-blur);backdrop-filter:var(--ds-blur);color:var(--ds-ink)!important;font:700 16px/1 var(--ds-font-text)!important;box-shadow:inset 0 0 0 1px var(--ds-glass-rim),var(--ds-shadow-dock)!important}
+#fsu-ai{right:max(18px,env(safe-area-inset-right,0px))!important;bottom:var(--ds-dock-b)!important;height:48px!important;border-radius:999px!important;background:var(--ds-accent)!important;color:var(--ds-on-accent)!important;font:700 16px/1 var(--ds-font-text)!important;box-shadow:var(--ds-shadow-dock)!important}
+#fsu-ai-p{bottom:calc(var(--ds-dock-b) + 60px)!important;background:var(--ds-surface)!important;color:var(--ds-ink)!important;border-radius:var(--ds-r-card)!important;font-family:var(--ds-font-text)!important;box-shadow:var(--ds-shadow-dock)!important}
+#fsu-ai-p textarea{background:var(--ds-surface-2);color:var(--ds-ink);border-color:var(--ds-line)!important}
+#fsu-ai-p>div:first-child,#fsu-ai-f{border-color:var(--ds-line)!important}
+@media(max-width:480px){#fsu-ai::after{font:700 16px/1 var(--ds-font-text)}}
+
+/* 21.11.2026 «Солнце/Луна»: кадр под тему — свой фон (песок днём, ночное небо ночью), во всю плитку; ночью края растворяются в небе */
+.pt .ph.lit{padding:0;background:transparent}
+.pt .ph.lit img{width:100%;height:100%;object-fit:cover}
+.main figure.lit img{width:100%;height:100%;object-fit:cover;padding:0;background:transparent}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pt{background:transparent;box-shadow:none}
+ :root:not([data-theme="light"]) .pt .ph.lit img{-webkit-mask-image:radial-gradient(ellipse 64% 68% at 50% 48%,#000 56%,transparent 100%);mask-image:radial-gradient(ellipse 64% 68% at 50% 48%,#000 56%,transparent 100%)}
+ :root:not([data-theme="light"]) .pt .ph{border-radius:var(--r2)}
+ :root:not([data-theme="light"]) .pt .bd{padding-inline:4px}}
+:root[data-theme="dark"] .pt{background:transparent;box-shadow:none}
+:root[data-theme="dark"] .pt .ph.lit img{-webkit-mask-image:radial-gradient(ellipse 64% 68% at 50% 48%,#000 56%,transparent 100%);mask-image:radial-gradient(ellipse 64% 68% at 50% 48%,#000 56%,transparent 100%)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--photo:#E6ECF4}}
+:root[data-theme="dark"]{--photo:#E6ECF4}
+/* «Солнце/Луна»: кадр темы — во всю плитку и во весь слайд, без белой подложки (сильнее тёмных правил выше) */
+:root .pt .ph.lit{padding:0!important;background:transparent!important}
+:root .pt .ph.lit img.a{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:normal}
+:root .pt .ph.lit img.b{display:none}
+:root .main figure.lit{padding:0;background:var(--ds-ground)}
+:root .main figure.lit img{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
