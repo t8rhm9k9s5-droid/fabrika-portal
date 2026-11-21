@@ -601,23 +601,26 @@ function tm_events_(ctx) {
   try {
     var id = PropertiesService.getScriptProperties().getProperty('EV_SHEET_ID') || TM_EV_SHEET;
     var v = SpreadsheetApp.openById(id).getSheets()[0].getDataRange().getDisplayValues(), from = tm_addDays_(ctx.today, -60), rows = [];
-    for (var i = 1; i < v.length && rows.length < 200; i++) {
+    for (var i = 1; i < v.length; i++) {   // 21.11.2026 (Рекс CG-56): читаем все строки, ограничение — после сортировки по дате
       var r = v[i], d = String(r[0] || '').trim(), k = String(r[2] || '').trim().toLowerCase();
       if (!d || !k || k.indexOf('пример') >= 0) continue;
       var m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(d); if (m) d = m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
       if (!/^\d{4}-\d\d-\d\d$/.test(d) || d < from) continue;
       var kind = /периметр|забор|проникн|посторон/.test(k) ? 'per' : /машин|подач|транспорт|авто/.test(k) ? 'car' : 'inc';
       rows.push({ d: d, tm: String(r[1] || '').slice(0, 5), k: kind, place: tm_mask_(r[3]).slice(0, 80), what: tm_mask_(r[4]).slice(0, 300), who: tm_mask_(r[5]).slice(0, 60),
-                  act: tm_mask_(r[6]).slice(0, 200), st: /закрыт|решен|выполнен/i.test(String(r[7] || '')) ? 'done' : 'open' });
+                  act: tm_mask_(r[6]).slice(0, 200), st: /^\s*(закрыт[оа]?|решен[оа]?|выполнен[оа]?|готово)\s*$/i.test(String(r[7] || '')) ? 'done' : 'open' });   // точный статус: «не закрыто» — открыто
     }
     // 21.11.2026, Т. В. («происшествия — из совещаний и почты»): письма 1c@ за 30 дней с признаками происшествия или неподанной машины — строками журнала (источник «письмо 1c@»).
     //   Свои письма робота и камер, сверки поручений — не берутся; письмо, уже внесённое в таблицу (та же тема), — один раз.
+    var MAILOK = true;
     try {
       var seen = {}; rows.forEach(function (x) { seen[String(x.what).slice(0, 60).toLowerCase()] = 1; });
       var Q = 'newer_than:30d -from:user1@example.org -from:user32@example.org -subject:"NVR ALERT" (происшествие OR авария OR травма OR пожар OR возгорание OR задымление OR кража OR хищение OR протечка OR затопление OR "несчастный случай" OR ДТП OR "машина не подана" OR "не подали машину" OR "машину не подали")';
       GmailApp.search(Q, 0, 40).forEach(function (th) {
-        var sub = String(th.getFirstMessageSubject() || ''); if (/поручени[яй] на|видеонаблюдени|сводк|отчёт|отчет|совещани|протокол|договор|служебн|сч[её]т|замечани/i.test(sub)) return;   // повестки, договоры, счета — не происшествия
-        var m = th.getMessages()[0], dt = m.getDate(), txt = (sub + ' ' + m.getPlainBody().slice(0, 1500)).toLowerCase();
+        var tid = th.getId(); if (seen['t:' + tid]) return; seen['t:' + tid] = 1; var sub = String(th.getFirstMessageSubject() || ''); if (/поручени[яй] на|видеонаблюдени|сводк|отчёт|отчет|совещани|протокол|договор|служебн|сч[её]т|замечани/i.test(sub)) return;   // повестки, договоры, счета — не происшествия
+        var RXI = /происшеств|авари[яи]|травм|пожар|возгоран|задымл|краж[аиу]|хищени|протечк|затоплен|несчастн[а-я]* случа|(^|[^а-я])дтп([^а-я]|$)|машин[а-я]* не подан|не подали машин|проникновени/;
+        var m = null, txt = ''; th.getMessages().some(function (mm) { var tx = (sub + ' ' + mm.getPlainBody().slice(0, 1500)).toLowerCase(); if (RXI.test(tx)) { m = mm; txt = tx; return true; } return false; });   // 21.11.2026 (Рекс CG-56): письмо цепочки, в котором совпало
+        if (!m) return; var dt = m.getDate();
         if (!/происшеств|авари[яи]|травм|пожар|возгоран|задымл|краж[аиу]|хищени|протечк|затоплен|несчастн[а-я]* случа|(^|[^а-я])дтп([^а-я]|$)|машин[а-я]* не подан|не подали машин|проникновени/.test(txt)) return;   // поиск Gmail нестрогий — слово должно быть в теме или начале письма
         var d2 = Utilities.formatDate(dt, 'Europe/Moscow', 'yyyy-MM-dd'); if (d2 < from) return;
         var key = sub.replace(/^(re|fwd?|fw):\s*/ig, '').slice(0, 60).toLowerCase(); if (seen[key]) return; seen[key] = 1;
@@ -625,9 +628,9 @@ function tm_events_(ctx) {
         rows.push({ d: d2, tm: Utilities.formatDate(dt, 'Europe/Moscow', 'HH:mm'), k: kind, place: '', what: tm_mask_(sub).slice(0, 300), who: tm_mask_(String(m.getFrom()).replace(/<[^>]*>/, '').trim()).slice(0, 50) + ' (письмо 1c@)',
                     act: '', st: 'open', src: 'mail' });
       });
-    } catch (em) { /* почта недоступна — журнал без писем */ }
-    rows.sort(function (a, b) { return a.d < b.d ? 1 : -1; });
-    return { ok: true, rows: rows.slice(0, 200) };   // 21.11.2026 (GPT): не больше 200 строк и с письмами
+    } catch (em) { MAILOK = false; }   // почта недоступна — строки таблицы есть, писем нет (mail:false — портал пишет об этом)
+    rows.sort(function (a, b) { var x = a.d + ' ' + (a.tm || ''), y = b.d + ' ' + (b.tm || ''); return x < y ? 1 : x > y ? -1 : 0; });
+    return { ok: true, rows: rows.slice(0, 200), mail: MAILOK };   // 21.11.2026 (GPT): не больше 200 строк и с письмами
   } catch (e) { return { ok: false, err: String(e && e.message || e).slice(0, 120) }; }
 }
 function tm_poruch_(ctx, st, ctl) {

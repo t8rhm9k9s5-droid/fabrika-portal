@@ -146,19 +146,26 @@ async function refresh(until) {                     // a new version on a device
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
-    try { await pub(); } catch (e0) { try { for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
+    try { await pub(); } catch (e0) { try { await dropOld(true); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
     try { await refresh(Date.now() + 8000); } catch (err) { /* ключ и карта остаются прежними */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
     await self.skipWaiting();
   })());
 });
 let FILLED = 0, LAST_REQ = 0;   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
+async function coreFull(st) {   // новая версия докачана целиком — прошлую можно убрать
+  const c = await caches.open(CORE); for (const p of st.map.pre) { if (st.map.files[p] && fkey(st, st.map.files[p]) && !(await c.match(BASE + p))) return false; } return true;
+}
 function fillLater(e) {                            // докачать сайт в кэш фоном, понемногу: не чаще раза в 2 минуты, не дольше 25 с за раз
   if (Date.now() - FILLED < 120000) return; FILLED = Date.now();
-  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000); } catch (x) { /* в другой раз */ } })());
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) { const r = await precache(st, null, null, Date.now() + 20000); if (r && !r.partial && await coreFull(st)) await dropOld(false); } } catch (x) { /* в другой раз */ } })());
 }
+// 21.11.2026 (Рекс CG-56, блокер офлайна): прошлая версия сайта на телефоне держится, пока новая не докачана целиком —
+//   без связи сразу после обновления страницы открываются из неё. Удаляются только версии старше прошлой; прошлая — когда новая полная.
+async function oldCores() { return (await caches.keys()).filter(k => k.startsWith('t14-core-') && k !== CORE).sort(); }
+async function dropOld(keepPrev) { const o = await oldCores(); for (const k of (keepPrev ? o.slice(0, -1) : o)) await caches.delete(k); }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k);
+    await dropOld(true);
     await self.clients.claim();
   })());
 });
@@ -270,7 +277,7 @@ async function fq(st, req) {
   const v = st.map.v;
   for (const k in FQ) if (k !== String(v)) delete FQ[k];   // 21.11.2026 (GPT): индекс прошлой версии из памяти убираем
   if (!FQ[v]) FQ[v] = (async () => { const r = await serve0('fsu/_api/_fidx.json', { mode: 'cors' }); if (!r.ok) throw new Error('fidx ' + r.status); return r.json(); })().catch(e => { delete FQ[v]; throw e; });
-  let X; try { X = await FQ[v]; } catch (e) { return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }); }
+  let X; try { X = await FQ[v]; } catch (e) { return new Response(JSON.stringify({ success: false, offline: true, message: 'Список этого раздела не сохранён в копии сайта — откройте fabrikant.su' }), { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }); }   // 21.11.2026 (Рекс CG-56): ошибка индекса — не «пустой каталог»
   const q = new URL(req.url).searchParams; let f = {}; try { f = JSON.parse(q.get('filter') || '{}') || {}; } catch (e) { }
   let ids = X.order.slice();
   const sec = q.get('sectionId'); if (sec && (X.v['miblock-section-id'] || {})[sec]) f['miblock-section-id'] = (f['miblock-section-id'] || []).concat([sec]);

@@ -81,10 +81,11 @@
     //   «Выполнение плана» (SNAP.pmgr: факт с 1-го числа на дату) — берём его + дни после его даты, если так больше.
     var P = SNAP.pmgr, mix = null;
     if (P && P.ym === ym && P.fact && P.asof) {
-      var after = 0; ks.forEach(function (x) { if (x > S(P.asof)) { var R = (D[x] || {}).types || (D[x] || {}).cap; if (R && R.tot) after += R.tot[1] || 0; } });
-      if (P.fact + after > A.s) mix = { v: P.fact + after, asof: P.asof };
+      var after = 0, lastA = ''; ks.forEach(function (x) { if (x > S(P.asof)) { var R = (D[x] || {}).types || (D[x] || {}).cap; if (R && R.tot) { after += R.tot[1] || 0; lastA = x; } } });
+      // 21.11.2026 (Рекс CG-56): накопительный отчёт — Имя1 (в нём и корректировки вниз), а не «что больше»; период — его дата или последний день после неё
+      mix = { v: P.fact + after, asof: P.asof, to: lastA || S(P.asof).slice(0, 10) };
     }
-    return { ym: ym, v: mix ? mix.v : A.s, q: A.q, to: ks[ks.length - 1], asof: got, whole: whole, n: ks.length, daily: A.s, pm: mix };
+    return { ym: ym, v: mix ? mix.v : A.s, q: A.q, to: mix ? mix.to : ks[ks.length - 1], asof: got, whole: whole, n: ks.length, daily: A.s, pm: mix };
   }
   function sales() {
     var SD = sday(), R = SNAP.rev || null, bars = {}, ag = {};
@@ -333,7 +334,7 @@
     var Ptxt = L.map(function (x) { return x.text; }).join(' ');   // строка журнала из совещания (P-007…) уже посчитана в поручениях — второй раз не считаем
     var evInc = ER.filter(function (r) { var m = /P-\d{3}/.exec(S(r.who)); return r.k === 'inc' && r.st !== 'done' && !(m && Ptxt.indexOf(m[0]) >= 0); }).length;
     return { open: L.length + evInc, late: L.filter(function (x) { return x.late; }).length, inc: L.filter(function (x) { return x.inc; }).length + evInc, items: L, t: d.t,
-      ev: E ? { ok: !!E.ok, err: E.err || '', per7: ER.filter(function (r) { return r.k === 'per' && r.d >= d7; }).length, car7: ER.filter(function (r) { return r.k === 'car' && r.d >= d7; }).length,
+      ev: E ? { ok: !!E.ok, err: E.err || '', per7: ER.filter(function (r) { return r.k === 'per' && r.d > d7 && r.d <= td; }).length, car7: ER.filter(function (r) { return r.k === 'car' && r.d > d7 && r.d <= td; }).length,   // 21.11.2026 (Рекс CG-56): ровно 7 дат, включая сегодня
         carToday: ER.filter(function (r) { return r.k === 'car' && r.d === td; }).length, inc: evInc, last: ER[0] || null } : null };
   }
   //   21.11.2026, Т. В. («периметр — камеры»): perim(cam) — события камер периметра и ворот вне рабочего графика (cam.bin, 3 суток).

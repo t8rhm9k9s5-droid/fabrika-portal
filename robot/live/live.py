@@ -777,7 +777,9 @@ def expected_x(day, last):
 
 # 21.11.2026 (аудит): T14B2 — JSON сжат zlib до шифрования (живые файлы в ~10 раз меньше), ключи потока и подписи разделены.
 #   Шаг 2 выкладки: включается файлом zlive.on рядом с роботом, когда у всех страницы с поддержкой T14B2 (live.js от 21.11).
-ZLIVE = os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zlive.on'))
+ZLIVE = not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zlive.off'))   # 21.11.2026, Т. В. «доустанавливай всё»: шаг 2 включён; выключить — файл zlive.off
+#   Сжимаются только файлы, которые читают страницы портала и сверка (sverka.py умеет T14B2); боты, отчёты и PHP читают свои файлы в T14B1.
+ZNAMES = ('ls.bin', 'pf.bin', 'sales.bin', 'cam.bin', 'omts.bin', 'smvs.bin')
 
 
 def seal2(obj, key=None):
@@ -793,7 +795,6 @@ def seal2(obj, key=None):
 
 def seal(obj, key=None):
     key = key or KEY
-    if globals().get('ZLIVE') and 'seal2' in globals() and key == globals().get('KEY'): return globals()['seal2'](obj, key)   # 21.11.2026: сжатый формат — только по флагу zlive.on
     raw = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     nonce = secrets.token_bytes(16)
     ks = bytearray(); i = 0
@@ -841,8 +842,14 @@ def publish(name, obj):
               'любой пользователь портала. Нужно положить k_owner.txt пакетом кода (см. INSTALL_py.md).', critical=True)
         return False
     tmp = '%s.%d.tmp' % (p, os.getpid())                    # 29.10.2026: процессы работают параллельно — у каждого свой временный файл
-    with open(tmp, 'w') as f: f.write(seal(obj, KEY_OWNER if owner else KEY))
+    with open(tmp, 'w') as f: f.write(seal(obj, KEY_OWNER if owner else KEY))   # 21.11.2026 (Рекс CG-56): прежний формат остаётся на месте — старые страницы и боты читают его
     os.chmod(tmp, 0o644); os.replace(tmp, p)
+    if globals().get('ZLIVE') and not owner and name in globals().get('ZNAMES', ()):   # сжатая копия T14B2 — st/z/<имя>, её берут новые страницы (live.js), при сбое — прежний файл
+        try:
+            dz = os.path.join(d, 'z'); os.makedirs(dz, exist_ok=True); pz = os.path.join(dz, name); tz = '%s.%d.tmp' % (pz, os.getpid())
+            with open(tz, 'w') as f: f.write(globals()['seal2'](obj, KEY))
+            os.chmod(tz, 0o644); os.replace(tz, pz)
+        except Exception as e: log('  ! сжатая копия %s:' % name, e.__class__.__name__, e)
     try:                                                    # 04.11.2026, Т. В. «Файл сверки на Диске»: итоги того же объекта → state/sverka/<name>.json (sverka.py)
         import sverka as SV
         SV.note(STATE, name, obj)

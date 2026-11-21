@@ -127,11 +127,17 @@
   }
   // 21.11.2026 (аудит): условный запрос — браузер спрашивает хостинг «изменился ли файл» (ETag) и получает 304 без тела, если нет.
   //   Раньше метка ?m= и cache:'no-store' заставляли каждый раз качать файл целиком (4 МБ на все разделы).
-  var NETC = {};
+  var NETC = {}, ZN = { 'ls.bin': 1, 'pf.bin': 1, 'sales.bin': 1, 'cam.bin': 1, 'omts.bin': 1, 'smvs.bin': 1 };   // те же, что ZNAMES в live.py
   function net(name, signal) {
     if (NETC[name]) return NETC[name];   // один запрос на файл одновременно
-    var p = NETC[name] = fetch('st/' + name, { cache: 'no-cache', credentials: 'same-origin', signal: signal })
-      .then(function (r) { return r.ok ? r.text() : null; }).then(function (t) { if (t && OK(t)) { cput(name, t); pput(name, t); } return t; })
+    function f1(path) { return fetch(path, { cache: 'no-cache', credentials: 'same-origin', signal: signal }).then(function (r) { return r.ok ? r.text() : null; }); }
+    // 21.11.2026 (Рекс CG-56): сжатая копия (st/z/, формат T14B2) — для новых страниц; не пришла или не та — прежний файл st/<имя>
+    var first = ZN[name] && window.DecompressionStream ? f1('st/z/' + name).then(function (t) { return t && t.indexOf('T14B2.') === 0 ? t : null; }, function () { return null; }) : Promise.resolve(null);
+    function v(t) {   // 21.11.2026 (Рекс CG-56): в память и хранилище — только файл, который расшифровался и разобрался; иначе остаётся прежний
+      if (!t || !OK(t)) return Promise.resolve(null);
+      return Promise.resolve(open(t)).then(function (d) { if (!d) return null; cput(name, t); pput(name, t); return t; }, function () { return null; });
+    }
+    var p = NETC[name] = first.then(v).then(function (t) { return t || f1('st/' + name).then(v); })
       .then(function (t) { delete NETC[name]; return t; }, function (e) { delete NETC[name]; throw e; });
     return p;
   }

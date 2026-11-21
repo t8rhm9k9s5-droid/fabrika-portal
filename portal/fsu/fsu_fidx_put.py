@@ -4,6 +4,12 @@
 import sys, json, re, os, urllib.parse as up
 SRC, FSU = sys.argv[1], sys.argv[2]
 X = json.load(open(SRC, encoding='utf-8'))
+# 21.11.2026 (Рекс CG-56): проверка схемы и свежести — испорченный или старый индекс в копию не кладём (остаётся прежний)
+import time as _t
+if not (isinstance(X.get('items'), dict) and X['items'] and isinstance(X.get('order'), list) and X['order'] and isinstance(X.get('v'), dict) and 'miblock-section-id' in X['v']):
+    sys.exit('индекс фильтров: неверная схема — оставляю прежний')
+if X.get('t') and (_t.time() - _t.mktime(_t.strptime(X['t'], '%Y-%m-%dT%H:%M'))) > 8 * 86400:
+    print('ВНИМАНИЕ: индексу фильтров больше 8 дней (%s) — обновить: fsu_fidx.py' % X['t'], file=sys.stderr)
 t = open(os.path.join(FSU, 'index.html'), encoding='utf-8').read()
 A = json.JSONDecoder().raw_decode(t.split('var A=', 1)[1])[0] if 'var A=' in t else {}   # карты ещё нет — порядок как отдал сайт
 pg = []

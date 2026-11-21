@@ -7,7 +7,7 @@ import sys, os, json, time, urllib.request, urllib.parse
 F = json.load(open(sys.argv[1], encoding='utf-8')); OUT = sys.argv[2]
 B = 'https://fabrikant.su/api/v1/?action=products.getItemsShortByFilter&lang=ru&withTotal=true&page=1&pageSize=400&filter='
 import hashlib
-CACHE = os.path.join(OUT, 'c'); os.makedirs(CACHE, exist_ok=True)
+CACHE = os.path.join(OUT, 'c', time.strftime('%Y-%m-%d')); os.makedirs(CACHE, exist_ok=True)   # 21.11.2026 (Рекс CG-56): ответы годны только в день обхода
 def get1(flt, page):   # ответы сохраняются: обрыв связи — повтор только недостающих
     key = os.path.join(CACHE, hashlib.md5(('%s|%d' % (json.dumps(flt, sort_keys=True), page)).encode()).hexdigest() + '.json')
     if os.path.exists(key): return json.load(open(key, encoding='utf-8'))
@@ -26,6 +26,7 @@ def get(flt):   # постранично по 100: большие ответы �
         p += 1; more = get1(flt, p)['items']
         if not more: break
         its += more
+    if len(its) < n: raise SystemExit('неполная выдача сайта: %s — %d из %d' % (flt, len(its), n))   # 21.11.2026 (Рекс CG-56): неполный индекс не сохраняем
     return its
 items, v = {}, {}
 inputs = []

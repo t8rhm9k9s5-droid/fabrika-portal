@@ -131,9 +131,21 @@ try:
         news = ('Что нового на портале\n' + '; '.join(re.sub(r'\s*\(\d+\)$', '', i) for i in _its[:4]))[:300]
         pathlib.Path(NEWS).write_text(news + '\n', encoding='utf-8')
 except Exception as _e: print('news:', _e)
-m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news}, ensure_ascii=False).encode()
+# 21.11.2026 (аудит, шаг 2 деления карты; Т. В. «доустанавливай всё»): карта 1,2 МБ, из них 93 % — копия «Сайта». Разделы «Сайт» (mf.bin) и
+#   «Документы»/«Архив» (ml.bin) — отдельными картами: Service Worker (need) догружает их при первом открытии раздела. Файлы предзагрузки остаются в m.bin.
+#   Выключить: FABRIKA_MAPSPLIT=0.
+PARTS = {} if os.environ.get('FABRIKA_MAPSPLIT') == '0' else {'fsu/': 'mf.bin', 'library/': 'ml.bin', 'archive/': 'ml.bin'}
+_pre = set(pre); _pm = {}
+for _p in list(files):
+    _k = next((x for x in PARTS if _p.startswith(x)), None)
+    if _k and _p not in _pre: _pm.setdefault(PARTS[_k], {})[_p] = files.pop(_p)
+for _nm in sorted(set(PARTS.values())):
+    _b = json.dumps({'v': VERSION, 'files': _pm.get(_nm, {})}, ensure_ascii=False).encode(); _iv = secrets.token_bytes(12)
+    pathlib.Path(f'{OUT}/{_nm}').write_bytes(_iv + aes.encrypt(_iv, _b, None))
+m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news, **({'parts': PARTS} if PARTS else {})}, ensure_ascii=False).encode()
 iv = secrets.token_bytes(12)
 pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, m, None))
+if PARTS: print('map split: m.bin %d KB, %s' % (len(m) // 1024, ', '.join('%s %d файлов' % (k, len(v)) for k, v in sorted(_pm.items()))))
 
 # public part
 login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
@@ -144,7 +156,8 @@ if ACCT_ON:
 login = login.replace('__ACCT_CFG__', json.dumps(ACFG)).replace('/*__ACCT_CORE__*/', pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8'))
 _core = pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8')   # 12.11 CodeQL: проверка не внутри assert (python -O её выкидывает)
 if '__ACCT' in login or '</script' in _core.lower(): raise SystemExit('build_enc: в странице входа остался __ACCT или </script в acct_core.js')
-_SETS = sorted({f[3] for f in files.values() if len(f) > 3}); _PG = ACC.people_groups(KR) if ACC_ON else {}
+_ALLF = list(files.values()) + [v for _d in _pm.values() for v in _d.values()]
+_SETS = sorted({f[3] for f in _ALLF if len(f) > 3}); _PG = ACC.people_groups(KR) if ACC_ON else {}
 nk = ACCT.write_keyring(OUT, master, KR, (lambda uid: ACC.payload(master, _PG.get(uid), _SETS, S, AMAP)) if ACC_ON else None) if ACFG else 0
 if ACC_ON: print('group sets:', _SETS, '| people with groups:', len(_PG))
 print('personal keys k/*.bin:', nk)
@@ -160,5 +173,5 @@ if not os.path.exists(APK): APK = f'{B}/out/Terekhina14.apk'          # the onli
 if os.path.exists(APK) and os.path.getsize(APK) < 8e6: shutil.copy(APK, f'{OUT}/fabrika.apk')   # the link on the sign-in page saves it as «Фабрика.apk»
 pathlib.Path(f'{OUT}/robots.txt').write_text('User-agent: *\nDisallow: /\n')
 pathlib.Path(f'{OUT}/README.md').write_text('# Фабрика\n\nЗашифрованная сборка веб-приложения (AES-256-GCM). Открывается по паролю: ' + (f'https://owner.github.io{BASE}' if BASE != '/' else 'https://techfabrikant.ru/') + '\n', encoding='utf-8')
-tot = sum(v[2] for v in files.values())
+tot = sum(v[2] for v in _ALLF)
 print('files', len(files), 'pre', len(pre), 'docs', len(docs), f'{tot / 1e6:.1f} MB', 'version', VERSION, 'base', BASE, '->', OUT)

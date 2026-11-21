@@ -358,7 +358,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       PM ? n(PM.n) : EV ? n(EV.per7) : '—', (EV && EV.per7) ? 'bad' : PM && PM.n ? 'warn' : ''));
     R.push(row(SC ? 'sales.html#ship' : 'transport.html', 'omts', 'var(--ic-omts)', 'Машины не поданы / заказы не уехали',
       (SC ? 'не уехали на прошлой неделе, снова в графике ' + dd(SC.from) + '–' + dd(SC.to) + ': ' + n(SC.n) + ' зак. на ' + mln(SC.s) + ' млн ₽' : 'график отгрузки: нет переноса') + (EV ? ' · журнал диспетчера за 7 дней — ' + n(EV.car7) : '') + (FL && FL.cargo ? ' · ГЛОНАСС: в рейсе ' + FL.go + ' из ' + FL.cargo : ''),
-      SC ? n(SC.n + (EV ? EV.car7 : 0)) : EV ? n(EV.car7) : '—', (SC && SC.n) || (EV && EV.car7) ? 'warn' : ''));
+      (EV ? n(EV.car7) : '—') + ' / ' + (SC ? n(SC.n) : '—'), (SC && SC.n) || (EV && EV.car7) ? 'warn' : ''));   // 21.11.2026 (Рекс CG-56): машины (журнал) и заказы (перенос) — разные единицы, не складываются
     R.push(row('sales.html#ship', 'omts', 'var(--ic-sales)', 'Заказы в двух графиках отгрузки подряд', 'уехали ли — сверка с отгрузками 1С', 'список', ''));
     R.push(row('sales.html#s-days', 'sales', 'var(--ic-sales)', 'Вечерние отчёты офисов сегодня', ops ? 'сдали ' + rep + ' из ' + ops.length + ' · контакты с клиентами — в отчётах' : 'загружаю…', ops ? rep + ' / ' + ops.length : '—', ops && rep < ops.length ? 'warn' : ''));
     R.push(row('sales.html#planm', 'sales', 'var(--ic-sales)', 'План продаж на дату', PL && PL.live ? mln(PL.fact) + ' из ' + mln(PL.need) + ' млн ₽ на ' + dd(PL.asof) : 'загружаю…', PL && PL.live ? Math.round(PL.onDate) + ' %' : '—', PL && PL.live && PL.onDate < 90 ? 'warn' : ''));

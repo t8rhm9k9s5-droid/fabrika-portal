@@ -108,8 +108,11 @@ _jd({'success': False, 'offline': True, 'message': 'нет снимка'}, os.pa
 # 21.11.2026 (Т. В.: «для офиса», «HoReCa» пустые): индекс фильтров каталога и файлы остатков складов — в каждую сборку копии.
 #   Индекс обновляется: python3 fsu_fidx.py <_api/getFilter.json> /home/claude/work/fsu_fidx (около 3 мин).
 _FIDX = '/home/claude/work/fsu_fidx/_fidx.json'
-if os.path.exists(_FIDX): subprocess.run([sys.executable, os.path.join(_HERE, 'fsu_fidx_put.py'), _FIDX, OUT], check=True)
-else: print('ВНИМАНИЕ: нет индекса фильтров — списки «для офиса», «HoReCa» и др. будут пустыми', file=sys.stderr)
+if os.path.exists(_FIDX) and subprocess.run([sys.executable, os.path.join(_HERE, 'fsu_fidx_put.py'), _FIDX, OUT]).returncode == 0: pass
+else:   # 21.11.2026 (Рекс CG-56): нового индекса нет — переносим проверенный прежний из действующей копии; нет и его — сборка останавливается
+    _old = os.path.join(FINAL, '_api', '_fidx.json')
+    if os.path.exists(_old): shutil.copy2(_old, os.path.join(OUT, '_api', '_fidx.json')); print('ВНИМАНИЕ: индекс фильтров — прежний (нового нет)', file=sys.stderr)
+    else: sys.exit('нет индекса фильтров каталога — без него разделы «для офиса», «HoReCa» и др. пустые; запустить fsu_fidx.py')
 _ST = os.path.join(FINAL, 'upload/als-1c/stores')
 if os.path.isdir(_ST) and not os.path.isdir(os.path.join(OUT, 'upload/als-1c/stores')): shutil.copytree(_ST, os.path.join(OUT, 'upload/als-1c/stores'))
 rep['img_map'] = len(IMAP)
@@ -126,6 +129,8 @@ shell = re.sub(r'<link[^>]+rel="preload"[^>]+/fsu/api/[^>]*>', '', shell)
 shell = shell.replace('<head>', '<head><script>' + shim + '</script>', 1)
 shell = shell.replace('</body>', _rd(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_back.html')) + '</body>')
 _wr(os.path.join(OUT, 'index.html'), shell)
+# 21.11.2026 (Т. В.): сверка с прайсом, характеристики 1С в карточки, недостающие модели прайса — карточками (fsu_enrich.py, отчёт — assort/)
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_enrich.py'), OUT], check=True)
 # 20.11.2026: подбор мебели по свойствам (Т. В.: «я потребитель, не знаю, что такое стул, кресло… ищу по набору свойств»)
 HERE = os.path.dirname(os.path.abspath(__file__))
 pb = _rd(os.path.join(HERE, 'podbor.html')).replace('</body>', _rd(os.path.join(HERE, 'fsu_back.html')) + '</body>')
