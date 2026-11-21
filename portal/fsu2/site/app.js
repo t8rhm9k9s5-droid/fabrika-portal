@@ -4,7 +4,11 @@
 (function () {
   var d = document, $ = function (s, r) { return (r || d).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var IM = function (k) { return '/fsu/n/i/' + k + '.webp'; }, TH = function (k) { return '/fsu/n/i/t/' + k + '.webp'; };
+  // 21.11.2026, Т. В.: фото 2К, но быстро на плохом интернете — браузер сам берёт 480/1024/2048 под экран; при «экономии трафика» и 2G/3G — без 2048
+  var SLOW = (function () { try { var c = navigator.connection; return !!(c && (c.saveData || /(^|-)2g|3g/.test(c.effectiveType || ''))); } catch (e) { return false; } })();
+  var IM = function (k) { return '/fsu/n/i/m/' + k + '.webp'; }, TH = function (k) { return '/fsu/n/i/t/' + k + '.webp'; };
+  var SSG = function (k) { return ' srcset="/fsu/n/i/m/' + k + '.webp 1024w' + (SLOW ? '' : ', /fsu/n/i/' + k + '.webp 2048w') + '" sizes="(max-width: 900px) 100vw, 58vw"'; };
+  var SST = function (k) { return ' srcset="/fsu/n/i/t/' + k + '.webp 480w' + (SLOW ? '' : ', /fsu/n/i/m/' + k + '.webp 1024w') + '" sizes="(max-width: 600px) 50vw, (max-width: 1100px) 33vw, 25vw"'; };
   var I = {
     search: '<svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     menu: '<svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
@@ -25,23 +29,26 @@
   function hdr(on) {
     return '<header class="hdr"><div class="wrap"><a href="/fsu/" aria-label="Фабрикант — главная каталога">' + LOGO + '</a>' +
       '<nav class="nav" aria-label="Разделы сайта"><a href="/fsu/catalog/"' + (on === 'cat' ? ' class="on"' : '') + '>Каталог</a><a href="/fsu/resheniya/"' + (on === 'sp' ? ' class="on"' : '') + '>Решения</a>' +
-      '<a href="/fsu/podbor.html">Подбор</a><a href="/fsu/projects">Проекты</a><a href="/fsu/company">О компании</a></nav>' +
+      '<a href="/fsu/podbor"' + (on === 'pb' ? ' class="on"' : '') + '>Подбор</a><a href="/fsu/projects"' + (on === 'pr' ? ' class="on"' : '') + '>Проекты</a><a href="/fsu/company"' + (on === 'co' ? ' class="on"' : '') + '>О компании</a></nav>' +
       '<span class="sp"></span><form class="srch" role="search" data-q><label style="display:contents">' + I.search + '<input name="q" placeholder="Модель, артикул, назначение" aria-label="Поиск по каталогу"></label></form>' +
-      '<a class="btn where" href="/fsu/stock">' + I.pin + 'Где купить</a><button class="iconbtn menu" type="button" aria-label="Меню" data-menu>' + I.menu + '</button></div></header>' +
+      '<a class="btn where' + (on === 'st' ? ' on' : '') + '" href="/fsu/stock">' + I.pin + 'Где купить</a><button class="iconbtn menu" type="button" aria-label="Меню" data-menu>' + I.menu + '</button></div></header>' +
       '<div class="drawer" id="drw" role="dialog" aria-label="Меню"><div class="dtop">' + LOGO + '<button class="iconbtn" type="button" aria-label="Закрыть" data-menu>' + I.x + '</button></div>' +
       '<form class="srch" role="search" data-q style="margin-top:14px"><label style="display:contents">' + I.search + '<input name="q" placeholder="Поиск по каталогу" aria-label="Поиск по каталогу"></label></form>' +
       '<nav>' + M.groups.filter(function (g) { return g.k; }).map(function (g) { return '<a href="/fsu/catalog/' + g.c + '/">' + esc(g.n) + '<span>' + g.k + '</span></a>'; }).join('') +
-      '<a href="/fsu/resheniya/">Решения по пространствам</a><a href="/fsu/podbor.html">Подбор по свойствам</a><a href="/fsu/stock">Где купить · остатки</a><a href="/fsu/projects">Проекты</a><a href="/fsu/company">О компании</a></nav></div>';
+      '<a href="/fsu/resheniya/">Решения по пространствам</a><a href="/fsu/podbor">Подбор по свойствам</a><a href="/fsu/stock">Где купить · остатки</a><a href="/fsu/projects">Проекты</a><a href="/fsu/company">О компании</a><a href="/fsu/company/news">Новости</a><a href="/fsu/company/contacts">Контакты</a></nav></div>';
   }
-  function foot() {
-    return '<footer class="foot"><div class="wrap"><span>ГК «Фабрикант» · производство: Рязанская обл., с. Поляны, ул. Терёхина, 14</span><span>Склады: ' +
-      M.stores.map(function (s) { return esc(s.name); }).join(', ') + '</span></div></footer>';
+  function foot() {   // 21.11.2026: общий подвал каталога и страниц компании
+    return '<footer class="foot"><div class="wrap fcols"><div><b>Каталог</b>' + M.groups.filter(function (g) { return g.k; }).map(function (g) { return '<a href="/fsu/catalog/' + g.c + '/">' + esc(g.n) + '</a>'; }).join('') + '</div>' +
+      '<div><b>Покупателям</b><a href="/fsu/resheniya/">Решения по пространствам</a><a href="/fsu/podbor">Подбор по свойствам</a><a href="/fsu/stock">Где купить · остатки</a><a href="/fsu/shares">Акции</a><a href="/fsu/company/documentation">Документация</a></div>' +
+      '<div><b>Компания</b><a href="/fsu/company">О компании</a><a href="/fsu/company/production">Производство</a><a href="/fsu/projects">Проекты</a><a href="/fsu/company/news">Новости</a><a href="/fsu/company/vacancies">Вакансии</a><a href="/fsu/company/contacts">Контакты</a></div>' +
+      '<div><b>Связаться</b><a href="tel:+7 000 000-00-17" class="num">+7 000 000-00-14</a><a href="mailto:user7@example.org">user7@example.org</a><span>Производство: Рязанская обл., с. Поляны, ул. Терёхина, 14</span>' +
+      '<span class="muted">Склады: ' + M.stores.map(function (s) { return esc(s.name); }).join(', ') + '</span><a href="/fsu/personal_data_policy.pdf" class="muted">Политика конфиденциальности</a></div></div></footer>';
   }
   function tile(x) {
     if (!x) return '';
     return '<a class="pt" href="' + x.u + '"><div class="ph">' + (x.hit ? '<span class="badge">Хит</span>' : '') +
-      (x.i ? '<img class="a' + (x.i2 ? ' has2' : '') + '" src="' + TH(x.i) + '" alt="' + esc(x.n) + '" loading="lazy" decoding="async">' : '<span class="muted">нет фото</span>') +
-      (x.i2 ? '<img class="b" src="' + TH(x.i2) + '" alt="" loading="lazy" decoding="async">' : '') +
+      (x.i ? '<img class="a' + (x.i2 ? ' has2' : '') + '" src="' + TH(x.i) + '"' + SST(x.i) + ' alt="' + esc(x.n) + '" loading="lazy" decoding="async">' : '<span class="muted">нет фото</span>') +
+      (x.i2 ? '<img class="b" src="' + TH(x.i2) + '"' + SST(x.i2) + ' alt="" loading="lazy" decoding="async">' : '') +
       '<span class="cnt">' + pl(x.np + x.ni, 'фото', 'фото', 'фото') + '</span></div>' +
       '<div class="bd"><span class="nm">' + esc(x.n) + '</span><span class="mt num">' + esc(dims(x)) + '</span></div></a>';
   }
@@ -163,7 +170,7 @@
 
   // ---------- карточка ----------
   function fig(x, i, name) {
-    return '<figure' + (x.ai ? ' class="ai"' : '') + '><img src="' + IM(x.k) + '" alt="' + esc(name) + ', фото ' + (i + 1) + (x.ai ? ' (визуализация)' : '') + '"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + ' decoding="async">' +
+    return '<figure' + (x.ai ? ' class="ai"' : '') + '><img src="' + IM(x.k) + '"' + SSG(x.k) + ' alt="' + esc(name) + ', фото ' + (i + 1) + (x.ai ? ' (визуализация)' : '') + '"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + ' decoding="async">' +
       (x.ai ? '<span class="vis">визуализация</span>' : '') + '</figure>';
   }
   function vCard(x, c) {
@@ -187,7 +194,7 @@
       '<div>' + c.ch.filter(function (q) { return q.t !== 'Исполнения' && q.v.length; }).map(function (q, i) {
         return '<details' + (i === 0 ? ' open' : '') + '><summary>' + esc(q.t) + '</summary><dl>' + q.v.map(function (v) { return '<dt>' + esc(v[0]) + '</dt><dd>' + esc(v[1]) + '</dd>'; }).join('') + '</dl></details>'; }).join('') + '</div></div></div>' +
       (c.in.length && c.ph.length ? '<section><div class="sh"><h2>В интерьере</h2></div><div class="inter2">' + c.in.map(function (p, i) {
-        return '<figure><img src="' + IM(p.k) + '" alt="' + esc(x.n) + ' в интерьере' + (p.ai ? ' (визуализация)' : '') + '" loading="lazy" decoding="async">' + (p.ai ? '<span class="vis">визуализация</span>' : '') + '</figure>'; }).join('') + '</div></section>' : '') +
+        return '<figure><img src="' + IM(p.k) + '"' + SSG(p.k) + ' alt="' + esc(x.n) + ' в интерьере' + (p.ai ? ' (визуализация)' : '') + '" loading="lazy" decoding="async">' + (p.ai ? '<span class="vis">визуализация</span>' : '') + '</figure>'; }).join('') + '</div></section>' : '') +
       (c.ft.length ? '<section><div class="sh"><h2>Детали</h2></div><div class="feat">' + c.ft.map(function (f) { return '<div>' + (f.i ? '<img src="' + TH(f.i) + '" alt="" loading="lazy">' : '') + '<p>' + esc(f.n) + '</p></div>'; }).join('') + '</div></section>' : '') +
       '<section id="where"><div class="sh"><h2>Где купить</h2><a href="/fsu/stock">Остатки по складам</a></div><p class="muted" style="margin:-6px 0 12px">' +
       (c.st.length ? 'Есть на ' + pl(c.st.length, 'складе', 'складах', 'складах') + ' компании.' : 'Под заказ — уточните срок у отдела продаж.') + '</p><div class="where">' +
@@ -242,10 +249,11 @@
       }
       return card(p[p.length - 1], true);
     }
+    if (window.FSU_PAGES && window.FSU_PAGES.route(p, q)) return;   // 21.11.2026: страницы компании, проекты, остатки, подбор — pages.js
     show(vMiss('Страница не найдена.'));
   }
   function nav(u, push) { if (push) history.pushState(null, '', u); route(); if (!/#/.test(u)) window.scrollTo(0, 0); }
-  var NEW = /^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$))/;
+  var NEW = /^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$)|company(?:\/|$)|projects(?:\/|$)|shares(?:\/|$)|stock(?:\/|$)|podbor(?:\/|$))/;
   d.addEventListener('click', function (e) {
     var m = e.target.closest && e.target.closest('[data-menu]');
     if (m) { var dr = $('#drw'); var o = !dr.classList.contains('open'); dr.classList.toggle('open', o); d.body.style.overflow = o ? 'hidden' : ''; return; }
@@ -259,6 +267,7 @@
     var f = e.target.closest('[data-q]'); if (!f) return; e.preventDefault(); var v = (f.q.value || '').trim(); if (!v) return;
     d.body.style.overflow = ''; nav('/fsu/poisk?q=' + encodeURIComponent(v), true);
   });
+  window.FSU_UI = { hdr: hdr, foot: foot, crumbs: crumbs, esc: esc, show: show, tile: tile, pl: pl, I: I, nav: nav, data: function () { return { M: M, ITEMS: ITEMS, BY: BY }; } };   // 21.11.2026: для pages.js
   window.addEventListener('popstate', route);
   Promise.all([window.FSU_DATA, window.FSU_LOGO]).then(function (r) {
     M = r[0].meta; ITEMS = r[0].items; LOGO = r[1] || '<b>Фабрикант</b>';

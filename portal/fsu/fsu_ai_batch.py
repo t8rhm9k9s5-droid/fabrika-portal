@@ -17,7 +17,7 @@ SCENE = {'Кресла': 'современный светлый офис или 
          'Банкетки и\xa0кушетки': 'холл или коридор общественного здания', 'Школьная мебель': 'светлый школьный класс',
          'Мебель для театров и\xa0залов ожидания': 'зал ожидания вокзала или аэропорта, либо фойе театра', 'Медицинская мебель': 'светлый кабинет поликлиники',
          'Мебель на\xa0деревянной основе': 'уютный интерьер кафе или гостиной'}
-LOCK = threading.Lock(); LOG = os.path.join(OUT, '_log.jsonl')
+STOP = threading.Event(); LOCK = threading.Lock(); LOG = os.path.join(OUT, '_log.jsonl')
 
 
 def du(p, cap=85000):   # бот принимает запрос до 200 000 знаков: на 2 фото — не больше ~85 000 знаков каждое
@@ -45,6 +45,7 @@ def prompt(kind, x):
 def one(job):
     code, kind, q = job; x = GAP[code]; dst = os.path.join(OUT, code, kind + '.png')
     if os.path.exists(dst): return 'есть'
+    if STOP.is_set(): return 'остановлено'
     src = [p for p in ([x.get('best_source_photo')] + x.get('studio', [])) if p and os.path.exists(p)]
     src = list(dict.fromkeys(src))[:2]
     if not src: return 'нет исходника'
@@ -52,11 +53,12 @@ def one(job):
         try:
             r = G.call('gptask', {'img': {'prompt': prompt(kind, x), 'images': [du(p) for p in src], 'size': '1024x1536', 'quality': q}})
             if not r.get('ok'):
-                if 'предохранитель' in str(r.get('error')): return 'предохранитель'
+                if 'предохранитель' in str(r.get('error')): STOP.set(); return 'предохранитель'
                 time.sleep(20); continue
             for i in range(120):
                 time.sleep(8); g = G.call('gptget', {'id': r['id']})
                 if g.get('status') in ('completed', 'failed', 'cancelled', 'incomplete'): break
+            if 'credits' in str(g.get('err') or '') or 'billing' in str(g.get('err') or ''): STOP.set(); return 'нет денег'
             if g.get('images'):
                 os.makedirs(os.path.dirname(dst), exist_ok=True); open(dst + '.tmp', 'wb').write(base64.b64decode(g['images'][0])); os.replace(dst + '.tmp', dst)
                 with LOCK: open(LOG, 'a', encoding='utf-8').write(json.dumps({'code': code, 'kind': kind, 'src': src, 't': time.strftime('%d.%m %H:%M')}, ensure_ascii=False) + '\n')
@@ -77,6 +79,7 @@ if __name__ == '__main__':
         x = GAP[c]
         if x.get('need_interior') and not x.get('no_interior_section'): jobs.append((c, 'interior', o.quality))
         jobs += [(c, k, o.quality) for k in ORDER[:x.get('need_angles', 0)]]
+    jobs = [j for j in jobs if not os.path.exists(os.path.join(OUT, j[0], j[1] + '.png'))]   # готовые не берём (и проба --limit 1 — по-настоящему новая картинка)
     if o.limit: jobs = jobs[:o.limit]
     from collections import Counter
     res = Counter(); t0 = time.time()
@@ -84,5 +87,5 @@ if __name__ == '__main__':
         for i, r in enumerate(ex.map(one, jobs)):
             res[r] += 1
             if i % 25 == 0: print(i, len(jobs), dict(res), '%.0f мин' % ((time.time() - t0) / 60), flush=True)
-            if res['предохранитель']: break
+            if res['предохранитель'] or res['нет денег']: break
     print(json.dumps({'заданий': len(jobs), **res}, ensure_ascii=False))

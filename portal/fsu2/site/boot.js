@@ -17,14 +17,16 @@
     'html,body{background:#F3F2EF}@media (prefers-color-scheme:dark){html,body{background:#171816}}';
   h.appendChild(st);
   el('link', { rel: 'stylesheet', href: '/fsu/n/app.css?v=' + V });
-  d.title = 'Каталог — Фабрикант';
+  el('link', { rel: 'stylesheet', href: '/fsu/n/pages.css?v=' + V });   // 21.11.2026: страницы компании, проекты, остатки, подбор
+  d.title = 'Фабрикант';
   window.FSU_DATA = fetch('/fsu/n/d/idx.json?v=' + V).then(function (r) { if (!r.ok) throw new Error('каталог ' + r.status); return r.json(); });
   window.FSU_LOGO = fetch('/fsu/n/logo.svg?v=' + V).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; });
   function start() {
     var pt = d.querySelector('plaintext'); if (pt) pt.remove();
     var b = d.body || d.documentElement.appendChild(d.createElement('body'));
     b.innerHTML = '<div id="app"><div class="loading">Загружаю каталог…</div></div>';
-    var s = d.createElement('script'); s.src = '/fsu/n/app.js?v=' + V; b.appendChild(s);
+    var s0 = d.createElement('script'); s0.src = '/fsu/n/pages.js?v=' + V; s0.async = false; b.appendChild(s0);   // 21.11.2026: до app.js (порядок сохраняется)
+    var s = d.createElement('script'); s.src = '/fsu/n/app.js?v=' + V; s.async = false; b.appendChild(s);
     // кнопки портала (назад, ИИ) — та же вставка, что у копии; скрипты внутри — пересоздать, иначе не выполнятся
     fetch('/fsu/n/back.html?v=' + V).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
       if (!t) return; var w = d.createElement('div'); w.innerHTML = t;

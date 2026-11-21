@@ -49,11 +49,11 @@ GROUPS = [  # код, название, разделы копии, подраз�
     ('kresla', 'Кресла', [117], [('rukovoditelya', 'Руководителя', ['для руководителя']), ('kompyuternye', 'Компьютерные', ['компьютерное']),
                                  ('operatorskie', 'Операторские и для кассиров', ['для кассиров', '~оператор']), ('posetiteley', 'Для посетителей и конференц-зала', ['для посетителей', 'конференц-зал']),
                                  ('igrovye', 'Игровые', ['игровые', '~игров']), ('detskie', 'Детские', ['для детей', '~детск'])]),
-    ('stulya', 'Стулья', [131, 321], [('barnye', 'Барные и полубарные', ['барные', '~бар']), ('skladnye', 'Складные и штабелируемые', ['~склад', '~штабел']),
+    ('stulya', 'Стулья', [131, 321], [('sektsii', 'Секции и многоместные', ['~местн', '~на раме', '~секци']), ('taburety', 'Табуреты', ['~табурет']), ('barnye', 'Барные и полубарные', ['барные', '~бар']), ('skladnye', 'Складные и штабелируемые', ['~склад', '~штабел']),
                                      ('derevyannye', 'На деревянном каркасе', ['#321', '~дерев', '~венск', '~ wd', '$derevo']), ('uchenicheskie', 'Ученические', ['учебное', 'школа', '~учен']),
                                      ('kafe', 'Для кафе и ресторанов', ['в кафе', 'HoReCa', 'в ресторан']), ('ofisnye', 'Имя2 и для посетителей', ['для офиса', 'для посетителей', 'для бизнеса', '*'])]),
-    ('myagkaya-mebel', 'Мягкая мебель', [133], [('divany', 'Диваны', ['~диван']), ('pufy', 'Пуфы и банкетки', ['~пуф', '~банкет']),
-                                               ('moduli', 'Модульные системы', ['~модул', '~секци', '~угл']), ('kresla', 'Кресла', ['~кресл'])]),
+    ('myagkaya-mebel', 'Мягкая мебель', [133], [('divany', 'Диваны', ['~диван', '~2-х мест', '~3-х мест']), ('pufy', 'Пуфы и банкетки', ['~пуф', '~банкет']),
+                                               ('moduli', 'Модульные системы', ['~модул', '~секци', '~угл', '~угол']), ('kresla', 'Кресла', ['~кресл'])]),
     ('stoly', 'Столы и основания', [132], []),
     ('zaly', 'Для залов и аудиторий', [140], [('teatralnye', 'Театральные кресла', ['~театр']), ('na-balke', 'Секции на балке', ['~балк', '~секци', '~мест']),
                                               ('auditornye', 'Аудиторные', ['~аудитор']), ('chasti', 'Комплектующие секций', ['~накладк', '~подлокотн', '~опора', '~столик', '~сиденье'])]),
@@ -101,7 +101,43 @@ def num(v):
 
 
 # ---------- картинки: webp 1600 и миниатюра 480 (кэш) ----------
-for _d in ('i', 't', 'h'): os.makedirs(os.path.join(CACHE, _d), exist_ok=True)
+# 21.11.2026, Т. В.: «фото минимум 2К качеством, грузиться быстро на плохом интернете; бежевые обводки — убрать».
+#   i2 — 2048 px (меньше — увеличение ×2 нейросетью FSRCNN, затем точная подгонка), m2 — 1024 px (телефон), t2 — 480 px (списки).
+#   Фон студийного снимка: прозрачность — на белый; светлый однотонный фон по краям (кремовый, серый, желтоватый) — заливкой от краёв в чистый белый.
+for _d in ('i2', 'm2', 't2', 'h'): os.makedirs(os.path.join(CACHE, _d), exist_ok=True)
+try:
+    import cv2, numpy as _np
+    _SR = cv2.dnn_superres.DnnSuperResImpl_create(); _SR.readModel(FSU + '/FSRCNN_x2.pb'); _SR.setModel('fsrcnn', 2)
+except Exception:
+    _SR = None
+BIG, MID, SM = 2048, 1024, 480
+
+
+def up2(im):   # до 2048: Lanczos + лёгкая резкость (FSRCNN на 2 ядрах — 3–4 с на снимок, 2000 снимков — часы; разница на белом фоне незаметна)
+    from PIL import ImageFilter
+    r = min(BIG / max(im.size), 2.6)
+    if r <= 1.05: return im
+    im = im.resize((round(im.width * r), round(im.height * r)), Image.LANCZOS)
+    return im.filter(ImageFilter.UnsharpMask(radius=1.6, percent=60, threshold=2))
+
+
+def whiten(im):   # светлый нейтральный фон, связный с краем кадра (белый, серые плашки каталога) → чистый белый; предмет не трогаем
+    a = _np.asarray(im.convert('RGB')).astype(_np.int16)
+    lum = a.mean(axis=2); chroma = a.max(axis=2) - a.min(axis=2)
+    cand = ((lum > 212) & (chroma < 12)).astype(_np.uint8)
+    edge = _np.concatenate([cand[0], cand[-1], cand[:, 0], cand[:, -1]])
+    if edge.mean() < .6: return im, False          # края не светлые и не нейтральные — интерьер, ткань или тёмный снимок: как есть
+    if (lum > 250).mean() > .97: return im, False   # уже белый
+    n, lab = cv2.connectedComponents(cand, connectivity=4)
+    border = _np.unique(_np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]])); border = border[border > 0]
+    bgm = _np.isin(lab, border).astype(_np.float32)
+    fg = 1 - bgm.mean()
+    if fg < .14: return im, False                    # почти всё ушло бы в фон — светлый предмет (белое кресло): не трогать
+    fgm = bgm < .5
+    if fgm.any() and (lum[fgm] > 200).mean() > .45: return im, False   # сам предмет светлый (белый пластик, хром) — заливка съест его края
+    bgm = cv2.GaussianBlur(bgm, (0, 0), 1.0)[:, :, None]   # мягкий край, без «ореола»
+    out = a * (1 - bgm) + 255 * bgm
+    return Image.fromarray(out.clip(0, 255).astype(_np.uint8)), True
 
 
 def key(p):
@@ -114,21 +150,24 @@ def dhash(im):   # 64 бит: повторы одного и того же сн�
 
 
 def conv(p):
-    k = key(p); a, b, hf = os.path.join(CACHE, 'i', k + '.webp'), os.path.join(CACHE, 't', k + '.webp'), os.path.join(CACHE, 'h', k)
-    if os.path.exists(a) and os.path.exists(b):
+    k = key(p) + 'v2'; a, m, b, hf = [os.path.join(CACHE, d, k + '.webp') for d in ('i2', 'm2', 't2')] + [os.path.join(CACHE, 'h', k)]
+    if os.path.exists(a) and os.path.exists(m) and os.path.exists(b):
         if not os.path.exists(hf): open(hf, 'w').write(str(dhash(Image.open(b))))
         return k, int(open(hf).read())
     try:
         im = Image.open(p); im.load()
         if im.mode in ('P', 'LA', 'RGBA', 'PA') or 'transparency' in im.info:
             im = im.convert('RGBA'); bg = Image.new('RGB', im.size, (255, 255, 255)); bg.paste(im, mask=im.split()[3]); im = bg
-        else: im = im.convert('RGB')
-        bb = Image.eval(im.convert('L'), lambda v: 255 if v < 247 else 0).getbbox()   # белые поля вокруг предмета — срезать, оставив 4 %
+        else:
+            im = im.convert('RGB'); im, _ = whiten(im)
+        bb = Image.eval(im.convert('L'), lambda v: 255 if v < 247 else 0).getbbox()   # белые поля вокруг предмета — срезать, оставив 5 %
         if bb:
-            pad = int(max(im.size) * .04); bb = (max(0, bb[0] - pad), max(0, bb[1] - pad), min(im.width, bb[2] + pad), min(im.height, bb[3] + pad))
+            pad = int(max(bb[2] - bb[0], bb[3] - bb[1]) * .05); bb = (max(0, bb[0] - pad), max(0, bb[1] - pad), min(im.width, bb[2] + pad), min(im.height, bb[3] + pad))
             if (bb[2] - bb[0]) * (bb[3] - bb[1]) < .97 * im.width * im.height: im = im.crop(bb)
-        f = im.copy(); f.thumbnail((1600, 1600)); f.save(a + '.tmp', 'WEBP', quality=80, method=5); os.replace(a + '.tmp', a)
-        t = im.copy(); t.thumbnail((480, 480)); t.save(b + '.tmp', 'WEBP', quality=76, method=5); os.replace(b + '.tmp', b)
+        big = up2(im) if max(im.size) < BIG else im
+        f = big.copy(); f.thumbnail((BIG, BIG), Image.LANCZOS); f.save(a + '.tmp', 'WEBP', quality=82, method=4); os.replace(a + '.tmp', a)
+        f = im.copy() if max(im.size) >= MID else big.copy(); f.thumbnail((MID, MID), Image.LANCZOS); f.save(m + '.tmp', 'WEBP', quality=80, method=5); os.replace(m + '.tmp', m)
+        t = im.copy(); t.thumbnail((SM, SM), Image.LANCZOS); t.save(b + '.tmp', 'WEBP', quality=78, method=5); os.replace(b + '.tmp', b)
         h = dhash(t); open(hf, 'w').write(str(h)); return k, h
     except Exception as e:
         return None, str(e)
@@ -171,14 +210,14 @@ for c, L in gal.items():   # повторы: расстояние Хэмминг
     gal[c] = keep
 
 # ---------- сборка out/ ----------
-shutil.rmtree(OUT, ignore_errors=True); N = os.path.join(OUT, 'n'); os.makedirs(os.path.join(N, 'd', 'p')); os.makedirs(os.path.join(N, 'i', 't'))
+shutil.rmtree(OUT, ignore_errors=True); N = os.path.join(OUT, 'n'); os.makedirs(os.path.join(N, 'd', 'p')); os.makedirs(os.path.join(N, 'i', 't')); os.makedirs(os.path.join(N, 'i', 'm'))
 used = set()
 def img(p):
     k = K2.get(p)
     if not k: return None
     if k not in used:
         used.add(k)
-        for sub, dst in (('i', os.path.join(N, 'i', k + '.webp')), ('t', os.path.join(N, 'i', 't', k + '.webp'))):
+        for sub, dst in (('i2', os.path.join(N, 'i', k + '.webp')), ('m2', os.path.join(N, 'i', 'm', k + '.webp')), ('t2', os.path.join(N, 'i', 't', k + '.webp'))):
             try: os.link(os.path.join(CACHE, sub, k + '.webp'), dst)
             except OSError: shutil.copy2(os.path.join(CACHE, sub, k + '.webp'), dst)
     return k
@@ -187,7 +226,10 @@ def img(p):
 idx = []; cards = {}
 for it in ITEMS:
     c = it['code']; d = PAGE.get(c, {}); it['_nm'] = clean(it['name']).lower(); iid = int(it['id'])
-    gcode = SEC2G.get(it['sectionId']) or 'komplektuyushchie'; G = next(x for x in GROUPS if x[0] == gcode)
+    gcode = SEC2G.get(it['sectionId']) or 'komplektuyushchie'
+    if gcode == 'komplektuyushchie' and re.search(r'подстол|основание стол', it['_nm']): gcode = 'stoly'   # 21.11.2026: подстолья и основания — к столам, не в комплектующие
+    if re.search(r'^кресло\b|\bкресло$', it['_nm']) and gcode == 'stulya': gcode = 'kresla'
+    G = next(x for x in GROUPS if x[0] == gcode)
     pt = (tags.get(iid) or {}).get('mp-purpose', [])
     fe = feats(it, d); it['_fk'] = fe['karkas']
     subs = [s[0] for s in G[3] if any(hit(r, it, pt) for r in s[2])]
@@ -245,7 +287,9 @@ logo = re.sub(r'fill="#000(?:000)?"', 'fill="currentColor"', logo)
 logo = re.sub(r'<svg([^>]*?)\swidth="(\d+)"\s+height="(\d+)"', lambda m: '<svg class="logo" role="img" aria-label="Фабрикант" viewBox="0 0 %s %s"%s' % (m.group(2), m.group(3), m.group(1)), logo, count=1)
 open(os.path.join(N, 'logo.svg'), 'w', encoding='utf-8').write(logo)
 ver = hashlib.md5(b''.join(open(os.path.join(N, f), 'rb').read() for f in ('app.css', 'app.js', 'boot.js')) + open(os.path.join(N, 'd', 'idx.json'), 'rb').read()).hexdigest()[:10]
-ROUTE = r'^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$))'
+# 21.11.2026 (B3): остальные страницы сайта — компания, новости, проекты, акции, остатки, подбор (pages_new.py; данные n/d/pg, pages.js/pages.css)
+sys.path.insert(0, HERE); import pages_new; ver = pages_new.build(BASE, OUT, N, A, idx, ver)
+ROUTE = r'^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$)|company(?:\/|$)|projects(?:\/|$)|shares(?:\/|$)|stock(?:\/|$)|podbor(?:\/|$))'
 early = ('<script>/* 21.11.2026: новый каталог /fsu/ — каталог, решения, поиск и главная открываются новой витриной; остальные страницы — прежней копией */'
          '(function(){var R=/%s/,p=location.pathname;window.FSU_NEW_V="%s";'
          'if(R.test(p)){document.write(\'<script src="/fsu/n/boot.js?v=%s"><\\/script><plaintext hidden style="display:none">\');return}'
