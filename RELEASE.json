@@ -1,23 +1,23 @@
 {
  "portal_version": "2.22.13",
- "exported_utc": "2026-11-21T14:25Z",
- "files_sha": "db94a304396d4364",
+ "exported_utc": "2026-11-21T14:26Z",
+ "files_sha": "fddd186b20dbdefb",
  "files": [
-  "bots/telegram/ClaudeGpt.gs.js",
   "bots/telegram/ClaudeGpt.v65.gs.js",
-  "portal/assets/acct.js",
-  "portal/assets/live.js",
-  "portal/assets/versions_full.js",
-  "portal/build/assort_frag.html",
   "portal/fsu/fsu_ai_batch.py",
-  "portal/fsu/fsu_build.py",
   "portal/fsu/fsu_catalog.py",
   "portal/fsu/fsu_enrich.py",
   "portal/fsu/fsu_fidx.py",
   "portal/fsu/fsu_fidx_put.py",
   "portal/fsu/fsu_ftp_fetch.py",
   "portal/fsu/fsu_more.py",
-  "portal/fsu/fsu_photo_gap.py"
+  "portal/fsu/fsu_photo_gap.py",
+  "portal/fsu2/STRUCTURE.md",
+  "portal/fsu2/build_new.py",
+  "portal/fsu2/fsu_build_new.py",
+  "portal/fsu2/site/app.css",
+  "portal/fsu2/site/app.js",
+  "portal/fsu2/site/boot.js"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }
