@@ -1,29 +1,13 @@
 {
  "portal_version": "2.22.11",
- "exported_utc": "2026-11-21T11:50Z",
- "files_sha": "24b0283ca44d0a05",
+ "exported_utc": "2026-11-21T12:40Z",
+ "files_sha": "35af374f2ad62bf6",
  "files": [
-  "bots/max/TimersCtl.gs.js",
-  "ci/test_sw_flow.js",
-  "portal/app_build/build_enc.py",
-  "portal/app_build/build_host.sh",
-  "portal/app_build/enc/enc_sw.js",
-  "portal/assets/acct.js",
-  "portal/assets/live.js",
-  "portal/assets/versions_full.js",
-  "portal/build/app/live.js",
-  "portal/build/app/metrics_core.js",
-  "portal/build/assort_frag.html",
-  "portal/build/home_frag.html",
-  "portal/build/poruch_frag.html",
-  "portal/build/sales_frag.html",
-  "portal/fsu/fsu_build.py",
+  "ci/predeploy_check.sh",
   "portal/fsu/fsu_enrich.py",
   "portal/fsu/fsu_fidx.py",
   "portal/fsu/fsu_fidx_put.py",
-  "portal/fsu/fsu_shim.js",
-  "robot/live/live.py",
-  "robot/live/sverka.py"
+  "robot/live/deploy.py"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"
 }

@@ -21,7 +21,7 @@ def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — фай
     with open(p, mode, **kw) as _f: return _f.read()
 # тихие часы (пользователь 27.10.2026, уточнение): ночью всё делается и ставится — молчат только уведомления (их держит Google-скрипт бота до 08:00)
 
-SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|manifest\.webmanifest|'
+SITE_FILES = re.compile(r'^(b/[0-9a-f]{24}\.bin|k/[0-9a-f]{8,64}\.bin|icons/[\w.-]+|index\.html|login\.html|404\.html|sw\.js|m\.bin|mf\.bin|ml\.bin|manifest\.webmanifest|'   # 21.11.2026: mf.bin / ml.bin — карты разделов «Сайт» и «Документы» (деление карты)
                         r'robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess|'
                         r'menutest/(?:full/)?(?:index\.html|manifest\.webmanifest)|'   # 15.11.2026: тест нижнего меню (Т. В.), без данных портала
                         # 16.11.2026: тестовая копия портала с доступом по группам (опрос Т. В. «Да, выкладывай копию»; проверка Сотрудник89 И. В. 17.11)
