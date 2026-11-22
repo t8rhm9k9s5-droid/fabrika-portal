@@ -109,8 +109,9 @@ window.fitPh = function (im) {
   }
   function vSpaces() {
     return hdr('sp') + '<main><div class="wrap">' + crumbs([['Решения']]) + '<section class="heroB" style="padding-top:8px"><h1>Решения по пространствам</h1><div class="spaces">' + M.spaces.map(function (s) {
-      return '<a class="spc" href="/fsu/resheniya/' + s.c + '/"><span class="tx"><h3>' + esc(s.n) + '</h3><span class="c num">' + mod(s.k) + '</span></span><span class="im">' +
-        s.i.map(function (k) { return '<img src="' + TH(k) + '" alt="" loading="lazy">'; }).join('') + (s.i.some(function (k) { return AIK()[k]; }) ? '<span class="vis">визуализация</span>' : '') + '</span></a>'; }).join('') + '</div></section></div></main>' + foot();
+      return '<a class="spc' + (s.d || s.nt ? ' li' : '') + '" href="/fsu/resheniya/' + s.c + '/"><span class="tx"><h3>' + esc(s.n) + '</h3><span class="c num">' + mod(s.k) + '</span></span><span class="im">' +
+        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li) + ' alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
+          return s.i.map(function (k) { return '<img src="' + TH(k) + '" alt="" loading="lazy">'; }).join('') + (s.i.some(function (k) { return AIK()[k]; }) ? '<span class="vis">визуализация</span>' : ''); })() + '</span></a>'; }).join('') + '</div></section></div></main>' + foot();
   }
 
   // ---------- список: группа / подраздел / пространство / поиск ----------
@@ -309,9 +310,9 @@ window.fitPh = function (im) {
     for (y = 1; y < H - 1; y++) { e.push(px(0, y)); e.push(px(W - 1, y)); }
     var df = function (p, q) { return Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]); }, ref = e[0], best = -1;
     e.forEach(function (q, i) { if (i % 3) return; var k = e.filter(function (r) { return df(q, r) <= 36; }).length; if (k > best) { best = k; ref = q; } });
-    var cs = [ref], mx = best < e.length * 0.55 ? 99 : 0;
+    var mx = best < e.length * 0.55 ? 99 : 0;
     var sl = im.parentNode; if (mx > 40) { im.classList.add('cov'); sl.style.background = '#000'; return; }
-    var med = function (L) { var o = [0, 1, 2].map(function (k) { var z = L.map(function (q) { return q[k]; }).sort(function (m, n) { return m - n; }); return z[z.length >> 1]; }); if (df(o, ref) > 30) o = ref; return 'rgb(' + o.join(',') + ')'; }   // край сильно другой, чем фон фото, — берём фон, чтобы не было полос, R = function (f, n) { var L = []; for (var i = 0; i < n; i++) L.push(f(i)); return L; };
+    var med = function (L) { var o = [0, 1, 2].map(function (k) { var z = L.map(function (q) { return q[k]; }).sort(function (m, n) { return m - n; }); return z[z.length >> 1]; }); if (df(o, ref) > 30) o = ref; return 'rgb(' + o.join(',') + ')'; }, R = function (f, n) { var L = []; for (var i = 0; i < n; i++) L.push(f(i)); return L; };   // край сильно другой, чем фон фото, — берём фон, чтобы не было полос
     var wide = im.naturalWidth / im.naturalHeight > (sl.clientWidth || 3) / (sl.clientHeight || 4);   // поля сверху/снизу или слева/справа — каждое своим краем фото, шва не видно
     var iy = Math.round(H * .04), ix = Math.round(W * .04);   // чуть внутрь от края: у сжатого фото крайняя строка бывает светлее
     im.classList.add(wide ? 'fw' : 'fh');

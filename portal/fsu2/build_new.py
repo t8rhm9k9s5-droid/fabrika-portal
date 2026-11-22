@@ -12,21 +12,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ap = argparse.ArgumentParser(); ap.add_argument('--base', default='/home/claude/build/fsu'); ap.add_argument('--out', default=os.path.join(HERE, 'out'))
 ap.add_argument('--jobs', type=int, default=8); O = ap.parse_args()
 BASE = os.path.realpath(O.base); OUT = O.out; CACHE = os.path.join(HERE, 'cache'); FSU = '/home/claude/fabrika/work/fsu'
-AI = os.path.join(FSU, 'ai'); INFO = json.load(open(os.path.join(FSU, 'assort', 'info_all.json'), encoding='utf-8')) if os.path.exists(os.path.join(FSU, 'assort', 'info_all.json')) else {}; REJ = json.load(open(os.path.join(FSU, 'ai', '_reject.json'), encoding='utf-8')) if os.path.exists(os.path.join(FSU, 'ai', '_reject.json')) else {}; GAP = json.load(open(os.path.join(FSU, 'assort', 'photo_gap.json'), encoding='utf-8'))
+def _rj(p):   # 22.11.2026 (CodeQL py/file-not-closed): чтение JSON с закрытием файла
+    with open(p, encoding='utf-8') as f: return json.load(f)
+
+
+def _wj(o, p, **kw):
+    with open(p, 'w', encoding='utf-8') as f: json.dump(o, f, **kw)
+
+AI = os.path.join(FSU, 'ai'); INFO = _rj(os.path.join(FSU, 'assort', 'info_all.json')) if os.path.exists(os.path.join(FSU, 'assort', 'info_all.json')) else {}; REJ = _rj(os.path.join(FSU, 'ai', '_reject.json')) if os.path.exists(os.path.join(FSU, 'ai', '_reject.json')) else {}; GAP = _rj(os.path.join(FSU, 'assort', 'photo_gap.json'))
 # старая оболочка копии: после первой замены index.html — маршрутизатор, а оболочка лежит в old.html
 SHELL = os.path.join(BASE, 'old.html') if os.path.exists(os.path.join(BASE, 'old.html')) else os.path.join(BASE, 'index.html')
 SH = open(SHELL, encoding='utf-8').read(); A = json.JSONDecoder().raw_decode(SH[SH.index('var A=') + 6:])[0]
-def J(k): return json.load(open(os.path.join(BASE, '_api', A[k] + '.json'), encoding='utf-8'))
+def J(k): return _rj(os.path.join(BASE, '_api', A[k] + '.json'))
 def K(sub): return next(k for k in A if sub in k)
-X = json.load(open(os.path.join(BASE, '_api', '_fidx.json'), encoding='utf-8')); FV = X.get('v') or {}
+X = _rj(os.path.join(BASE, '_api', '_fidx.json')); FV = X.get('v') or {}
 _A = os.path.join(FSU, 'assort')
-PT = json.load(open(os.path.join(_A, 'price_tier.json'), encoding='utf-8')) if os.path.exists(os.path.join(_A, 'price_tier.json')) else {}
-PR = json.load(open(os.path.join(_A, 'prais_rows.json'), encoding='utf-8')) if os.path.exists(os.path.join(_A, 'prais_rows.json')) else []
-COLS = json.load(open(os.path.join(_A, 'colors.json'), encoding='utf-8')) if os.path.exists(os.path.join(_A, 'colors.json')) else {}
+PT = _rj(os.path.join(_A, 'price_tier.json')) if os.path.exists(os.path.join(_A, 'price_tier.json')) else {}
+PR = _rj(os.path.join(_A, 'prais_rows.json')) if os.path.exists(os.path.join(_A, 'prais_rows.json')) else []
+COLS = _rj(os.path.join(_A, 'colors.json')) if os.path.exists(os.path.join(_A, 'colors.json')) else {}
 OKNIGHT = {'katrin-kreslo', 'samba-box4-stul', 'chestermen-kreslo', 'metro-urna', 'kombi-urna', 'domik-urna', 'karandash-urna-213351698', 'opora-urna-statsionarnaya', 'zamok-urna', 'atlant-kreslo-1030986919', 'milan-kreslo'}
-try: OKNIGHT |= set(json.load(open(os.path.join(FSU, 'assort', 'oknight.json'))))   # 22.11.2026: ночные интерьеры хитов (80% объёма), проверены Claude, Т. В. смотрит утром
-except Exception: pass
-DOCS = json.load(open(os.path.join(_A, 'docs.json'), encoding='utf-8')) if os.path.exists(os.path.join(_A, 'docs.json')) else {}
+try: OKNIGHT |= set(_rj(os.path.join(FSU, 'assort', 'oknight.json')))   # 22.11.2026: ночные интерьеры хитов (80% объёма), проверены Claude, Т. В. смотрит утром
+except (OSError, ValueError): OKNIGHT = OKNIGHT   # нет файла — только встроенный список
+DESCN = _rj(os.path.join(FSU, 'desc', 'ok.json')) if os.path.exists(os.path.join(FSU, 'desc', 'ok.json')) else {}
+DOCS = _rj(os.path.join(_A, 'docs.json')) if os.path.exists(os.path.join(_A, 'docs.json')) else {}
 clean = lambda s: re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', str(s or ''))).replace('\xa0', ' ')).strip()
 
 # ---------- данные ----------
@@ -41,7 +49,7 @@ STORES = [{'id': g.get('id'), 'name': clean(g.get('name'))} for g in J(K('addres
 PAGE = {}
 for k, h in A.items():
     if 'getPageByUrl&url=/catalog/' in k and os.path.exists(os.path.join(BASE, '_api', h + '.json')):
-        try: d = (json.load(open(os.path.join(BASE, '_api', h + '.json'), encoding='utf-8')).get('dynamicContent') or {}).get('data')
+        try: d = (_rj(os.path.join(BASE, '_api', h + '.json')).get('dynamicContent') or {}).get('data')
         except Exception: continue
         if isinstance(d, dict) and d.get('code'): PAGE[d['code']] = d
 SIM = {}
@@ -292,6 +300,7 @@ for it in ITEMS:
     ch = [{'t': clean(g0.get('title')), 'v': [[clean(v.get('name')), clean(v.get('value'))] for v in g0.get('values', [])]} for g0 in (d.get('characteristics') or [])]
     ft = [{'n': clean(f.get('name')), 'i': img(fpath((f.get('image') or {}).get('src'))) if f.get('image') else None} for f in ((d.get('features') or {}).get('items') or [])]
     desc = re.split(r'По прайсу', clean(d.get('description')))[0].strip()
+    if len(re.sub(r'<[^>]+>', '', desc)) < 200 and DESCN.get(c): desc = DESCN[c]   # 22.11.2026, Т. В.: «полное описание — если нет, написать» (work/fsu/desc/out.json, проверено Claude)
     sim = [BYID[s]['code'] for s in SIM.get(iid, []) if s in BYID]
     cards[c] = {'c': c, 'n': e['n'], 'art': clean(d.get('articul')), 'desc': desc, 'ph': photos, 'in': inter, 'inf': infg, 'th': lit, 'ch': ch, 'ft': ft, 'st': d.get('inStores') or [], 'sim': sim}
     # 22.11.2026, Т. В. (карточка А): все исполнения по прайсу 28.10 — цена и опции; документы/видео товара — assort/docs.json
@@ -313,10 +322,11 @@ for gcode, gname, secs, subs in GROUPS:
     ss = [{'c': s[0], 'n': s[1], 'k': sum(1 for e in its if s[0] in e['ss'])} for s in subs]
     if subs and any(not e['ss'] for e in its): ss.append({'c': 'drugie', 'n': 'Другие', 'k': sum(1 for e in its if not e['ss'])})
     groups.append({'c': gcode, 'n': gname, 'k': len(its), 'i': cov, 'subs': [s for s in ss if s['k']], 'sec': secs})
-spaces = []
+spaces = []; _used = set()
 for code, name, tg, sc in SPACES:
     its = sorted([e for e in idx if code in e['sp'] and e['i']], key=lambda e: (not e['hit'], -e['np']))
-    spaces.append({'c': code, 'n': name, 'k': sum(1 for e in idx if code in e['sp']), 'i': [e['i'] for e in its[:3]]})
+    _li = next((cards[e['c']]['th'] for e in its if cards.get(e['c'], {}).get('th', {}).get('day') and e['c'] not in _used), {}); _used.update(e['c'] for e in its if cards.get(e['c'], {}).get('th') is _li)   # 22.11.2026: обложка пространства — интерьер день/ночь на всю плитку
+    spaces.append({'c': code, 'n': name, 'k': sum(1 for e in idx if code in e['sp']), 'i': [e['i'] for e in its[:3]], 'd': _li.get('day'), 'nt': _li.get('night')})
 FL = {'pur': sorted({p for e in idx for p in e['pur']}), 'mat': sorted({p for e in idx for p in e['mat']}), 'lbl': LBL}
 meta = {'v': X.get('t') or '', 'total': len(idx), 'groups': groups, 'spaces': spaces, 'stores': STORES, 'fl': FL,
         'old': OLDSEC, 'hits': [e['c'] for e in sorted(idx, key=lambda e: -e['np']) if e['hit'] and e['i']][:16]}
@@ -349,7 +359,7 @@ def immeta(fp):
     if x1 <= x0 or y1 <= y0: x0, x1, y0, y1 = 0, W - 1, 0, H - 1
     return [round(x0 / W, 3), round((x1 + 1) / W, 3), round(y0 / H, 3), round((y1 + 1) / H, 3), h(ref), h(tb[0]) + h(tb[1]), h(lr[0]) + h(lr[1]), 0]
 _imc_p = os.path.join(CACHE, 'immeta.json')
-try: _imc = json.load(open(_imc_p))
+try: _imc = _rj(_imc_p)
 except Exception: _imc = {}
 IMM = {}
 for _f in os.listdir(os.path.join(N, 'i', 't')):
@@ -359,8 +369,8 @@ for _f in os.listdir(os.path.join(N, 'i', 't')):
         try: _imc[_k] = immeta(os.path.join(N, 'i', 't', _f))
         except Exception: continue
     IMM[_k] = _imc[_k]
-json.dump(_imc, open(_imc_p, 'w'))
-json.dump(IMM, open(os.path.join(N, 'd', 'im.json'), 'w'), separators=(',', ':'))
+_wj(_imc, _imc_p)
+_wj(IMM, os.path.join(N, 'd', 'im.json'), separators=(',', ':'))
 
 # ---------- оболочка: app.css, app.js, back.html, index.html (маршрутизатор) ----------
 for f in ('ds.css', 'app.css', 'app.js', 'boot.js'): shutil.copy2(os.path.join(HERE, 'site', f), os.path.join(N, f))
