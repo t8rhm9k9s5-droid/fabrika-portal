@@ -66,7 +66,7 @@ window.fitPh = function (im) {
   function tZ(x) { var m = Math.max(x.w || 0, (x.h || [])[1] || (x.h || [])[0] || 0); if (m) return Math.max(.45, Math.min(1, m / 900)); return zOf(null, x.n); }
   function tile(x) {
     if (!x) return '';
-    var tz = ' data-z="' + tZ(x).toFixed(2) + '" onload="bgA(this)"';
+    var tz = ' data-z="' + tZ(x).toFixed(2) + '" data-fit="1"';
     var lk = DK() ? x.tm : x.ts, k0 = lk || x.i;
     return '<a class="pt" href="' + x.u + '"><div class="ph' + (lk ? ' lit' : '') + '">' + (x.hit ? '<span class="badge">Хит</span>' : '') +
       (k0 ? '<img class="a' + (x.i2 ? ' has2' : '') + '" src="' + TH(k0) + '"' + SST(k0) + ' alt="' + esc(x.n) + '" loading="lazy" decoding="async"' + tz + '>' : '<span class="muted">нет фото</span>') +
@@ -110,7 +110,7 @@ window.fitPh = function (im) {
   function vSpaces() {
     return hdr('sp') + '<main><div class="wrap">' + crumbs([['Решения']]) + '<section class="heroB" style="padding-top:8px"><h1>Решения по пространствам</h1><div class="spaces">' + M.spaces.map(function (s) {
       return '<a class="spc' + (s.d || s.nt ? ' li' : '') + '" href="/fsu/resheniya/' + s.c + '/"><span class="tx"><h3>' + esc(s.n) + '</h3><span class="c num">' + mod(s.k) + '</span></span><span class="im">' +
-        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li) + ' alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
+        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li).replace(/sizes="[^"]*"/, 'sizes="(max-width: 560px) 100vw, (max-width: 1100px) 66vw, 50vw"') + ' alt=""" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
           return s.i.map(function (k) { return '<img src="' + TH(k) + '" alt="" loading="lazy">'; }).join('') + (s.i.some(function (k) { return AIK()[k]; }) ? '<span class="vis">визуализация</span>' : ''); })() + '</span></a>'; }).join('') + '</div></section></div></main>' + foot();
   }
 
@@ -277,7 +277,7 @@ window.fitPh = function (im) {
       (INF.length ? '<section class="infA"><div class="sh"><h2>Инфографика</h2><span class="muted">' + INF.length + '</span></div><div class="infG">' + INF.map(function (p, i) { return '<button type="button" data-inf="' + i + '" aria-label="' + esc(p.lab) + '"><img src="' + TH(p.k) + '" alt="" loading="lazy"><i>инфографика</i></button>'; }).join('') + '</div></section>' : '') +
       '<section class="specA"><div><h2>Характеристики</h2>' + c.ch.filter(function (q) { return q.t !== 'Исполнения' && q.v.length; }).map(function (q) {
         return '<h4>' + esc(q.t) + '</h4><dl>' + q.v.map(function (v) { return '<dt>' + esc(v[0]) + '</dt><dd>' + esc(v[1]) + '</dd>'; }).join('') + '</dl>'; }).join('') + '</div>' +
-      '<div><h2>Документы и видео</h2>' + (docs.length ? docs.map(function (dd) { return '<a class="docA" href="' + esc(dd.u) + '"' + (dd.v ? '' : ' download') + '><span>' + esc(dd.t) + '</span><small>' + esc(dd.f || (dd.v ? 'видео' : 'PDF')) + '</small></a>'; }).join('')
+      '<div><h2>Документы и видео</h2>' + (docs.length ? docs.filter(function (dd) { return /^https:\/\/([a-z0-9-]+\.)*(fabrikant\.su|techfabrikant\.ru)\//i.test(String(dd.u || '')); }).map(function (dd) { return '<a class="docA" href="' + esc(dd.u) + '"' + (dd.v ? '' : ' download') + '><span>' + esc(dd.t) + '</span><small>' + esc(dd.f || (dd.v ? 'видео' : 'PDF')) + '</small></a>'; }).join('')
         : '<p class="muted">Гарантийный талон, схему сборки и сертификат пришлём по запросу: <a href="mailto:user7@example.org">user7@example.org</a>.</p>') + '</div></section>' +
       '<section id="where"><div class="sh"><h2>Где купить</h2><a href="/fsu/stock">Остатки по складам</a></div><p class="muted" style="margin:-6px 0 12px">' +
       (c.st.length ? 'Есть на ' + pl(c.st.length, 'складе', 'складах', 'складах') + ' компании.' : 'Под заказ — уточните срок у отдела продаж.') + '</p></section>' +
@@ -288,40 +288,53 @@ window.fitPh = function (im) {
   }
   // 22.11.2026, Т. В. (видео с iPhone): рамка фото неподвижна, листание пальцем влево-вправо; фон рамки = цвет фона самого кадра — без белых полей
   function hx(h) { return 'rgb(' + parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ',' + parseInt(h.slice(4, 6), 16) + ')'; }
-  function bgM(im, m) {   // готовый разбор снимка из im.json: только арифметика, без canvas
-    var sl = im.parentNode; if (!sl) return;
-    if (m[7]) { im.classList.add('cov'); sl.style.background = '#000'; return; }
+  // 22.11.2026 (CG-67, ревью Рекса): у каждого снимка своё состояние (_m разбор, _k ключ), фон рамки красит только видимый кадр,
+  // смена src/поворот — пересчёт с нуля; разбор из im.json проверяется; без im.json — canvas малыми порциями в простое.
+  function vm(m) { return Array.isArray(m) && m.length === 8 && [0, 1, 2, 3].every(function (i) { return typeof m[i] === 'number' && m[i] >= 0 && m[i] <= 1; }) && m[0] < m[1] && m[2] < m[3] &&
+    /^[0-9a-f]{6}$/.test(m[4]) && /^[0-9a-f]{12}$/.test(m[5]) && /^[0-9a-f]{12}$/.test(m[6]) && (m[7] === 0 || m[7] === 1); }
+  function keyOf(im) { return (im.currentSrc || im.src || '').replace(/^.*\//, '').replace(/\.webp.*$/, ''); }
+  function bgApply(im) {
+    var m = im._m, sl = im.parentNode; if (!m || !sl) return;
+    im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; im._bb = null;
+    var paint = !im.classList.contains('b');   // скрытый кадр плитки (при наведении) фон рамки не трогает
+    if (m[7]) { im.classList.add('cov'); if (paint) sl.style.background = '#000'; return; }
     var wide = im.naturalWidth / im.naturalHeight > (sl.clientWidth || 3) / (sl.clientHeight || 4);
     im.classList.add(wide ? 'fw' : 'fh');
-    sl.style.background = wide ? 'linear-gradient(to bottom,' + hx(m[5].slice(0, 6)) + ' 50%,' + hx(m[5].slice(6)) + ' 50%)' : 'linear-gradient(to right,' + hx(m[6].slice(0, 6)) + ' 50%,' + hx(m[6].slice(6)) + ' 50%)';
+    if (paint) sl.style.background = wide ? 'linear-gradient(to bottom,' + hx(m[5].slice(0, 6)) + ' 50%,' + hx(m[5].slice(6)) + ' 50%)' : 'linear-gradient(to right,' + hx(m[6].slice(0, 6)) + ' 50%,' + hx(m[6].slice(6)) + ' 50%)';
     im._bb = [m[0], m[1], m[2], m[3]]; fitA(im); }
-  var BGQ = [], BGT = 0;
-  function bgRun(dl) { while (BGQ.length && (!dl || dl.timeRemaining() > 4)) { var im = BGQ.shift(); if (im.isConnected) bgC(im); } BGT = BGQ.length ? (window.requestIdleCallback ? requestIdleCallback(bgRun, { timeout: 300 }) : setTimeout(bgRun, 50)) : 0; }
+  var BGQ = [], BGT = 0, BGW = null;
+  function bgNext() { BGT = BGQ.length ? (window.requestIdleCallback ? requestIdleCallback(bgRun, { timeout: 400 }) : setTimeout(bgRun, 60)) : 0; }
+  function bgRun(dl) {   // не больше двух снимков за проход: кадр не забивается, а по тайм-ауту очередь всё равно движется
+    for (var n = 0; n < 2 && BGQ.length; n++) { if (n && dl && !dl.didTimeout && dl.timeRemaining() < 6) break; var im = BGQ.shift(); im._q = 0; if (im.isConnected && im._k === keyOf(im)) bgC(im); }
+    bgNext(); }
+  function immReady() {   // ждём im.json не дольше 2,5 с, дальше — запасной путь
+    if (window.FSU_IMM) return Promise.resolve(); if (!BGW) BGW = Promise.race([window.FSU_IMMP || Promise.resolve(), new Promise(function (r) { setTimeout(r, 2500); })]); return BGW; }
   window.bgA = function (im) {
-    var k = (im.currentSrc || im.src || '').replace(/^.*\//, '').replace(/\.webp.*$/, ''), m = (window.FSU_IMM || {})[k];
-    if (m) return bgM(im, m);
-    if (!window.FSU_IMM && window.FSU_IMMP && !im._w) { im._w = 1; window.FSU_IMMP.then(function () { window.bgA(im); }); return; }
-    BGQ.push(im); if (!BGT) BGT = window.requestIdleCallback ? requestIdleCallback(bgRun, { timeout: 300 }) : setTimeout(bgRun, 50);   // нет в разборе — считаем в простое, не во время прокрутки
-  };
-  function bgC(im) { try {   // 22.11.2026, Т. В.: «фото должно заполнять всю рамку» — однотонный фон: продолжаем его цветом; сцена (интерьер): кадр на всю рамку
+    var k = keyOf(im); im._k = k; im._m = null;
+    var m = (window.FSU_IMM || {})[k];
+    if (vm(m)) { im._m = m; return bgApply(im); }
+    if (!window.FSU_IMM) { immReady().then(function () { if (im._k !== k) return; var m2 = (window.FSU_IMM || {})[k]; if (vm(m2)) { im._m = m2; bgApply(im); } else bgQ(im); }); return; }
+    bgQ(im); };
+  function bgQ(im) { if (im._q) return; im._q = 1; BGQ.push(im); if (!BGT) bgNext(); }
+  document.addEventListener('load', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) window.bgA(t); }, true);   // без onload в разметке
+  function bgC(im) { try {
     var W = 64, H = Math.max(16, Math.round(64 * im.naturalHeight / Math.max(1, im.naturalWidth))), c = d.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);
     var v = g.getImageData(0, 0, W, H).data, px = function (x, y) { var i = (y * W + x) * 4; return [v[i], v[i + 1], v[i + 2]]; }, e = [], x, y;
-    for (x = 0; x < W; x++) { e.push(px(x, 0)); e.push(px(x, H - 1)); }   // весь край кадра: у фото на фоне его почти весь занимает фон (предмет касается края лишь местами)
+    for (x = 0; x < W; x++) { e.push(px(x, 0)); e.push(px(x, H - 1)); }
     for (y = 1; y < H - 1; y++) { e.push(px(0, y)); e.push(px(W - 1, y)); }
     var df = function (p, q) { return Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]); }, ref = e[0], best = -1;
     e.forEach(function (q, i) { if (i % 3) return; var k = e.filter(function (r) { return df(q, r) <= 36; }).length; if (k > best) { best = k; ref = q; } });
-    var mx = best < e.length * 0.55 ? 99 : 0;
-    var sl = im.parentNode; if (mx > 40) { im.classList.add('cov'); sl.style.background = '#000'; return; }
-    var med = function (L) { var o = [0, 1, 2].map(function (k) { var z = L.map(function (q) { return q[k]; }).sort(function (m, n) { return m - n; }); return z[z.length >> 1]; }); if (df(o, ref) > 30) o = ref; return 'rgb(' + o.join(',') + ')'; }, R = function (f, n) { var L = []; for (var i = 0; i < n; i++) L.push(f(i)); return L; };   // край сильно другой, чем фон фото, — берём фон, чтобы не было полос
-    var wide = im.naturalWidth / im.naturalHeight > (sl.clientWidth || 3) / (sl.clientHeight || 4);   // поля сверху/снизу или слева/справа — каждое своим краем фото, шва не видно
-    var iy = Math.round(H * .04), ix = Math.round(W * .04);   // чуть внутрь от края: у сжатого фото крайняя строка бывает светлее
-    im.classList.add(wide ? 'fw' : 'fh');
-    var x0 = W, x1 = -1, y0 = H, y1 = -1;   // 22.11.2026, Т. В.: предмет занимает максимум рамки, масштаб — по габаритам (табурет ≈ половина кресла)
+    var h6 = function (p) { return p.map(function (n) { return ('0' + n.toString(16)).slice(-2); }).join(''); };
+    if (best < e.length * 0.55) { im._m = [0, 1, 0, 1, '000000', '000000000000', '000000000000', 1]; return bgApply(im); }
+    var med = function (L) { var o = [0, 1, 2].map(function (k) { var z = L.map(function (q) { return q[k]; }).sort(function (m, n) { return m - n; }); return z[z.length >> 1]; }); return df(o, ref) > 30 ? ref : o; };
+    var R = function (f, n) { var L = []; for (var i = 0; i < n; i++) L.push(f(i)); return L; }, iy = Math.round(H * .04), ix = Math.round(W * .04);
+    var x0 = W, x1 = -1, y0 = H, y1 = -1;
     for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (df(px(x, y), ref) > 60) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-    if (x1 > x0 && y1 > y0) { im._bb = [x0 / W, (x1 + 1) / W, y0 / H, (y1 + 1) / H]; fitA(im); }
-    sl.style.background = wide ? 'linear-gradient(to bottom,' + med(R(function (i) { return px(i, iy); }, W)) + ' 50%,' + med(R(function (i) { return px(i, H - 1 - iy); }, W)) + ' 50%)'
-                               : 'linear-gradient(to right,' + med(R(function (i) { return px(ix, i); }, H)) + ' 50%,' + med(R(function (i) { return px(W - 1 - ix, i); }, H)) + ' 50%)';
-  } catch (e) { } };
+    if (!(x1 > x0 && y1 > y0)) { x0 = 0; x1 = W - 1; y0 = 0; y1 = H - 1; }
+    im._m = [x0 / W, (x1 + 1) / W, y0 / H, (y1 + 1) / H, h6(ref), h6(med(R(function (i) { return px(i, iy); }, W))) + h6(med(R(function (i) { return px(i, H - 1 - iy); }, W))),
+      h6(med(R(function (i) { return px(ix, i); }, H))) + h6(med(R(function (i) { return px(W - 1 - ix, i); }, H))), 0];
+    bgApply(im);
+  } catch (e) { } }
   var CZ = 1;   // масштаб предмета текущей карточки: max(ширина, высота) / 900 мм, 0.45…1
   function zOf(ch, nm) { var W0 = 0, H0 = 0; (ch || []).forEach(function (g) { if (g.t !== 'Габариты') return; (g.v || []).forEach(function (r) { var nn = String(r[1]).match(/\d+/g), n = nn ? Math.max.apply(null, nn.map(Number)) : 0; if (/Ширин/.test(r[0])) W0 = n; if (/Высот/.test(r[0])) H0 = n; }); });
     var m = Math.max(W0, H0); if (m) return Math.max(.45, Math.min(1, m / 900));
@@ -331,9 +344,9 @@ window.fitPh = function (im) {
     var bw = (b[1] - b[0]) * dw, bh = (b[3] - b[2]) * dh, k = Math.min(Fw * M * z / bw, Fh * M * z / bh); if (!isFinite(k) || k <= 0) return; k = Math.min(k, 1.8);
     var cx = (Fw - dw) / 2 + (b[0] + b[1]) / 2 * dw, by = (Fh - dh) / 2 + b[3] * dh, bot = Fh * (1 + M) / 2 - (z < 1 ? 0 : (Fh * M - bh * k) / 2);   // крупное — по центру, мелкое стоит на том же «полу»
     im.style.cssText = 'position:absolute;width:' + (Fw * k) + 'px;height:' + (Fh * k) + 'px;max-width:none;left:' + (Fw / 2 - cx * k) + 'px;top:' + (bot - by * k) + 'px'; }
-  var fitT; window.addEventListener('resize', function () { clearTimeout(fitT); fitT = setTimeout(function () { d.querySelectorAll('.slA img.fw,.slA img.fh,.pt .ph img.fw,.pt .ph img.fh').forEach(fitA); }, 120); });
+  var fitT; window.addEventListener('resize', function () { clearTimeout(fitT); fitT = setTimeout(function () { d.querySelectorAll('img[data-fit]').forEach(function (im) { if (im._m) bgApply(im); }); }, 120); });
   function phA(p, name, hi, idx) {
-    return '<img src="' + IM(p.k) + '"' + SSG(p.k) + ' alt="' + esc(name) + (p.ai ? ' (визуализация)' : '') + '" decoding="async"' + (hi ? ' fetchpriority="high"' : (idx != null && idx < 3 ? '' : ' loading="lazy"')) + ' onload="bgA(this)">' +
+    return '<img src="' + IM(p.k) + '"' + SSG(p.k) + ' alt="' + esc(name) + (p.ai ? ' (визуализация)' : '') + '" decoding="async"' + (hi ? ' fetchpriority="high"' : (idx != null && idx < 3 ? '' : ' loading="lazy"')) + ' data-fit="1">' +
       (p.t === 'info' ? '<span class="vis">инфографика</span>' : p.ai ? '<span class="vis">визуализация</span>' : '');
   }
   function bindCard() {

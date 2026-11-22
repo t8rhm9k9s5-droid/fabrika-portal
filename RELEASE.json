@@ -1,12 +1,11 @@
 {
- "portal_version": "2.22.49",
- "exported_utc": "2026-11-22T20:41Z",
- "files_sha": "b8e563c4fa44fa83",
+ "portal_version": "2.22.50",
+ "exported_utc": "2026-11-22T21:31Z",
+ "files_sha": "b30d114964c3262c",
  "files": [
   "portal/assets/versions_full.js",
   "portal/build/assort_frag.html",
   "portal/fsu2/build_new.py",
-  "portal/fsu2/site/app.css",
   "portal/fsu2/site/app.js"
  ],
  "note": "обезличенная копия для чтения и ревью; рабочая сборка — на хостинге, выкладка не из этого репозитория"

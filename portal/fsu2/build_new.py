@@ -16,8 +16,9 @@ def _rj(p):   # 22.11.2026 (CodeQL py/file-not-closed): чтение JSON с з�
     with open(p, encoding='utf-8') as f: return json.load(f)
 
 
-def _wj(o, p, **kw):
-    with open(p, 'w', encoding='utf-8') as f: json.dump(o, f, **kw)
+def _wj(o, p, **kw):   # атомарно: сначала во временный файл, потом замена
+    with open(p + '.tmp', 'w', encoding='utf-8') as f: json.dump(o, f, **kw)
+    os.replace(p + '.tmp', p)
 
 AI = os.path.join(FSU, 'ai'); INFO = _rj(os.path.join(FSU, 'assort', 'info_all.json')) if os.path.exists(os.path.join(FSU, 'assort', 'info_all.json')) else {}; REJ = _rj(os.path.join(FSU, 'ai', '_reject.json')) if os.path.exists(os.path.join(FSU, 'ai', '_reject.json')) else {}; GAP = _rj(os.path.join(FSU, 'assort', 'photo_gap.json'))
 # старая оболочка копии: после первой замены index.html — маршрутизатор, а оболочка лежит в old.html
@@ -34,6 +35,9 @@ OKNIGHT = {'katrin-kreslo', 'samba-box4-stul', 'chestermen-kreslo', 'metro-urna'
 try: OKNIGHT |= set(_rj(os.path.join(FSU, 'assort', 'oknight.json')))   # 22.11.2026: ночные интерьеры хитов (80% объёма), проверены Claude, Т. В. смотрит утром
 except (OSError, ValueError): OKNIGHT = OKNIGHT   # нет файла — только встроенный список
 DESCN = _rj(os.path.join(FSU, 'desc', 'ok.json')) if os.path.exists(os.path.join(FSU, 'desc', 'ok.json')) else {}
+DESCN = {k: v.strip() for k, v in (DESCN.items() if isinstance(DESCN, dict) else []) if isinstance(k, str) and isinstance(v, str) and 150 <= len(v.strip()) <= 2000}   # CG-67: проверка формата
+DESC_USED = []
+DOCS_RX = re.compile(r'^https://([a-z0-9-]+\.)*(fabrikant\.su|techfabrikant\.ru)/', re.I)   # CG-67: только свои адреса документов
 DOCS = _rj(os.path.join(_A, 'docs.json')) if os.path.exists(os.path.join(_A, 'docs.json')) else {}
 clean = lambda s: re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', str(s or ''))).replace('\xa0', ' ')).strip()
 
@@ -300,13 +304,13 @@ for it in ITEMS:
     ch = [{'t': clean(g0.get('title')), 'v': [[clean(v.get('name')), clean(v.get('value'))] for v in g0.get('values', [])]} for g0 in (d.get('characteristics') or [])]
     ft = [{'n': clean(f.get('name')), 'i': img(fpath((f.get('image') or {}).get('src'))) if f.get('image') else None} for f in ((d.get('features') or {}).get('items') or [])]
     desc = re.split(r'По прайсу', clean(d.get('description')))[0].strip()
-    if len(re.sub(r'<[^>]+>', '', desc)) < 200 and DESCN.get(c): desc = DESCN[c]   # 22.11.2026, Т. В.: «полное описание — если нет, написать» (work/fsu/desc/out.json, проверено Claude)
+    if len(re.sub(r'<[^>]+>', '', desc)) < 200 and DESCN.get(c): desc = DESCN[c]; DESC_USED.append(c)   # 22.11.2026, Т. В.: «полное описание — если нет, написать» (work/fsu/desc/out.json, проверено Claude)
     sim = [BYID[s]['code'] for s in SIM.get(iid, []) if s in BYID]
     cards[c] = {'c': c, 'n': e['n'], 'art': clean(d.get('articul')), 'desc': desc, 'ph': photos, 'in': inter, 'inf': infg, 'th': lit, 'ch': ch, 'ft': ft, 'st': d.get('inStores') or [], 'sim': sim}
     # 22.11.2026, Т. В. (карточка А): все исполнения по прайсу 28.10 — цена и опции; документы/видео товара — assort/docs.json
     _pm = (PT.get(c) or {}).get('m')
     cards[c]['pr'] = [[r['p1'], {k.strip(): str(v).strip() for k, v in r['opt'].items() if str(v).strip() not in ('-', '') and k.strip() not in ('I',)}] for r in PR if _pm and r['m'].strip() == _pm.strip()]
-    cards[c]['docs'] = DOCS.get(c, [])
+    cards[c]['docs'] = [x for x in DOCS.get(c, []) if isinstance(x, dict) and DOCS_RX.match(str(x.get('u', '')))]
     cards[c]['col'] = COLS.get(c, {}); cards[c]['cv'] = cvs
 # похожие: из копии, иначе — тот же подраздел (хиты первыми)
 for e in idx:
@@ -358,7 +362,8 @@ def immeta(fp):
     h = lambda c: '%02x%02x%02x' % c
     if x1 <= x0 or y1 <= y0: x0, x1, y0, y1 = 0, W - 1, 0, H - 1
     return [round(x0 / W, 3), round((x1 + 1) / W, 3), round(y0 / H, 3), round((y1 + 1) / H, 3), h(ref), h(tb[0]) + h(tb[1]), h(lr[0]) + h(lr[1]), 0]
-_imc_p = os.path.join(CACHE, 'immeta.json')
+IMMV = 'v1'   # CG-67: версия алгоритма разбора — смена версии сбрасывает кэш
+_imc_p = os.path.join(CACHE, 'immeta_%s.json' % IMMV)
 try: _imc = _rj(_imc_p)
 except Exception: _imc = {}
 IMM = {}
@@ -379,7 +384,12 @@ logo = open(os.path.join(BASE, 'f/media/brand/logo-black.svg'), encoding='utf-8'
 logo = re.sub(r'fill="#000(?:000)?"', 'fill="currentColor"', logo)
 logo = re.sub(r'<svg([^>]*?)\swidth="(\d+)"\s+height="(\d+)"', lambda m: '<svg class="logo" role="img" aria-label="Фабрикант" viewBox="0 0 %s %s"%s' % (m.group(2), m.group(3), m.group(1)), logo, count=1)
 open(os.path.join(N, 'logo.svg'), 'w', encoding='utf-8').write(logo)
-ver = hashlib.md5(b''.join(open(os.path.join(N, f), 'rb').read() for f in ('ds.css', 'app.css', 'app.js', 'boot.js')) + open(os.path.join(N, 'd', 'idx.json'), 'rb').read()).hexdigest()[:10]
+def _rb(p):
+    with open(p, 'rb') as f: return f.read()
+_ch = hashlib.md5()   # CG-67: версия учитывает и im.json, и данные карточек (описания, документы, фото)
+for _p in sorted(os.listdir(os.path.join(N, 'd', 'p'))): _ch.update(_rb(os.path.join(N, 'd', 'p', _p)))
+ver = hashlib.md5(b''.join(_rb(os.path.join(N, f)) for f in ('ds.css', 'app.css', 'app.js', 'boot.js')) + _rb(os.path.join(N, 'd', 'idx.json')) + _rb(os.path.join(N, 'd', 'im.json')) + _ch.digest()).hexdigest()[:10]
+print('описания: применено %d из %d' % (len(DESC_USED), len(DESCN)))
 # 21.11.2026 (B3): остальные страницы сайта — компания, новости, проекты, акции, остатки, подбор (pages_new.py; данные n/d/pg, pages.js/pages.css)
 sys.path.insert(0, HERE); import pages_new; ver = pages_new.build(BASE, OUT, N, A, idx, ver)
 ROUTE = r'^\/fsu\/(?:$|index\.html$|catalog(?:\/|$)|resheniya(?:\/|$)|poisk(?:\/|$)|company(?:\/|$)|projects(?:\/|$)|shares(?:\/|$)|stock(?:\/|$)|podbor(?:\/|$))'
