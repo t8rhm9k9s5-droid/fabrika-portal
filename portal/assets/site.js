@@ -327,7 +327,7 @@
     var a = e.target.closest && e.target.closest('a[data-pdf]'); if (!a) return;
     e.preventDefault(); T14Doc.open(a.getAttribute('href'), a.getAttribute('data-t') || a.textContent.trim(), a.getAttribute('data-m') || '');
   });
-  function skinNow() { var v = getPref('t14.skin', ''); return v === 'classic' ? 'classic' : 'v22'; }   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
+  function skinNow() { return 'v22'; }   // 22.11.2026, Т. В.: «старый никакой не будет» — только новый вид, выбора «Сотрудник6/Классика» нет   // 14.11.2026 ~08:10, Т. В.: V22 — для всех
   function skinApply() { var de = document.documentElement, was = de.getAttribute('data-skin') === 'v22', on = skinNow() === 'v22'; if (on === was) return; if (on) de.setAttribute('data-skin', 'v22'); else de.removeAttribute('data-skin'); if (window.T14SideSync) window.T14SideSync(); if (on && window.T14Motion && T14Motion.v22) T14Motion.v22(); else if (!on) { try { location.reload(); } catch (e) { } } }
   window.addEventListener('t14acct', skinApply);
   function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
@@ -826,7 +826,7 @@
       }
       seg('Тема', theme, [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Авто']], function (v) { setPref('t14.theme', v); applyLook(); });
       // 14.11.2026, Т. В.: оформление по видео «Dashboard V22» — на просмотр; у остальных по умолчанию «Классика»
-      seg('Вид', function () { return skinNow(); }, [['v22', 'Сотрудник6'], ['classic', 'Классика']], function (v) { setPref('t14.skin', v); if (v === 'v22') document.documentElement.setAttribute('data-skin', 'v22'); else document.documentElement.removeAttribute('data-skin'); if (window.T14Motion && T14Motion.v22) T14Motion.v22(); });
+      // 22.11.2026, Т. В.: переключатель «Вид: Сотрудник6 / Классика» убран — у всех новый вид
       var syncP = seg('Производительность', FX.choice, [['auto', 'Авто'], ['max', 'Сотрудник17'], ['eco', 'Экономно']], function (v) { FX.set(v); });
       var pft = el('p', 'ifoot'); pft.setAttribute('role', 'status'); s.appendChild(pft);
       var pfs = function () { pft.textContent = FX.describe() + '«Экономно» — без размытия стекла, теней и анимаций, модель и план — в низком качестве; «Сотрудник17» — всё и высокое качество. «Авто» подбирает под устройство по памяти, процессору, видеокарте, связи и плавности прокрутки и запоминает. Выбор хранится в этом браузере.'; syncP(); };

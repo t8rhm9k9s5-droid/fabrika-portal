@@ -9,7 +9,7 @@ from library_files import update_library_sizes
 from _cg1_build_io import read_file as _cg1_read_file, read_json as _cg1_read_json
 from site_widgets import build_minimap, repair_note
 import pathlib   # 14.11.2026: чтение/запись файлов с закрытием (CodeQL py/file-not-closed)
-import os, re, shutil, subprocess, zipfile
+import os, re, shutil, subprocess, zipfile, glob
 
 
 def _rd(*a, **k):   # CodeQL py/file-not-closed: файл закрывается сразу (15.11.2026)
@@ -68,7 +68,7 @@ for _n, _t in _TITLES.items():
 # one look for every page (22.10.2026): the model's colours, type and glass (assets/ui.css) and the tab bar below (assets/site.js); no address
 for _n in frags:
     if _n == 'index.html': continue
-    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/portal.css">\n<link rel="stylesheet" href="assets/glass.css">', 1)   # 13.11: glass.css — стекло с бликом (Т. В.)
+    frags[_n] = frags[_n].replace('<link rel="stylesheet" href="assets/site.css">', '<link rel="stylesheet" href="assets/site.css">\n<link rel="stylesheet" href="assets/ios.css">\n<link rel="stylesheet" href="assets/ui.css">\n<link rel="stylesheet" href="assets/ds.css">\n<link rel="stylesheet" href="assets/portal.css">\n<link rel="stylesheet" href="assets/glass.css">', 1)   # 13.11: glass.css — стекло с бликом (Т. В.)
     # Чертежи and Архив live under «Документы» (22.10.2026): a back link instead of the eyebrow
     for _a, _b in (('<h1>План участка · Поляны, ул. Терехина, 14</h1>', '<h1>План участка</h1>'),
                    ('<p class="eyebrow">Поляны, ул. Терехина, 14 · архив</p>\n      <h1>Документы, по которым построены модель и сайт</h1>', '<a class="back" href="library.html">Документы</a>\n      <h1>Архив</h1>'),
@@ -468,7 +468,7 @@ _THEME = ("<script>(function(){var d=document.documentElement,n=navigator,u=n.us
           #   теперь владельцу (вход GL_OWNER_ID) V22 по умолчанию на всех устройствах; явный выбор «Классика» на устройстве — сильнее
           "var sp=/[?&]skin=(v22|classic)/.exec(location.search);if(sp){try{localStorage.setItem('t14.skin',sp[1])}catch(e){}}"
           # 14.11.2026 ~08:10, Т. В.: «обновлённый дизайн — включаю для всех»: V22 по умолчанию у всех; «Классика» на устройстве — по выбору
-          "var sk=sp?sp[1]:g('t14.skin');if(!sk)sk='v22';"
+          "var sk='v22';try{localStorage.removeItem('t14.skin')}catch(e){}"
           "if(sk==='v22')d.setAttribute('data-skin','v22');"
           # 15.11.2026, Т. В. (компьютер, видео «Glassy SideBar»): стрелка «›» раскрывает левую панель с названиями — выбор запоминается
           "if(g('t14.side')==='open')d.setAttribute('data-side','open');"
@@ -722,6 +722,15 @@ try:
         _pmx = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else {}
         _SNAP['pmgr'] = {'ym': os.path.basename(_pmf[-1])[:7], 'asof': _pmx.get('asof'), 'fact': (_pmx.get('total') or {}).get('fact')} if _pmf and (_pmx.get('total') or {}).get('fact') else None
     except Exception as _e9: print('pmgr:', _e9); _SNAP['pmgr'] = None
+    try:   # 21.11.2026 (аудит): план месяца — в единый модуль (T14M.plan), факт берётся из продаж 1С там же
+        _pmf2 = sorted(glob.glob('/home/claude/build/sales_plan_mgr/2*.json')); _px = _cg1_read_json(_pmf2[-1], encoding='utf-8') if _pmf2 else {}
+        _SNAP['planm'] = {'month': os.path.basename(_pmf2[-1])[:7], 'asof': _px.get('asof'), 'tot': {k: (_px.get('total') or {}).get(k) for k in ('plan', 'fact', 'pct')}} if _pmf2 else None
+    except Exception as _e10: print('planm:', _e10); _SNAP['planm'] = None
+    try:   # 21.11.2026: перенос по графику отгрузки — для «Щекотливого» (машины не поданы / заказы не уехали), один расчёт с «Продажами» (ship_carry.py)
+        _an = ((_SHIP or {}).get('plan') or {}).get('an') or {}
+        _SNAP['shipcar'] = {'n': (_an.get('car') or [0, 0])[0], 's': (_an.get('car') or [0, 0])[1], 'from': ((_SHIP or {}).get('plan') or {}).get('from'), 'to': ((_SHIP or {}).get('plan') or {}).get('to'),
+                            'o': [[o[0], o[1], o[2]] for o in (_an.get('car_o') or [])[:8]]} if _an.get('car') else None
+    except Exception as _e11: print('shipcar:', _e11); _SNAP['shipcar'] = None
     _MJS = _cg1_read_file('/home/claude/build/app/metrics_core.js', encoding='utf-8')
     assert _MJS.count('__SNAP__') == 1
     with open(os.path.join(SITE, 'assets', 'metrics.js'), 'w', encoding='utf-8') as _cg1_output_file:
