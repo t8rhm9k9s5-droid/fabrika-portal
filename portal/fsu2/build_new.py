@@ -318,7 +318,7 @@ for e in idx:
     if len(cd['sim']) < 6:
         more = [x['c'] for x in sorted(idx, key=lambda x: (not x['hit'], -x['np'])) if x['g'] == e['g'] and x['s'] == e['s'] and x['c'] != e['c'] and x['c'] not in cd['sim'] and x['i']]
         cd['sim'] += more[:8 - len(cd['sim'])]
-    json.dump(cd, open(os.path.join(N, 'd', 'p', e['c'] + '.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    _wj(cd, os.path.join(N, 'd', 'p', e['c'] + '.json'), ensure_ascii=False, separators=(',', ':'))
 groups = []
 for gcode, gname, secs, subs in GROUPS:
     its = [e for e in idx if e['g'] == gcode]
@@ -334,13 +334,13 @@ for code, name, tg, sc in SPACES:
 FL = {'pur': sorted({p for e in idx for p in e['pur']}), 'mat': sorted({p for e in idx for p in e['mat']}), 'lbl': LBL}
 meta = {'v': X.get('t') or '', 'total': len(idx), 'groups': groups, 'spaces': spaces, 'stores': STORES, 'fl': FL,
         'old': OLDSEC, 'hits': [e['c'] for e in sorted(idx, key=lambda e: -e['np']) if e['hit'] and e['i']][:16]}
-json.dump({'meta': meta, 'items': idx}, open(os.path.join(N, 'd', 'idx.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+_wj({'meta': meta, 'items': idx}, os.path.join(N, 'd', 'idx.json'), ensure_ascii=False, separators=(',', ':'))
 
 # 22.11.2026, Т. В.: «120 кадров» + «предмет на максимум рамки» — разбор каждого снимка заранее (фон, рамка предмета, сцена/нет),
 # чтобы страница не считала пиксели на телефоне: n/d/im.json {ключ: [x0,x1,y0,y1,"rrggbb","rrggbb","rrggbb",сцена]} (поля сверху/снизу и слева/справа берутся из rrggbb)
 def immeta(fp):
     from PIL import Image as _I
-    im = _I.open(fp).convert('RGB'); W = 64; H = max(16, round(64 * im.height / max(1, im.width))); im = im.resize((W, H), _I.BILINEAR); px = im.load()
+    im = _I.open(fp).convert('RGB'); ar = im.height / max(1, im.width); W = max(16, round(96 / ar)) if ar > 1.5 else 64; H = min(96, max(16, round(W * ar))); im = im.resize((W, H), _I.BILINEAR); px = im.load()
     e = [px[x, 0] for x in range(W)] + [px[x, H - 1] for x in range(W)] + [px[0, y] for y in range(1, H - 1)] + [px[W - 1, y] for y in range(1, H - 1)]
     df = lambda a, b: abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
     best, ref = -1, e[0]
@@ -348,7 +348,7 @@ def immeta(fp):
         if i % 3: continue
         k = sum(1 for r in e if df(q, r) <= 36)
         if k > best: best, ref = k, q
-    if best < len(e) * 0.55: return [0, 1, 0, 1, '000000', '000000', '000000', 1]
+    if best < len(e) * 0.55: return [0, 1, 0, 1, '000000', '000000000000', '000000000000', 1]   # CG-67: тот же формат, что у обычных
     def med(L):
         o = tuple(sorted(c[j] for c in L)[len(L) // 2] for j in range(3)); return ref if df(o, ref) > 30 else o
     iy, ix = round(H * .04), round(W * .04)
@@ -362,7 +362,7 @@ def immeta(fp):
     h = lambda c: '%02x%02x%02x' % c
     if x1 <= x0 or y1 <= y0: x0, x1, y0, y1 = 0, W - 1, 0, H - 1
     return [round(x0 / W, 3), round((x1 + 1) / W, 3), round(y0 / H, 3), round((y1 + 1) / H, 3), h(ref), h(tb[0]) + h(tb[1]), h(lr[0]) + h(lr[1]), 0]
-IMMV = 'v1'   # CG-67: версия алгоритма разбора — смена версии сбрасывает кэш
+IMMV = 'v2'   # CG-67: версия алгоритма разбора — смена версии сбрасывает кэш
 _imc_p = os.path.join(CACHE, 'immeta_%s.json' % IMMV)
 try: _imc = _rj(_imc_p)
 except Exception: _imc = {}
@@ -376,14 +376,22 @@ for _f in os.listdir(os.path.join(N, 'i', 't')):
     IMM[_k] = _imc[_k]
 _wj(_imc, _imc_p)
 _wj(IMM, os.path.join(N, 'd', 'im.json'), separators=(',', ':'))
+_hx = re.compile(r'^[0-9a-f]{6}$'); _hx2 = re.compile(r'^[0-9a-f]{12}$')   # CG-67: та же проверка, что vm() в app.js
+_bad = [k for k, m in IMM.items() if not (isinstance(m, list) and len(m) == 8 and all(isinstance(m[i], (int, float)) and 0 <= m[i] <= 1 for i in range(4)) and m[0] < m[1] and m[2] < m[3]
+        and m[7] in (0, 1) and _hx.match(str(m[4])) and _hx2.match(str(m[5])) and _hx2.match(str(m[6])))]
+print('im.json: %d снимков, не прошли проверку %d' % (len(IMM), len(_bad)))
 
 # ---------- оболочка: app.css, app.js, back.html, index.html (маршрутизатор) ----------
 for f in ('ds.css', 'app.css', 'app.js', 'boot.js'): shutil.copy2(os.path.join(HERE, 'site', f), os.path.join(N, f))
 shutil.copy2(os.path.join(FSU, 'fsu_back.html'), os.path.join(N, 'back.html'))
-logo = open(os.path.join(BASE, 'f/media/brand/logo-black.svg'), encoding='utf-8').read()
+def _rt(p):
+    with open(p, encoding='utf-8') as f: return f.read()
+def _wt(p, t):
+    with open(p, 'w', encoding='utf-8') as f: f.write(t)
+logo = _rt(os.path.join(BASE, 'f/media/brand/logo-black.svg'))
 logo = re.sub(r'fill="#000(?:000)?"', 'fill="currentColor"', logo)
 logo = re.sub(r'<svg([^>]*?)\swidth="(\d+)"\s+height="(\d+)"', lambda m: '<svg class="logo" role="img" aria-label="Фабрикант" viewBox="0 0 %s %s"%s' % (m.group(2), m.group(3), m.group(1)), logo, count=1)
-open(os.path.join(N, 'logo.svg'), 'w', encoding='utf-8').write(logo)
+_wt(os.path.join(N, 'logo.svg'), logo)
 def _rb(p):
     with open(p, 'rb') as f: return f.read()
 _ch = hashlib.md5()   # CG-67: версия учитывает и im.json, и данные карточек (описания, документы, фото)
@@ -400,9 +408,9 @@ early = ('<script>/* 21.11.2026: новый каталог /fsu/ — катал�
          'history.pushState=w(history.pushState);history.replaceState=w(history.replaceState)})()</script>') % (ROUTE, ver, ver)
 sh = re.sub(r'<script>/\* 21\.11\.2026: новый каталог.*?</script>', '', SH, flags=re.S)
 sh = sh.replace('<head>', '<head><meta charset="utf-8">' + early, 1)
-open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(sh)
-open(os.path.join(OUT, 'old.html'), 'w', encoding='utf-8').write(re.sub(r'<script>/\* 21\.11\.2026: новый каталог.*?</script>', '', SH, flags=re.S))
+_wt(os.path.join(OUT, 'index.html'), sh)
+_wt(os.path.join(OUT, 'old.html'), re.sub(r'<script>/\* 21\.11\.2026: новый каталог.*?</script>', '', SH, flags=re.S))
 rep = {'dups': dups, 'cards': len(idx), 'images': len(used), 'bad_images': len(bad), 'ai_images': sum(e['nai'] for e in idx), 'cards_ge5': sum(1 for e in idx if e['np'] >= 5),
        'cards_inter': sum(1 for e in idx if e['ni']), 'groups': {g['c']: g['k'] for g in groups}, 'ver': ver}
-json.dump({**rep, 'bad': bad[:50]}, open(os.path.join(HERE, 'build_report.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+_wj({**rep, 'bad': bad[:50], 'desc': {'in': len(DESCN), 'used': len(DESC_USED), 'unknown_codes': sorted(set(DESCN) - set(cards))[:50]}}, os.path.join(HERE, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps(rep, ensure_ascii=False))

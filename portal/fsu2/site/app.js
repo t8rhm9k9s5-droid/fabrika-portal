@@ -110,7 +110,7 @@ window.fitPh = function (im) {
   function vSpaces() {
     return hdr('sp') + '<main><div class="wrap">' + crumbs([['Решения']]) + '<section class="heroB" style="padding-top:8px"><h1>Решения по пространствам</h1><div class="spaces">' + M.spaces.map(function (s) {
       return '<a class="spc' + (s.d || s.nt ? ' li' : '') + '" href="/fsu/resheniya/' + s.c + '/"><span class="tx"><h3>' + esc(s.n) + '</h3><span class="c num">' + mod(s.k) + '</span></span><span class="im">' +
-        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li).replace(/sizes="[^"]*"/, 'sizes="(max-width: 560px) 100vw, (max-width: 1100px) 66vw, 50vw"') + ' alt=""" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
+        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li).replace(/sizes="[^"]*"/, 'sizes="(max-width: 560px) 100vw, (max-width: 1100px) 66vw, 50vw"') + ' alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
           return s.i.map(function (k) { return '<img src="' + TH(k) + '" alt="" loading="lazy">'; }).join('') + (s.i.some(function (k) { return AIK()[k]; }) ? '<span class="vis">визуализация</span>' : ''); })() + '</span></a>'; }).join('') + '</div></section></div></main>' + foot();
   }
 
@@ -259,7 +259,7 @@ window.fitPh = function (im) {
     var r0 = pr.slice().sort(function (a, b) { return mq(b) - mq(a) || a[0] - b[0]; })[0];
     if (r0) gs.forEach(function (q) { CS.sel[q.k] = r0[1][q.k]; });
     var hh = (x.h || []).filter(Boolean), hs = hh.length === 2 && hh[0] !== hh[1] ? hh.join('–') : (hh[0] || '—');
-    var docs = c.docs || [];
+    var docs = (c.docs || []).filter(function (dd) { return /^https:\/\/([a-z0-9-]+\.)*(fabrikant\.su|techfabrikant\.ru)\//i.test(String(dd.u || '')); });   // CG-67: только свои адреса; пусто после проверки — подсказка
     var lab = function (p, i) { return p.t === 'lit' ? 'Ракурс 3/4' : p.t === 'interior' ? 'В интерьере' : p.t === 'info' ? 'Инфографика' : 'Фото ' + i; };
     var pn = 0; P.forEach(function (p) { p.lab = lab(p, p.t === 'photo' || p.t === 'angle' ? ++pn : 0); }); INF.forEach(function (p, i) { p.lab = 'Инфографика ' + (i + 1); });
     return hdr('cat') + '<main><div class="wrap">' + crumbs([['Каталог', '/fsu/catalog/'], [g ? g.n : 'Каталог', g ? '/fsu/catalog/' + g.c + '/' : '/fsu/catalog/']].concat(sub ? [[sub.n, '/fsu/catalog/' + g.c + '/' + sub.c + '/']] : []).concat([[x.n]])) +
@@ -277,7 +277,7 @@ window.fitPh = function (im) {
       (INF.length ? '<section class="infA"><div class="sh"><h2>Инфографика</h2><span class="muted">' + INF.length + '</span></div><div class="infG">' + INF.map(function (p, i) { return '<button type="button" data-inf="' + i + '" aria-label="' + esc(p.lab) + '"><img src="' + TH(p.k) + '" alt="" loading="lazy"><i>инфографика</i></button>'; }).join('') + '</div></section>' : '') +
       '<section class="specA"><div><h2>Характеристики</h2>' + c.ch.filter(function (q) { return q.t !== 'Исполнения' && q.v.length; }).map(function (q) {
         return '<h4>' + esc(q.t) + '</h4><dl>' + q.v.map(function (v) { return '<dt>' + esc(v[0]) + '</dt><dd>' + esc(v[1]) + '</dd>'; }).join('') + '</dl>'; }).join('') + '</div>' +
-      '<div><h2>Документы и видео</h2>' + (docs.length ? docs.filter(function (dd) { return /^https:\/\/([a-z0-9-]+\.)*(fabrikant\.su|techfabrikant\.ru)\//i.test(String(dd.u || '')); }).map(function (dd) { return '<a class="docA" href="' + esc(dd.u) + '"' + (dd.v ? '' : ' download') + '><span>' + esc(dd.t) + '</span><small>' + esc(dd.f || (dd.v ? 'видео' : 'PDF')) + '</small></a>'; }).join('')
+      '<div><h2>Документы и видео</h2>' + (docs.length ? docs.map(function (dd) { return '<a class="docA" href="' + esc(dd.u) + '"' + (dd.v ? '' : ' download') + '><span>' + esc(dd.t) + '</span><small>' + esc(dd.f || (dd.v ? 'видео' : 'PDF')) + '</small></a>'; }).join('')
         : '<p class="muted">Гарантийный талон, схему сборки и сертификат пришлём по запросу: <a href="mailto:user7@example.org">user7@example.org</a>.</p>') + '</div></section>' +
       '<section id="where"><div class="sh"><h2>Где купить</h2><a href="/fsu/stock">Остатки по складам</a></div><p class="muted" style="margin:-6px 0 12px">' +
       (c.st.length ? 'Есть на ' + pl(c.st.length, 'складе', 'складах', 'складах') + ' компании.' : 'Под заказ — уточните срок у отдела продаж.') + '</p></section>' +
@@ -291,21 +291,23 @@ window.fitPh = function (im) {
   // 22.11.2026 (CG-67, ревью Рекса): у каждого снимка своё состояние (_m разбор, _k ключ), фон рамки красит только видимый кадр,
   // смена src/поворот — пересчёт с нуля; разбор из im.json проверяется; без im.json — canvas малыми порциями в простое.
   function vm(m) { return Array.isArray(m) && m.length === 8 && [0, 1, 2, 3].every(function (i) { return typeof m[i] === 'number' && m[i] >= 0 && m[i] <= 1; }) && m[0] < m[1] && m[2] < m[3] &&
-    /^[0-9a-f]{6}$/.test(m[4]) && /^[0-9a-f]{12}$/.test(m[5]) && /^[0-9a-f]{12}$/.test(m[6]) && (m[7] === 0 || m[7] === 1); }
+    (m[7] === 1 || (/^[0-9a-f]{6}$/.test(m[4]) && /^[0-9a-f]{12}$/.test(m[5]) && /^[0-9a-f]{12}$/.test(m[6]))) && (m[7] === 0 || m[7] === 1); }
   function keyOf(im) { return (im.currentSrc || im.src || '').replace(/^.*\//, '').replace(/\.webp.*$/, ''); }
   function bgApply(im) {
     var m = im._m, sl = im.parentNode; if (!m || !sl) return;
     im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; im._bb = null;
+    if (!sl.classList.contains('slA') && !(sl.classList.contains('ph') && sl.closest('.pt'))) return;   // CG-67: интерьер у описания и прочие — без подгонки (у рамки нет своей высоты)
     var paint = !im.classList.contains('b');   // скрытый кадр плитки (при наведении) фон рамки не трогает
-    if (m[7]) { im.classList.add('cov'); if (paint) sl.style.background = '#000'; return; }
+    if (m[7]) { im.classList.add('cov'); im._bg = '#000'; if (paint) { sl.style.background = '#000'; sl._bg = '#000'; } return; }
     var wide = im.naturalWidth / im.naturalHeight > (sl.clientWidth || 3) / (sl.clientHeight || 4);
     im.classList.add(wide ? 'fw' : 'fh');
-    if (paint) sl.style.background = wide ? 'linear-gradient(to bottom,' + hx(m[5].slice(0, 6)) + ' 50%,' + hx(m[5].slice(6)) + ' 50%)' : 'linear-gradient(to right,' + hx(m[6].slice(0, 6)) + ' 50%,' + hx(m[6].slice(6)) + ' 50%)';
+    var bgv = wide ? 'linear-gradient(to bottom,' + hx(m[5].slice(0, 6)) + ' 50%,' + hx(m[5].slice(6)) + ' 50%)' : 'linear-gradient(to right,' + hx(m[6].slice(0, 6)) + ' 50%,' + hx(m[6].slice(6)) + ' 50%)';
+    im._bg = bgv; if (paint) { sl.style.background = bgv; sl._bg = bgv; }
     im._bb = [m[0], m[1], m[2], m[3]]; fitA(im); }
   var BGQ = [], BGT = 0, BGW = null;
   function bgNext() { BGT = BGQ.length ? (window.requestIdleCallback ? requestIdleCallback(bgRun, { timeout: 400 }) : setTimeout(bgRun, 60)) : 0; }
   function bgRun(dl) {   // не больше двух снимков за проход: кадр не забивается, а по тайм-ауту очередь всё равно движется
-    for (var n = 0; n < 2 && BGQ.length; n++) { if (n && dl && !dl.didTimeout && dl.timeRemaining() < 6) break; var im = BGQ.shift(); im._q = 0; if (im.isConnected && im._k === keyOf(im)) bgC(im); }
+    for (var n = 0; n < 2 && BGQ.length; n++) { if (n && dl && !dl.didTimeout && dl.timeRemaining() < 6) break; var j = BGQ.shift(), im = j.im; im._q = 0; if (im.isConnected && !im._m && im._k === j.k && j.k === keyOf(im)) bgC(im); }
     bgNext(); }
   function immReady() {   // ждём im.json не дольше 2,5 с, дальше — запасной путь
     if (window.FSU_IMM) return Promise.resolve(); if (!BGW) BGW = Promise.race([window.FSU_IMMP || Promise.resolve(), new Promise(function (r) { setTimeout(r, 2500); })]); return BGW; }
@@ -315,10 +317,15 @@ window.fitPh = function (im) {
     if (vm(m)) { im._m = m; return bgApply(im); }
     if (!window.FSU_IMM) { immReady().then(function () { if (im._k !== k) return; var m2 = (window.FSU_IMM || {})[k]; if (vm(m2)) { im._m = m2; bgApply(im); } else bgQ(im); }); return; }
     bgQ(im); };
-  function bgQ(im) { if (im._q) return; im._q = 1; BGQ.push(im); if (!BGT) bgNext(); }
+  function bgQ(im) { if (im._q) return; im._q = 1; BGQ.push({ im: im, k: im._k }); if (!BGT) bgNext(); }
   document.addEventListener('load', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) window.bgA(t); }, true);   // без onload в разметке
+  document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) { imgReset(t); if (t.parentNode && !t.classList.contains('b')) t.parentNode.style.background = ''; } }, true);   // не загрузилось — нейтральный вид
+  function imgReset(im) { im._m = null; im._k = ''; im._q = 0; im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; }   // смена src — состояние сразу с нуля
+  if (window.matchMedia && matchMedia('(hover: hover)').matches) {   // второй кадр плитки при наведении — со своим фоном
+    d.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('.pt'), ph = p && p.querySelector('.ph'), b = ph && ph.querySelector('img.b'); if (b && b._bg && !p.contains(e.relatedTarget)) ph.style.background = b._bg; });
+    d.addEventListener('mouseout', function (e) { var p = e.target.closest && e.target.closest('.pt'), ph = p && p.querySelector('.ph'); if (ph && ph._bg && !p.contains(e.relatedTarget)) ph.style.background = ph._bg; }); }
   function bgC(im) { try {
-    var W = 64, H = Math.max(16, Math.round(64 * im.naturalHeight / Math.max(1, im.naturalWidth))), c = d.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);
+    var ar = im.naturalHeight / Math.max(1, im.naturalWidth), W = ar > 1.5 ? Math.max(16, Math.round(96 / ar)) : 64, H = Math.min(96, Math.max(16, Math.round(W * ar))), c = d.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);   // CG-67: обе стороны не больше 96
     var v = g.getImageData(0, 0, W, H).data, px = function (x, y) { var i = (y * W + x) * 4; return [v[i], v[i + 1], v[i + 2]]; }, e = [], x, y;
     for (x = 0; x < W; x++) { e.push(px(x, 0)); e.push(px(x, H - 1)); }
     for (y = 1; y < H - 1; y++) { e.push(px(0, y)); e.push(px(W - 1, y)); }
@@ -355,7 +362,7 @@ window.fitPh = function (im) {
     var trk = $('#trk'), lock = false;
     var mark = function (i) { var p = cur(P[i]), gc = $('#gc'); if (gc) gc.textContent = p.lab + ' · ' + (i + 1) + ' из ' + P.length;
       $$('#th button').forEach(function (b, k) { b.setAttribute('aria-current', k === i ? 'true' : 'false'); }); };
-    var hero = function () { var s = trk && trk.children[0]; if (!s || P[0].t !== 'lit') return; var p = cur(P[0]), im = s.querySelector('img'); if (im && im.getAttribute('data-k') !== p.k) { im.setAttribute('data-k', p.k); im.removeAttribute('srcset'); im.src = IM(p.k); } };
+    var hero = function () { var s = trk && trk.children[0]; if (!s || P[0].t !== 'lit') return; var p = cur(P[0]), im = s.querySelector('img'); if (im && im.getAttribute('data-k') !== p.k) { im.setAttribute('data-k', p.k); im.removeAttribute('srcset'); imgReset(im); im.src = IM(p.k); } };
     var go = function (i, smooth) { var L = CS.L; CS.i = (i + L.length) % L.length;
       if (CS.L === P) { hero(); mark(CS.i); if (trk) { lock = true; trk.scrollTo({ left: CS.i * trk.clientWidth, behavior: smooth === false ? 'auto' : 'smooth' }); setTimeout(function () { lock = false; }, 450); } }
       if (!lb.hidden) lbShow(); };
