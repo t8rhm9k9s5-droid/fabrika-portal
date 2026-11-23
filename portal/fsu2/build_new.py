@@ -33,7 +33,7 @@ PR = _rj(os.path.join(_A, 'prais_rows.json')) if os.path.exists(os.path.join(_A,
 COLS = _rj(os.path.join(_A, 'colors.json')) if os.path.exists(os.path.join(_A, 'colors.json')) else {}
 OKNIGHT = {'katrin-kreslo', 'samba-box4-stul', 'chestermen-kreslo', 'metro-urna', 'kombi-urna', 'domik-urna', 'karandash-urna-213351698', 'opora-urna-statsionarnaya', 'zamok-urna', 'atlant-kreslo-1030986919', 'milan-kreslo'}
 try: OKNIGHT |= set(_rj(os.path.join(FSU, 'assort', 'oknight.json')))   # 22.11.2026: ночные интерьеры хитов (80% объёма), проверены Claude, Т. В. смотрит утром
-except (OSError, ValueError): OKNIGHT = OKNIGHT   # нет файла — только встроенный список
+except (OSError, ValueError): pass   # нет файла — только встроенный список
 DESCN = _rj(os.path.join(FSU, 'desc', 'ok.json')) if os.path.exists(os.path.join(FSU, 'desc', 'ok.json')) else {}
 DESCN = {k: v.strip() for k, v in (DESCN.items() if isinstance(DESCN, dict) else []) if isinstance(k, str) and isinstance(v, str) and 150 <= len(v.strip()) <= 2000}   # CG-67: проверка формата
 DESC_USED = []

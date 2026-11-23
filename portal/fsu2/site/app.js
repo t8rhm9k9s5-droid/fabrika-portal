@@ -322,10 +322,12 @@ window.fitPh = function (im) {
   document.addEventListener('load', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) window.bgA(t); }, true);   // без onload в разметке
   document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) { imgReset(t); t.classList.remove('rdy'); if (t.parentNode && !t.classList.contains('b')) { t.parentNode.style.background = ''; t.parentNode._bg = ''; } if (t.parentNode && t.parentNode.classList.contains('ph')) phSync(t.parentNode); } }, true);   // не загрузилось — нейтральный вид
   function imgReset(im) { im._m = null; im._k = ''; im._q = ''; im.classList.remove('cov', 'fw', 'fh', 'rdy'); im.style.cssText = ''; if (im.parentNode && !im.classList.contains('b')) im.parentNode.style.background = ''; }   // смена src — состояние сразу с нуля
-  var HOV = !!(window.matchMedia && matchMedia('(hover: hover)').matches);   // CG-67 круг 5: второй кадр только на устройствах с наведением и только готовый
+  var HQ = window.matchMedia ? matchMedia('(hover: hover)') : null, HOV = !!(HQ && HQ.matches);   // CG-67 круг 6: мышь подключили/отключили — без перезагрузки
+  if (HQ) { var hq = function () { HOV = HQ.matches; d.documentElement.classList.toggle('hov', HOV); d.querySelectorAll('.pt .ph').forEach(phSync); }; if (HQ.addEventListener) HQ.addEventListener('change', hq); else if (HQ.addListener) HQ.addListener(hq); }   // CG-67 круг 5: второй кадр только на устройствах с наведением и только готовый
   function phSync(ph) { if (!ph) return; var p = ph.closest('.pt'), b = ph.querySelector('img.b'), on = HOV && p && p.matches(':hover') && b && b.classList.contains('rdy');
-    ph.classList.toggle('sh2', !!on); var bg = on ? b._bg : ph._bg; if (bg) ph.style.background = bg; }
-  if (HOV) { d.documentElement.classList.add('hov');
+    ph.classList.toggle('sh2', !!on); var bg = on ? b._bg : ph._bg; ph.style.background = bg || ''; }   // CG-67 круг 6: нет своего фона — нейтральный, чужой не остаётся
+  if (HOV) d.documentElement.classList.add('hov');
+  {
     d.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('.pt'); if (p && !p.contains(e.relatedTarget)) phSync(p.querySelector('.ph')); });
     d.addEventListener('mouseout', function (e) { var p = e.target.closest && e.target.closest('.pt'); if (p && !p.contains(e.relatedTarget)) setTimeout(function () { phSync(p.querySelector('.ph')); }, 0); }); }
   function bgC(im) { try {
@@ -345,7 +347,11 @@ window.fitPh = function (im) {
     im._m = [x0 / W, (x1 + 1) / W, y0 / H, (y1 + 1) / H, h6(ref), h6(med(R(function (i) { return px(i, iy); }, W))) + h6(med(R(function (i) { return px(i, H - 1 - iy); }, W))),
       h6(med(R(function (i) { return px(ix, i); }, H))) + h6(med(R(function (i) { return px(W - 1 - ix, i); }, H))), 0];
     bgApply(im);
-  } catch (e) { } }
+  } catch (e) { bgFail(im); } }
+  function bgFail(im) {   // CG-67 круг 6: разбор не удался (нет im.json и canvas) — снимок целиком (contain) на нейтральном фоне; второй кадр всё равно готов
+    im._m = null; im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; im._bg = '';
+    var sl = im.parentNode; if (im.classList.contains('b')) im.classList.add('rdy'); else if (sl) { sl._bg = ''; sl.style.background = ''; }
+    if (sl && sl.classList.contains('ph')) phSync(sl); }
   var CZ = 1;   // масштаб предмета текущей карточки: max(ширина, высота) / 900 мм, 0.45…1
   function zOf(ch, nm) { var W0 = 0, H0 = 0; (ch || []).forEach(function (g) { if (g.t !== 'Габариты') return; (g.v || []).forEach(function (r) { var nn = String(r[1]).match(/\d+/g), n = nn ? Math.max.apply(null, nn.map(Number)) : 0; if (/Ширин/.test(r[0])) W0 = n; if (/Высот/.test(r[0])) H0 = n; }); });
     var m = Math.max(W0, H0); if (m) return Math.max(.45, Math.min(1, m / 900));
@@ -361,7 +367,7 @@ window.fitPh = function (im) {
       (p.t === 'info' ? '<span class="vis">инфографика</span>' : p.ai ? '<span class="vis">визуализация</span>' : '');
   }
   function bindCard() {
-    if (!CS) return; var gm = $('#gm'), th = $('#th'), lb = $('#lb'), P = CS.P;
+    if (!CS) return; var th = $('#th'), lb = $('#lb'), P = CS.P;
     var cur = function (p) { if (p.t === 'lit') { var k = colKey(); if (k) return Object.assign({}, p, { k: k, lab: 'Ракурс 3/4 · ' + colName(CS.col) }); } return p; };
     var trk = $('#trk'), lock = false;
     var mark = function (i) { var p = cur(P[i]), gc = $('#gc'); if (gc) gc.textContent = p.lab + ' · ' + (i + 1) + ' из ' + P.length;
