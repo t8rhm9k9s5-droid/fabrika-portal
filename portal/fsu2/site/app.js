@@ -298,16 +298,17 @@ window.fitPh = function (im) {
     im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; im._bb = null;
     if (!sl.classList.contains('slA') && !(sl.classList.contains('ph') && sl.closest('.pt'))) return;   // CG-67: интерьер у описания и прочие — без подгонки (у рамки нет своей высоты)
     var paint = !im.classList.contains('b');   // скрытый кадр плитки (при наведении) фон рамки не трогает
-    if (m[7]) { im.classList.add('cov'); im._bg = '#000'; if (paint) { sl.style.background = '#000'; sl._bg = '#000'; } return; }
+    if (m[7]) { im.classList.add('cov'); im._bg = '#000'; if (paint) sl._bg = '#000'; if (im.classList.contains('b')) im.classList.add('rdy'); if (sl.classList.contains('ph')) phSync(sl); else if (paint) sl.style.background = '#000'; return; }
     var wide = im.naturalWidth / im.naturalHeight > (sl.clientWidth || 3) / (sl.clientHeight || 4);
     im.classList.add(wide ? 'fw' : 'fh');
     var bgv = wide ? 'linear-gradient(to bottom,' + hx(m[5].slice(0, 6)) + ' 50%,' + hx(m[5].slice(6)) + ' 50%)' : 'linear-gradient(to right,' + hx(m[6].slice(0, 6)) + ' 50%,' + hx(m[6].slice(6)) + ' 50%)';
-    im._bg = bgv; if (paint) { sl.style.background = bgv; sl._bg = bgv; }
+    im._bg = bgv; if (paint) sl._bg = bgv; if (im.classList.contains('b')) im.classList.add('rdy');
+    if (sl.classList.contains('ph')) phSync(sl); else if (paint) sl.style.background = bgv;
     im._bb = [m[0], m[1], m[2], m[3]]; fitA(im); }
   var BGQ = [], BGT = 0, BGW = null;
   function bgNext() { BGT = BGQ.length ? (window.requestIdleCallback ? requestIdleCallback(bgRun, { timeout: 400 }) : setTimeout(bgRun, 60)) : 0; }
   function bgRun(dl) {   // не больше двух снимков за проход: кадр не забивается, а по тайм-ауту очередь всё равно движется
-    for (var n = 0; n < 2 && BGQ.length; n++) { if (n && dl && !dl.didTimeout && dl.timeRemaining() < 6) break; var j = BGQ.shift(), im = j.im; im._q = 0; if (im.isConnected && !im._m && im._k === j.k && j.k === keyOf(im)) bgC(im); }
+    for (var n = 0; n < 2 && BGQ.length; n++) { if (n && dl && !dl.didTimeout && dl.timeRemaining() < 6) break; var j = BGQ.shift(), im = j.im; if (im._q === j.k) im._q = ''; if (im.isConnected && !im._m && im._k === j.k && j.k === keyOf(im)) bgC(im); }
     bgNext(); }
   function immReady() {   // ждём im.json не дольше 2,5 с, дальше — запасной путь
     if (window.FSU_IMM) return Promise.resolve(); if (!BGW) BGW = Promise.race([window.FSU_IMMP || Promise.resolve(), new Promise(function (r) { setTimeout(r, 2500); })]); return BGW; }
@@ -317,13 +318,16 @@ window.fitPh = function (im) {
     if (vm(m)) { im._m = m; return bgApply(im); }
     if (!window.FSU_IMM) { immReady().then(function () { if (im._k !== k) return; var m2 = (window.FSU_IMM || {})[k]; if (vm(m2)) { im._m = m2; bgApply(im); } else bgQ(im); }); return; }
     bgQ(im); };
-  function bgQ(im) { if (im._q) return; im._q = 1; BGQ.push({ im: im, k: im._k }); if (!BGT) bgNext(); }
+  function bgQ(im) { if (im._q === im._k) return; im._q = im._k; BGQ.push({ im: im, k: im._k }); if (!BGT) bgNext(); }   // флаг очереди — по ключу: смена кадра A→B→A не теряется
   document.addEventListener('load', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) window.bgA(t); }, true);   // без onload в разметке
-  document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) { imgReset(t); if (t.parentNode && !t.classList.contains('b')) t.parentNode.style.background = ''; } }, true);   // не загрузилось — нейтральный вид
-  function imgReset(im) { im._m = null; im._k = ''; im._q = 0; im.classList.remove('cov', 'fw', 'fh'); im.style.cssText = ''; }   // смена src — состояние сразу с нуля
-  if (window.matchMedia && matchMedia('(hover: hover)').matches) {   // второй кадр плитки при наведении — со своим фоном
-    d.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('.pt'), ph = p && p.querySelector('.ph'), b = ph && ph.querySelector('img.b'); if (b && b._bg && !p.contains(e.relatedTarget)) ph.style.background = b._bg; });
-    d.addEventListener('mouseout', function (e) { var p = e.target.closest && e.target.closest('.pt'), ph = p && p.querySelector('.ph'); if (ph && ph._bg && !p.contains(e.relatedTarget)) ph.style.background = ph._bg; }); }
+  document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-fit')) { imgReset(t); t.classList.remove('rdy'); if (t.parentNode && !t.classList.contains('b')) { t.parentNode.style.background = ''; t.parentNode._bg = ''; } if (t.parentNode && t.parentNode.classList.contains('ph')) phSync(t.parentNode); } }, true);   // не загрузилось — нейтральный вид
+  function imgReset(im) { im._m = null; im._k = ''; im._q = ''; im.classList.remove('cov', 'fw', 'fh', 'rdy'); im.style.cssText = ''; if (im.parentNode && !im.classList.contains('b')) im.parentNode.style.background = ''; }   // смена src — состояние сразу с нуля
+  var HOV = !!(window.matchMedia && matchMedia('(hover: hover)').matches);   // CG-67 круг 5: второй кадр только на устройствах с наведением и только готовый
+  function phSync(ph) { if (!ph) return; var p = ph.closest('.pt'), b = ph.querySelector('img.b'), on = HOV && p && p.matches(':hover') && b && b.classList.contains('rdy');
+    ph.classList.toggle('sh2', !!on); var bg = on ? b._bg : ph._bg; if (bg) ph.style.background = bg; }
+  if (HOV) { d.documentElement.classList.add('hov');
+    d.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('.pt'); if (p && !p.contains(e.relatedTarget)) phSync(p.querySelector('.ph')); });
+    d.addEventListener('mouseout', function (e) { var p = e.target.closest && e.target.closest('.pt'); if (p && !p.contains(e.relatedTarget)) setTimeout(function () { phSync(p.querySelector('.ph')); }, 0); }); }
   function bgC(im) { try {
     var ar = im.naturalHeight / Math.max(1, im.naturalWidth), W = ar > 1.5 ? Math.max(16, Math.round(96 / ar)) : 64, H = Math.min(96, Math.max(16, Math.round(W * ar))), c = d.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);   // CG-67: обе стороны не больше 96
     var v = g.getImageData(0, 0, W, H).data, px = function (x, y) { var i = (y * W + x) * 4; return [v[i], v[i + 1], v[i + 2]]; }, e = [], x, y;

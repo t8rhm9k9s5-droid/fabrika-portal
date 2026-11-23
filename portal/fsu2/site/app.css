@@ -69,8 +69,8 @@ section{padding-block:28px}
 .pt .ph{position:relative;aspect-ratio:4/5;background:var(--stone);display:flex;align-items:center;justify-content:center;padding:10%}
 .pt .ph img{position:absolute;inset:10%;width:80%;height:80%;object-fit:contain;transition:opacity .25s}
 .pt .ph img.b{opacity:0}
-.pt:hover .ph img.b{opacity:1}
-.pt:hover .ph img.a.has2{opacity:0}
+.pt .ph.sh2 img.b{opacity:1}   /* CG-67 круг 5: второй кадр — только готовый и только при наведении (класс ставит JS) */
+.pt .ph.sh2 img.a.has2{opacity:0}
 .pt .bd{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .pt .nm{font-weight:700;font-size:16px;line-height:1.25}
 .pt .mt{font-size:13px;color:var(--ink-2)}

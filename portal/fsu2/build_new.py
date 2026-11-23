@@ -366,20 +366,22 @@ IMMV = 'v2'   # CG-67: версия алгоритма разбора — сме
 _imc_p = os.path.join(CACHE, 'immeta_%s.json' % IMMV)
 try: _imc = _rj(_imc_p)
 except Exception: _imc = {}
-IMM = {}
+IMM = {}; _st = {'ожидалось': 0, 'посчитано': 0, 'пропущено': 0}; _skip = []   # CG-67 круг 5: полный учёт разбора
 for _f in os.listdir(os.path.join(N, 'i', 't')):
     if not _f.endswith('.webp'): continue
     _k = _f[:-5]
+    _st['ожидалось'] += 1
     if _k not in _imc:
-        try: _imc[_k] = immeta(os.path.join(N, 'i', 't', _f))
-        except Exception: continue
+        try: _imc[_k] = immeta(os.path.join(N, 'i', 't', _f)); _st['посчитано'] += 1
+        except Exception: _st['пропущено'] += 1; _skip.append(_k); continue
     IMM[_k] = _imc[_k]
 _wj(_imc, _imc_p)
 _wj(IMM, os.path.join(N, 'd', 'im.json'), separators=(',', ':'))
 _hx = re.compile(r'^[0-9a-f]{6}$'); _hx2 = re.compile(r'^[0-9a-f]{12}$')   # CG-67: та же проверка, что vm() в app.js
 _bad = [k for k, m in IMM.items() if not (isinstance(m, list) and len(m) == 8 and all(isinstance(m[i], (int, float)) and 0 <= m[i] <= 1 for i in range(4)) and m[0] < m[1] and m[2] < m[3]
         and m[7] in (0, 1) and _hx.match(str(m[4])) and _hx2.match(str(m[5])) and _hx2.match(str(m[6])))]
-print('im.json: %d снимков, не прошли проверку %d' % (len(IMM), len(_bad)))
+print('im.json: ожидалось %d, посчитано заново %d, пропущено %d, в файле %d, не прошли проверку %d' % (_st['ожидалось'], _st['посчитано'], _st['пропущено'], len(IMM), len(_bad)))
+IMREP = {**_st, 'в_файле': len(IMM), 'невалидно': len(_bad), 'пропущены': _skip[:50], 'невалидные': _bad[:50], 'версия': IMMV}
 
 # ---------- оболочка: app.css, app.js, back.html, index.html (маршрутизатор) ----------
 for f in ('ds.css', 'app.css', 'app.js', 'boot.js'): shutil.copy2(os.path.join(HERE, 'site', f), os.path.join(N, f))
@@ -412,5 +414,5 @@ _wt(os.path.join(OUT, 'index.html'), sh)
 _wt(os.path.join(OUT, 'old.html'), re.sub(r'<script>/\* 21\.11\.2026: новый каталог.*?</script>', '', SH, flags=re.S))
 rep = {'dups': dups, 'cards': len(idx), 'images': len(used), 'bad_images': len(bad), 'ai_images': sum(e['nai'] for e in idx), 'cards_ge5': sum(1 for e in idx if e['np'] >= 5),
        'cards_inter': sum(1 for e in idx if e['ni']), 'groups': {g['c']: g['k'] for g in groups}, 'ver': ver}
-_wj({**rep, 'bad': bad[:50], 'desc': {'in': len(DESCN), 'used': len(DESC_USED), 'unknown_codes': sorted(set(DESCN) - set(cards))[:50]}}, os.path.join(HERE, 'build_report.json'), ensure_ascii=False, indent=1)
+_wj({**rep, 'bad': bad[:50], 'desc': {'in': len(DESCN), 'used': len(DESC_USED), 'unknown_codes': sorted(set(DESCN) - set(cards))[:50]}, 'im': IMREP, 'ver': ver}, os.path.join(HERE, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps(rep, ensure_ascii=False))
