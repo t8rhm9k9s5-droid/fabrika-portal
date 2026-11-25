@@ -146,7 +146,7 @@ html:root:not([data-theme="light"]) .al-x svg{stroke:#ebebf5}
 @media (hover:none){.al-x{display:none}.al-h{padding-right:0}}
 .pnav .pi,.fs .fs-i{position:relative}
 .al-dot.al-ic-dot{position:absolute;top:-3px;left:-3px;width:9px;height:9px;margin:0;box-shadow:0 0 0 2px var(--p-bg,#f2f2f7)}
-/* «Пульс фабрики» первой строкой главной (13.11.2026, Т. В.): три Имя2 цифры; справа — тревоги плитками шириной в плитку раздела.
+/* «Пульс фабрики» первой строкой главной (13.11.2026, Т. В.): три Имя1 цифры; справа — тревоги плитками шириной в плитку раздела.
    Без бликов и мигания: цвет цифры — зелёный / оранжевый / красный, точка у подписи того же цвета. Сетка — как у «Разделов» (6 / 3 / 2). */
 .al-n,.al-n::before,.al-ic::after,.al-dot{animation:none!important}
 .al-n.al-crit::before{opacity:.5}
@@ -266,7 +266,7 @@ html.t14-intro .pz-hb .tr b,html.t14-intro .pz-k .bar b,html.t14-intro .fb-m .fb
   .pside .pnav{width:44px;min-height:44px!important;padding:0!important;justify-content:center;border-radius:14px!important;color:#ebebf5!important}
   .pside .pnav .pi svg{width:22px;height:22px}
   .pside .pnav:hover{background:rgba(255,255,255,.1)!important}
-  .pside .pnav[aria-current="page"]{background:rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important}
+  .pside .pnav[aria-current="page"],.pside .pnav[data-cur]{background:rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important}
   .pside .pfoot{justify-items:center}
   .pside .al-dot.al-ic-dot{box-shadow:0 0 0 1.5px rgba(28,30,34,.9)}
 }
@@ -324,3 +324,12 @@ html body .rz-map a.al-on-warn,html body .fhome .fh-secs .fs.al-on-warn,html bod
   .fhome .fh-top .al-tile .al-x,.fhome .fh-top .al-tile .al-x:focus-visible{position:static!important;grid-column:4;grid-row:1;align-self:center;justify-self:end;
     top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;margin:0!important;transform:none!important}
 }
+
+/* 21.11.2026 ds2030 — фон и стекло из единой системы (assets/ds.css): тёплая бумага со свечением, без холодных синих пятен */
+html body{background:var(--ds-ground-glow),var(--ds-ground);background-attachment:fixed}
+:root[data-theme=dark] body{background:var(--ds-ground-glow),var(--ds-ground)}
+html body .igroup,html body .ios .igroup,.fhome .pk,.fhome .fh-map,.fhome .fh-ban,.pcard,html body .kpis div,.rz-card,.rz-map a,.fhome .fs,.gl{border-radius:var(--ds-r-card)}
+:root[data-theme=dark] body .igroup,:root[data-theme=dark] .fhome .pk,:root[data-theme=dark] .fhome .fh-map,:root[data-theme=dark] .pcard,:root[data-theme=dark] .rz-card,:root[data-theme=dark] .rz-map a,:root[data-theme=dark] .fhome .fs,:root[data-theme=dark] .gl{
+  background:linear-gradient(180deg,rgba(40,41,39,.70),rgba(29,30,29,.62))!important;border-color:var(--ds-glass-rim)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),var(--ds-shadow-2)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) body .igroup,:root:not([data-theme]) .fhome .pk,:root:not([data-theme]) .pcard,:root:not([data-theme]) .rz-card,:root:not([data-theme]) .rz-map a,:root:not([data-theme]) .fhome .fs,:root:not([data-theme]) .gl{
+  background:linear-gradient(180deg,rgba(40,41,39,.70),rgba(29,30,29,.62))!important;border-color:var(--ds-glass-rim)!important}}

@@ -25,6 +25,7 @@
    send="bot" — очередь outbox/ отдаётся скрипту бота в st/mo.bin (mail_q.bot_work), подтверждения — st/mo.php → outbox/acks/;
    read="gas" — ни imap.gmail.com, ни imap.mail.ru: отчёты приносит скрипт бота (st/in.php → ~/.fabrika_live/inbox_gas/*.json),
    участок reports разбирает их тем же ingest_message, что письма из Gmail (gas_inbox); блоки itm@, которым нужен IMAP, — «отключено»."""
+import zlib
 import base64, datetime, email, email.header, email.policy, email.utils, fcntl, hashlib, hmac, imaplib, json, os, re, secrets, smtplib, socket, ssl, sys, time
 def _rd(p, mode='r', **kw):   # 14.11.2026: CodeQL py/file-not-closed — файл читается и сразу закрывается
     with open(p, mode, **kw) as _f: return _f.read()
@@ -438,7 +439,8 @@ class IngestRetry(Exception):
 
 
 INGEST_WARN = []        # 30.10.2026 аудит P16: вложения отчётов, которые не разобрались (формат) — участок reports сообщает владельцу
-SALES_DAY_SUBJ = re.compile(r'Продажи в разрезе', re.I)   # 30.10.2026: ежедневные рассылки 1С о продажах (sales_day.py)
+SALES_DAY_SUBJ = re.compile(r'Продажи в разрезе|Продажи в течение месяца|Продажи за вчера-месяц', re.I)   # 23.11.2026: + скользящее окно 1С (sales_day.parse_roll)
+# было: SALES_DAY_SUBJ = re.compile(r'Продажи в разрезе', re.I)   # 30.10.2026: ежедневные рассылки 1С о продажах (sales_day.py)
 QUAR_TRIES = 3          # 30.10.2026 аудит P16: столько попыток разбора письма, дальше — карантин и оповещение
 
 
@@ -478,7 +480,7 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'sday:' + rec['kind'], 'date': rec['date'], 'file': fn})
                     continue
-                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник11) — все дни + сумма месяца
+                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) — все дни + сумма месяца
                 if mr:
                     sdj = jload('sales_day.json', {})
                     SDY.merge_month(sdj, mr, iso(sent), fn[:80])
@@ -488,11 +490,22 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'smon:' + mr['kind'], 'date': max(mr['days']), 'file': fn})
                     continue
+                rr = SDY.parse_roll(data)                    # 23.11.2026: «Продажи в течение месяца … (вчера-месяц)» — окно ~30 дней, правит прошлые дни
+                if rr:
+                    sdj = jload('sales_day.json', {})
+                    nr = SDY.merge_roll(sdj, rr, iso(sent), fn[:80])
+                    SDY.lock(sdj, fn[:80])
+                    sdj['days'] = dict(sorted(sdj.get('days', {}).items())[-60:])
+                    sdj['months'] = dict(sorted((sdj.get('months') or {}).items())[-6:])
+                    jsave('sales_day.json', sdj)
+                    log('  продажи окном:', rr['kind'], rr['from'], '…', rr['to'], 'дней записано', nr)
+                    got.append({'k': 'smon:' + rr['kind'], 'date': rr['to'], 'file': fn})
+                    continue
             except Exception as e: log('  ! продажи за день:', fn, e.__class__.__name__, e); last_e = e
         if low.endswith('.xlsx') and re.search(r'запас\w*\s*гп|товары\s+на\s+складах', fn + ' ' + subj, re.I):
-            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник14, используй его как базу… движение по складу в разрезе филиалов… склады брака
+            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник13, используй его как базу… движение по складу в разрезе филиалов… склады брака
             #   внутри отчета… на главной — общее количество согласно того отчета»): 1С «Товары на складах» («Запасы ГП», ежедневно на 1c@ —
-            #   запрошено у В. В. Сотрудник11 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
+            #   запрошено у В. В. Сотрудник10 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
             try:
                 import stock_mv as SMV
                 rd = SMV.ingest(fn, data, iso(sent), jload, jsave, log)
@@ -723,7 +736,7 @@ REPORTS_X = [
     ('omts:zps', '1С «Жилпромсервис Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:fts', '1С «ФТС Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:pok', '1С «Покупные товары»', '08:30', 'same', 'mwf'),
-    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник11 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
+    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник10 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
 ]
 
 
@@ -772,6 +785,24 @@ def expected_x(day, last):
             if a and (not L_ or a > L_['date']): L_ = {'date': a, 'got': a}
         rows.append({'k': k, 'n': n, 'due': due, 'rule': rule, 'want': want, 'ok': bool(L_ and L_['date'] >= want), 'last': L_})
     return rows
+
+
+# 21.11.2026 (аудит): T14B2 — JSON сжат zlib до шифрования (живые файлы в ~10 раз меньше), ключи потока и подписи разделены.
+#   Шаг 2 выкладки: включается файлом zlive.on рядом с роботом, когда у всех страницы с поддержкой T14B2 (live.js от 21.11).
+ZLIVE = not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zlive.off'))   # 21.11.2026, Т. В. «доустанавливай всё»: шаг 2 включён; выключить — файл zlive.off
+#   Сжимаются только файлы, которые читают страницы портала и сверка (sverka.py умеет T14B2); боты, отчёты и PHP читают свои файлы в T14B1.
+ZNAMES = ('ls.bin', 'pf.bin', 'sales.bin', 'cam.bin', 'omts.bin', 'smvs.bin')
+
+
+def seal2(obj, key=None):
+    key = key or KEY
+    raw = zlib.compress(json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8'), 9)
+    ke = hmac.new(key, b't14-enc', hashlib.sha256).digest(); km = hmac.new(key, b't14-mac', hashlib.sha256).digest()
+    nonce = secrets.token_bytes(16)
+    ks = b''.join(hmac.new(ke, nonce + i.to_bytes(4, 'big'), hashlib.sha256).digest() for i in range((len(raw) + 31) // 32))[:len(raw)]
+    ct = (int.from_bytes(raw, 'big') ^ int.from_bytes(ks, 'big')).to_bytes(len(raw), 'big') if raw else b''
+    tag = hmac.new(km, nonce + ct, hashlib.sha256).digest()
+    return 'T14B2.' + base64.b64encode(nonce + tag + ct).decode()
 
 
 def seal(obj, key=None):
@@ -823,8 +854,14 @@ def publish(name, obj):
               'любой пользователь портала. Нужно положить k_owner.txt пакетом кода (см. INSTALL_py.md).', critical=True)
         return False
     tmp = '%s.%d.tmp' % (p, os.getpid())                    # 29.10.2026: процессы работают параллельно — у каждого свой временный файл
-    with open(tmp, 'w') as f: f.write(seal(obj, KEY_OWNER if owner else KEY))
+    with open(tmp, 'w') as f: f.write(seal(obj, KEY_OWNER if owner else KEY))   # 21.11.2026 (Рекс CG-56): прежний формат остаётся на месте — старые страницы и боты читают его
     os.chmod(tmp, 0o644); os.replace(tmp, p)
+    if globals().get('ZLIVE') and not owner and name in globals().get('ZNAMES', ()):   # сжатая копия T14B2 — st/z/<имя>, её берут новые страницы (live.js), при сбое — прежний файл
+        try:
+            dz = os.path.join(d, 'z'); os.makedirs(dz, exist_ok=True); pz = os.path.join(dz, name); tz = '%s.%d.tmp' % (pz, os.getpid())
+            with open(tz, 'w') as f: f.write(globals()['seal2'](obj, KEY))
+            os.chmod(tz, 0o644); os.replace(tz, pz)
+        except Exception as e: log('  ! сжатая копия %s:' % name, e.__class__.__name__, e)
     try:                                                    # 04.11.2026, Т. В. «Файл сверки на Диске»: итоги того же объекта → state/sverka/<name>.json (sverka.py)
         import sverka as SV
         SV.note(STATE, name, obj)
@@ -1247,7 +1284,7 @@ def sales_day_backfill():
     mk = jload('sales_day_bf.json', {}) or {}
     pos, size = int(mk.get('pos') or 0), os.path.getsize(idx)
     if pos > size or mk.get('v') != BF_V: pos = 0                       # 30.10.2026 ~18:50: v2 — отчёт «за месяц» (parse_month): архив перечитать один раз —
-                                                                          # письмо Сотрудник11 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
+                                                                          # письмо Сотрудник10 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
     if pos == size: return {'state': 'ok', 'n': 0}
     sdj, n = None, 0
     with open(idx, 'rb') as f:

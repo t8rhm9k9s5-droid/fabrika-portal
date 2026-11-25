@@ -10,23 +10,33 @@ const VERSION = '__VERSION__';
 const CORE = 't14-core-' + VERSION, DOCS = 't14-docs', PUB = 't14-public';
 const BASE = new URL('./', self.location).href;
 const PUBLIC = new Set(['sw.js', 'manifest.webmanifest', 'm.bin', '404.html', 'login.html', 'fabrika.apk', 'applink.js']);   // applink.js: «Приложение для Android» в меню (24.10.2026)
-const isPublic = p => PUBLIC.has(p) || p.startsWith('b/') || p.startsWith('icons/') || p.startsWith('k/') || p.startsWith('wx/') || p.startsWith('st/') || p.startsWith('menutest/');   // 15.11.2026: тест меню — отдельное приложение, не через портал   // st/q.php: анонимная статистика устройств для «Качество: Авто» (26.10.2026)   // wx/f.php: погода Сотрудник12 с сервера (26.10.2026)   // k/<id>.bin: the site key for each personal login (wrapped by the person's key)
+const isPublic = p => PUBLIC.has(p) || p.startsWith('b/') || p.startsWith('icons/') || p.startsWith('k/') || p.startsWith('wx/') || p.startsWith('st/') || p.startsWith('menutest/');   // 15.11.2026: тест меню — отдельное приложение, не через портал   // st/q.php: анонимная статистика устройств для «Качество: Авто» (26.10.2026)   // wx/f.php: погода Сотрудник11 с сервера (26.10.2026)   // k/<id>.bin: the site key for each personal login (wrapped by the person's key)
 
 // ---------- key and map in IndexedDB ----------
+// 21.11.2026 (аудит): одно соединение с базой на весь Service Worker — раньше каждое фото «Сайта» после сна SW открывало базу заново
+let IDB = null;
 function idb() {
-  return new Promise((ok, bad) => { const r = indexedDB.open('t14', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); });
+  if (IDB) return IDB;
+  IDB = new Promise((ok, bad) => { const r = indexedDB.open('t14', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => { const db = r.result; db.onclose = () => { IDB = null; }; db.onversionchange = () => { try { db.close(); } catch (e) { } IDB = null; }; ok(db); };
+    r.onerror = () => { IDB = null; bad(r.error); }; });
+  return IDB;
 }
 async function kvGet(k) { const db = await idb(); return new Promise((ok, bad) => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); }); }
 async function kvSet(k, v) { const db = await idb(); return new Promise((ok, bad) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => ok(); t.onerror = () => bad(t.error); }); }
 async function kvPut(o) { const db = await idb(); return new Promise((ok, bad) => { const t = db.transaction('kv', 'readwrite'), st = t.objectStore('kv'); for (const k in o) st.put(o[k], k); t.oncomplete = () => ok(); t.onerror = () => bad(t.error); }); }   // several keys in one transaction
 async function kvDel(k) { const db = await idb(); return new Promise(ok => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = () => ok(); t.onerror = () => ok(); }); }
 
-let ST = null;                                     // {key, map} in memory
+let ST = null, STP = null;                         // {key, map} in memory; STP — одно чтение на все одновременные запросы (21.11.2026, аудит)
 async function state() {
   if (ST) return ST;
-  const key = await kvGet('key'), map = await kvGet('map');
-  if (key instanceof CryptoKey && map) ST = { key, map, docs: new Set(map.docs), sets: (await kvGet('sets')) || {} };   // 15.11.2026: Safari может отдать Service Worker'у не ключ
-  return ST;
+  if (STP) return STP;
+  STP = (async () => {
+    const key = await kvGet('key'), map = await kvGet('map');
+    if (key instanceof CryptoKey && map) ST = { key, map, docs: new Set(map.docs), sets: (await kvGet('sets')) || {} };   // 15.11.2026: Safari может отдать Service Worker'у не ключ
+    return ST;
+  })();
+  try { return await STP; } finally { STP = null; }
 }
 async function decrypt(key, buf) {
   const iv = new Uint8Array(buf, 0, 12), ct = new Uint8Array(buf, 12);
@@ -56,13 +66,31 @@ async function loadMap(key) {                     // the newest map from the hos
   if (!r.ok) throw new Error('m.bin ' + r.status);
   return JSON.parse(new TextDecoder().decode(await decrypt(key, await r.arrayBuffer())));
 }
+// 21.11.2026 (аудит): карта может быть разделена — m.bin (портал, ~20 КБ) и части по разделам: {parts: {'fsu/': 'mf.bin', …}}.
+//   Часть грузится при первом обращении к разделу, хранится в памяти и в базе (ключ — имя части и версия карты). Без parts — как раньше.
+const PARTS = {};
+async function need(st, p) {
+  if (st.map.files[p] || !st.map.parts) return;
+  const pre = Object.keys(st.map.parts).filter(x => p.startsWith(x)).sort((a, b) => b.length - a.length)[0]; if (!pre) return;
+  const nm = st.map.parts[pre], id = nm + '@' + st.map.v;
+  if (!PARTS[id]) PARTS[id] = (async () => {
+    let fl = null; try { const c = await kvGet('mp:' + nm); if (c && c.v === st.map.v) fl = c.files; } catch (e) { }
+    if (!fl) { const r = await fetch(BASE + nm, { cache: 'no-cache' }); if (!r.ok) throw new Error(nm + ' ' + r.status); fl = JSON.parse(new TextDecoder().decode(await decrypt(st.key, await r.arrayBuffer()))).files || {}; try { await kvSet('mp:' + nm, { v: st.map.v, files: fl }); } catch (e) { } }
+    return fl;
+  })().catch(e => { delete PARTS[id]; throw e; });
+  const fl = await PARTS[id];
+  for (const k in fl) if (!st.map.files[k]) st.map.files[k] = fl[k];
+}
 async function plain(st, p) {                     // decrypted response for a site path
+  await need(st, p);
   const f = st.map.files[p], k = fkey(st, f);
   if (!k) throw new Error(p + ' — раздел другой группы');
   const r = await fetch(BASE + 'b/' + f[0]);
   if (!r.ok) throw new Error(p + ' ' + r.status);
   const body = await decrypt(k, await r.arrayBuffer());
-  return new Response(body, { status: 200, headers: { 'Content-Type': f[1], 'Content-Length': String(body.byteLength), 'X-T14-Blob': f[0] } });   // the blob name = the version of the file
+  const h = { 'Content-Type': f[1], 'Content-Length': String(body.byteLength), 'X-T14-Blob': f[0] };   // the blob name = the version of the file
+  if (CSP_TYPES.test(f[1] || '')) { h[CSP_HDR] = CSP; h['X-Frame-Options'] = 'SAMEORIGIN'; h['X-Content-Type-Options'] = 'nosniff'; }   // 21.11.2026: CSP — сразу, без второго копирования страницы
+  return new Response(body, { status: 200, headers: h });
 }
 // 15.11.2026 (облачный браузер Рекса: «Quota exceeded.» при входе): места в браузере мало — сохраняем, сколько влезает, вход не ломаем;
 //   остальные страницы расшифровываются с хостинга при открытии (serve0), как документы архива.
@@ -118,19 +146,26 @@ async function refresh(until) {                     // a new version on a device
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const pub = async () => { const pc = await caches.open(PUB); await pc.put(BASE + 'login.html', await fetch(BASE + 'login.html', { cache: 'reload' })); };
-    try { await pub(); } catch (e0) { try { for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
+    try { await pub(); } catch (e0) { try { await dropOld(true); await caches.delete(PUB); await pub(); } catch (e1) { /* без копии — страница входа берётся из сети */ } }
     try { await refresh(Date.now() + 8000); } catch (err) { /* ключ и карта остаются прежними */ }   // 20.11.2026: установка не дольше ~8 с, остальное — фоном
     await self.skipWaiting();
   })());
 });
 let FILLED = 0, LAST_REQ = 0;   // LAST_REQ: когда страница последний раз что-то просила — фоновая докачка уступает ей сеть
+async function coreFull(st) {   // новая версия докачана целиком — прошлую можно убрать
+  const c = await caches.open(CORE); for (const p of st.map.pre) { if (st.map.files[p] && fkey(st, st.map.files[p]) && !(await c.match(BASE + p))) return false; } return true;
+}
 function fillLater(e) {                            // докачать сайт в кэш фоном, понемногу: не чаще раза в 2 минуты, не дольше 25 с за раз
   if (Date.now() - FILLED < 120000) return; FILLED = Date.now();
-  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) await precache(st, null, null, Date.now() + 20000); } catch (x) { /* в другой раз */ } })());
+  e.waitUntil((async () => { try { await new Promise(r => setTimeout(r, 3000)); const st = await state(); if (st) { const r = await precache(st, null, null, Date.now() + 20000); if (r && !r.partial && await coreFull(st)) await dropOld(false); } } catch (x) { /* в другой раз */ } })());
 }
+// 21.11.2026 (Рекс CG-56, блокер офлайна): прошлая версия сайта на телефоне держится, пока новая не докачана целиком —
+//   без связи сразу после обновления страницы открываются из неё. Удаляются только версии старше прошлой; прошлая — когда новая полная.
+async function oldCores() { return (await caches.keys()).filter(k => k.startsWith('t14-core-') && k !== CORE).sort(); }
+async function dropOld(keepPrev) { const o = await oldCores(); for (const k of (keepPrev ? o.slice(0, -1) : o)) await caches.delete(k); }
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('t14-core-') && k !== CORE) await caches.delete(k);
+    await dropOld(true);
     await self.clients.claim();
   })());
 });
@@ -165,7 +200,7 @@ self.addEventListener('message', e => {
 function relPath(u) {
   const s = u.origin + u.pathname;
   if (!s.startsWith(BASE)) return null;
-  const p = decodeURIComponent(s.slice(BASE.length));
+  let p; try { p = decodeURIComponent(s.slice(BASE.length)); } catch (e) { return null; }   // 21.11.2026: «%» без кода не роняет обработчик
   return p === '' ? '' : p;            // 27.10.2026, портал: адрес сайта без страницы → главная home.html (в старой сборке её нет → модель)
 }
 self.addEventListener('fetch', e => {
@@ -209,7 +244,23 @@ async function login() {
 }
 async function serve(p, req) {
   if (p === '') { const st = await state(); p = st && st.map.files['home.html'] ? 'home.html' : 'index.html'; }
-  return withCsp(await withApp(p, await serve0(p, req)));   // 04.11.2026 аудит 29.10 (В6): CSP на страницы после входа
+  // 21.11.2026 (аудит): applink.js вставляет сборка (build_enc), CSP ставит plain() — страница не перекладывается в памяти дважды;
+  //   старые копии без заголовка (кэш прошлой версии) — по-прежнему через withApp/withCsp
+  let r = await serve0(p, req);
+  if (r && r.status === 200 && r.headers.get(CSP_HDR) !== CSP && CSP_TYPES.test(r.headers.get('Content-Type') || '')) r = await withCsp(await withApp(p, r));
+  return range(req, r);
+}
+// 21.11.2026 (аудит): Safari на iPhone и Mac запрашивает видео частями (Range) — отвечаем 206 с нужным отрезком
+async function range(req, r) {
+  const h = req.headers.get('Range');
+  if (!r || r.status !== 200 || !/^(video|audio)\//.test(r.headers.get('Content-Type') || '')) return r;
+  if (!h) { if (r.headers.get('Accept-Ranges')) return r; const h0 = new Headers(r.headers); h0.set('Accept-Ranges', 'bytes'); return new Response(r.body, { status: 200, headers: h0 }); }   // 21.11.2026 (GPT): Safari перематывает видео, если видит Accept-Ranges и в полном ответе
+  const m = /^bytes=(\d*)-(\d*)$/.exec(h.trim()); if (!m) return r;
+  const buf = await r.arrayBuffer(), size = buf.byteLength;
+  let a = m[1] === '' ? Math.max(0, size - +m[2]) : +m[1], b = m[1] !== '' && m[2] !== '' ? Math.min(+m[2], size - 1) : size - 1;
+  if (a >= size || a > b) return new Response('', { status: 416, headers: { 'Content-Range': 'bytes */' + size } });
+  const hh = new Headers(r.headers); hh.set('Content-Range', 'bytes ' + a + '-' + b + '/' + size); hh.set('Content-Length', String(b - a + 1)); hh.set('Accept-Ranges', 'bytes');
+  return new Response(buf.slice(a, b + 1), { status: 206, headers: hh });
 }
 async function withApp(p, r) {                     // 24.10.2026: each page gets applink.js — the «Приложение для Android» row in the menu
   if (!/\.html$/.test(p) || !r || r.status !== 200) return r;
@@ -219,10 +270,34 @@ async function withApp(p, r) {                     // 24.10.2026: each page gets
   const h = new Headers(r.headers); h.delete('Content-Length');
   return new Response(i >= 0 ? t.slice(0, i) + tag + t.slice(i) : t + tag, { status: 200, headers: h });
 }
+// 21.11.2026 (Т. В.: «для офиса», «HoReCa» в копии «Сайта» пустые): список товаров по любому сочетанию фильтров — из индекса _fidx.json.
+//   Внутри фильтра — «или», между фильтрами — «и»; порядок — как на сайте без фильтров. Ответ того же вида, что у fabrikant.su.
+const FQ = {};
+async function fq(st, req) {
+  const v = st.map.v;
+  for (const k in FQ) if (k !== String(v)) delete FQ[k];   // 21.11.2026 (GPT): индекс прошлой версии из памяти убираем
+  if (!FQ[v]) FQ[v] = (async () => { const r = await serve0('fsu/_api/_fidx.json', { mode: 'cors' }); if (!r.ok) throw new Error('fidx ' + r.status); return r.json(); })().catch(e => { delete FQ[v]; throw e; });
+  let X; try { X = await FQ[v]; } catch (e) { return new Response(JSON.stringify({ success: false, offline: true, message: 'Список этого раздела не сохранён в копии сайта — откройте fabrikant.su' }), { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }); }   // 21.11.2026 (Рекс CG-56): ошибка индекса — не «пустой каталог»
+  const q = new URL(req.url).searchParams; let f = {}; try { f = JSON.parse(q.get('filter') || '{}') || {}; } catch (e) { }
+  let ids = X.order.slice();
+  const sec = q.get('sectionId'); if (sec && (X.v['miblock-section-id'] || {})[sec]) f['miblock-section-id'] = (f['miblock-section-id'] || []).concat([sec]);
+  for (const code in f) {
+    const vals = [].concat(f[code] || []).map(String); if (!vals.length) continue;
+    const ok = new Set(); for (const x of vals) for (const i of ((X.v[code] || {})[x] || [])) ok.add(i);
+    ids = ids.filter(i => ok.has(i));
+  }
+  let its = ids.map(i => X.items[String(i)]).filter(Boolean);
+  const total = its.length, lim = +q.get('limit') || 0, ps = +q.get('pageSize') || 0, pg = Math.max(1, +q.get('page') || 1);
+  if (lim) its = its.slice(0, lim); else if (ps) its = its.slice((pg - 1) * ps, pg * ps);
+  const body = q.get('withTotal') ? { items: its, total } : its;
+  return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
 async function serve0(p, req) {
   const st = await state();
   if (!st) return req.mode === 'navigate' ? login() : new Response('', { status: 401 });
-  if (!st.map.files[p] && /^fsu\//.test(p) && req.mode === 'navigate') p = 'fsu/index.html';   // 20.11.2026: копия fabrikant.su — адреса страниц сайта ведут в её оболочку
+  if (p === 'fsu/_q') return fq(st, req);
+  try { await need(st, p); } catch (e0) { if (req.mode === 'navigate') return HTML('Нет связи: раздел ещё не открывался на этом устройстве. Откройте его при интернете.'); return new Response('', { status: 504 }); }
+  if (!st.map.files[p] && /^fsu\//.test(p) && req.mode === 'navigate') { p = 'fsu/index.html'; try { await need(st, p); } catch (e1) { } }   // 20.11.2026: копия fabrikant.su — адреса страниц сайта ведут в её оболочку
   if (!st.map.files[p]) return req.mode === 'navigate' ? HTML('Такой страницы нет.') : new Response('', { status: 404 });
   if (!fkey(st, st.map.files[p])) return req.mode === 'navigate' ? NOGROUP() : new Response('', { status: 403 });
   const name = st.docs.has(p) ? DOCS : CORE;
@@ -235,6 +310,9 @@ async function serve0(p, req) {
     return r;
   } catch (err) {
     if (hit) return hit;                          // no connection: the old copy is better than nothing
+    try {   // 21.11.2026 (аудит): без связи после обновления — прошлая сохранённая версия страницы из кэша прошлой версии портала
+      for (const k of await caches.keys()) { if (!k.startsWith('t14-core-') || k === CORE) continue; const o = await (await caches.open(k)).match(BASE + p); if (o) return o; }
+    } catch (e2) { /* нет — сообщение ниже */ }
     if (req.mode === 'navigate') return HTML('Нет связи, а эта страница ещё не сохранена на телефоне. Откройте её один раз при интернете.');
     return new Response('', { status: name === DOCS ? 404 : 504 });
   }
@@ -251,7 +329,8 @@ self.addEventListener('push', e => {
     else if (d.t === 'msg') { body = String(d.x || ''); title = 'Фабрика' + (d.f ? ' · ' + d.f : ''); tag = 't14-msg-' + Date.now(); }
     else if (d.t === 'chat') { body = String(d.x || ''); title = 'Чат · ' + (d.f || 'Фабрика'); tag = 't14-chat'; url = BASE + 'chat.html'; }
     else {
-      try { const key = await kvGet('key'); if (key) { const m = await loadMap(key); if (m.news) { const i = m.news.indexOf('\n'); if (i > 0) { title = m.news.slice(0, i); body = m.news.slice(i + 1); } else body = m.news; } } }   // first line = the topic (what was updated)
+      // 21.11.2026 (аудит): текст новости — из карты, сохранённой на телефоне (1,2 МБ карты с хостинга ради одной строки не качаем: iPhone ждёт показа сразу)
+      try { const m = (ST && ST.map) || await Promise.race([kvGet('map'), new Promise(ok => setTimeout(() => ok(null), 1500))]); if (m && m.news && (!d.v || !m.v || String(m.v).indexOf(String(d.v)) >= 0 || String(d.v).indexOf(String(m.v)) >= 0)) {   /* новость другой версии — общий текст, не устаревший */ const i = m.news.indexOf('\n'); if (i > 0) { title = m.news.slice(0, i); body = m.news.slice(i + 1); } else body = m.news; } }   // first line = the topic (what was updated)
       catch (err) { /* без связи или пароль сменился — общий текст */ }
     }
     await self.registration.showNotification(title, {

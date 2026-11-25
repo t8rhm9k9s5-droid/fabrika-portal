@@ -4,7 +4,7 @@
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
 """«Фабрика» — «Продажи, выпуск и план по линиям» на странице «Производство» (28.10.2026; 03.11.2026 — октябрь целиком и ноябрь на дату).
 28.10, пользователь: «как корректно преобразовывать структуру отдела продаж в структуру мощности» — правило пересчёта (блок ниже).
-03.11, Т. В.: «Продажи в разрезе мощностей производства за октябрь и ноябрь» (1С, В. В. Сотрудник9, 02.11) — связка с «Производством»:
+03.11, Т. В.: «Продажи в разрезе мощностей производства за октябрь и ноябрь» (1С, В. В. Сотрудник10, 02.11) — связка с «Производством»:
 продано против выпуска и плана по каждой группе, за октябрь (весь месяц) и ноябрь (нарастающим итогом на дату).
 Продажи — build/sales_1c/month_2026-11-02/parsed.json (1С «Продажи в разрезе мощностей производства» за месяц, реквизит «Вид номенклатуры сбыт»);
 выпуск и план — pf.bin с хостинга (дневные отчёты ПДО и утверждённые планы месяцев), без него — снимок сборки; план ноября — plan_2026-11 (21 р. д.,
@@ -109,23 +109,27 @@ frag = '''
     function planM(line){ if (L && L.plan[line]) return L.plan[line]; if (M.plan) return M.plan[line]; if (M.pday && M.pday[line]) return M.pday[line] * wd; return null; }
     var wdTo = (L && L.wd_done) || (oct ? M.out_wd : M.wd_to_sales);
     function planTo(line){ var p = planM(line); return p != null && wd ? p / wd * wdTo : null; }
-    var Q = 0, S = 0, O = 0, PT = 0, I = 0, E = 0;
+    var Q = 0, S = 0, O = 0, PT = 0, I = 0, E = 0, seen = {}, shared = 0;
     var body = M.rows.map(function(r){
       var o = OUT ? OUT[r.line] : null, pt = planTo(r.line), k = o ? r.q / o : null, cls = k == null ? '' : k > 1.15 ? 'hi' : k < 0.85 ? 'ok' : '';
       var ex = o != null && pt ? o / pt : null, ecl = ex == null ? '' : ex < 0.85 ? 'hi' : ex >= 1 ? 'ok' : '';
-      Q += r.q; S += r.s; if (o) O += o; if (pt) PT += pt; if (oct) { I += r.oin || 0; E += r.oend || 0; }
+      // 16.11.2026 (R5-12 Рекса): несколько видов сбыта на одной линии — выпуск и план линии в итог один раз
+      var first = !seen[r.line]; seen[r.line] = 1; if (!first && (o || pt)) shared++;
+      Q += r.q; S += r.s; if (o && first) O += o; if (pt && first) PT += pt; if (oct) { I += r.oin || 0; E += r.oend || 0; }
       return '<tr><td>' + esc(r.v) + '<small>' + esc(r.line) + ' · уч. ' + r.a + '</small></td><td>' + n(r.q) + '</td><td>' + m2(r.s) + '</td><td>' + n(o) + '</td><td>' + n(pt) + '</td><td class="' + ecl + '">' + pct(o, pt) + '</td><td class="' + cls + '">' + (k == null ? '—' : k.toFixed(2).replace('.', ',')) + '</td>' +
         (oct ? '<td>' + n(r.oin) + '</td><td>' + n(r.oend) + '</td>' : '') + '</tr>';
     }).join('');
     var oth = Object.keys(M.other || {}).map(function(k){ return [k, M.other[k]]; }).sort(function(a, b){ return b[1][1] - a[1][1]; }).map(function(x){ return esc(x[0]) + ' ' + m2(x[1][1]) + ' млн ₽ (' + n(x[1][0]) + ' шт)'; }).join(', ');
-    el.innerHTML = '<div class="scroll"><table><thead><tr><th>Вид сбыта (линия)</th><th>Продано, шт</th><th>Продано, млн ₽</th><th>Выпуск, шт' + (days ? ' · ' + days + ' дн.' : '') + '</th><th>План, шт' + (wdTo ? ' · ' + wdTo + ' р. д.' : '') + '</th><th>Выпуск / план</th><th>Продано / выпуск</th>' +
+    el.innerHTML = '<div class="scroll"><table><thead><tr><th>Вид сбыта (линия)</th><th>Продано, шт' + (M.whole ? '' : ' · на ' + esc(M.sales_to)) + '</th><th>Продано, млн ₽</th><th>Выпуск, шт' + (days ? ' · ' + days + ' дн.' : '') + (last ? ' · по ' + dm(last) : '') + '</th><th>План, шт' + (wdTo ? ' · ' + wdTo + ' р. д.' : '') + '</th><th>Выпуск / план</th><th>Продано / выпуск</th>' +
       (oct ? '<th>Заказано в октябре, шт</th><th>Не отгружено, шт</th>' : '') + '</tr></thead><tbody>' + body +
       '<tr class="tot"><td>Итого по линиям</td><td>' + n(Q) + '</td><td>' + (S / 1e6).toFixed(1).replace('.', ',') + '</td><td>' + n(O || null) + '</td><td>' + n(PT || null) + '</td><td>' + pct(O || null, PT) + '</td><td></td>' + (oct ? '<td>' + n(I) + '</td><td>' + n(E) + '</td>' : '') + '</tr></tbody></table></div>' +
       '<p class="note">Продано — ' + esc(D.src) + ', ' + M.label + (M.whole ? ' целиком' : ' на ' + M.sales_to) + ': всего ' + n(M.tot[0]) + ' шт, ' + (M.tot[1] / 1e6).toFixed(1).replace('.', ',') + ' млн ₽' + (oth ? '; вне мощности производства: ' + oth : '') + '. ' +
       'Выпуск — дневные отчёты ПДО' + (days ? ' за ' + days + ' из ' + wdTo + ' рабочих дней' + (last ? ' по ' + dm(last) : '') : ': за ' + M.label + ' отчётов ещё нет') + '. ' +
       'План — утверждённый план ПДО' + (oct ? ' на октябрь' : ' на ноябрь (в сутки × ' + wd + ' р. д.; «Шеффилд» — в «Креслах руководителя»)') + ', пропорционально рабочим дням' + (wdTo ? ' (' + wdTo + ' из ' + wd + ')' : '') + '. ' +
       'Выпуск / план: красным — меньше 85%. Продано / выпуск: красным — продано больше выпуска на 15% и больше (продажи идут из остатка склада или вид сбыта не совпадает с линией).' +
-      (oct ? ' Заказано и не отгружено — ' + esc(M.ord_src) + ' на ' + esc(M.ord_asof) + '.' : '') + ' Строки — по убыванию проданных штук.</p>';
+      (oct ? ' Заказано и не отгружено — ' + esc(M.ord_src) + ' на ' + esc(M.ord_asof) + '.' : '') + ' Строки — по убыванию проданных штук.' +
+      (shared ? ' Выпуск и план линии, общей для нескольких видов сбыта, в «Итого» учтены один раз.' : '') +
+      (!M.whole && last && esc(M.sales_to) !== dm(last) ? ' Продано и выпуск — на разные даты (см. заголовки столбцов), отношение «продано / выпуск» ориентировочное.' : '') + '</p>';
   }
   tabs.addEventListener('click', function(e){ var a = e.target.closest('[data-scm]'); if (!a) return; e.preventDefault(); CUR = a.getAttribute('data-scm'); render(); });
   render();

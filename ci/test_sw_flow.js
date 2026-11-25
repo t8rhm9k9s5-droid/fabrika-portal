@@ -8,7 +8,7 @@
 const { chromium } = require('playwright'), fs = require('fs'), path = require('path'), http = require('http'), { execFileSync } = require('child_process');
 const D = process.argv[2], OUT = path.join(D, 'out'), PORT = 8125, BASE = 'http://localhost:' + PORT + '/';
 const CAND = process.env.T14_CAND || '/home/claude/work/speed2011', REB = process.argv.slice(3), USERS = JSON.parse(fs.readFileSync(path.join(D, 'users.json'), 'utf8')), U = USERS.admin;
-const PAGES = ['home.html', 'calls.html', 'sales.html', 'staff.html'];
+const PAGES = ['home.html', 'calls.html', 'sales.html', 'staff.html'].concat((process.env.T14_PAGES || '').split(',').filter(Boolean));   // 21.11.2026: T14_PAGES — ещё страницы (разделы с отдельной картой: fsu/…, library/…)
 let RATE = 0, LOG = [], FREE = 0;   // RATE — байт/с на ВЕСЬ канал (общая очередь, Рекс CG-51), FREE — когда канал освободится
 const srv = http.createServer((q, s) => {
   let p = decodeURIComponent(new URL(q.url, BASE).pathname); if (p === '/') p = '/index.html';

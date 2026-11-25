@@ -11,7 +11,7 @@
  1) История всех групп с ботом (groups.json → on, не каналы): GET /messages?count=100 раз в прогон → ~/.fabrika_max/hist/<chat_id>.json
     (60 дней, телефоны заменены на [тел.]); «Коммерческий отдел» — ещё и из history_all.json (max_hist.py). Раз в день — участники группы.
  2) Вопрос — сообщение не бота с «?» или просьбой (прошу / подскажите / сообщите / можно ли …) и адресатом: reply на сообщение человека,
-    упоминание, имя в начале («Сотрудник13, …», «Имя5 Отчество22, …»). Без адресата от владельца — вопрос группе (напоминания только
+    упоминание, имя в начале («Сотрудник17, …», «Сотрудник51 Отчество23, …»). Без адресата от владельца — вопрос группе (напоминания только
     в группу, без писем); без адресата от других и вопросы владельцу — не берём (их делает unans.py).
  3) Ответ — любое сообщение адресата в той же группе после вопроса (группе — чьё-то сообщение ответом на вопрос или от 3 слов).
  4) Лестница напоминаний (будни, МСК, пока нет ответа; больше 10 рабочих дней → stale, в сводку владельцу):
@@ -104,7 +104,7 @@ def hist_save(hp, H):
     os.chmod(hp + '.tmp', 0o600); os.replace(hp + '.tmp', hp)
 
 
-# REDACTED_B64_37 история групп
+# REDACTED_B64_8 история групп
 def fetch(token, groups, M, res, t):
     """все группы с ботом → {cid: {'title', 'msgs': [norm_msg по времени]}}; новое — в hist/<cid>.json (60 дней)"""
     hd = os.path.join(M, 'hist'); os.makedirs(hd, exist_ok=True)
@@ -153,7 +153,7 @@ def group_names(token, cid, msgs, st, day, res):
     return names
 
 
-# REDACTED_B64_37 вопросы и ответы
+# REDACTED_B64_8 вопросы и ответы
 def addressee(m, by_mid, names, bot):
     """→ (uid | 'group' | 'owner' | None, как): reply на сообщение человека → его автор; упоминание; имя в начале текста (единственный участник с таким именем)"""
     me = str(m.get('uid') or '')
@@ -225,7 +225,7 @@ def answers(st, G, owner, bot, t):
     return n
 
 
-# REDACTED_B64_37 письма
+# REDACTED_B64_8 письма
 def greet_name(cfg, org, mail, fallback):
     """обращение в письме: Имя Отчество из mx_poll_cfg.json (fio), иначе ФИО из оргструктуры, иначе имя в MAX"""
     ml = (mail or '').lower()
@@ -266,7 +266,7 @@ def send_mail(ctx, mail_send, kind, subj, text, to, cc):
     ctx['res'].setdefault('err', []).append('%s: %s' % (kind, str(r)[:100])); return None
 
 
-# REDACTED_B64_37 лестница напоминаний
+# REDACTED_B64_8 лестница напоминаний
 def ladder(ctx, st, cfg, org, t, owner, mail_send):
     today = t.date(); wd = MC.workday(today); h = t.hour; two = datetime.timedelta(hours=2); n = 0
     for q in st['q'].values():
@@ -294,7 +294,7 @@ def ladder(ctx, st, cfg, org, t, owner, mail_send):
     return n
 
 
-# REDACTED_B64_37 эскалация по пунктам контроля (ctl.json)
+# REDACTED_B64_8 эскалация по пунктам контроля (ctl.json)
 def _what(it): return re.sub(r'\s+', ' ', it.get('what') or '')[:200]
 
 
@@ -401,7 +401,7 @@ def _owner_fio(f):
 
 
 def lead_overdue(ctl, today, owner_uid=None):
-    """03.11.2026 (Т. В. Сотрудник1, опрос: просроченные пункты Сотрудник19 и Сотрудник1 А. А. — «В мою утреннюю сводку»):
+    """03.11.2026 (Т. В. Сотрудник1, опрос: просроченные пункты Сотрудник16 и Сотрудник1 А. А. — «В мою утреннюю сводку»):
     пункты контрольных точек на людей из leaders.json (кроме самого владельца), которые бот больше не спрашивает (st='lead'),
     со сроком в прошлом → [(item, ФИО, рабочих дней просрочки)]. Не берём: пункт, где автор-руководитель записан ответственным
     за своё же поручение («жду до…» без адресата — ошибка, не поручение ему); просрочку больше LEAD_MAX_WD рабочих дней."""
@@ -477,7 +477,7 @@ def overdue_summary(L=None, st=None, ctl=None, today=None):
     return out
 
 
-# REDACTED_B64_37 run
+# REDACTED_B64_8 run
 def run(L, CFG, log, jload, jsave, publish, iso, mail_send=None):
     M = os.path.join(os.path.dirname(L), '.fabrika_max')
     mcfg = MP.jl(os.path.join(M, 'config.json'))

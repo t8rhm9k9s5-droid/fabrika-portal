@@ -12,7 +12,7 @@
     CREATE недостающих папок «Портал/…» и UID MOVE писем из «Входящих». Если сервер не умеет MOVE — только UID COPY
     (оригинал остаётся во «Входящих»). Ничего не удаляется: ни \\Deleted, ни EXPUNGE. Свои папки пользователя
     (экономика, производство, ОМТС и другие) не трогаются. После переноса — state/itm_sort_done.json, файл-команда переименовывается.
-Новые письма после переноса раскладываются так же при следующей команде (файл itm_sort_go)."""
+Сотрудник6 письма после переноса раскладываются так же при следующей команде (файл itm_sort_go)."""
 import email, email.policy, imaplib, json, os, re, ssl, time
 import itm as IT
 
@@ -21,6 +21,14 @@ from itm_rules import SINCE, PARENT, TARGET, ROBOT_SKIP, utf7_encode, uid_move, 
 
 def run(L, CFG, log, jload, jsave, budget=100):
     me = (CFG.get('itm_mail') or 'user5@example.org').lower()
+    try:                                                  # 25.11.2026, Т. В.: «в ящике itm@ убери папки портала, письма разложи по моим папкам» — по команде code/itm_unportal_cmd.json
+        import sys
+        import itm_unportal as IU
+        _u = IU.run(L, CFG, log, jload, jsave)
+        _pub = getattr(sys.modules.get('__main__'), 'publish', None)
+        if _u and _pub: _pub('exp_unp.bin', _u)           # итог — только владельцу (ключ k_owner): в нём имена папок его ящика
+    except Exception as e:
+        log('  ! itm@ папки «Портал»:', e.__class__.__name__, e)
     go = os.path.join(L, 'itm_sort_go')
     st = jload('itm_sort.json', {})
     apply_ = os.path.exists(go)

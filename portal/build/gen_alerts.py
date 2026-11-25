@@ -36,11 +36,13 @@ if len(sp) > 1:
                       len(car), 'заказ' if len(car) % 10 == 1 and len(car) % 100 != 11 else ('заказа' if 2 <= len(car) % 10 <= 4 and not 12 <= len(car) % 100 <= 14 else 'заказов'),
                       mln(cs), dm(b.get('from')), dm(b.get('to')), dm(a.get('from')), dm(a.get('to'))),
                   'rule': 'тревога от %s %%, критично от %s %% графика недели' % (pct(R['warn']), pct(R['crit'])), 'since': a.get('from')})
-# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник8, build/sales_plan_mgr/<ГГГГ-ММ>.json)
+# 2) Продажи: выполнение плана менеджеров на дату (Сотрудник16, build/sales_plan_mgr/<ГГГГ-ММ>.json)
 pm = sorted(glob.glob(B + '/sales_plan_mgr/2*.json'))
 if pm:
     x = J(pm[-1]) or {}; T = x.get('total') or {}
-    if T.get('need'):
+    import datetime as _dt   # 21.11.2026 (Т. В.: «продажи 73, а тут 45»): файл плана старше 2 дней — тревогу по нему не поднимаем, карточка считает по продажам 1С
+    _fresh = bool(x.get('asof')) and (_dt.date.today() - _dt.date.fromisoformat(x['asof'][:10])).days <= 2
+    if T.get('need') and _fresh:
         r = 100.0 * (T.get('fact') or 0) / T['need']; R = RULES['plan']
         if r < R['warn']:
             A.append({'id': 'plan-' + (x.get('asof') or ''), 'lvl': 'crit' if r < R['crit'] else 'warn', 'cat': 'Продажи', 'secs': ['sales'],

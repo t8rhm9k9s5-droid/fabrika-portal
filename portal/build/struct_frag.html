@@ -121,7 +121,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
 .kop[open]>summary .ichev{transform:rotate(90deg)}
 .kob{padding:4px 16px 14px;font-size:15px;line-height:1.45}.kob p{margin:8px 0 4px}.kob ol,.kob ul{margin:4px 0 6px;padding-left:20px}.kob li{margin:3px 0}
 .kost{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--p-soft,#eee);font-size:12px;font-weight:500;vertical-align:2px}
-/* 30.10.2026: «Офисы продаж — октябрь 2026» (письмо М. И. Сотрудник8, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
+/* 30.10.2026: «Имя2 продаж — октябрь 2026» (письмо М. И. Сотрудник8, выгрузки 1С): строка «Итого», выделенная неделя, план по менеджерам с раскрытием групп */
 .opm .mtx tr.opt td{font-weight:600}
 .opm .mtx .hl{background:var(--p-soft,rgba(120,120,128,.12))}
 .opm .mtx th.hl{color:var(--p-fg,inherit);font-weight:600}
@@ -230,7 +230,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (R.busy) return h + note('Проверяю доступ…');
     if (R.err) return h + note(R.err === 'login' ? 'Войдите личным входом.' : 'Не получилось: ' + esc(R.err) + ' <a href="#" onclick="return false" data-secre="' + part + '">Повторить</a>');
     if (R.pin === 'wait') return h + note((R.sent ? '<b>Подтвердите в Telegram.</b> Бот «Фабрика» прислал вам кнопку «Да, это я» — нажмите её, затем ' : (esc(R.why || 'Нужно подтверждение в Telegram.') + ' Затем ')) + '<a href="#" data-secre="' + part + '">Проверить</a>.');
-    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник83 Отчество41 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
+    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник91 Отчество42 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
       R.req === 'again' ? 'Сотрудник4 уже у Сотрудник2 Отчество2. После его ответа — <a href="#" data-secre="' + part + '">Проверить</a>.' : esc(R.why || 'Доступа нет.'));
     if (R.none) return h + note(esc(R.why || 'Раздел ещё не выложен.'));
     return h + note('Нет данных. <a href="#" data-secre="' + part + '">Повторить</a>');
@@ -333,7 +333,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
         return sxCard((a.n ? 'Уч. ' + a.n + ' · ' : 'Ночная смена · ') + a.title, a.staff ? a.staff + ' чел.' : '', [(a.blocks || []).join(', '), a.note].filter(Boolean).map(esc).join(' · '),
           [sxP(a.who, true)].concat((a.team || []).map(function (p) { return sxP(p); })));
       })));
-    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник73 и вся его служба, системный администратор и 1С-программисты»
+    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник81 и вся его служба, системный администратор и 1С-программисты»
     var td = O.tech_director, TD = DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; });
     if (td && TD.length) h += sxSec('og-t', 'Техническая служба · ' + TD.length, sxScheme([sxCard('Технический директор', TD.reduce(function (s, d) { return s + (Number(d.count) || 0); }, 0) + ' чел.', '', [sxP(td, true)], 'og-node')],
       TD.map(function (d) { return sxCard(d.title, d.count ? d.count + ' чел.' : '', d.note && !/^Подчиняется техническому/.test(d.note) ? esc(d.note) : (/уточняется/.test(d.note || '') ? 'состав службы уточняется' : ''), (d.heads || []).map(function (p) { return sxP(p, true); }).concat((d.staff || []).map(function (p) { return sxP(p); }))); })));
@@ -410,10 +410,10 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     })));
     var ch = [];
     if (W && W.changes && W.changes.length) W.changes.forEach(function (c) {
-      ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Сотрудник5 сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
+      ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Сотрудник6 сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
         [sxRow({ n: c.name, r: c.what || '', x: c.ask ? 'Вопрос' + (c.to ? ' (' + c.to + ')' : '') + ': ' + c.ask : '', chips: [[c.answer ? 'ответ: ' + c.answer : 'ответа нет', '', c.answer ? 'tag' : 'warn']] })], 'og-warn'));
     });
-    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник20 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник8 напрямую' })]));
+    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник21 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник8 напрямую' })]));
     if (SPB && SPB.list && SPB.list.length) ch.push(sxCard('ОП Санкт-Петербург закрыт с ' + dd(SPB.closed), SPB.list.length + ' клиентов', '', SPB.by.map(function (x) { return sxRow({ n: x[0], r: 'клиентов передано: ' + n(x[1]) }); }).concat(
       ['<details class="og-fold"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary>' + SPB.list.map(function (x) { return sxRow({ n: x[0], r: 'передан: ' + x[1] }); }).join('') + '</details>'])));
     if ((K.check || []).length) ch.push(sxCard('Что проверить', K.check.length + '', '', K.check.map(function (c, i) { return sxRow({ n: (i + 1) + '.', r: c }); })));
@@ -469,7 +469,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1><p class="lead">' + esc(D.src || '') + '</p><iframe id="secfr" sandbox="allow-scripts" style="width:100%;height:80vh;border:0;border-radius:12px;background:#fff"></iframe>';
     document.getElementById('secfr').srcdoc = String(D.html || '');
   }
-  // 03.11.2026: ответ М. И. Сотрудник8 02.11 — ОП Самара без руководителя (в поиске, Сотрудник20 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
+  // 03.11.2026: ответ М. И. Сотрудник8 02.11 — ОП Самара без руководителя (в поиске, Сотрудник21 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
   var SPB = (function () { try { return JSON.parse(document.getElementById('spb-data').textContent || 'null'); } catch (e) { return null; } })();
   function route() {
     document.body.classList.add('wide');

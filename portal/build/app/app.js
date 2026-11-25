@@ -763,7 +763,7 @@ function szzInfo(u){
        <dt>Источники</dt><dd>${s.sources.total} выбросов (${s.sources.org} организованных, ${s.sources.unorg} неорганизованных), ${s.sources.noise} шума</dd>
        <dt>Выброс</dt><dd>${nf(s.emis.gs, 3)} г/с, ${nf(s.emis.ty, 1)} т/год, ${s.emis.n} веществ</dd></dl>
        <p>${esc(s.result)}</p>
-       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник16 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
+       ${ND ? `<p><b>Расчёт 2025 г.</b> 10 расчётных точек «Эколога» лежат точно на этой границе. Сотрудник17 на границе — ${nf(ND.summary.maxes.szz.sub[1], 2)} ПДК (${esc(subN25(ND.summary.maxes.szz.sub[0]))}), у жилья — ${nf(ND.summary.maxes.zhil.grp[1], 2)} ПДК. <button type="button" class="linkbtn" data-szz="ndv:0">Сводка 2025 г.</button></p>` : ''}
        <p><b>Баланс территории в СЗЗ</b></p><table class="inv szzt">${s.balance.map(([n, a, p])=>`<tr><td>${esc(n)}</td><td class="mono">${nf(a, 0)} м²</td><td class="mono">${nf(p, 1)} %</td></tr>`).join('')}</table>
        <p><b>Нельзя размещать в СЗЗ</b> (п. 5 Правил, ПП РФ №222): жильё, школы и больницы, открытые спортсооружения, детский отдых, рекреацию и садоводство; производство и хранение лекарств, пищевые производства и оптовые продовольственные склады, водопроводные сооружения питьевой воды. Можно: здания управления и вахтовый персонал, гаражи и стоянки, склады непищевые, коммуникации, ЛЭП, подстанции, АЗС и СТО.</p>
        <p><b>Натурные исследования.</b> ${esc(s.monitor)}</p><p class="warn">${esc(s.deadline)}</p>
@@ -899,7 +899,7 @@ function ndvInfo(u){
     return {k:'Расчётная точка · расчёт рассеивания 2025', t:`Р${r.n} — ${r.name}`, d:
       `<dl class="kv"><dt>Тип</dt><dd>${R25_TYPE[r.type]}</dd><dt>МСК-62</dt><dd class="mono">X ${nf(r.X, 2)}<br>Y ${nf(r.Y, 2)}</dd><dt>Высота</dt><dd>2 м</dd>
        ${r.type === 'szz' ? `<dt>На границе СЗЗ</dt><dd>${r.dszz < .5 ? 'да — точка лежит на границе 2019 г. (расхождение < 0,5 м)' : 'в ' + nf(r.dszz, 1) + ' м от границы'}</dd>` : ''}</dl>
-       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и Имя2 источники</p>
+       <p><b>Промплощадка № 1</b> — максимальные разовые концентрации, доли ПДК (≥ 0,05) и Имя1 источники</p>
        ${a ? `<table class="inv szzt"><tr><th>Вещество / группа</th><th>ПДК</th><th>вклад</th></tr>${a}</table>` : '<p class="note">Всё меньше 0,05 ПДК.</p>'}
        <p><b>Гальванический цех</b> (≥ 0,01 ПДК)</p>${g ? `<table class="inv szzt"><tr><th>Вещество</th><th>ПДК</th><th>вклад</th></tr>${g}</table>` : '<p class="note">Всё меньше 0,01 ПДК.</p>'}
        ${r.type === 'prom' ? '<p class="note">Граница производственной зоны — это забор предприятия; гигиенические нормативы для населения проверяются на границе СЗЗ и у жилья.</p>' : ''}
@@ -909,10 +909,10 @@ function ndvInfo(u){
     return {k:'Выбросы в атмосферу · 2025', t:'Инвентаризация и НДВ, 2025 г.', d:
       `<p>${esc(s.dev)}; ${esc(s.date)}.</p>
        ${s.objects.map(o=>`<p><b>${esc(o.name)}</b> — объект НВОС ${o.cat} категории, код <span class="mono">${o.code}</span></p><dl class="kv"><dt>Источники</dt><dd>${o.src} (${ruN(o.org, 'организованный', 'организованных', 'организованных')}, ${ruN(o.unorg, 'неорганизованный', 'неорганизованных', 'неорганизованных')})</dd><dt>Выброс</dt><dd>${nf(o.ty, 3)} т/год: твёрдые ${nf(o.solid, 3)}, газообразные и жидкие ${nf(o.gas, 3)}; ${esc(o.subst)}</dd><dt>Классы</dt><dd>${esc(o.classes)}</dd><dt>Нормативы</dt><dd>${esc(o.norm)}</dd>${o.place ? `<dt>Где</dt><dd>${esc(o.place)}</dd>` : ''}</dl>`).join('')}
-       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник5 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
-       <details class="info"><summary>Сотрудник5 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
+       <p><b>По сравнению с проектом СЗЗ 2019 г.:</b> было ${ruN(c.n19, 'источник', 'источника', 'источников')} и ${nf(c.ty19, 1)} т/год, стало ${c.n25} и ${nf(c.ty25, 1)} т/год (+${nf((c.ty25 / c.ty19 - 1) * 100, 0)} %). Сотрудник6 — ${c.new.length}, изменились — ${c.changed.length}, не вошли в инвентаризацию 2025 г. — ${c.gone.length}.</p>
+       <details class="info"><summary>Сотрудник6 источники (${c.new.length})</summary><div class="camlist">${c.new.map(id=>{ const x = ND.sources.find(o=>o.id === id); return `<button type="button" data-szz="i25:${id}"><b>${id}</b>${esc(x.outlet)} · ${esc(x.shop)}</button>`; }).join('')}</div></details>
        <details class="info"><summary>Нет в 2025 г. (${ND.gone.length})</summary><div class="camlist">${ND.gone.map(g=>`<button type="button" data-szz="isa:${g.id}"><b>${g.id}</b>${esc(g.outlet)} · ${esc(g.shop)}, ${fg(g.ty)} т/год</button>`).join('')}</div><p class="note">Откроется источник из проекта СЗЗ 2019 г.</p></details>
-       <p><b>Сотрудник16 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
+       <p><b>Сотрудник17 на расчётных точках, доли ПДК</b> (промплощадка № 1)</p><table class="inv szzt"><tr><th>Где</th><th>вещество</th><th>группа суммации</th></tr>${mxs('szz', 'граница СЗЗ')}${mxs('zhil', 'жилая зона')}${mxs('park', 'парк')}${mxs('prom', 'забор предприятия')}</table>
        <p>${esc(s.result)}</p>
        <p><b>Нормативы допустимых выбросов гальванического цеха на 2026–2032 гг.</b></p><table class="inv szzt"><tr><th>Вещество</th><th>класс</th><th>г/с</th><th>т/год</th></tr>${ND.norms.map(([c, n, kl, gs, ty])=>`<tr><td><span class="mono">${c}</span> ${esc(n)}</td><td>${kl}</td><td class="mono">${fg(gs)}</td><td class="mono">${fg(ty)}</td></tr>`).join('')}<tr><td><b>Итого</b></td><td></td><td></td><td class="mono"><b>0,519</b></td></tr></table>
        <p><b>СЗЗ и окружение.</b> ${esc(s.szz)} ${esc(s.zone)}</p>
@@ -982,7 +982,7 @@ function areaColors(){
 /* ===================== LABELS ===================== */
 const labelsEl = $('#labels');
 const rulLabels = [];
-const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Офисная мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Корпусная мебель',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
+const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Имя2 мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Участок операторских кресел',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
 if (ND && ND.short) Object.assign(SHORT, ND.short);
 const bLab = {};
 for (const b of S.buildings){ if (!SHORT[b.k] && !b.lit) continue;
@@ -1089,7 +1089,7 @@ function goView(name, instant){
 document.querySelectorAll('.views button').forEach(b=>b.addEventListener('click', ()=>{ markPlace(null); setSolo(null); hideAll(); goView(b.dataset.view); }));
 
 // ---------- «К объекту» and «Только здание» ----------
-const PLACES = [['nSklad','Склад №1'],['nGef','Котельная'],['ws','Швейный цех'],['b10','Админ. здание'],['b15','КПП'],['b31','Механический цех'],['b43','Цех металлоизделий'],['b22','Офисная мебель'],['b57','ТП-1'],['tp2','ТП-2'],['tp3','ТП-3'],['chapel','Часовня'],['__szz','СЗЗ'],['__ndv','Выбросы 2025'],['__site','Весь участок']];
+const PLACES = [['nSklad','Склад №1'],['nGef','Котельная'],['ws','Швейный цех'],['b10','Админ. здание'],['b15','КПП'],['b31','Механический цех'],['b43','Цех металлоизделий'],['b22','Имя2 мебель'],['b57','ТП-1'],['tp2','ТП-2'],['tp3','ТП-3'],['chapel','Часовня'],['__szz','СЗЗ'],['__ndv','Выбросы 2025'],['__site','Весь участок']];
 const placesEl = $('#places'), placeBtn = {}, soloBtn = $('#solo');
 let lastPlace = null, soloK = null;
 function markPlace(k){ Object.entries(placeBtn).forEach(([key,b])=>b.classList.toggle('on', key===k)); }
@@ -1134,7 +1134,7 @@ function plen(pts){let L=0;for(let k=0;k+1<pts.length;k++)L+=Math.hypot(pts[k+1]
 function wsPower(){const p=S.proj.power;return `<table class="inv">
  <tr><td>Установленная мощность</td><td>${nf(p['Ру'],2)} кВт</td></tr><tr><td>Расчётная мощность</td><td>${nf(p['Рр'],2)} кВт</td></tr>
  <tr><td>Расчётный ток</td><td>${nf(p.Ip,1)} А</td></tr><tr><td>cos φ</td><td>${nf(p.cos,2)}</td></tr>
- <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник16 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
+ <tr><td>Годовое потребление</td><td>${nf(p.year,1)} тыс. кВт·ч</td></tr><tr><td>Сотрудник17 по ТУ №1 от 05.06.2023</td><td>${nf(p.tu_max,0)} кВт</td></tr></table>
  <p>Питание 0,4 кВ от РУ-0,4 кВ существующей ТП 10/0,4 кВ кабелем ${esc(p.cable)}. Какая именно ТП, в проекте не сказано.</p>`}
 function srcText(b){ return b.src==='egrn'?'выписка ЕГРН от 01.11.2024 (технический план 2016 г.): 12 точек контура в МСК-62, точность 0,1 м; деление на части — по топосъёмке 2016 г.':b.src==='topo'?'топосъёмка 2016 г., подтверждён генпланом 03.26':b.src==='gp'?'генплан 26/08-РАВП-ПЗУ (03.26)':b.src==='proj'?(b.k==='ws'?'проект 75/23, место по контуру цеха на генплане 03.26':'проект 19/221 (размеры из АР)'):b.src==='tp'?'технический план 03.02.2021, точность 0,1 м':b.src==='proj2'?'проект 19/221, второй этап (на генплане 03.26 нет)':'по схеме камер, условно'; }
 /* literas, official names and areas from the property list of ЗАО «Жилпромсервис» (21.10.2026) */
@@ -1916,7 +1916,7 @@ const LIST = {
     cams.filter(c=>!c.isNew).forEach(c=>{ const h = c.host ? bname(c.host) : 'Территория'; (byHost[h] = byHost[h] || []).push(c); });
     const nc = cams.filter(c=>c.isNew);
     let body = Object.keys(byHost).sort((a,b)=>a.localeCompare(b,'ru')).map(h=>sec('h:' + h, esc(h), byHost[h].length, `<ul>${sortCams(byHost[h]).map(c=>row(c)).join('')}</ul>`, false, 'grp')).join('');
-    if (nc.length) body += sec('h:new', 'Сотрудник5 камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
+    if (nc.length) body += sec('h:new', 'Сотрудник6 камеры', nc.length, `<ul>${nc.map(c=>row(c)).join('')}</ul>`, true, 'grp');
     if (cams.length) parts.push(sec('cams', '<i class="camdot"></i>Камеры', q ? cams.length : CAMS.length, body || '', false, 'sec cams'));
     if (!parts.length) parts.push('<p class="none">Ничего не найдено</p>');
     parts.push('<button type="button" class="btn primary addcam" id="addCam">+ Добавить камеру</button>');

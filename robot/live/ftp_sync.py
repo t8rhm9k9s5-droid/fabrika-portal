@@ -14,7 +14,7 @@ DEPTH = 8                                                       # 20.11.2026: в
 MAX_ENTRIES = 20000
 FILE_MAX = 3 * 1024 * 1024
 PER_RUN = 300                                                   # 20.11.2026: пока есть очередь — обход каждые 10 мин (BACKLOG), иначе раз в FTP_EVERY
-TOTAL_MAX = 2000 * 1024 * 1024                                  # 20.11.2026: весь сайт с FTP (картинки до 3 МБ ≈ 1 ГБ); на хостинге свободно > 40 ГБ
+TOTAL_MAX = 8000 * 1024 * 1024                                  # 21.11.2026: было 2000 МБ — упёрлись, вся инфографика (1100 шт.) не выкладывалась; на хостинге свободно > 40 ГБ
 PREVIEW = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.pdf')
 REPORT_EXT = ('.xlsx', '.xls', '.pdf', '.csv', '.xml', '.json', '.txt', '.docx')
 REM_TO, REM_CC, REM_MAX = ['user33@example.org'], ['user2@example.org', 'user5@example.org'], 3
@@ -198,7 +198,7 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
                 continue
             fid = _fid(it['p'], it['s'], it['m']); it['id'] = fid
             want_rep = bool(REPORT_DIRS.search(it['p'])) and ext in REPORT_EXT
-            want_pub = ext in PREVIEW and (it['s'] <= FILE_MAX or (it['p'] in lead and it['s'] <= BIG_MAX))
+            want_pub = ext in PREVIEW and (it['s'] <= FILE_MAX or ((it['p'] in lead or it['p'].startswith('/infographic/')) and it['s'] <= BIG_MAX))   # 21.11.2026: инфографика крупнее 3 МБ — тоже (уменьшается _thumb)
             if fid in pubs or not (want_rep or want_pub): continue
             if n_new >= PER_RUN or total + it['s'] > TOTAL_MAX: continue
             bio = io.BytesIO()

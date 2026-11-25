@@ -19,6 +19,18 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Главная</h1>
   <p class="fh-sub fh-date" id="fhSub"></p>
 
+  <!-- 23.11.2026, Т. В.: «Консоль верни прям первым… снизу пульс фабрики идет» — «Контрольные точки» первыми на главной -->
+  <div class="fh-cap"><h2 id="pulseH">Контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество и отзывы → онлайн</p></div>
+  <ul class="pk-grid" id="pulse" aria-labelledby="pulseH">
+    <li><a class="pk" id="pkSales" href="razdel.html#sales" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Продажи</span><b class="pk-v">…</b><span class="pk-s">сумма продаж</span></a></li>
+    <li><a class="pk" id="pkProd" href="razdel.html#prod" style="--c:var(--ic-prod)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20V10l6 4V10l6 4V6l6 4v10z"/></svg>Выпуск · план/факт</span><b class="pk-v">…</b><span class="pk-s">отчёты выпуска и план ПДО</span></a></li>
+    <li><a class="pk" id="pkAllwh" href="razdel.html#supply" style="--c:var(--ic-stock)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 12 3l9 5v11H3z"/><path d="M8 19v-6h8v6"/></svg>Склад</span><b class="pk-v">…</b><span class="pk-s">все склады и филиалы — 1С «Товары на складах»</span></a></li>
+    <li><a class="pk" id="pkOmts" href="razdel.html#omts" style="--c:var(--ic-omts)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/></svg>ОМТС · снабжение</span><b class="pk-v">…</b><span class="pk-s">загружаю отчёт ОМТС</span></a></li>
+    <li><a class="pk" id="pkRecl" href="razdel.html#quality" style="--c:var(--ic-docs)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Качество и отзывы</span><span class="pk-v">—</span><span class="pk-s">рекламации и брак</span><span class="pk-tag">1С</span></a></li>
+    <li><a class="pk" id="pkOnl" href="razdel.html#online" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Онлайн · наши модели</span><b class="pk-v">…</b><span class="pk-s">мониторинг сайтов</span></a></li>
+  </ul>
+  <div hidden><a class="pk" id="pkRev" href="razdel.html#online" style="--c:var(--ic-calls)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>Отзывы клиентов</span><b class="pk-v">…</b><span class="pk-s">отзывы покупателей Ozon</span><span class="pk-tag">Ozon</span></a></div>
+
   <!-- 13.11.2026, Т. В.: «верни «Пульс фабрики» — офигенная вещь; первой строкой: % плана производства, % плана продаж, сорванные поставки ОМТС;
        справа — тревоги, если есть, шириной в плитку раздела; всё хорошо — горят зелёным» -->
   <section class="fh-top" id="fhTop" aria-labelledby="fhBanT">
@@ -26,17 +38,17 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       <div class="fb-h"><span class="fh-bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
         <div><b id="fhBanT">Пульс фабрики</b><p>Фабрика — один организм: производство зависит от снабжения, снабжение — от продаж.</p></div></div>
       <div class="fb-k">
-        <a class="fb-m" id="fbProd" href="staff.html#pf" data-tone="wait"><span class="fb-l"><i></i>План производства</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
-        <a class="fb-m" id="fbSales" href="sales.html#planm" data-tone="wait"><span class="fb-l"><i></i>План продаж</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
-        <a class="fb-m" id="fbOmts" href="omts.html#s-hist" data-tone="wait"><span class="fb-l"><i></i>Сорванные поставки ОМТС</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
+        <a class="fb-m" id="fbProd" href="razdel.html#prod" data-tone="wait"><span class="fb-l"><i></i>План производства</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
+        <a class="fb-m" id="fbSales" href="razdel.html#sales" data-tone="wait"><span class="fb-l"><i></i>План продаж</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
+        <a class="fb-m" id="fbOmts" href="razdel.html#omts" data-tone="wait"><span class="fb-l"><i></i>Сорванные поставки ОМТС</span><span class="fb-v">—</span><span class="fb-s">загружаю</span></a>
       </div>
       <ol class="fh-flow" aria-label="Цепочка контрольных точек">
-        <li><a href="sales.html#s1c" style="--c:var(--ic-sales)">Сумма продаж</a></li>
-        <li><a href="staff.html#pf" style="--c:var(--ic-prod)">Выпуск: план и факт</a></li>
-        <li><a href="stock.html#s-whs" style="--c:var(--ic-stock)">Склад</a></li>
-        <li><a href="omts.html#s-hist" style="--c:var(--ic-omts)">Снабжение (ОМТС)</a></li>
-        <li><a href="sales.html#recl" style="--c:var(--ic-docs)">Качество</a></li>
-        <li><a href="sales.html#rev" style="--c:var(--ic-calls)">Отзывы клиентов</a></li>
+        <li><a href="razdel.html#sales" style="--c:var(--ic-sales)">Сумма продаж</a></li>
+        <li><a href="razdel.html#prod" style="--c:var(--ic-prod)">Выпуск: план и факт</a></li>
+        <li><a href="razdel.html#supply" style="--c:var(--ic-stock)">Склад</a></li>
+        <li><a href="razdel.html#omts" style="--c:var(--ic-omts)">Снабжение (ОМТС)</a></li>
+        <li><a href="razdel.html#quality" style="--c:var(--ic-docs)">Качество</a></li>
+        <li><a href="razdel.html#online" style="--c:var(--ic-calls)">Отзывы клиентов</a></li>
       </ol>
     </div>
     <div class="fh-al" id="fhAl"></div>
@@ -45,16 +57,8 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   <!-- 14.11.2026, Т. В.: «звёздочку отмечаю в мобильной версии — с главного экрана его не видно» — «Сохранённое» на главной (assets/fav.js) -->
   <section class="fh-fav" id="fhFav" aria-labelledby="favH" hidden><div class="fh-cap"><h2 id="favH">Сохранённое</h2><a class="fh-all" id="favAll" href="razdel.html#saved">Все</a></div><div class="igroup fav-mini" id="favHome"></div></section>
 
-  <div class="fh-cap"><h2 id="pulseH">Контрольные точки</h2><p class="fh-chain">продажи → выпуск → склад → снабжение → качество и отзывы → онлайн</p></div>
-  <ul class="pk-grid" id="pulse" aria-labelledby="pulseH">
-    <li><a class="pk" id="pkSales" href="sales.html#s1c" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Продажи</span><b class="pk-v">…</b><span class="pk-s">сумма продаж</span></a></li>
-    <li><a class="pk" id="pkProd" href="staff.html#pf" style="--c:var(--ic-prod)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20V10l6 4V10l6 4V6l6 4v10z"/></svg>Выпуск · план/факт</span><b class="pk-v">…</b><span class="pk-s">отчёты выпуска и план ПДО</span></a></li>
-    <li><a class="pk" id="pkAllwh" href="stock.html#s-whs" style="--c:var(--ic-stock)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 12 3l9 5v11H3z"/><path d="M8 19v-6h8v6"/></svg>Склад</span><b class="pk-v">…</b><span class="pk-s">все склады и филиалы — 1С «Товары на складах»</span></a></li>
-    <li><a class="pk" id="pkOmts" href="omts.html#s-hist" style="--c:var(--ic-omts)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/></svg>ОМТС · снабжение</span><b class="pk-v">…</b><span class="pk-s">загружаю отчёт ОМТС</span></a></li>
-    <li><a class="pk" id="pkRecl" href="sales.html#recl" style="--c:var(--ic-docs)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Качество и отзывы</span><span class="pk-v">—</span><span class="pk-s">рекламации и брак</span><span class="pk-tag">1С</span></a></li>
-    <li><a class="pk" id="pkOnl" href="sales.html#online" style="--c:var(--ic-sales)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Онлайн · наши модели</span><b class="pk-v">…</b><span class="pk-s">мониторинг сайтов</span></a></li>
-  </ul>
-  <div hidden><a class="pk" id="pkRev" href="sales.html#rev" style="--c:var(--ic-calls)" data-tone="wait"><span class="pk-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>Отзывы клиентов</span><b class="pk-v">…</b><span class="pk-s">отзывы покупателей Ozon</span><span class="pk-tag">Ozon</span></a></div>
+  <!-- 21.11.2026, Т. В. (аудит, вариант «Пульт»): щекотливое — за 1 нажатие; видят администраторы; нет источника — так и написано, не ноль -->
+  <section class="fh-attn" id="fhSens" aria-labelledby="sensH" hidden><div class="fh-cap"><h2 id="sensH">Щекотливое</h2></div><div class="igroup" id="sens"></div></section>
 
   <div class="fh-cols">
     <section class="fh-attn" aria-labelledby="attnH">
@@ -110,7 +114,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var el = document.getElementById('fhSub'), wxs = '';
     function day() { var d = new Date(), w = WD[d.getDay()]; return w.charAt(0).toUpperCase() + w.slice(1) + ', ' + d.getDate() + ' ' + MG[d.getMonth()]; }
     function put() { el.textContent = day() + (wxs ? ' · ' + wxs : ''); }
-    // погода — Сотрудник12 Сотрудник27 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник12 убираем только из поиска и ИИ)
+    // погода — Сотрудник11 Сотрудник27 через assets/sky0.js (02.11, Т. В.: «погоду оставить», Сотрудник11 убираем только из поиска и ИИ)
     window.addEventListener('t14sky', function (e) { var w = e.detail && e.detail.wx; if (!w || w.temp == null) return;
       var t = Math.round(w.temp); wxs = (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '°' + (w.text ? ', ' + String(w.text).toLowerCase() : ''); put(); });
     put(); setInterval(put, 60e3);
@@ -166,7 +170,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   function stockTile() {
     var K = M.get('stock'), a = document.getElementById('pkAllwh');
     if (!K) { card('pkAllwh', '—', 'отчёты 1С по складу ещё не разобраны', 'none'); return null; }
-    a.href = K.href;
+    // 24.11.2026, Т. В.: карточка «Склад» всегда ведёт в раздел «Склад» (razdel.html#supply), а не на страницу отчёта
     if (K.kind === 'all') {
       var A = K.all, T = A.tot, ch = T[3] - T[0];
       card('pkAllwh', nf(T[3]) + '<small>шт</small>', 'все склады и ОП · за месяц ' + (ch > 0 ? '+' : '') + nf(ch) + ' · на ' + dd(A.date) + (K.rz ? ' · ГП Рязань ' + n(K.rz.v) + ' на ' + dd(K.rz.date) : ''), K.stale ? 'warn' : '');
@@ -254,8 +258,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       var pv = wp ? Math.round(gs.reduce(function (a, g) { return a + g.v * g.p; }, 0) / wp) : null;
       fbSet('fbProd', pv != null ? pv + '<small>%</small>' : '—', pv != null ? 'к плану на дату · ' + MN[+R.m.slice(5) - 1] + (R.last ? ', по ' + dd(R.last) : '') : 'нет факта выпуска', pv == null ? 'none' : pv >= 95 ? 'ok' : pv >= 85 ? 'warn' : 'bad');
     } else fbSet('fbProd', '—', R ? 'отчётов ПДО за ' + MN[+R.m.slice(5) - 1] + ' ещё нет' : 'план-факт ПДО ещё не пришёл', 'none');
-    var KP = (window.T14_ALERTS && T14_ALERTS.kpi && T14_ALERTS.kpi.plan) || null;
-    if (KP && KP.need) fbSet('fbSales', KP.pct_need + '<small>%</small>', 'к плану на ' + dd(KP.asof) + ' · ' + String(KP.pct_month).replace('.', ',') + ' % месяца', KP.pct_need >= 90 ? 'ok' : KP.pct_need >= 75 ? 'warn' : 'bad');
+    var KP = (window.T14_ALERTS && T14_ALERTS.kpi && T14_ALERTS.kpi.plan) || null, PL0 = M.plan ? M.plan() : null;   // 21.11.2026 (аудит, «единый источник»): план на дату — тот же расчёт, что «Продажи» и «Щекотливое» (T14M.plan: факт 1С, рабочие дни)
+    if (PL0 && PL0.live) { var pn = Math.round(PL0.onDate); fbSet('fbSales', pn + '<small>%</small>', 'к плану на ' + dd(PL0.asof) + ' · ' + String(Math.round(PL0.pct * 10) / 10).replace('.', ',') + ' % месяца', pn >= 90 ? 'ok' : pn >= 75 ? 'warn' : 'bad'); }
+    else if (KP && KP.need) fbSet('fbSales', KP.pct_need + '<small>%</small>', 'к плану на ' + dd(KP.asof) + ' · ' + String(KP.pct_month).replace('.', ',') + ' % месяца', KP.pct_need >= 90 ? 'ok' : KP.pct_need >= 75 ? 'warn' : 'bad');
     else fbSet('fbSales', '—', 'план менеджеров ещё не пришёл', 'none');
     if (O) fbSet('fbOmts', n(O.tot), O.tot ? 'позиций в просрочке · ЖПС ' + n(O.z) + ', ФТС ' + n(O.f) : 'просрочек нет' + (O.t ? ' · на ' + dd(O.t) : ''), !O.tot ? 'ok' : O.tot <= 10 ? 'warn' : 'bad');
     else fbSet('fbOmts', '—', 'отчёт ОМТС ещё не пришёл', 'none');
@@ -271,22 +276,22 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
       var big = R.lines.filter(function (x) { return x.loss >= 50000; }).sort(function (a, b) { return b.loss - a.loss; }).slice(0, 2);
       big.forEach(function (x) {
         // 28.10.2026 15:50, пользователь: «тут основной показатель штуки» — крупно недовыпуск в штуках; рубли — справочно, по ним только порядок строк
-        rows.push(row('staff.html#pf', 'prod', 'var(--ic-prod)', x.n + ': недовыпуск ' + n(x.p - x.f) + ' шт', per + ': ' + n(x.f) + ' из ' + n(x.p) + ' шт, ' + x.v + '% плана' + (AR[x.n] ? ' · участок ' + AR[x.n] : '') + ' · ≈ ' + mln(x.loss) + ' млн ₽ по средней цене продажи ' + n(PR[x.n]) + ' ₽', '−' + n(x.p - x.f) + ' шт', tone(x.v)));
+        rows.push(row('razdel.html#prod', 'prod', 'var(--ic-prod)', x.n + ': недовыпуск ' + n(x.p - x.f) + ' шт', per + ': ' + n(x.f) + ' из ' + n(x.p) + ' шт, ' + x.v + '% плана' + (AR[x.n] ? ' · участок ' + AR[x.n] : '') + ' · ≈ ' + mln(x.loss) + ' млн ₽ по средней цене продажи ' + n(PR[x.n]) + ' ₽', '−' + n(x.p - x.f) + ' шт', tone(x.v)));
       });
       var weak = R.lines.filter(function (x) { return x.v < 70 && big.indexOf(x) < 0; }).sort(function (a, b) { return (b.p - b.f) - (a.p - a.f); });   // 03.11: по убыванию недовыпуска
-      if (weak.length) rows.push(row('staff.html#pf', 'prod', 'var(--ic-prod)', 'Ниже 70% плана: ' + weak.length + ' ' + pl(weak.length, 'линия', 'линии', 'линий'), weak.slice(0, 4).map(function (x) { return x.n + ' −' + n(x.p - x.f) + ' шт (' + x.v + '%)'; }).join(', ') + (weak.length > 4 ? '…' : '') + ' · ' + per, String(weak.length), 'bad'));
-      var lowN = R.lines.filter(function (x) { return x.v < 90; }).length; if (lowN) badge['staff.html'] = lowN;
+      if (weak.length) rows.push(row('razdel.html#prod', 'prod', 'var(--ic-prod)', 'Ниже 70% плана: ' + weak.length + ' ' + pl(weak.length, 'линия', 'линии', 'линий'), weak.slice(0, 4).map(function (x) { return x.n + ' −' + n(x.p - x.f) + ' шт (' + x.v + '%)'; }).join(', ') + (weak.length > 4 ? '…' : '') + ' · ' + per, String(weak.length), 'bad'));
+      var lowN = R.lines.filter(function (x) { return x.v < 90; }).length; if (lowN) badge['razdel.html#prod'] = lowN;
     }
     if (Q && Q.old30) { rows.push(row('sales.html#recl', 'docs', 'var(--ic-docs)', 'Рекламации: не закрыты дольше 30 дней', 'из ' + n(Q.all) + ' незакрытых · дольше 90 дн. — ' + n(Q.old90) + ' · 1С на ' + dd(Q.asof), n(Q.old30), 'warn')); }
-    if (O && O.tot > 0) { rows.push(row('omts.html#s-hist', 'omts', 'var(--ic-omts)', 'ОМТС: просроченные позиции в заявках', 'ЖПС — ' + n(O.z) + ', ФТС — ' + n(O.f) + (O.t ? ' · отчёт 1С от ' + dd(O.t) : ''), n(O.tot), 'warn')); badge['omts.html'] = O.tot; }
+    if (O && O.tot > 0) { rows.push(row('razdel.html#omts', 'omts', 'var(--ic-omts)', 'ОМТС: просроченные позиции в заявках', 'ЖПС — ' + n(O.z) + ', ФТС — ' + n(O.f) + (O.t ? ' · отчёт 1С от ' + dd(O.t) : ''), n(O.tot), 'warn')); badge['razdel.html#omts'] = O.tot; }
     if (K.neg && K.neg.length) {
       rows.push(row('stock.html#s-mis', 'stock', 'var(--ic-stock)', 'Склад: отрицательные остатки', K.neg.slice().sort(function (a, b) { return Math.abs(b[2]) - Math.abs(a[2]); }).slice(0, 2).map(function (x) { return x[0] + ' ' + n(x[2]); }).join(', ') + (K.neg.length > 2 ? '…' : '') + (K.date ? ' · на ' + dd(K.date) : ''), String(K.neg.length), 'warn'));
-      badge['stock.html'] = K.neg.length;
+      badge['razdel.html#supply'] = K.neg.length;
     }
     if (F2.lag.length) {
       var lagT = F2.lag.slice(0, 3).map(function (o) { return String(o.n || '').replace(/^ОП\s+/, '') + ' ' + (o.sent || 0) + '/' + o.of; }).join(', ');
       rows.push(row('sales.html#s-days', 'sales', 'var(--ic-sales)', F2.lag.length === 1 ? (F2.lag[0].n + ': отчёты не сдаются') : 'Продажи: офисы без отчётов', 'сдано из рабочих дней: ' + lagT, F2.lag.length === 1 ? (F2.lag[0].sent || 0) + ' / ' + F2.lag[0].of : String(F2.lag.length), 'bad'));
-      badge['sales.html'] = F2.lag.length;
+      badge['razdel.html#sales'] = F2.lag.length;
     }
     if (F2.cp && F2.cp.late) rows.push(row('sales.html#cp', 'sales', 'var(--ic-sales)', 'Продажи: контрольные точки с прошедшим сроком', 'без статуса — ' + n(F2.cp.open) + ', срок прошёл — ' + n(F2.cp.late), n(F2.cp.late), 'warn'));
     var PRm = M.get('promises'); if (PRm && PRm.st) { var pb = (PRm.st['нет подтверждения'] || 0) + (PRm.st['не выполнено'] || 0); if (pb) rows.push(row('sales.html#prom', 'sales', 'var(--ic-sales)', 'Продажи: визиты и звонки без отметки', 'обещали заехать или позвонить — отметки «сделано» нет', n(pb), 'warn')); }
@@ -339,6 +344,34 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     });
   }
   render();
+  // 21.11.2026: «Щекотливое» — числа из того же модуля (T14M.poruch, T14M.plan), что «Поручения» и «Продажи»
+  var SENS = {};
+  function sens() {
+    var me = null; try { me = JSON.parse(localStorage.getItem('t14.me') || 'null'); } catch (e) { }
+    var box = document.getElementById('fhSens'); if (!box || !me || me.role !== 'admin' || me.st === 'pending') return;
+    var PC = M.poruch && SENS.poruch ? M.poruch(SENS.poruch) : null, PL = M.plan ? M.plan() : null, S = SENS.sales, ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null;
+    var td = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null, R = [];
+    R.push(row('poruch.html#due', 'chat', 'var(--ic-err)', 'Поручения: просрочено', PC ? 'открыто ' + n(PC.open) + ' · по сроку и службам' : 'загружаю…', PC ? n(PC.late) : '—', PC && PC.late ? 'bad' : ''));
+    R.push(row('poruch.html#svc:inc', 'prod', 'var(--ic-err)', 'Происшествия', PC ? PC.ev && PC.ev.ok ? 'совещания, письма 1c@ и журнал охраны' : 'из поручений совещаний · журнал охраны подключается' : 'загружаю…', PC ? n(PC.inc) : '—', PC && PC.inc ? 'bad' : ''));
+    var EV = PC && PC.ev && PC.ev.ok ? PC.ev : null;   // журнал охраны и диспетчера (таблица); камеры и ГЛОНАСС — следующим шагом
+    var PM = M.perim && SENS.cam ? M.perim(SENS.cam) : null, FL = M.fleet ? M.fleet(SENS.gl) : null, SC = FL && FL.ship;   // 21.11.2026: периметр — камеры + журнал охраны; машины — журнал + график отгрузки + ГЛОНАСС
+    R.push(row(PM ? 'cams.html' : EV ? 'poruch.html#ev' : 'cams.html', 'stock', 'var(--ic-omts)', 'Периметр: движение вне графика',
+      (PM ? 'камеры за ' + PM.days + ' сут.: ' + n(PM.cams) + ' камер' + (PM.top[0] ? ', больше всего — ' + esc(PM.top[0][0]) : '') : 'камеры: загружаю…') + (EV ? ' · журнал охраны за 7 дней — ' + n(EV.per7) : ''),
+      PM ? n(PM.n) : EV ? n(EV.per7) : '—', (EV && EV.per7) ? 'bad' : PM && PM.n ? 'warn' : ''));
+    R.push(row(SC ? 'sales.html#ship' : 'transport.html', 'omts', 'var(--ic-omts)', 'Машины не поданы / заказы не уехали',
+      (SC ? 'не уехали на прошлой неделе, снова в графике ' + dd(SC.from) + '–' + dd(SC.to) + ': ' + n(SC.n) + ' зак. на ' + mln(SC.s) + ' млн ₽' : 'график отгрузки: нет переноса') + (EV ? ' · журнал диспетчера за 7 дней — ' + n(EV.car7) : '') + (FL && FL.cargo ? ' · ГЛОНАСС: в рейсе ' + FL.go + ' из ' + FL.cargo : ''),
+      (EV ? n(EV.car7) : '—') + ' / ' + (SC ? n(SC.n) : '—'), (SC && SC.n) || (EV && EV.car7) ? 'warn' : ''));   // 21.11.2026 (Рекс CG-56): машины (журнал) и заказы (перенос) — разные единицы, не складываются
+    R.push(row('sales.html#ship', 'omts', 'var(--ic-sales)', 'Заказы в двух графиках отгрузки подряд', 'уехали ли — сверка с отгрузками 1С', 'список', ''));
+    R.push(row('sales.html#s-days', 'sales', 'var(--ic-sales)', 'Вечерние отчёты офисов сегодня', ops ? 'сдали ' + rep + ' из ' + ops.length + ' · контакты с клиентами — в отчётах' : 'загружаю…', ops ? rep + ' / ' + ops.length : '—', ops && rep < ops.length ? 'warn' : ''));
+    R.push(row('sales.html#planm', 'sales', 'var(--ic-sales)', 'План продаж на дату', PL && PL.live ? mln(PL.fact) + ' из ' + mln(PL.need) + ' млн ₽ на ' + dd(PL.asof) : 'загружаю…', PL && PL.live ? Math.round(PL.onDate) + ' %' : '—', PL && PL.live && PL.onDate < 90 ? 'warn' : ''));
+    R.push(row('mts.html', 'chat', 'var(--ic-calls)', 'Звонки менеджеров', 'по выгрузке МТС', 'открыть', ''));
+    document.getElementById('sens').innerHTML = R.join(''); box.hidden = false;
+  }
+  try {
+    if (window.T14Live && T14Live.bin) ['poruch.bin', 'sales.bin', 'cam.bin', 'gl.bin'].forEach(function (nm) { T14Live.bin(nm).then(function (D) { if (D) { SENS[nm.replace('.bin', '')] = D; sens(); } }, function () { }); });
+    window.addEventListener('t14bin', function (e) { var d = e.detail || {}; if (/^(poruch|sales|cam|gl)\.bin$/.test(d.name)) { SENS[d.name.replace('.bin', '')] = d.data; sens(); } });
+  } catch (e) { }
+  M.on(sens);
   M.on(render);
   M.start();
   // для помощника: что сейчас на главной (тексты плиток — из того же модуля)

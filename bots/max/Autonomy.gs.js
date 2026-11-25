@@ -30,9 +30,9 @@ var AU_PRICE_TTL_DAYS = 14;                       // запрос цены бе�
 var AU_OWNER_PCT = 5;                             // скидка больше — «нужно ваше решение» (price_now.discount_owner_pct)
 var AU_SET_TTL = 600;                             // кэш настроек листа, секунд
 var AU_LOG_KEEP = 1500;
-var AU_ITM = 'user5@example.org', AU_PTO = 'user11@example.org';
-var AU_PEO_TO = ['user13@example.org'], AU_PEO_CC = ['user14@example.org', 'user5@example.org'];
-var AU_LAWYER = 'Сотрудник25 Н. Я., user12@example.org';
+var AU_ITM = 'user5@example.org', AU_PTO = 'user13@example.org';
+var AU_PEO_TO = ['user15@example.org'], AU_PEO_CC = ['user16@example.org', 'user5@example.org'];
+var AU_LAWYER = 'Сотрудник49 Н. Я., user14@example.org';
 var AU_SHEETS = {
   au_recl_watch: ['id', 't', 'bot', 'group', 'chat', 'mid', 'client', 'defect', 'manager', 'due', 'status', 'checked', 'reminded', 'note'],
   au_price: ['id', 't', 'status', 'bot', 'chat', 'group', 'manager', 'client', 'item_id', 'position', 'basis', 'city', 'price', 'requested', 'dev_pct', 'qty', 'acted'],
@@ -57,12 +57,12 @@ var AU_SYN = { 'велюр': 'velur', 'веллюр': 'velur', 'экокож': '
 // руководители (RULES 03.11, leaders.json): бот вопросов не задаёт — помогает сроками и пунктами. Лист au_settings: leader / not_leader добавляют и убирают.
 var AU_LEADERS = [
   { fio: 'Сотрудник1 Сотрудник2 Отчество1', names: ['Сотрудник2 М', 'Сотрудник2 Сотрудник1', 'Сотрудник1 Сотрудник2', 'Сотрудник2 Отчество1', 'Т. В. Сотрудник1'], mail: ['user5@example.org', 'user4@example.org'], uniq: false },
-  { fio: 'Сотрудник17 Сотрудник80 Отчество34', names: ['Сотрудник80 Сотрудник17', 'Сотрудник80 Отчество34'], mail: ['user39@example.org'], uniq: true },
-  { fio: 'Сотрудник10 Сотрудник13 Отчество28', names: ['Сотрудник13 Сотрудник10', 'Сотрудник13 Отчество28'], mail: ['user35@example.org'], uniq: true },
-  { fio: 'Сотрудник23 Сотрудник24 Отчество1', names: ['Сотрудник24 Сотрудник23', 'Сотрудник24 Отчество1'], mail: ['user36@example.org'], uniq: false },
-  { fio: 'Сотрудник18 Сотрудник38 Отчество12', names: ['Сотрудник38 Сотрудник18', 'Сотрудник38 Отчество12'], mail: ['user15@example.org'], uniq: true },
-  { fio: 'Сотрудник19 Сотрудник21 Отчество11', names: ['Сотрудник21 Сотрудник19', 'Сотрудник21 Отчество11'], mail: ['user16@example.org'], uniq: true },
-  { fio: 'Сотрудник1 Сотрудник49 Отчество26', names: ['Сотрудник49 Сотрудник1', 'Сотрудник1 Сотрудник49'], mail: ['user22@example.org'], uniq: false }
+  { fio: 'Сотрудник29 Сотрудник90 Отчество35', names: ['Сотрудник90 Сотрудник29', 'Сотрудник90 Отчество35'], mail: ['user42@example.org'], uniq: true },
+  { fio: 'Сотрудник13 Сотрудник17 Отчество29', names: ['Сотрудник17 Сотрудник13', 'Сотрудник17 Отчество29'], mail: ['user37@example.org'], uniq: true },
+  { fio: 'Сотрудник42 Сотрудник48 Отчество1', names: ['Сотрудник48 Сотрудник42', 'Сотрудник48 Отчество1'], mail: ['user39@example.org'], uniq: false },
+  { fio: 'Сотрудник26 Сотрудник58 Отчество12', names: ['Сотрудник58 Сотрудник26', 'Сотрудник58 Отчество12'], mail: ['user17@example.org'], uniq: true },
+  { fio: 'Сотрудник16 Сотрудник47 Отчество11', names: ['Сотрудник47 Сотрудник16', 'Сотрудник47 Отчество11'], mail: ['user18@example.org'], uniq: true },
+  { fio: 'Сотрудник1 Сотрудник63 Отчество27', names: ['Сотрудник63 Сотрудник1', 'Сотрудник1 Сотрудник63'], mail: ['user6@example.org'], uniq: false }
 ];
 var AU_MEMO = { rules: undefined, price: undefined, set: undefined, ss: null, items: null };
 
@@ -255,7 +255,7 @@ function au_isLeader(nameOrId) {
   for (var j = 0; j < extra.length; j++) if (extra[j].fio.split(' ').length > 1 && hit(extra[j])) return true;
   return false;
 }
-/** Имя27 и Джановой лично бот ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans, лист au_settings ban). */
+/** Имя7 и Джановой лично бот ничего не адресует (RULES 04.11 ~18:15, bot_rules.bans, лист au_settings ban). */
 function au_isBanned_(name) {
   var s = au_nrm_(name); if (!s) return false;
   if (/(^|\s)(попов|джанов)/.test(s)) return true;
@@ -637,7 +637,7 @@ function au_priceLookup(text, ctx) {
   } catch (e) { out.note = (out.note ? out.note + '; ' : '') + 'запрос не записан (кнопки могут не сработать): ' + au_err_(e); au_log_('price', 'запись запроса: ' + au_err_(e)); }
   return out;
 }
-/** Клиент из текста: «для ООО «Ромашка»», «клиент ИП Имя1». */
+/** Клиент из текста: «для ООО «Ромашка»», «клиент ИП Сотрудник5». */
 function au_clientOf_(text) {
   var m = /(?:для|клиент[ау]?|заказчик[ау]?|покупател[ья])\s*[:—-]?\s*((?:ооо|ип|зао|оао|ао|пао|гк|тд)\s*[«"]?[^»"\n,;:()]{2,60}[»"]?|[«"][^»"\n]{2,60}[»"])/i.exec(String(text || ''));
   return m ? m[1].replace(/\s+/g, ' ').trim() : '';
@@ -698,7 +698,7 @@ function au_priceAction(data) {
   var client = String(rec.client || '') || 'по сообщению в группе' + (rec.group ? ' «' + rec.group + '»' : ''), qty = rec.qty ? String(rec.qty) : 'не указано', basisTxt = basis + (city ? ' (' + city + ')' : '');
   if (kind === 'peo') {
     var PL = sc.peo_letter || {}, to = Array.isArray(PL.to) && PL.to.length ? PL.to : AU_PEO_TO, cc = Array.isArray(PL.cc) && PL.cc.length ? PL.cc : AU_PEO_CC;
-    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя6 Отчество30', addr = au_address_(peoName);
+    var peoName = (sc.peo && sc.peo[0] && sc.peo[0].name) || (P.peo && P.peo[0] && P.peo[0].name) || 'Имя10 Отчество31', addr = au_address_(peoName);
     out.mail = { to: to.slice(), cc: cc.slice(), subject: 'Расчёт цены: ' + pos + ', базис ' + basis,
       body: addr + ', добрый день!\nПросим, пожалуйста, рассчитать цену для клиента ' + client + (rec.manager ? ' (менеджер ' + rec.manager + (rec.group ? ', «' + rec.group + '»' : '') + ')' : '') + ': ' + pos + ', количество ' + qty + ', базис ' + basisTxt + '.' +
         (X ? ' Сейчас по прайсу ' + au_dmy_(String(P.date || '')) + ' — ' + au_fmtMoney_(X) + ' ₽ с НДС' : ' Цены прайса на этом базисе нет') + (Y ? ', клиент просит ' + au_fmtMoney_(Y) + ' ₽' + (Z !== null ? ' (' + au_pct_(Z) + ')' : '') : '') + '.\n' +

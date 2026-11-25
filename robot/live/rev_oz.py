@@ -75,7 +75,7 @@ def parse(data, fn):
 
 
 def _summ(L):
-    un = [x for x in L if x['st'] != 'Обработан']          # Ozon: «Новый» и «Просмотрен» — не обработаны
+    un = [x for x in L if x['st'] != 'Обработан']          # Ozon: «Сотрудник6» и «Просмотрен» — не обработаны
     return {'n': len(L), 'avg': round(sum(x['r'] for x in L) / len(L), 2) if L else 0,
             'dist': dict((str(s), sum(1 for x in L if x['r'] == s)) for s in (5, 4, 3, 2, 1)),
             'txt': sum(1 for x in L if x['txt']), 'ph': sum(1 for x in L if x['ph']), 'answered': sum(1 for x in L if x['ans']),

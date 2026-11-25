@@ -393,8 +393,8 @@ h1{font-size:clamp(30px,5.2vw,56px)}
 /* 22.11.2026, Т. В.: карточка — вариант А. Фото целиком (без обрезки и полос), на весь экран с листанием, исполнения из прайса */
 .cardA{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:40px;align-items:start;padding:8px 0 48px}
 .galA{display:flex;flex-direction:column;gap:12px;min-width:0}
-.mainA{display:block;margin:0 auto;padding:0;border:0;background:transparent;cursor:zoom-in;position:relative;max-width:100%}
-.mainA img{display:block;max-width:100%;max-height:min(82vh,780px);width:auto;height:auto;border-radius:24px;mix-blend-mode:normal!important;background:transparent!important}
+.mainA{display:block;margin:0 auto;padding:0;border:0;background:transparent;cursor:zoom-in;position:relative;width:100%}
+.mainA img{display:block;width:100%;height:min(82vh,780px);object-fit:contain;border-radius:24px;mix-blend-mode:normal!important;background:transparent!important}
 .capA{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)}
 .thA{display:flex;gap:8px;overflow-x:auto;padding:4px 2px;scrollbar-width:none}.thA::-webkit-scrollbar{display:none}
 .thA button{position:relative;flex:0 0 auto;width:72px;height:72px;border-radius:14px;overflow:hidden;padding:0;border:1px solid var(--line);background:#fff;cursor:pointer}
@@ -418,10 +418,11 @@ h1{font-size:clamp(30px,5.2vw,56px)}
 .docA{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;border-radius:18px;background:var(--stone);padding:0 18px;margin-bottom:10px;text-decoration:none;color:inherit}
 .lbA{position:fixed;inset:0;z-index:2147483600;background:#000;display:flex;flex-direction:column}.lbA[hidden]{display:none}
 .lbT{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;color:#fff;font-size:15px}
-.lbM{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px calc(14px + env(safe-area-inset-bottom,0px))}
-.lbM img{max-width:calc(100% - 128px);max-height:100%;object-fit:contain}
+.lbM{position:relative;flex:1 1 auto;min-height:0;padding:0 84px calc(14px + env(safe-area-inset-bottom,0px))}
+.lbM img{display:block;width:100%;height:100%;object-fit:contain}
+.lbM .lbB{position:absolute;top:50%;transform:translateY(-50%)}.lbM .lbB[data-lb="-1"]{left:16px}.lbM .lbB[data-lb="1"]{right:16px}
 .lbB{font:inherit;cursor:pointer;border:0;min-width:56px;min-height:56px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:22px;padding:0 16px}
-@media (max-width:760px){.infoA{position:static}.lbM img{max-width:100%}.lbM .lbB{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px))}.lbM .lbB[data-lb="-1"]{left:16px}.lbM .lbB[data-lb="1"]{right:16px}}
+@media (max-width:760px){.infoA{position:static}.lbM{padding:0 0 calc(88px + env(safe-area-inset-bottom,0px))}.lbM .lbB{top:auto;transform:none;bottom:calc(16px + env(safe-area-inset-bottom,0px))}.lbM .lbB[data-lb="-1"]{left:16px}.lbM .lbB[data-lb="1"]{right:16px}}
 
 /* 22.11.2026: цвет обивки и инфографика отдельным блоком */
 .og .sw{display:flex;gap:8px;flex-wrap:wrap}

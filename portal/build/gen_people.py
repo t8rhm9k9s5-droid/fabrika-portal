@@ -244,7 +244,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
       act('Отклонить', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     } else {
       if (u.st === 'active' && u.id !== me.id) act(u.role === 'admin' ? 'Сделать сотрудником' : 'Сделать администратором', '', function () { return A.api('userset', { tok: A.tok(), id: u.id, role: u.role === 'admin' ? 'user' : 'admin' }); });
-      if (u.st === 'active') act('Сотрудник5 пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
+      if (u.st === 'active') act('Сотрудник6 пароль', '', function () { return A.resetPw(u).then(function (r) { showPw(g, r); return 'keep'; }); });
       if (u.id !== me.id) act(u.st === 'off' ? 'Включить доступ' : 'Отключить доступ', u.st === 'off' ? '' : 'red', function () { return A.api('userset', { tok: A.tok(), id: u.id, st: u.st === 'off' ? 'active' : 'off' }); });
       if (u.id !== me.id && u.st === 'off') act('Удалить совсем', 'red', function () { return A.api('userdel', { tok: A.tok(), id: u.id }); });
     }
@@ -255,8 +255,8 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     where.appendChild(c); where.appendChild(UI.el('p', 'ifoot', 'Передайте лично (не в общий чат). Пароль показывается один раз; сменить его можно в «Ещё» → «Личный вход».'));
   }
   function addPerson() {
-    var s = UI.sheet('Сотрудник5 человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
-    var nm = UI.field('Имя, фамилия', 'text', 'Имя1 Имя1'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
+    var s = UI.sheet('Сотрудник6 человек', 'Логин и пароль появятся здесь — передайте их лично.'), f = UI.el('div', 'iform');
+    var nm = UI.field('Имя, фамилия', 'text', 'Сотрудник5 Сотрудник5'), lg = UI.field('Логин', 'text', 'латиницей, например ivanov');
     var role = UI.el('button', 'irow', '<span class="ic"><span class="ibody"><span class="ititle">Администратор</span><span class="isub">люди, уведомления, документы, чат</span></span><span class="isw"></span></span>'); role.type = 'button'; role.setAttribute('aria-pressed', 'false');
     role.addEventListener('click', function () { role.setAttribute('aria-pressed', String(role.getAttribute('aria-pressed') !== 'true')); });
     var g1 = UI.el('div', 'igroup iflds'), g2 = UI.el('div', 'igroup'), go = UI.btn('Создать вход', 'pri');
@@ -313,7 +313,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     var act = D.users.filter(function (u) { return u.st === 'active'; }).length;
     var s = UI.sheet('Общий пароль', D.shared ? 'Сейчас сайт открывается и общим паролем, и личными входами.' : 'Выключен: сайт открывается только личными входами.'), f = UI.el('div', 'iform');
     if (D.shared) {
-      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Сотрудник5 людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
+      f.appendChild(UI.el('p', 'ifoot', 'Если выключить, общий пароль перестанет открывать сайт после ближайшего обновления (каждый день в 18:00). Войти смогут только люди с личным входом — сейчас их ' + act + '. Сотрудник6 людей тогда добавляет администратор. Вернуть общий пароль может только владелец.'));
       var go = UI.btn('Выключить общий пароль', 'red'); f.appendChild(go);
       go.addEventListener('click', function () { if (!go.dataset.arm) { go.dataset.arm = 1; go.textContent = 'Точно? Нажмите ещё раз'; return; } UI.busy(go, true); A.api('shared', { tok: A.tok(), on: false }).then(function () { s.close(); load(); }, function (e) { UI.busy(go, false); UI.msg(f, e.message, true); }); });
     }
@@ -380,7 +380,7 @@ ADMIN = '<title>Фабрика — управление</title>\n' + HEAD + '''
     }
     function draw(J) {
       f.innerHTML = ''; f.appendChild(stat(J));
-      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Сотрудник5 токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
+      var tg = UI.el('div', 'igroup iflds'), tk = UI.field(J.token ? 'Сотрудник6 токен (если меняется)' : 'Токен бота MAX', 'password', 'из кабинета MAX для бизнеса'); tk.lastChild.autocomplete = 'off'; tg.appendChild(tk); f.appendChild(tg);
       f.appendChild(act(J.token ? 'Заменить токен и переподключить' : 'Сохранить токен и подключить', 'pri', function () {
         var v = tk.lastChild.value.trim(); if (!v) return Promise.reject(new Error('Вставьте токен.'));
         return mxCall('token', { token: v }).then(function (r) { tk.lastChild.value = ''; return r; });

@@ -22,7 +22,7 @@ var TM_UA_OWNER = /(?<![А-Яа-яЁё])(Сотрудник2(а|у|ом|е)?(\s+
 var TM_UA_ASK = /\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|согласуете|направьте|предоставьте|пришлите|ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|как поступить|разрешите|одобрите|утвердите|посмотрите)(?![а-яё])/i;
 var TM_SUBJ_PFX = /^\s*((re|fw|fwd|отв|ответ|пересл|пересылка|ha)\s*(\[\d+\])?\s*:\s*)+/i;
 
-// REDACTED_B64_38 общее: адреса, заголовки, тело
+// REDACTED_B64_9 общее: адреса, заголовки, тело
 /** «Имя <адрес>» → адрес в нижнем регистре */
 function tm_addr_(s) { var m = /<([^<>\s]+@[^<>\s]+)>/.exec(String(s || '')); var a = m ? m[1] : (String(s || '').match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/) || [''])[0]; return String(a).trim().toLowerCase(); }
 function tm_addrs_(s) { var out = []; String(s || '').split(',').forEach(function (x) { var a = tm_addr_(x); if (a) out.push(a); }); return out; }
@@ -79,7 +79,7 @@ function tm_colSet_(name) {
   return s;
 }
 
-// REDACTED_B64_38 1) письма-команды → cp_push (минутный тик)
+// REDACTED_B64_9 1) письма-команды → cp_push (минутный тик)
 var TM_MAILCMD_FIRST_MS = 3600e3;                                        // первый запуск: письма не старше часа (старые разобрал робот хостинга — дубли Claude не нужны)
 var TM_MAILCMD_LAG_MS = 180e3;                                           // запас к водяному знаку времени (письмо могло прийти чуть «из прошлого»)
 var TM_MAILCMD_PAGE = 50, TM_MAILCMD_MAX = 400;                          // F4 C-A5: поиск постранично; больше TM_MAILCMD_MAX нитей в окне — окно времени делится пополам
@@ -172,7 +172,7 @@ function tm_mailOne_(x, subjRe, anyFrom, logRow, res, hold, now) {
   return 'pushed';
 }
 
-// REDACTED_B64_38 2) вопросы без ответа (раз в 55 минут)
+// REDACTED_B64_9 2) вопросы без ответа (раз в 55 минут)
 /** сегодня и n прошлых рабочих дней → ['ГГГГ-ММ-ДД', …] */
 function tm_workDays_(today, n) { var out = [today], d = today; while (out.length < n + 1) { d = tm_addDays_(d, -1); if (tm_workday_(d)) out.push(d); } return out; }
 function tm_nsubj_(s) { return String(s || '').replace(TM_SUBJ_PFX, '').replace(/\s+/g, ' ').trim().toLowerCase(); }
@@ -269,9 +269,9 @@ function tm_unans_(ctx) {
   return { mail: ms.open, max: xs.open, n: items.length };
 }
 
-// REDACTED_B64_38 3) контроль sales@ (раз в 25 минут)
-var TM_SALES_DEF = { on: true, from: '2026-10-31', hours: 4, second: 8, work: ['09:00', '18:00'], window_days: 21, to: ['user8@example.org', 'user16@example.org', 'user15@example.org'],
-                     greet: 'Сотрудник13 Отчество7, Сотрудник21 Отчество11, Сотрудник38 Отчество12', owner: TM_ITM, digest_at: '08:50', skip_from: [], skip_domains: [] };
+// REDACTED_B64_9 3) контроль sales@ (раз в 25 минут)
+var TM_SALES_DEF = { on: true, from: '2026-10-31', hours: 4, second: 8, work: ['09:00', '18:00'], window_days: 21, to: ['user10@example.org', 'user18@example.org', 'user17@example.org'],
+                     greet: 'Сотрудник17 Отчество8, Сотрудник47 Отчество11, Сотрудник58 Отчество12', owner: TM_ITM, digest_at: '08:50', skip_from: [], skip_domains: [] };
 function tm_salesCfg_() { var o = JSON.parse(JSON.stringify(TM_SALES_DEF)), over = tm_cfgJson_('sales', {}); if (over && typeof over === 'object') Object.keys(over).forEach(function (k) { o[k] = over[k]; }); return o; }
 /** рабочих минут между t0 и t1 (пн–пт, окно work, без праздников) */
 function tm_workMins_(t0, t1, cfg) {
@@ -310,7 +310,7 @@ function tm_salesThread_(thread, cfg, lo) {
       return;
     }
     if (!cur || cur.ans || !tm_ownDom_(m.frm)) return;
-    var toClient = m.rc.indexOf(cur.client) >= 0 || m.rc.indexOf('user41@example.org') >= 0;
+    var toClient = m.rc.indexOf(cur.client) >= 0 || m.rc.indexOf('user44@example.org') >= 0;
     if (toClient) cur.ans = { t: tm_msk_(m.t).iso, n: (m.fname || m.frm.split('@')[0]).slice(0, 60) };
     else cur.fwd = { t: tm_msk_(m.t).iso, n: (m.fname || m.frm.split('@')[0]).slice(0, 60) };
   });
@@ -324,7 +324,7 @@ function tm_salesScan_(ctx, cfg, st) {
   var from = tm_addDays_(ctx.today, -(Number(cfg.window_days) || 21)), lo = String(cfg.from || '2026-10-31');
   if (from < tm_addDays_(lo, -7)) from = tm_addDays_(lo, -7);
   if (!st.th || typeof st.th !== 'object') st.th = {};
-  var full = st.full !== ctx.today || !st.scan_t, base = '(to:user41@example.org OR cc:user41@example.org OR subject:"[sales]") -in:spam -in:trash';
+  var full = st.full !== ctx.today || !st.scan_t, base = '(to:user44@example.org OR cc:user44@example.org OR subject:"[sales]") -in:spam -in:trash';
   var q = full ? base + ' after:' + from.replace(/-/g, '/') : base + ' after:' + Math.floor((tm_isoMs_(st.scan_t) - 15 * 60000) / 1000);
   var threads = GmailApp.search(q, 0, full ? 100 : 30), seen = {}, n = 0;
   for (var i = 0; i < threads.length && ctx.left() > 20000; i++) {
@@ -359,8 +359,8 @@ function tm_salesCtl_(ctx) {
       var items = first.concat(second), body = [];
       if (first.length) { body.push('Нет ответа клиенту больше ' + (h1 / 60) + ' рабочих часов:'); first.forEach(function (x, i) { body.push(tm_salesLine_(i + 1, x[1], now, cfg)); }); }
       if (second.length) { if (body.length) body.push(''); body.push('Повторно — нет ответа больше ' + (h2 / 60) + ' рабочих часов:'); second.forEach(function (x, i) { body.push(tm_salesLine_(first.length + i + 1, x[1], now, cfg)); }); }
-      var text = (cfg.greet || 'Коллеги') + ', добрый день.\n\nПисьма на user41@example.org — на особом контроле: ответ клиенту в течение ' + (h1 / 60) + ' рабочих часов, с user41@example.org в копии.\n\n' + body.join('\n') +
-                 '\n\nОтвечая клиенту, ставьте user41@example.org в копию — тогда запрос закроется. Если ответ уже ушёл без копии — перешлите его на user41@example.org.\n— бот «Фабрикант» (контроль sales@)';
+      var text = (cfg.greet || 'Коллеги') + ', добрый день.\n\nПисьма на user44@example.org — на особом контроле: ответ клиенту в течение ' + (h1 / 60) + ' рабочих часов, с user44@example.org в копии.\n\n' + body.join('\n') +
+                 '\n\nОтвечая клиенту, ставьте user44@example.org в копию — тогда запрос закроется. Если ответ уже ушёл без копии — перешлите его на user44@example.org.\n— бот «Фабрикант» (контроль sales@)';
       var n = items.length, subj = 'sales@: ' + n + ' ' + (n === 1 ? 'запрос' : n < 5 ? 'запроса' : 'запросов') + ' без ответа клиенту';
       var to = (cfg.to || []).map(function (x) { return String(x).toLowerCase(); }).filter(function (x) { return !leaders[x]; });   // руководству напоминаний нет
       if (to.length) {
@@ -385,8 +385,8 @@ function tm_salesCtl_(ctx) {
         lines.push(''); lines.push('За ' + tm_ddmm_(y) + ' отвечено: ' + ansY.length + ', в среднем за ' + Math.floor(avg / 60) + ' ч ' + Math.round(avg % 60) + ' мин рабочего времени' + (late ? '; позже ' + (h1d / 60) + ' ч — ' + late : '') + '.');
         ansY.forEach(function (m) { var r = req[m]; lines.push('  • ' + r.n + ' — «' + String(r.s).replace(/^\s*\[\s*sales\s*\]\s*/i, '').slice(0, 90) + '» — ответил(а) ' + r.ans.n + ' в ' + tm_ddmm_(r.ans.t) + ' ' + r.ans.t.slice(11, 16)); });
       }
-      lines.push(''); lines.push('Новых запросов за ' + tm_ddmm_(y) + ': ' + newY.length + '.');
-      var txt = 'Контроль писем на user41@example.org на ' + tm_ddmm_(ctx.today) + ' ' + ctx.msk.hm + '.\n\n' + lines.join('\n') + '\n\nНапоминания уходят через ' + (h1d / 60) + ' и ' + (Number(cfg.second) || 8) + ' рабочих часов без ответа.\n— бот «Фабрикант» (контроль sales@)';
+      lines.push(''); lines.push('Сотрудник6 запросов за ' + tm_ddmm_(y) + ': ' + newY.length + '.');
+      var txt = 'Контроль писем на user44@example.org на ' + tm_ddmm_(ctx.today) + ' ' + ctx.msk.hm + '.\n\n' + lines.join('\n') + '\n\nНапоминания уходят через ' + (h1d / 60) + ' и ' + (Number(cfg.second) || 8) + ' рабочих часов без ответа.\n— бот «Фабрикант» (контроль sales@)';
       var r2 = tm_mail_([cfg.owner || TM_ITM], [], 'sales@ на ' + tm_ddmm_(ctx.today) + ': без ответа — ' + opn.length, txt, true);
       if (r2 === 'ok' || r2 === 'dry') { res.digest = opn.length; st.dg.push(ctx.today); st.dg = st.dg.slice(-30); } else res.err = r2;
     } else { st.dg.push(ctx.today); st.dg = st.dg.slice(-30); }

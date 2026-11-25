@@ -7,7 +7,7 @@
 Карта вариантов {путь: [ширина основного, ширина 640-варианта или 0, ширина крупного или 0]} подключается в fsu_shim.js: картинка получает srcset,
 и браузер сам берёт файл под размер на экране × плотность пикселей. Медленная сеть не страдает: телефон тянет 640/1280."""
 import io, os, re
-from PIL import Image
+from PIL import Image, ImageOps
 try:
     import cv2, numpy as np
     _SR = cv2.dnn_superres.DnnSuperResImpl_create()
@@ -48,6 +48,13 @@ def process(src, dst, rel):
     """→ (байт до, байт после, запись карты или None)"""
     n = os.path.getsize(src)
     im = Image.open(src); im.draft('RGB', (BIG * 2, BIG * 2)); im.load()
+    im = ImageOps.exif_transpose(im)   # 21.11.2026 (аудит): поворот по EXIF
+    _icc = im.info.get('icc_profile')
+    if _icc and im.mode in ('RGB', 'RGBA'):   # профиль AdobeRGB/P3 → sRGB, иначе оттенок обивки сдвигается
+        try:
+            from PIL import ImageCms
+            _m = im.mode; im = ImageCms.profileToProfile(im, ImageCms.ImageCmsProfile(io.BytesIO(_icc)), ImageCms.createProfile('sRGB'), outputMode=_m)
+        except Exception: pass
     if im.mode == 'P': im = im.convert('RGBA')
     W = max(im.size)
     if W < 64 or rel.endswith('.svg'):

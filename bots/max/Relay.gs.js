@@ -12,7 +12,7 @@
 
 var SITE = 'https://techfabrikant.ru/';
 var OWNER_CMD = /^\s*в\s+(?:группу\s+)?([^:\n]{3,60}?)\s*:\s*(\S[\s\S]*)$/i;
-var KNOWN_GROUPS = { '-100000000003': 'Коммерческий отдел', '-100000000004': 'Производство' };
+var KNOWN_GROUPS = { '-100000000004': 'Коммерческий отдел', '-100000000005': 'Производство' };
 var HOOK_TYPES = ['message_created', 'message_callback', 'bot_started', 'bot_added', 'bot_removed', 'message_edited', 'message_removed',
                   'user_added', 'user_removed', 'chat_title_changed'];
 
@@ -55,7 +55,7 @@ function sendChat_(cid, text) { return api_('POST', '/messages', { chat_id: cid 
 function sendUser_(uid, text) { return api_('POST', '/messages', { user_id: uid }, { text: String(text).slice(0, 3990), format: 'html' }); }
 function h_(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }   // 12.11 CodeQL: и кавычки — h_ идёт и в атрибуты href
 
-// REDACTED_B64_38 группы бота (свойство GROUPS)
+// REDACTED_B64_9 группы бота (свойство GROUPS)
 /** { chat_id: {title, type} } — запомненные группы + то, что вдруг отдаст GET /chats. */
 function groups_() {
   var g = {}; try { g = JSON.parse(P_().getProperty('GROUPS') || '{}'); } catch (e) {}
@@ -104,7 +104,7 @@ function members_(cid) {
   return out;
 }
 
-// REDACTED_B64_38 команды Claude (подпись K_CMD)
+// REDACTED_B64_9 команды Claude (подпись K_CMD)
 function cmd_(e) {
   var k = kcmd_(); if (!k) return { ok: false, error: 'ключ команд не установлен' };
   var t = Number(e.parameter.t || 0), d = String(e.parameter.d || ''), s = String(e.parameter.s || '').toLowerCase();
@@ -161,7 +161,7 @@ function cmd_(e) {
   } finally { lock.releaseLock(); }
 }
 
-// REDACTED_B64_38 вебхук MAX
+// REDACTED_B64_9 вебхук MAX
 function hook_(e) {
   var sec = P_().getProperty('HOOK_SECRET'); if (!sec || !e || !e.parameter || e.parameter.s !== sec) return { ok: false };
   var raw = e.postData && e.postData.contents || '', u; try { u = JSON.parse(raw); } catch (x) { return { ok: true }; }
@@ -227,7 +227,7 @@ function doPost(e) {
 }
 function doGet(e) {if(e && e.parameter && e.parameter.page === 'owner-timers') return rcot_render_(); if(e && e.parameter && e.parameter.page === 'owner-control') return rcow_routeGet_(e);  if(e && e.parameter && e.parameter.page === 'rexapprove') return rxap_renderApproval_(); if(e && e.parameter && e.parameter.page === 'rexsetup') return rxa_renderSetup_(); return json_({ ok: true, bot: 'Фабрика — бот MAX' }); }
 
-// REDACTED_B64_38 настройка (запускать из редактора)
+// REDACTED_B64_9 настройка (запускать из редактора)
 var WEBAPP_URL_FIXED = 'https://script.google.com/macros/s/REDACTED_2/exec';   // адрес веб-приложения (…/exec) после развёртывания — вписывается сюда, если getUrl() из редактора отдаёт /dev
 function webappUrl_() {
   if (WEBAPP_URL_FIXED) return WEBAPP_URL_FIXED;

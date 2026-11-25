@@ -249,15 +249,15 @@ def report_like(frm, subj, names):
     if not names: return frm in ('user16@example.org', 'user15@example.org') and 'гальваник' in s   # 03.11.2026: ПЭО «выпуска в 1С нет» — без вложения
     if frm == 'user28@example.org' and 'отчет' in s.replace('ё', 'е'): return True
     if frm in ('user16@example.org', 'user15@example.org') and ('гальваник' in s or any('гальваник' in n for n in low)): return True
-    if frm == 'user3@example.org' and any(k in s for k in ('складские остатки', 'жилпромсервис отчеты', 'пкс свободные остатки', 'продажи в разрезе')): return True   # 30.10: + продажи за день
+    if frm == 'user3@example.org' and any(k in s for k in ('складские остатки', 'жилпромсервис отчеты', 'пкс свободные остатки', 'продажи в разрезе', 'продажи в течение месяца')): return True   # 30.10: + продажи за день; 23.11: + окно 1С «в течение месяца»
     if frm in ('user5@example.org', 'user4@example.org') and any(k in s for k in ('пкс свободные остатки', 'складские остатки')): return True
     if frm == 'user3@example.org' and any(k in s for k in ('реестр рекламаций', 'тз в работе')): return True       # 03.11.2026: рассылки 1С для rep_1c.py (02.11) — без этого письма не доходили до разбора
     if frm in ('user35@example.org', 'user6@example.org', 'user5@example.org', 'user4@example.org') and any('выгрузк' in n and 'отзыв' in n and n.endswith('.xlsx') for n in low): return True   # 03.11.2026: выгрузка отзывов Ozon (e-commerce, rev_oz.py); ~20:40 — и с user6@example.org (А. Сотрудник1 пишет оттуда)
-    if frm == 'user36@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник11 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
-    if frm in ('user36@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник11 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
+    if frm == 'user36@example.org' and 'продажи в разрезе' in s: return True     # 30.10.2026: В. В. Сотрудник10 — отчёт 1С «Продажи» за месяц по дням (в 1c@)
+    if frm in ('user36@example.org', 'user3@example.org') and any('продажи в разрезе' in x and x.endswith('.xlsx') for x in low): return True   # 03.11.2026: ответ Сотрудник10 02.11 15:52 шёл с темой «Ответ: Продажи 1С: ежедневная сводка…» — смотрим и имена файлов
     if frm in ('user3@example.org', 'user36@example.org', 'user30@example.org', 'user37@example.org', 'user5@example.org', 'user4@example.org') and \
             any(n.endswith('.xlsx') for n in low) and (any(k in s for k in ('запасы гп', 'товары на складах')) or any('товары на складах' in n or ('запас' in n and 'гп' in n) for n in low)):
-        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник14 02.11; ежедневно — В. В. Сотрудник11 на 1c@) → stock_mv.py
+        return True      # 03.11.2026: 1С «Товары на складах» («Запасы ГП», образец — М. М. Сотрудник13 02.11; ежедневно — В. В. Сотрудник10 на 1c@) → stock_mv.py
     return frm == 'user30@example.org' and any(n.endswith('.zip') for n in low)
 
 
@@ -300,7 +300,7 @@ def card(msg, folder, me):
 
 
 def refind(M, fl, st, nid, me, log):
-    """14.11.2026: ответ, одобренный по письму, запрос на которое уже вытеснен из dreq (ответ Сотрудник9 «повышение цен Крым» не ушёл:
+    """14.11.2026: ответ, одобренный по письму, запрос на которое уже вытеснен из dreq (ответ Сотрудник8 «повышение цен Крым» не ушёл:
     запрос вытеснили 12 более новых писем). Находит письмо заново по заметке (папка, отправитель, дата) и строит запрос, как card()."""
     note = next((n for n in st.get('notes') or [] if n.get('id') == nid), None)
     if not note or not note.get('f'): return None

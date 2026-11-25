@@ -5,7 +5,7 @@ function lmhm_control_(enabled){
  var lock=LockService.getScriptLock();if(!lock.tryLock(1500))throw Error('monitor control busy');
  try{
   var p=PropertiesService.getScriptProperties();
-  if(enabled){var c=lmhi_config_();if(!c||c.endpoint!=='https://max-durable-ingress-100000000001.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_2'||p.getProperty('MAX_HTTP_LEGACY_AUTO_ENABLED')!=='1'||typeof lmhm_timer_!=='function'||mx_isGoogle()!==true)throw Error('monitor target');mhl_dependencies_(c).verifyRootSchema();
+  if(enabled){var c=lmhi_config_();if(!c||c.endpoint!=='https://max-durable-ingress-100000000002.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_4'||p.getProperty('MAX_HTTP_LEGACY_AUTO_ENABLED')!=='1'||typeof lmhm_timer_!=='function'||mx_isGoogle()!==true)throw Error('monitor target');mhl_dependencies_(c).verifyRootSchema();
    var slot=p.getProperty('MAX_HTTP_MONITOR_SLOT_V1');if(slot!==null&&(!/^\d+$/.test(slot)||!Number.isSafeInteger(Number(slot))||Number(slot)>Math.floor(Date.now()/900000)))throw Error('monitor slot');
   }
   var raw=JSON.stringify({enabled:enabled,notify_enabled:false});p.setProperty('MAX_HTTP_MONITOR_V1',raw);

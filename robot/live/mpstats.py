@@ -17,7 +17,7 @@ import datetime, json, os, re, ssl, time, urllib.error, urllib.parse, urllib.req
 BASE = 'https://mpstats.io/api'
 MSK = datetime.timezone(datetime.timedelta(hours=3))
 DEF = {'days': 30, 'brands': {'wb': ['Фабрикант'], 'oz': ['Фабрикант']},
-       'competitors': ['UTFC', 'Комфур', 'Радом', 'Оленьсю'],   # Т. В. 11.11: главные конкуренты (+ новосибирская фабрика — название уточнить)
+       'competitors': ['UTFC', 'Комфур', 'Радом', 'Оленьсю'],   # Т. В. 11.11: Имя1 конкуренты (+ новосибирская фабрика — название уточнить)
        'niche_top': 3, 'run_after': '06:30', 'retry_h': 2}
 MPS = (('wb', 'Wildberries'), ('oz', 'Ozon'))
 

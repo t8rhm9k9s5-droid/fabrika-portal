@@ -14,7 +14,7 @@ function lmhi_realTimerJob_(ctx,metrics) {
   var deferred=false,inserted=false,dirty=false;
   function need(ms){var n=ctx&&typeof ctx.left==='function'?ctx.left():NaN;if(!Number.isFinite(n)||n<ms){deferred=true;throw Error('budget');}}
   var c;
-  try{c=lmhi_config_();if(!c)return 'disabled';if(c.endpoint!=='https://max-durable-ingress-100000000001.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_2')return 'namespace_blocked';if(typeof mx_isGoogle!=='function'||mx_isGoogle()!==true)return 'mode_disabled';need(35000);}
+  try{c=lmhi_config_();if(!c)return 'disabled';if(c.endpoint!=='https://max-durable-ingress-100000000002.us-central1.run.app'||c.namespace!=='legacy_prod_20261107'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_4')return 'namespace_blocked';if(typeof mx_isGoogle!=='function'||mx_isGoogle()!==true)return 'mode_disabled';need(35000);}
   catch(e){return deferred?'budget_deferred':'config_invalid';}
   var binding=lmhi_sha_(JSON.stringify([c.endpoint,c.namespace,c.receipt_kind,c.legacy_sheet_id])),cursor=null;
   try{cursor=JSON.parse(p.getProperty('MAX_HTTP_LEGACY_INGRESS_CURSOR_V1')||'null');}catch(e){}

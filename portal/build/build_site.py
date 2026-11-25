@@ -57,11 +57,13 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   ('poruch.html', '/home/claude/build/poruch_frag.html'),
                   # 14.11.2026, Т. В.: «по онлайн-продажам — раздел инфографики: промтами основные принципы её оформления»
                   ('infografika.html', '/home/claude/build/infografika_frag.html'), ('ppr.html', '/home/claude/build/ppr_frag.html'),
+                  # 23.11.2026, Т. В.: «форму расчёта клади на портал с тем же кодом… в разделе продажи»; база и расчёты — общие с веб-приложением (work/calc)
+                  ('calc.html', '/home/claude/build/calc_frag.html'),
                   # 16.11.2026, Т. В. (опрос): «Структура» — своя страница в разделе «Люди» (оргструктура, коммерческий отдел, СИМ-карты; раньше внутри «Продаж»)
                   ('struct.html', '/home/claude/build/struct_frag.html')):
     frags[name] = _cg1_read_file(src, encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+_TITLES = {'home.html': 'Фабрика', 'calc.html': 'Фабрика — калькулятор мебели', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
            'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'cams.html': 'Фабрика — видеонаблюдение', 'jps.html': 'Фабрика — Жилпромсервис', 'mts.html': 'Фабрика — звонки МТС', 'ftp.html': 'Фабрика — файлы FTP сайта', 'site.html': 'Фабрика — сайт', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'struct.html': 'Фабрика — структура', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — энергоресурсы и счётчики'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
@@ -86,7 +88,7 @@ for _n in frags:
 with open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8') + "\nwindow.T14SKY && T14SKY.mount('right');\n")
 frags['plan.html'] += '\n<script src="assets/sky.js"></script>\n'
-# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник12 Сотрудник27); ядро погоды без плашки — assets/sky0.js
+# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник11 Сотрудник27); ядро погоды без плашки — assets/sky0.js
 with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
@@ -180,7 +182,7 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник15 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник14 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
     _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Имя2 продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
@@ -225,7 +227,7 @@ try:
                     for _it in _o.get('items', []): _it.pop('ch', None)
         _SHIP['plan'] = _pl
 except Exception as _e: print('план отгрузки:', _e)
-# 11.11.2026, Сотрудник8 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
+# 11.11.2026, Сотрудник16 К. В.: «Ежедневное выполнение плана по менеджерам» (build/sales_plan_mgr/<ГГГГ-ММ>.json) → #planm-data
 try:
     _pmf = sorted(_gl.glob('/home/claude/build/sales_plan_mgr/2*.json'))
     _PM = _cg1_read_json(_pmf[-1], encoding='utf-8') if _pmf else None
@@ -266,7 +268,7 @@ if 'infografika.html' in frags: frags['infografika.html'] = frags['infografika.h
 try: _JK = _cg1_read_json('/home/claude/build/jps/kb_2026.json', encoding='utf-8')
 except Exception as _e: print('ЖПС база:', _e); _JK = None
 # 19.11.2026, Т. В.: «изменения из базы 1С не применяй, применяй те данные, которые у тебя были» — месяцы, по которым у портала
-#   есть принятый итог (sales_1c/month_override.json: октябрь 124,52 млн по отчёту Сотрудник11), берутся оттуда, а не из выгрузки
+#   есть принятый итог (sales_1c/month_override.json: октябрь 124,52 млн по отчёту Сотрудник10), берутся оттуда, а не из выгрузки
 try:
     _MOV = _cg1_read_json('/home/claude/build/sales_1c/month_override.json', encoding='utf-8')
     if _JK:
@@ -280,6 +282,23 @@ try:
 except Exception as _e: print('ЖПС месяцы:', _e)
 try: _MP = _cg1_read_json('/home/claude/build/calls_mts/phones.json', encoding='utf-8')
 except Exception as _e: print('звонки МТС, справочник:', _e); _MP = {'cl': {}, 'st': {}, 'src': ''}
+# 24.11.2026, Т. В.: «MAX ID … я просил их к сим-картам привязать» — к номеру сотрудника из справочника СИМ добавляется MAX ID (build/data/max_ids.json, совпадение фамилия+имя, только однозначное)
+try:
+    import re as _re_sm
+    _ksm = lambda s: ' '.join(_re_sm.findall(r'[а-яё]+', (s or '').lower().replace('ё', 'е').replace('ъ', 'ь'))[:2])
+    _MXS = {}
+    for _m in _cg1_read_json('/home/claude/build/data/max_ids.json', encoding='utf-8')['people']:
+        _nm = (_m.get('name') or '').split()
+        for _a, _b in ((_m.get('ln', ''), _m.get('fn', '')), (_nm[-1] if len(_nm) > 1 else '', _nm[0] if _nm else '')):
+            _kk = _ksm(_a + ' ' + _b)
+            if len(_kk.split()) == 2: _MXS.setdefault(_kk, set()).add(str(_m['uid']))
+    _nsm = 0
+    for _ph, _v in (_MP.get('st') or {}).items():
+        if isinstance(_v, list) and len(_v) >= 2 and _v[1] in ('Сотрудники', 'Руководство'):
+            _u = _MXS.get(_ksm(_v[0]))
+            if _u and len(_u) == 1: _v[2:] = [next(iter(_u))]; _nsm += 1
+    print('MAX ID у СИМ-карт:', _nsm)
+except Exception as _e: print('MAX ID у СИМ-карт:', _e)
 if 'mts.html' in frags: frags['mts.html'] = frags['mts.html'].replace('__MTSPH__', _js.dumps(_MP, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 if 'jps.html' in frags: frags['jps.html'] = frags['jps.html'].replace('__JPSKB__', _js.dumps(_JK, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
 frags['sales.html'] = frags['sales.html'].replace('__PLANM__', _js.dumps(_PM, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -289,7 +308,7 @@ try:
     _mof = sorted(_gl.glob('/home/claude/build/sales_mgr_op/2*.json'))
     _MO = _cg1_read_json(_mof[-1], encoding='utf-8') if _mof else None
 except Exception as _e: print('менеджеры × ОП:', _e); _MO = None
-# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник8 из папки «Планы» itm@)
+# 12.11.2026: раздел «ФТС» в «Продажах» — build/fts/fts_year.json (отчёты Сотрудник16 из папки «Планы» itm@)
 try: _FY = _cg1_read_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fts', 'fts_year.json'), encoding='utf-8')
 except Exception: _FY = None
 frags['sales.html'] = frags['sales.html'].replace('__FTSYEAR__', _js.dumps(_FY, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c'), 1)
@@ -389,7 +408,7 @@ except Exception as _e:
     print('отзывы ВИ:', _e); _virj = 'null'
 assert frags['sales.html'].count('__VIREV__') == 1
 frags['sales.html'] = frags['sales.html'].replace('__VIREV__', _virj, 1)
-# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник9 02.11, build/sales_op/spb_clients.json)
+# 03.11.2026: клиенты закрытого ОП Санкт-Петербург и кому переданы (ответ М. И. Сотрудник8 02.11, build/sales_op/spb_clients.json)
 try: _spbj = _js.dumps(_cg1_read_json('/home/claude/build/sales_op/spb_clients.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('клиенты СПб:', _e); _spbj = 'null'
 assert frags['struct.html'].count('__SPB__') == 1   # 16.11.2026: клиенты СПб — в «Структуре» (карточка ОП СПб у коммерческого отдела)
@@ -398,7 +417,7 @@ frags['struct.html'] = frags['struct.html'].replace('__SPB__', _spbj, 1)
 try: _tz1 = _js.dumps(_cg1_read_json('/home/claude/build/tz/tz_1c.json', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 except Exception as _e: print('ТЗ 1С:', _e); _tz1 = 'null'
 frags['sales.html'] = frags['sales.html'].replace('__TZ1C__', _tz1, 1)
-# 30.10.2026: «Продажи» → «Имя2 продаж — октябрь 2026» — письмо М. И. Сотрудник9 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
+# 30.10.2026: «Продажи» → «Имя2 продаж — октябрь 2026» — письмо М. И. Сотрудник8 (mit@) 30.10 с выгрузками 1С: продажи офисов, отгрузки по неделям,
 # план продаж по менеджерам октябрь → ноябрь с группами производства (build/sales_op/2026-10.json). Нет файла — пустой объект, блок не показывается
 _sopp = '/home/claude/build/sales_op/2026-10.json'
 def _sop_clean(d):
@@ -602,7 +621,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник11) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -645,7 +664,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         _AW = _SD.get('allwh') or {}
         if _AW.get('list'): _PU['stock']['allwh'] = {'date': _AW.get('date'), 'list': [{'n': w.get('n'), 'q': w.get('q'), 'd': w.get('d')} for w in _AW['list']]}
     except Exception as _e4: print('пульс, все склады:', _e4)
-    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник14; свежий — smvs.bin)
+    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник13; свежий — smvs.bin)
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:

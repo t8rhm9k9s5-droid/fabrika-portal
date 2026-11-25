@@ -101,6 +101,7 @@
     s_prod: SVG('<path d="M12 16h.01"/><path d="M16 16h.01"/><path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M8 16h.01"/>'),
     s_stock: SVG('<path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z"/><path d="M6 13h12"/><path d="M6 17h12"/>'),
     s_omts: SVG('<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>'),
+    s_calc: SVG('<path d="M4 4h16"/><path d="M4 2.5v3M20 2.5v3"/><path d="M7 15V11a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><path d="M4 13a1.5 1.5 0 0 1 3 0v2h10v-2a1.5 1.5 0 0 1 3 0v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M6 18v2M18 18v2"/>'),   // 23.11.2026: калькулятор мебели (иконка «А»)
     s_sales: SVG('<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>'),
     s_items: SVG('<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/>'),
     s_docs: SVG('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
@@ -120,6 +121,10 @@
     s_store: SVG('<path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/>'),
     s_arch: SVG('<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>'),
     s_meter: SVG('<path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/>'),   // 04.11.2026: «Счётчики и откачка»
+    // 24.11.2026: свои значки для новых пунктов меню (у каждого раздела — свой, без повторов)
+    s_cam: SVG('<path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/>'),
+    s_cart: SVG('<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>'),
+    s_factory: SVG('<path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M17 18h1"/><path d="M12 18h1"/><path d="M7 18h1"/>'),
     s_cube: SVG('<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
     s_file: SVG('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'),
     s_gear: SVG('<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/>'),
@@ -170,21 +175,27 @@
     ['razdel.html#online', 'Онлайн-продажи', 's_web', 'var(--ic-items)', 'Маркетплейсы, интернет-партнёры, цены и отзывы'],   // 13.11.2026, Т. В.: «онлайн-продажи — отдельный блок»
     ['razdel.html#prod', 'Производство', 's_prod', 'var(--ic-prod)', 'Выпуск, участки, мощность', 'staff.html'],
     ['razdel.html#quality', 'Качество', 's_file', 'var(--ic-err)', 'Рекламации, брак, сертификаты'],
-    ['razdel.html#supply', 'Снабжение и склад', 's_stock', 'var(--ic-stock)', 'Заявки ОМТС и остатки складов', 'stock.html'],
+    // 24.11.2026, Т. В.: «ОМТС — отдельная служба, отдельный раздел»; «склад — приходим в склад: остатки, брак, офисы»
+    ['razdel.html#supply', 'Склад', 's_stock', 'var(--ic-stock)', 'Остатки складов и офисов продаж, брак, движение', 'stock.html'],
+    ['razdel.html#omts', 'ОМТС', 's_cart', 'var(--ic-omts)', 'Заявки на закупку: просрочка, сроки поставки материалов', 'omts.html'],
     ['razdel.html#log', 'Логистика', 's_omts', 'var(--ic-omts)', 'Автотранспорт, перемещение грузов, ГСМ'],
     ['razdel.html#fin', 'Финансы и экономика', 's_sliders', 'var(--ic-ai)', 'Экономика ПЭО: цены, объёмы, мощность'],
     ['razdel.html#items', 'Продукция', 's_items', 'var(--ic-items)', 'Каталог, модели, материалы, прайсы'],
     ['fsu/', 'Сайт', 's_shop', 'var(--ic-items)', 'Сайт fabrikant.su — копия один к одному, на весь экран'],   // 20.11.2026, Т. В.: «отдельный раздел меню, как план»
     ['razdel.html#people', 'Люди', 's_org', 'var(--ic-calls)', 'Структура, контакты, кадры'],
     ['razdel.html#docs', 'Документы', 's_docs', 'var(--ic-docs)', 'Договоры, регламенты, чертежи, архив'],
-    ['razdel.html#site', 'Площадка', 's_map', 'var(--ic-map)', 'Инженерная служба: ППР и ТО, энергоресурсы; план и 3D-модель', 'plan.html']];
+    ['razdel.html#site', 'Площадка', 's_factory', 'var(--ic-map)', 'Инженерная служба: ППР и ТО, энергоресурсы, счётчики', 'plan.html'],
+    // 24.11.2026, Т. В.: «план 2D, 3D и видеонаблюдение — важная часть, по сути отдельные разделы; в меню „Разделы“ должно отображаться всё основное»
+    ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'Территория и здания на плане, камеры, сети'],
+    ['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'Объёмная модель площадки: здания, камеры, зоны обзора'],
+    ['cams.html', 'Видеонаблюдение', 's_cam', 'var(--ic-err)', 'События камер, снимки, регистраторы']];
   // 29.10.2026, «Транспорт (ГЛОНАСС)»: пользователь — «надо подключить», кто видит — «Только я». Пункт — только на устройстве, где вошёл
   // владелец (личный вход «owner»: id = первые 24 знака SHA-256('fabrika-login:owner')); это лишь меню — данные проверяет и отдаёт скрипт бота (op gl)
   var OWNER_ID = 'REDACTED_HEX_1';
   function isOwner() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'); return !!(p && p.id === OWNER_ID && p.st !== 'pending'); } catch (e) { return false; } }
   var SUBS = [['index.html', 'Модель 3D', 's_cube', 'var(--ic-map)', 'plan.html'], ['plan.html', 'План 2D', 's_map', 'var(--ic-map)', 'plan.html'], ['stores.html', 'Остатки ОП', 's_store', 'var(--ic-stock)', 'stock.html'],
-    ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['cams.html', 'Видеонаблюдение', 's_map', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html']];
-  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'cams.html': 'razdel.html#site', 'jps.html': 'razdel.html#sales', 'mts.html': 'razdel.html#people', 'ftp.html': 'site.html', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
+    ['utils.html', 'Энергоресурсы и счётчики', 's_meter', 'var(--ic-map)', 'plan.html'], ['cams.html', 'Видеонаблюдение', 's_map', 'var(--ic-map)', 'plan.html'], ['docs.html', 'Чертежи', 's_file', 'var(--ic-docs)', 'library.html'], ['archive.html', 'Архив', 's_arch', 'var(--ic-docs)', 'library.html'], ['calc.html', 'Калькулятор мебели', 's_calc', 'var(--ic-sales)', 'sales.html']];
+  var PARENT = { 'index.html': 'plan.html', 'utils.html': 'razdel.html#site', 'cams.html': 'razdel.html#site', 'jps.html': 'razdel.html#sales', 'calc.html': 'razdel.html#sales', 'mts.html': 'razdel.html#people', 'ftp.html': 'site.html', 'stores.html': 'stock.html', 'docs.html': 'library.html', 'archive.html': 'library.html' };
   // чат-боты (один список для листа «Разделы», профиля и боковой панели) и приложение для Android (28.10.2026: «меню «Скачать APK» пропало»).
   // APK лежит в корне сайта (build_enc.py → fabrika.apk); на iPhone/iPad строка не показывается — там приложение ставится с экрана «Домой»
   var BOTS = [['https://t.me/example1', 'plane', 'var(--ic-items)', 'Бот в Telegram'], ['https://max.ru/example1', 'chat', 'var(--ic-chat)', 'Бот в MAX']];
@@ -533,8 +544,8 @@
       .sort(function (a, b) { return b.sc - a.sc || a.i - b.i; });
   }
   window.T14Search = { rank: rank, stem: stem, terms: terms, index: function () { return loadIndex(); } };
-  var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
-      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'struct.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'cams.html': 'site', 'jps.html': 'sales', 'mts.html': 'people', 'ftp.html': 'items', 'site.html': 'items', 'transport.html': 'log' };
+  var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'omts', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
+      'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'struct.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'ppr.html': 'site', 'utils.html': 'site', 'cams.html': 'site', 'jps.html': 'sales', 'calc.html': 'sales', 'mts.html': 'people', 'ftp.html': 'items', 'site.html': 'items', 'transport.html': 'log' };
   function sectionFor(route) {
     var page = route.split('#')[0];
     var sections = { 'sales.html#recl': 'quality', 'sales.html#rev': 'online', 'sales.html#mp': 'online',
@@ -547,7 +558,7 @@
     if (SIDX) return SIDX;
     // 28.10.2026, пользователь: «почему нет перехода к списку камер, плану или карте» — ключевые слова разделов и строки «Камеры»
     var KW = { 'fsu/': 'сайт fabrikant.su копия главная каталог проекты о компании', 'site.html': 'сайт fabrikant витрина каталог модели обивки ткани цвета проекты где купить клиенты логотипы', 'plan.html': 'карта план здания территория камеры видеонаблюдение сети', 'ftp.html': 'сайт fabrikant ftp каталог логотипы клиентов проекты магазины файлы', 'mts.html': 'звонки мтс детализация сим карты корпоративные номера клиенты переговоры', 'jps.html': 'жилпромсервис жпс база 1с итоги года клиенты ушедшие рекламации заказы склад', 'cams.html': 'видеонаблюдение камеры события регистратор ночь периметр ворота снимки', 'staff.html': 'производство участки выпуск люди мастера',
-      'stock.html': 'склад остатки', 'omts.html': 'снабжение заявки поставки просрочка', 'sales.html': 'продажи офисы отчеты', 'library.html': 'документы регламенты инструкции формы прайс',
+      'stock.html': 'склад остатки', 'omts.html': 'снабжение заявки поставки просрочка', 'sales.html': 'продажи офисы отчеты', 'calc.html': 'калькулятор расчет расчёт себестоимость цена мебель лдсп фасад фурнитура', 'library.html': 'документы регламенты инструкции формы прайс',
       'calls.html': 'телефоны кому звонить контакты', 'products.html': 'изделия материалы каталог', 'transport.html': 'транспорт машины глонасс грузовики доставки пробег стоянки', 'utils.html': 'счетчики счётчики показания электроэнергия газ вода откачка септик выгреб жбо сточные воды' };
     var base = PORTAL.slice(1).map(function (p) { return { t: p[1], x: p[4], u: p[0], g: 'Разделы', i: p[2], c: p[3], k: KW[p[0]] || '' }; })
       .concat([{ t: 'Камеры видеонаблюдения — на модели 3D', x: 'Список камер, зоны обзора и слепые зоны; нажмите камеру — вид из неё', u: 'index.html', g: 'Разделы', i: 'cube', c: 'var(--ic-map)', k: 'камера камеры видеонаблюдение видео обзор слепые' },
@@ -567,7 +578,7 @@
     ['sales.html#rev', 'Отзывы клиентов Ozon', 'отзывы ozon озон оценки покупатели'], ['struct.html#ko', 'Коммерческий отдел — люди, функционал и инструкции', 'коммерческий отдел структура оргструктура зоны ответственности функционал инструкции замещение'],
     ['sales.html#mp', 'Маркетплейсы', 'маркетплейсы ozon озон wildberries вайлдберриз яндекс маркет'], ['sales.html#ship', 'График отгрузки', 'отгрузки график объекты'], ['sales.html#cp', 'Контрольные точки', 'контрольные точки сроки'],
     ['sales.html#prom', 'Обещанные визиты и звонки', 'визиты звонки обещания'], ['sales.html#buf', 'Буфер заказов', 'буфер заказы'], ['sales.html#prod', 'Заказы на производство', 'заказы производство'],
-    ['sales.html#cls', 'Сотрудник10', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
+    ['sales.html#cls', 'Сотрудник9', 'клиенты покупатели'], ['sales.html#peo', 'Расчёты ПЭО', 'расчеты пэо цены себестоимость'], ['sales.html#tzlist', 'ТЗ и расчёты: ПТО → ПЭО', 'тз техническое задание пто пэо'],
     ['sales.html#tz1c', 'ТЗ в работе · 1С', 'тз 1с в работе'], ['stock.html#move', 'Все склады и филиалы — движение за месяц', 'все склады филиалы товары на складах движение приход расход'],
     ['stock.html#free', 'Свободные остатки ПКС', 'свободные остатки пкс доступно'], ['stock.html#s-mis', 'Расхождения в 1С и отрицательные остатки', 'расхождения минус отрицательные остатки'],
     ['omts.html#s-hist', 'Заявки в просрочке', 'просрочка заявки поставки поставщики'], ['calls.html#org', 'Оргструктура — отделы и сотрудники', 'структура оргструктура кто есть кто отделы подразделения сотрудники штат руководство'],
@@ -639,6 +650,7 @@
     var sec = PARENT[cur] || cur, isPlan = cur === 'plan.html';
     // 13.11.2026: новая структура — пункт меню раздела «горит» и на его странице раздела, и на страницах его отчётов
     function onSec(u) {
+      if (PORTAL.some(function (p) { return p[0] === cur; })) return u === cur;   // 24.11.2026: план, 3D, камеры — свои пункты меню
       if (u === sec) return true;
       var d = cur === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[cur];
       return !!d && u === 'razdel.html#' + d;
@@ -684,13 +696,12 @@
     // --- листы ---
     addSec('sections', 'Разделы', function (s) {
       s.dataset.keep = '1';
-      s.appendChild(h4('Внутренний портал'));
+      s.appendChild(h4('Разделы портала'));
       var g = el('div', 'igroup'); s.appendChild(g);
       PORTAL.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], onSec(p[0]) ? 'сейчас' : ''); a.href = p[0]; if (onSec(p[0])) a.setAttribute('aria-current', 'page'); g.appendChild(a); });
-      s.appendChild(h4('Внутри разделов'));
-      var g2 = el('div', 'igroup'); s.appendChild(g2);
-      var fvr = irow('a', ICON.s_star, 'var(--ic-stock)', 'Сохранённое', ''); fvr.href = 'razdel.html#saved'; g2.appendChild(fvr);
-      SUBS.forEach(function (p) { var a = irow('a', ICON[p[2]], p[3], p[1], p[0] === cur ? 'сейчас' : ''); a.href = p[0]; if (p[0] === cur) a.setAttribute('aria-current', 'page'); g2.appendChild(a); });
+      // 24.11.2026, Т. В.: «разделы поделены рандомно; почему 2D внутри разделов?» — один список разделов. План, 3D, остатки ОП, счётчики, камеры,
+      //   чертежи, архив, калькулятор — внутри своих разделов (razdel.html#…), отдельной группы «Внутри разделов» больше нет. SUBS — только для «назад» и поиска.
+      var fvr = irow('a', ICON.s_star, 'var(--ic-stock)', 'Сохранённое', cur === 'razdel.html' && location.hash === '#saved' ? 'сейчас' : ''); fvr.href = 'razdel.html#saved'; g.appendChild(fvr);
       // 16.11.2026, Т. В. (опрос): «Управление» — не раздел, а настройки портала → «Профиль и настройки»
       s.appendChild(h4('Боты и приложение'));   // 28.10.2026, пользователь: «где ссылки на чат-боты»; 23:05: «меню «Скачать APK» пропало — исправь»
       var gb = el('div', 'igroup'); s.appendChild(gb);
@@ -727,8 +738,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник12 (пользователь: «Берем Gemini и Сотрудник12 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник12 из поиска и ИИ-интеграций портала» (Сотрудник12 Имя4 и Сотрудник12 Сотрудник27 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник11 (пользователь: «Берем Gemini и Сотрудник11 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник11 из поиска и ИИ-интеграций портала» (Сотрудник11 Имя4 и Сотрудник11 Сотрудник27 не трогаем)
         // 15.11.2026 ~20:00, Т. В.: «Gemini выключай, если он не работает» — не работает: модели Gemini 2.5 закрыты для ключа (404), 3.x — 429 без
         //   оплаченной квоты (проверка 12.11, SnabGpt). Кнопка убрана; сохранённый выбор gemini сбрасывается на «Авто» (проверка ниже).
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT']], prov = '';
@@ -767,7 +778,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник12' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник11' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '', my = (go.n = (go.n || 0) + 1);
           // 15.11.2026 ~20:00, Т. В. (видео 19:43): «ChatGPT вообще никакого поиска не делает» — «Помощник думает…» висел без конца: у запроса не было
@@ -1233,6 +1244,24 @@
     try { ['scrollY', 'pageYOffset'].forEach(function (k) { Object.defineProperty(window, k, { configurable: true, get: function () { return B.scrollTop; } }); }); } catch (e) { }
   }
   if (document.body) scrollMode(); else document.addEventListener('DOMContentLoaded', scrollMode);
+  // 23.11.2026, Т. В. (скрин 18:35, раздел «Производство»): «меню иногда уезжает в разных разделах». Причина — масштаб страницы на iPhone
+  //   (щипок или двойной тап по таблице): нижнее меню (position:fixed) привязано к странице без масштаба и при увеличении «всплывает» на середину.
+  //   Запрещаем масштабирование всей страницы: щипок (gesture*), двойной тап (touch-action в portal.css); если масштаб всё же > 1 — сбрасываем.
+  (function noZoom() {
+    if (!window.matchMedia || !matchMedia('(pointer: coarse)').matches) return;
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+      document.addEventListener(t, function (e) { if (!(e.target && e.target.closest && e.target.closest('.t14pdf,.mapwrap,[data-zoom]'))) e.preventDefault(); }, { passive: false });
+    });
+    var vv = window.visualViewport, m = document.querySelector('meta[name="viewport"]');
+    if (!vv || !m) return;
+    var base = m.getAttribute('content') || '', t = 0;
+    vv.addEventListener('resize', function () {
+      if (vv.scale <= 1.01 || here() === 'plan.html') return;
+      clearTimeout(t); t = setTimeout(function () {   // вернуть масштаб 1: iOS перечитывает viewport при смене content
+        m.setAttribute('content', base + ',maximum-scale=1'); setTimeout(function () { m.setAttribute('content', base); }, 400);
+      }, 250);
+    });
+  })();
   // REDACTED_B64_9 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
@@ -1360,6 +1389,8 @@
   vv.addEventListener('resize', kick); vv.addEventListener('scroll', kick);
   document.addEventListener('focusin', function () { setTimeout(kick, 60); setTimeout(kick, 400); });
   document.addEventListener('focusout', function () { setTimeout(kick, 120); });
+  // 23.11.2026: после закрытия клавиатуры iPhone держит окно коротким — лёгкий «пинок» прокруткой заставляет его пересчитать высоту сразу
+  document.addEventListener('focusout', function () { setTimeout(function () { if (window.innerHeight < screen.height * 0.85 && !document.querySelector('input:focus,textarea:focus')) { var y = window.scrollY; window.scrollTo(window.scrollX, y + 1); window.scrollTo(window.scrollX, y); } }, 350); });
   addEventListener('pageshow', kick);   // возврат из фона — сбросить временную геометрию (Рекс, №23)
 })();
 

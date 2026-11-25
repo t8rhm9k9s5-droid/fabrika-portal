@@ -58,12 +58,20 @@ def _cleanup(L, SITE, st, log):
     try: done = datetime.datetime.strptime(st['done_t'][:10], '%Y-%m-%d').date()
     except Exception: return False
     if (IT._now().date() - done).days < KEEP_DAYS: return False
+    # 16.11.2026 (R5-03 Рекса, остаток F4-06): ошибка удаления не помечает очистку завершённой — повтор в следующий прогон
+    bad = []
     shutil.rmtree(os.path.join(L, 'exp1c'), ignore_errors=True)
+    if os.path.exists(os.path.join(L, 'exp1c')): bad.append('exp1c/')
     d = os.path.join(SITE, 'st')
     for f in os.listdir(d) if os.path.isdir(d) else []:
         if re.match(r'^exp_1c_[\w]+\.bin$', f):
             try: os.remove(os.path.join(d, f))
-            except Exception: pass  # необязательный шаг: сбой не мешает работе робота
+            except Exception: bad.append(f)
+    if bad:
+        st['clean_err'] = {'t': IT._now().strftime('%Y-%m-%dT%H:%M'), 'left': bad[:20]}
+        log('выгрузка 1c@: удалить не удалось (%s) — повтор в следующий прогон' % ', '.join(bad[:5]))
+        return False
+    st.pop('clean_err', None)
     st['cleaned'] = IT._now().strftime('%Y-%m-%dT%H:%M')
     log('выгрузка 1c@: файлы удалены через %d дня (%s)' % (KEEP_DAYS, st.get('id')))
     return True
@@ -130,6 +138,14 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
                 st['hdr'][mu.group(1)] = {'u': int(mu.group(1)), 't': t, 'fr': frm, 'n': fname[:80], 'to': _lst(msg, 'To'), 'cc': _lst(msg, 'Cc'),
                                           's': IT.clean(msg['Subject']).strip()[:300], 'sz': int(ms.group(1)) if ms else 0,
                                           'mid': hashlib.sha256(str(msg['Message-ID'] or '').encode()).hexdigest()[:16]}
+            # 16.11.2026 (R5-03, остаток F4-06): ответ «OK» не значит, что пришли все запрошенные заголовки — сверяем ожидаемые UID с полученными.
+            #   Недостающие — в следующий прогон; письмо, которое трижды не вернулось (удалено из ящика), — в st['gone'] и в индекс отдельно.
+            miss = st.setdefault('miss', {})
+            for u in part:
+                if str(u) in st['hdr'] or str(u) in st.get('gone', {}): miss.pop(str(u), None); continue
+                miss[str(u)] = miss.get(str(u), 0) + 1
+                if miss[str(u)] >= 3: st.setdefault('gone', {})[str(u)] = res['t']; miss.pop(str(u), None)
+                else: pending = True
         if todo: pending = True
         # 2) кого скачать целиком: люди — все; рассылки — 2 последних письма каждой темы
         if not pending:
@@ -174,7 +190,10 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
                 else:
                     row['x'] = re.sub(r'\s+', ' ', body.decode('utf-8', 'replace'))[:1500]
                 st['msgs'][str(u)] = row
-            if not pending and len(st['msgs']) >= len(st['hdr']): st['fetched'] = res['t']
+            # 16.11.2026 (R5-03): «собрано» — только если каждый найденный поиском UID есть в заголовках (или признан исчезнувшим) и у каждого заголовка есть письмо
+            want_all = set(str(u) for u in uids) - set(st.get('gone', {}))
+            if not pending and want_all <= set(st['hdr']) and set(st['hdr']) <= set(st['msgs']): st['fetched'] = res['t']
+            elif not pending: pending = True
         res['state'] = 'идёт' if pending else 'письма собраны'
     except imaplib.IMAP4.error as e:
         res['state'] = 'Gmail: ' + str(e)[:160]
@@ -206,7 +225,7 @@ def run(L, SITE, CFG, log, jload, jsave, publish, budget=BUDGET):
         st['dirty'] = sorted(dirty)
         if not dirty:
             ok = publish('exp_1c_idx.bin', {'id': st['id'], 't': res['t'], 'since': st['since'], 'msgs': sorted(st['msgs'].values(), key=lambda r: r.get('t') or ''),
-                                            'part_of': pmap, 'parts': len(sizes), 'keep_days': KEEP_DAYS})
+                                            'part_of': pmap, 'parts': len(sizes), 'keep_days': KEEP_DAYS, 'gone': sorted(st.get('gone', {}))})
             if ok: st['done_t'] = res['t']; res['state'] = 'готово: %d писем, частей %d' % (len(st['msgs']), len(sizes))
             else: res['state'] = 'индекс не опубликован — повтор в следующий прогон'   # F4-06: без опубликованного индекса выгрузка не готова
     else: st['dirty'] = sorted(dirty)

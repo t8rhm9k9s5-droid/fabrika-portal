@@ -37,6 +37,8 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .pc-day[open]>summary::after{transform:rotate(-135deg)}.pc-day>summary .pc-dt{font:600 15px var(--f-body);color:var(--ios-label)}.pc-day>summary .pc-dtt{font-size:13px;color:var(--ios-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pc-day>summary .pc-n{font:600 13px var(--f-body);border-radius:999px;padding:2px 9px;background:var(--ios-fill);color:var(--ios-label)}.pc-day.today>summary{box-shadow:0 0 0 1.5px var(--t-press,#0866c6)}
 .pc-day>.pc-list{margin-top:8px}
+.pc-sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media(min-width:720px){.pc-sum{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pc-svc{text-align:left;border:0;border-radius:16px;padding:12px 14px;background:var(--card,#fff);color:inherit;font:inherit;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}.pc-svc b{display:block;font-size:26px;line-height:1.1}.pc-svc small{display:block;margin-top:2px}.pc-svc.on{outline:2px solid var(--ios-blue,#0a84ff)}.pc-svc:focus-visible{outline:2px solid var(--ios-blue,#0a84ff)}
 </style>
 <main class="ios" id="poruch">
   <a class="back" href="home.html">Главная</a>
@@ -50,16 +52,47 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 <script>
 (function () {
   var SNAP = __PORUCH__;
-  var D = null, F = 'all', today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-  try { F = sessionStorage.getItem('t14.pc.f') || 'all'; } catch (e) {}
+  var D = null, F = 'due', today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+  try { F = sessionStorage.getItem('t14.pc.f') || 'due'; } catch (e) {}
+  if (location.hash && /^#(due|ev|all|ctl|lead|meet|cp|svc:(inc|sales|prod|oth))$/.test(decodeURIComponent(location.hash))) F = decodeURIComponent(location.hash).slice(1);   // переход с главной: poruch.html#svc:inc
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function dm(s) { s = String(s || ''); return s.length >= 10 ? s.slice(8, 10) + '.' + s.slice(5, 7) : ''; }
   function late(due) { return due && due < today; }
-  var SRC = [['all', 'Все'], ['ctl', 'Отметки бота'], ['lead', 'Руководство'], ['meet', 'Совещания'], ['cp', 'Офисы продаж']];
+  var SRC = [['due', 'По сроку'], ['ev', 'Журнал охраны'], ['all', 'Все'], ['ctl', 'Отметки бота'], ['lead', 'Руководство'], ['meet', 'Совещания'], ['cp', 'Имя2 продаж']];
+  // 21.11.2026, Т. В.: «в поручениях сводка: происшествия, отдел продаж, производство, остальные службы; ниже — все поручения по сроку».
+  //   Один список: отметки бота, руководство, офисы продаж и совещания по единому протоколу (тот же счёт, что карточка на главной).
+  var SVC = [['inc', 'Происшествия'], ['sales', 'Отдел продаж'], ['prod', 'Производство'], ['oth', 'Остальные службы']];
+  var RX_INC = /происшеств|авари|травм|пожар|возгоран|задымл|(^|[^а-я])чп([^а-я]|$)|кража|хищен|протеч|затоп|порыв|обрушен|нарушен[а-я]* (периметр|охран|техник[а-я]* безопасн)|несчастн/i,
+    RX_SALES = /продаж|(^|[^а-я])оп([^а-я]|$)|офис|клиент|менеджер|клишин|трауш|разахов|маркетплейс|озон|ozon|рекламац|отгруз|коммерческ|кп([^а-я]|$)|дилер|прайс/i,
+    RX_PROD = /производств|цех|участ|мастер|выпуск|омтс|снабж|романов|бирюков|пто|станок|станк|лазер|форм[аы]|гальван|покраск|сварк|склад|металл|сборк|обивк|технолог|механик|оборудован|ппр|ремонт/i;
+  function svcOf(x) { var s = (x.text || '') + ' ' + (x.who || '') + ' ' + (x.g || ''); return RX_INC.test(s) ? 'inc' : x.src === 'cp' || RX_SALES.test(s) ? 'sales' : RX_PROD.test(s) ? 'prod' : 'oth'; }
+  function isDate(s) { return /^\d{4}-\d\d-\d\d/.test(s || ''); }
+  function items(d) {
+    var L = [];
+    (d.ctl || []).forEach(function (e) { if (e.who.some(function (w) { return w.st === 'open' || w.st === 'stale'; })) L.push({ src: 'ctl', text: e.text, who: e.who.map(function (w) { return w.n; }).join(', '), g: e.g, due: e.due, t: e.t, html: cardCtl(e) }); });
+    (d.lead || []).forEach(function (r) { L.push({ src: 'lead', text: r.what, who: r.who, due: r.due, t: r.t || r.at, html: cardRow(r, 'lead') }); });
+    (d.cp || []).forEach(function (r) { L.push({ src: 'cp', text: r.what, who: r.who, due: r.due, t: r.at, html: cardRow(r, 'cp') }); });
+    var M = d.meet || [], pr = M.filter(function (m) { return m.id === 'ctl_protocol'; });
+    (pr.length ? pr : M).forEach(function (m) { (m.tasks || []).forEach(function (x) { if (x.st !== 'done') L.push({ src: 'meet', text: x.what, who: x.who, due: x.due, t: m.id === 'ctl_protocol' ? (x.t || '') : m.date, html: cardMeet(x, m) }); }); });   // протокол — сводный список, его дата не дата поручения
+    L.forEach(function (x) { x.svc = svcOf(x); x.d = isDate(x.due) ? x.due.slice(0, 10) : ''; });
+    // 21.11.2026: журнал происшествий и охраны (таблица) — открытые происшествия в сводку «Происшествия»
+    var Ptx = L.map(function (x) { return x.text || ''; }).join(' ');   // 21.11.2026: строка журнала из совещания (P-007…) уже есть в списке — второй раз не добавляем
+    ((d.ev && d.ev.ok && d.ev.rows) || []).forEach(function (r) { var pm = /P-\d{3}/.exec(r.who || ''); if (r.k === 'inc' && r.st !== 'done' && !(pm && Ptx.indexOf(pm[0]) >= 0)) L.push({ src: 'ev', svc: 'inc', text: r.what, who: r.who, due: '', d: '', t: r.d, html: cardEv(r) }); });
+    return L;
+  }
+  function cardEv(r) { var K = { inc: 'происшествие', per: 'периметр', car: 'машина не подана' };
+    return '<div class="pc-card"><div class="pc-what">' + esc(r.what) + '</div><div class="pc-meta"><span class="pc-tag">' + esc(K[r.k] || r.k) + '</span><span>' + dm(r.d) + (r.tm ? ' ' + esc(r.tm) : '') + '</span>' +
+      (r.place ? '<span>' + esc(r.place) + '</span>' : '') + (r.who ? '<span>сообщил(а): ' + esc(r.who) + '</span>' : '') + (r.st === 'done' ? '<span class="pc-ok">закрыто</span>' : '') + '</div>' + (r.act ? '<div class="pc-meta"><span>меры: ' + esc(r.act) + '</span></div>' : '') + '</div>'; }
+  function byDue(L) {
+    var g = [['Просрочено', L.filter(function (x) { return x.d && x.d < today; })], ['Сегодня', L.filter(function (x) { return x.d === today; })], ['Дальше', L.filter(function (x) { return x.d > today; })], ['Срок не указан', L.filter(function (x) { return !x.d; })]];
+    return g.map(function (z) { var a = z[1].slice().sort(function (p, q) { return p.d < q.d ? -1 : p.d > q.d ? 1 : 0; }); return a.length ? '<div class="pc-h">' + z[0] + ' · ' + a.length + '</div><div class="pc-list">' + a.map(function (x) { return x.html; }).join('') + '</div>' : ''; }).join('');
+  }
   function counts(d) {
     return { ctl: (d.ctl || []).filter(function (e) { return e.who.some(function (w) { return w.st === 'open' || w.st === 'stale'; }); }).length,
              lead: (d.lead || []).length, cp: (d.cp || []).length,
-             meet: (d.meet || []).reduce(function (s, m) { return s + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0) };
+             // 21.11.2026 (аудит): поручения совещаний — по единому протоколу P-001…, если он есть; списки отдельных совещаний — те же поручения, второй раз не считаем
+             meet: (function () { var M = d.meet || [], pr = M.filter(function (m) { return m.id === 'ctl_protocol'; }), use = pr.length ? pr : M;
+               return use.reduce(function (s, m) { return s + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0); })() };
   }
   function cardCtl(e) {
     var open = e.who.filter(function (w) { return w.st === 'open' || w.st === 'stale'; }).length;
@@ -91,10 +124,16 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     var d = D || { ctl: [], lead: [], cp: [], meet: (SNAP && SNAP.meetings) || [] }, c = counts(d), h = '';
     var tdN = (d.meet || []).filter(function (m) { return m.date === today; }).reduce(function (s0, m) { return s0 + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0);
     c.today = tdN;
-    document.getElementById('pcSum').innerHTML = [['today', 'задач совещания сегодня'], ['ctl', 'на контроле у бота'], ['lead', 'поручений руководства'], ['meet', 'задач всех совещаний'], ['cp', 'контрольных точек офисов']]
-      .map(function (x) { return '<div><b>' + c[x[0]] + '</b><small>' + x[1] + '</small></div>'; }).join('');
-    document.getElementById('pcChips').innerHTML = SRC.map(function (s) { return '<button type="button" data-f="' + s[0] + '" aria-pressed="' + (F === s[0]) + '">' + s[1] + (s[0] !== 'all' ? '<b>' + c[s[0]] + '</b>' : '') + '</button>'; }).join('');
+    var IT = items(d); c.due = IT.length; var day1 = new Date(Date.now() + 3 * 3600e3 - 864e5).toISOString().slice(0, 10);
+    document.getElementById('pcSum').innerHTML = SVC.map(function (s) {
+      var a = IT.filter(function (x) { return x.svc === s[0]; }), lt = a.filter(function (x) { return x.d && x.d < today; }).length, nw = a.filter(function (x) { return String(x.t || '').slice(0, 10) >= day1; }).length;
+      return '<button type="button" class="pc-svc' + (F === 'svc:' + s[0] ? ' on' : '') + '" data-f="svc:' + s[0] + '"><b>' + a.length + '</b><small>' + s[1] + '</small><small>' + (lt ? '<span class="pc-late">просрочено ' + lt + '</span>' : 'без просрочки') + (nw ? ' · новых за сутки ' + nw : '') + '</small></button>';
+    }).join('');
+    document.getElementById('pcChips').innerHTML = SRC.map(function (s) { return '<button type="button" data-f="' + s[0] + '" aria-pressed="' + (F === s[0]) + '">' + s[1] + (s[0] !== 'all' && c[s[0]] != null ? '<b>' + c[s[0]] + '</b>' : '') + '</button>'; }).join('');
     var MS = (d.meet || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }), mt = MS.filter(function (m) { return m.date === today; }), mo = MS.filter(function (m) { return m.date !== today; });
+    if (F === 'ev') { var ER = (d.ev && d.ev.ok && d.ev.rows) || []; h += '<div class="pc-h">Журнал происшествий и охраны · 60 дней' + (d.ev && d.ev.mail === false ? ' · письма 1c@ сейчас не прочитаны — в списке только таблица' : '') + '</div>' + (ER.length ? '<div class="pc-list">' + ER.map(cardEv).join('') + '</div>' : '<p class="lead">' + (d.ev && !d.ev.ok ? 'Журнал пока не читается ботом: ' + esc(d.ev.err) : 'Записей нет.') + '</p>'); }
+    if (F === 'due') h += byDue(IT);
+    if (F.indexOf('svc:') === 0) { var sv = F.slice(4), nm = (SVC.filter(function (s) { return s[0] === sv; })[0] || [])[1]; h += '<div class="pc-h">' + esc(nm || '') + '</div>' + (byDue(IT.filter(function (x) { return x.svc === sv; })) || '<p class="lead">Открытых поручений нет.</p>'); }
     if ((F === 'all' || F === 'meet') && mt.length) h += '<div class="pc-h">Совещание за сегодня</div>' + mt.map(function (m) { return meetDay(m, true); }).join('');
     if (F === 'all' || F === 'ctl') { var L1 = (d.ctl || []); if (L1.length) h += '<div class="pc-h">Поставлено на контроль отметкой бота</div><div class="pc-list">' + L1.map(cardCtl).join('') + '</div>'; else if (F === 'ctl') h += '<p class="lead">Пока ничего не поставлено на контроль.</p>'; }
     if (F === 'all' || F === 'lead') { var L2 = (d.lead || []); if (L2.length) h += '<div class="pc-h">Поручения руководства</div><div class="pc-list">' + L2.map(function (r) { return cardRow(r, 'lead'); }).join('') + '</div>'; }
@@ -104,6 +143,9 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
     document.getElementById('pcFoot').textContent = D ? 'Обновлено ботом: ' + String(D.t || '').replace('T', ' ') + '. Бот обновляет раздел каждые 30 минут; задачи совещаний добавляются после каждого утреннего совещания.'
       : 'Пока показаны только задачи утренних совещаний (снимок ' + String((SNAP && SNAP.t) || '').replace('T', ' ') + '); остальное появится после первой публикации бота.';
   }
+  document.getElementById('pcSum').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-f]'); if (!b) return; var f = b.getAttribute('data-f'); F = F === f ? 'due' : f; try { sessionStorage.setItem('t14.pc.f', F); } catch (e) {} render();
+  });
   document.getElementById('pcChips').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b) return; F = b.getAttribute('data-f'); try { sessionStorage.setItem('t14.pc.f', F); } catch (e) {} render();
   });

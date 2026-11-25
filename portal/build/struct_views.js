@@ -129,10 +129,10 @@
     })));
     var ch = [];
     if (W && W.changes && W.changes.length) W.changes.forEach(function (c) {
-      ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Новый сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
+      ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Сотрудник6 сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
         [sxRow({ n: c.name, r: c.what || '', x: c.ask ? 'Вопрос' + (c.to ? ' (' + c.to + ')' : '') + ': ' + c.ask : '', chips: [[c.answer ? 'ответ: ' + c.answer : 'ответа нет', '', c.answer ? 'tag' : 'warn']] })], 'og-warn'));
     });
-    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник18 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник6 напрямую' })]));
+    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник21 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник8 напрямую' })]));
     if (SPB && SPB.list && SPB.list.length) ch.push(sxCard('ОП Санкт-Петербург закрыт с ' + dd(SPB.closed), SPB.list.length + ' клиентов', '', SPB.by.map(function (x) { return sxRow({ n: x[0], r: 'клиентов передано: ' + n(x[1]) }); }).concat(
       ['<details class="og-fold"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary>' + SPB.list.map(function (x) { return sxRow({ n: x[0], r: 'передан: ' + x[1] }); }).join('') + '</details>'])));
     if ((K.check || []).length) ch.push(sxCard('Что проверить', K.check.length + '', '', K.check.map(function (c, i) { return sxRow({ n: (i + 1) + '.', r: c }); })));

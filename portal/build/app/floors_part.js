@@ -164,7 +164,7 @@ function orgLabels(dist){
 }
 // cards
 function orgRoomCard(it, fl){
-  return {k:`${fl} этаж · ${it.post ? 'главный вход для всех сотрудников' : it.inner ? 'вход через приёмную ' + it.no : it.label ? 'кабинет 310, приёмная' : 'кабинет ' + it.no}`, t:it.post ? 'КПП № 1 · ' + it.name : it.name,
+  return {k:`${fl} этаж · ${it.post ? 'Имя1 вход для всех сотрудников' : it.inner ? 'вход через приёмную ' + it.no : it.label ? 'кабинет 310, приёмная' : 'кабинет ' + it.no}`, t:it.post ? 'КПП № 1 · ' + it.name : it.name,
     d:(it.note ? `<p>${esc(it.note)}</p>` : '') + orgPeople(it.people) + (it.mail ? `<p>Почта всего отдела: <a href="mailto:${esc(it.mail)}">${esc(it.mail)}</a></p>` : '')
       + `<p class="note">${esc(ORG.note)} Источник: ${esc(ORG.src)}.</p>`};
 }
@@ -190,7 +190,7 @@ function orgInfo(u){
   if (u.kind === 'drivers') return {k:'Гараж', t:ORG.gsm ? `Машины и техника · ${ORG.gsm.cars.length}` : `Водители · ${ORG.drivers.length} машин`, d:orgDrivers()};
   const it = u.it;
   if (it.kind === 'room') return orgRoomCard(it, u.fl);
-  const T = {stair:['Лестница', it.name === 'Запасная лестница' ? 'Запасная лестница в торце здания (по доске).' : 'Отчество47 лестница у входа (по доске).'],
+  const T = {stair:['Лестница', it.name === 'Запасная лестница' ? 'Запасная лестница в торце здания (по доске).' : 'Отчество48 лестница у входа (по доске).'],
              meet:['Переговорная', 'Переговорная комната (по доске).'], wc:['Туалет', 'Женский и мужской (по доске).'],
              other:['Помещение', 'На доске это место не подписано: здесь может быть подсобное помещение, холл или кабинет без сотрудников в списке.']}[it.kind] || [it.name, ''];
   return {k:`${u.fl} этаж`, t:T[0], d:`<p>${esc(T[1])}</p><p class="note">${esc(ORG.note)}</p>`};

@@ -75,7 +75,8 @@
     // 28.10.2026: исходник Word/Excel показан своей PDF-копией — кнопка справа отдаёт исходный файл («Word» / «Excel»), иначе — «Файл»
     $('.pa').textContent = d.orig ? (/\.xlsx?$/i.test(d.orig) ? 'Excel' : /\.pptx?$/i.test(d.orig) ? 'PowerPoint' : 'Word') : 'Файл';
     $('.pa').setAttribute('aria-label', d.orig ? 'Скачать исходный файл' : 'Файл: сохранить или отправить');
-    root.hidden = false; document.documentElement.style.overflow = 'hidden';
+    root.hidden = false; document.documentElement.style.overflow = (navigator.standalone === true ? '' : 'hidden');   // 16.11: в приложении со значка iPhone корень не закрывать — окно укорачивается (полоса снизу); фон держит касание ниже
+    if (navigator.standalone === true && !root._tm) { root._tm = t14NoBgScroll(root); root.addEventListener('touchmove', root._tm, { passive: false }); root.addEventListener('wheel', root._tm, { passive: false }); }   // iPad с трекпадом — тоже
     if (!V.pushed){ try { history.pushState({ t14pdf: 1 }, ''); V.pushed = true; } catch (e) {} }
     msg('Загружаю' + (d.bytes ? ' · ' + size(d.bytes) : ''), 0);
     lib().then(function(L){
@@ -159,6 +160,7 @@
     if (V.task){ try { V.task.destroy(); } catch (e) {} V.task = null; }
     if (V.pdf){ try { V.pdf.destroy(); } catch (e) {} V.pdf = null; }
   }
+  function t14NoBgScroll(box){ return function (e) { var n = e.target; while (n && n !== box) { var cs = getComputedStyle(n); if ((n.scrollHeight > n.clientHeight + 1 && /auto|scroll/.test(cs.overflowY)) || (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(cs.overflowX))) return;   /* 16.11 Рекс: обе оси (широкий короткий PDF) */ n = n.parentNode; } if (e.cancelable) e.preventDefault(); }; }
   function close(fromHistory){
     if (!root || root.hidden) return;
     reset(); if (root) { msg(null); root.hidden = true; } document.documentElement.style.overflow = '';

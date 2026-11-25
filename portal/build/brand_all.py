@@ -36,7 +36,7 @@ MEDIA = '/home/claude/build/brand_media/'          # шапки бланков, 
 DRY = '--dry' in sys.argv
 ONLY = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else ''
 MARK = 'fabrikant-brand'
-CONTACTS = 'fabrikant.su · user6@example.org · +7 000 000-00-01'
+CONTACTS = 'fabrikant.su · user7@example.org · +7 000 000-00-02'
 GREY, INK = (0.43, 0.43, 0.45), (0.11, 0.11, 0.12)
 
 SKIP_DIRS = ('brand', 'catalogs', 'prices', 'regs', 'dogovory', 'memo', 'cards', 'archive')

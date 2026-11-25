@@ -27,8 +27,8 @@ except Exception:
 HERE = os.path.dirname(os.path.abspath(__file__))
 MSK = datetime.timezone(datetime.timedelta(hours=3))
 QUIET_DAYS = 45
-HEADS = {'ОП Рязань': ('Сотрудник18 Ю. А.', 'user15@example.org'), 'Сеть офисов продаж': ('Сотрудник5 М. И.', 'user8@example.org'),
-         'e-commerce': ('Сотрудник1 А. А.', 'user22@example.org'), 'Fabrikant UZ': ('Сотрудник19 К. В.', 'user16@example.org'),
+HEADS = {'ОП Рязань': ('Сотрудник26 Ю. А.', 'user17@example.org'), 'Сеть офисов продаж': ('Сотрудник8 М. И.', 'user10@example.org'),
+         'e-commerce': ('Сотрудник1 А. А.', 'user6@example.org'), 'Fabrikant UZ': ('Сотрудник16 К. В.', 'user18@example.org'),
          'Имя4': ('Сотрудник1 Т. В.', ''), 'Руководство': ('Сотрудник1 Т. В.', '')}
 IGNORE_MAX = re.compile(r'попов|джанова|фабрикант|бот|claude', re.I)          # не работают (Т. В. 28.10) и боты
 
@@ -44,13 +44,13 @@ def _norm(n): return re.sub(r'[^а-яa-z]', '', (n or '').lower().replace('ё', 
 
 
 def _match(name, people):
-    """имя из MAX («Сотрудник45 Сотрудник44», «Имя5») → человек из списка или None"""
+    """имя из MAX («Сотрудник62 Сотрудник21», «Сотрудник51») → человек из списка или None"""
     w = [_norm(x) for x in (name or '').split() if len(_norm(x)) > 2]
     for p in people:
         pw = [_norm(x) for x in p['name'].split()] + [_norm(x) for a in p.get('aliases') or [] for x in a.split()]
         if w and w[0] in pw[:1] or (len(w) > 1 and any(x in pw[:1] for x in w)): return p
     one = [p for p in people if len(w) == 1 and len(p['name'].split()) > 1 and w[0] == _norm(p['name'].split()[1])]
-    return one[0] if len(one) == 1 else None                              # только имя («Имя5») — если совпадение одно
+    return one[0] if len(one) == 1 else None                              # только имя («Сотрудник51») — если совпадение одно
 
 
 def _banned(cfg, mail, name):

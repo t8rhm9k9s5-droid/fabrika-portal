@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 B = '/home/claude/app_build'
 STAND = bool(os.environ.get('T14_ENC_SRC'))   # стенд: рабочие файлы сборки (enc_map, release_state, news) не трогаем
 SRC = os.environ.get('T14_ENC_SRC') or f'{B}/pwa/terekhina14'   # 15.11.2026: стенд доступа по группам собирает из своей малой копии
-ENC = f'{B}/enc'
+ENC = os.environ.get('T14_ENC_TPL') or f'{B}/enc'   # 21.11.2026: стенд проверяет шаблоны из своей папки
 SECRET = os.environ.get('T14_ENC_SECRET') or f'{B}/enc_secret.json'
 ITER = 250000
 args = sys.argv[1:]
@@ -78,7 +78,12 @@ for root, _, names in os.walk(SRC):
     for n in names:
         rel = os.path.relpath(os.path.join(root, n), SRC).replace(os.sep, '/')
         if rel in SKIP or rel.startswith(PUBLIC_DIRS): continue
+        if re.search(r'\.before[-_]|\.(bak|orig)$', n) or n.startswith('_mock'): continue   # 21.11.2026 (аудит): резервные копии и макеты не публикуются
         data = pathlib.Path(os.path.join(root, n)).read_bytes()
+        if not data: continue   # пустой файл — не публикуем
+        if n.endswith('.html') and b'applink.js' not in data:   # 21.11.2026 (аудит): строка «Приложение для Android» — при сборке, а не в Service Worker на каждом переходе
+            _i = data.rfind(b'</body>'); _tag = b'<script src="applink.js?v=20261025" defer></script>'
+            data = data[:_i] + _tag + data[_i:] if _i >= 0 else data + _tag
         sid = ACC.set_of(rel, AMAP) if ACC_ON else None
         fa, fiv = set_aes(sid) if sid else (aes, ivkey)
         iv = hmac.new(fiv, rel.encode() + b'\0' + hashlib.sha256(data).digest(), hashlib.sha256).digest()[:12]
@@ -94,15 +99,25 @@ docs = [p for p in DOCS if p in files]
 _H8 = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:8]
 # 28.10.2026: уведомления всем — только «крупный выпуск» (решает build_pwa.py → release_state.json → last.public). Скрипт уведомлений шлёт пуш всем,
 #   когда меняется хвост VERSION (после «-»), поэтому для обычной сборки хвост остаётся прежним (enc_pub), а метка времени меняется — sw.js обновляется тихо.
-try:
-    _RS = json.loads(pathlib.Path('/home/claude/app_build/release_state.json').read_text(encoding='utf-8'))
-except Exception: _RS = {}
+# 16.11.2026 (R5-05 Рекса): тот же порядок, что в build_pwa — блокировка, копия .bak, атомарная запись, повреждённый файл не превращается в «{}»
+import fcntl as _fcntl, shutil as _sh
+_RSP = '/home/claude/app_build/release_state.json'
+_rs_lock = open(_RSP + '.lock', 'w'); _fcntl.flock(_rs_lock, _fcntl.LOCK_EX)
+_RS = None
+for _p in (_RSP, _RSP + '.bak'):
+    if os.path.exists(_p):
+        try: _RS = json.loads(pathlib.Path(_p).read_text(encoding='utf-8')); break
+        except Exception: continue
+if _RS is None:
+    if os.path.exists(_RSP): sys.exit('release_state.json повреждён (и .bak) — сборку не продолжаю')
+    _RS = {}
 # 28.10.2026 20:05: хвост меняется ОДИН раз на крупный выпуск (метка enc_for = last.t). Раньше каждая следующая сборка build_host после крупного
 #   выпуска давала новый хвост → пуш всем повторялся (28.10: 18:30 и 19:50, с устаревшим текстом news.txt от 26.10).
 _last = _RS.get('last') or {}
 if not STAND and (not _RS.get('enc_pub') or (_last.get('public') and _RS.get('enc_for') != _last.get('t'))):
     _RS['enc_pub'] = _H8; _RS['enc_for'] = _last.get('t')
-    pathlib.Path('/home/claude/app_build/release_state.json').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8')
+    if os.path.exists(_RSP): _sh.copy2(_RSP, _RSP + '.bak')
+    pathlib.Path(_RSP + '.tmp').write_text(json.dumps(_RS, ensure_ascii=False, indent=1), encoding='utf-8'); os.replace(_RSP + '.tmp', _RSP)
 VERSION = time.strftime('%Y%m%d%H%M%S') + '-' + (_RS.get('enc_pub') or 'stand')
 NEWS = f'{B}/news.txt'                    # «что нового» for the push notification text (private: lives only inside m.bin)
 news = pathlib.Path(NEWS).read_text(encoding='utf-8').strip()[:300] if os.path.exists(NEWS) else ''
@@ -116,9 +131,21 @@ try:
         news = ('Что нового на портале\n' + '; '.join(re.sub(r'\s*\(\d+\)$', '', i) for i in _its[:4]))[:300]
         pathlib.Path(NEWS).write_text(news + '\n', encoding='utf-8')
 except Exception as _e: print('news:', _e)
-m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news}, ensure_ascii=False).encode()
+# 21.11.2026 (аудит, шаг 2 деления карты; Т. В. «доустанавливай всё»): карта 1,2 МБ, из них 93 % — копия «Сайта». Разделы «Сайт» (mf.bin) и
+#   «Документы»/«Архив» (ml.bin) — отдельными картами: Service Worker (need) догружает их при первом открытии раздела. Файлы предзагрузки остаются в m.bin.
+#   Выключить: FABRIKA_MAPSPLIT=0.
+PARTS = {} if os.environ.get('FABRIKA_MAPSPLIT') == '0' else {'fsu/': 'mf.bin', 'library/': 'ml.bin', 'archive/': 'ml.bin'}
+_pre = set(pre); _pm = {}
+for _p in list(files):
+    _k = next((x for x in PARTS if _p.startswith(x)), None)
+    if _k and _p not in _pre: _pm.setdefault(PARTS[_k], {})[_p] = files.pop(_p)
+for _nm in sorted(set(PARTS.values())):
+    _b = json.dumps({'v': VERSION, 'files': _pm.get(_nm, {})}, ensure_ascii=False).encode(); _iv = secrets.token_bytes(12)
+    pathlib.Path(f'{OUT}/{_nm}').write_bytes(_iv + aes.encrypt(_iv, _b, None))
+m = json.dumps({'v': VERSION, 'files': files, 'pre': pre, 'docs': docs, 'news': news, **({'parts': PARTS} if PARTS else {})}, ensure_ascii=False).encode()
 iv = secrets.token_bytes(12)
 pathlib.Path(f'{OUT}/m.bin').write_bytes(iv + aes.encrypt(iv, m, None))
+if PARTS: print('map split: m.bin %d KB, %s' % (len(m) // 1024, ', '.join('%s %d файлов' % (k, len(v)) for k, v in sorted(_pm.items()))))
 
 # public part
 login = pathlib.Path(f'{ENC}/login.html').read_text(encoding='utf-8').replace('__SALT__', S['salt']).replace('__ITER__', str(S['iter']))
@@ -129,7 +156,8 @@ if ACCT_ON:
 login = login.replace('__ACCT_CFG__', json.dumps(ACFG)).replace('/*__ACCT_CORE__*/', pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8'))
 _core = pathlib.Path('/home/claude/build/acct/acct_core.js').read_text(encoding='utf-8')   # 12.11 CodeQL: проверка не внутри assert (python -O её выкидывает)
 if '__ACCT' in login or '</script' in _core.lower(): raise SystemExit('build_enc: в странице входа остался __ACCT или </script в acct_core.js')
-_SETS = sorted({f[3] for f in files.values() if len(f) > 3}); _PG = ACC.people_groups(KR) if ACC_ON else {}
+_ALLF = list(files.values()) + [v for _d in _pm.values() for v in _d.values()]
+_SETS = sorted({f[3] for f in _ALLF if len(f) > 3}); _PG = ACC.people_groups(KR) if ACC_ON else {}
 nk = ACCT.write_keyring(OUT, master, KR, (lambda uid: ACC.payload(master, _PG.get(uid), _SETS, S, AMAP)) if ACC_ON else None) if ACFG else 0
 if ACC_ON: print('group sets:', _SETS, '| people with groups:', len(_PG))
 print('personal keys k/*.bin:', nk)
@@ -145,5 +173,5 @@ if not os.path.exists(APK): APK = f'{B}/out/Terekhina14.apk'          # the onli
 if os.path.exists(APK) and os.path.getsize(APK) < 8e6: shutil.copy(APK, f'{OUT}/fabrika.apk')   # the link on the sign-in page saves it as «Фабрика.apk»
 pathlib.Path(f'{OUT}/robots.txt').write_text('User-agent: *\nDisallow: /\n')
 pathlib.Path(f'{OUT}/README.md').write_text('# Фабрика\n\nЗашифрованная сборка веб-приложения (AES-256-GCM). Открывается по паролю: ' + (f'https://owner.github.io{BASE}' if BASE != '/' else 'https://techfabrikant.ru/') + '\n', encoding='utf-8')
-tot = sum(v[2] for v in files.values())
+tot = sum(v[2] for v in _ALLF)
 print('files', len(files), 'pre', len(pre), 'docs', len(docs), f'{tot / 1e6:.1f} MB', 'version', VERSION, 'base', BASE, '->', OUT)

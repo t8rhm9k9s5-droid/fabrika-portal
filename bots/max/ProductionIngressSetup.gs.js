@@ -13,7 +13,7 @@ function lmhs_preflightProduction(){return lmhs_locked_(function(p){var c=lmhs_r
 function lmhs_locked_(fn){var l=LockService.getScriptLock();if(!l.tryLock(1500))throw Error('setup busy');try{return fn(PropertiesService.getScriptProperties());}finally{l.releaseLock();}}
 function lmhs_read_(p){var c;try{c=JSON.parse(p.getProperty('MAX_HTTP_LEGACY_INGRESS_V1')||'null');}catch(e){throw Error('setup config');}if(!c||typeof c!=='object'||Array.isArray(c))throw Error('setup config');return c;}
 function lmhs_keys_(p){['MAX_HTTP_INGRESS_READ_KEY','MAX_HTTP_INGRESS_ACK_KEY'].forEach(function(k){if(!/^[A-Za-z0-9_-]{32,256}$/.test(p.getProperty(k)||''))throw Error('setup key unavailable');});}
-function lmhs_target_(c){if(c.v!==1||c.endpoint!=='https://max-durable-ingress-100000000001.us-central1.run.app'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_2')throw Error('setup target');}
+function lmhs_target_(c){if(c.v!==1||c.endpoint!=='https://max-durable-ingress-100000000002.us-central1.run.app'||c.receipt_kind!=='legacy_max_in_v1'||c.legacy_sheet_id!=='REDACTED_ID_4')throw Error('setup target');}
 function lmhs_schema_(c){if(typeof mx_isGoogle!=='function'||mx_isGoogle()!==true)throw Error('setup mode');mhl_dependencies_(c).verifyRootSchema();}
 /* Activation requires operator-confirmed live server namespace/root/kind and health.
  * No server call here; these guards cannot attest remote state. */
@@ -51,7 +51,7 @@ function lmhs_runDisable(){return lmhs_boundedLog_(lmhs_disableProduction);}
 
 function lws_owner_(){var e='user1@example.org';if(String(Session.getActiveUser().getEmail()).toLowerCase()!==e||String(Session.getEffectiveUser().getEmail()).toLowerCase()!==e)throw Error('Unavailable');}
 function lws_types_(){return ['bot_added','bot_removed','bot_started','chat_title_changed','message_callback','message_created','message_edited','message_removed','user_added','user_removed'];}
-function lws_target_(){return 'https://max-durable-ingress-100000000001.us-central1.run.app/max';}
+function lws_target_(){return 'https://max-durable-ingress-100000000002.us-central1.run.app/max';}
 function lws_req_(method,path,body){
  var token=tok_();if(typeof token!=='string'||!token)throw Error('Unavailable');
  var opt={method:method.toLowerCase(),muteHttpExceptions:true,followRedirects:false,validateHttpsCertificates:true,headers:{Authorization:token,Accept:'application/json'}};
