@@ -85,32 +85,38 @@ function img(p){if(!p)return'';return p.charAt(0)==='~'?PF+p.slice(1):p}
 function srcset(p){var k=p.replace(PF,'~').replace(/^\/fsu\//,''),v=IM[k];if(!v)return'';var a=[p+' '+v[0]+'w'];if(v[1])a.unshift(p+'.640.webp '+v[1]+'w');if(v[2]&&Math.min(screen.width,innerWidth)>=1000)a.push(p+'.2560.webp '+v[2]+'w');return a.join(', ')}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 /* разбор фразы покупателя → свойства */
-var RX=[[/хром/,'f','Хром'],[/ч[её]рн/,'f','Чёрный'],[/бел/,'f','Белый'],[/дерев|массив|бук(?!ле)|под дерево/,'f','Дерево'],
+var RX=[[/хром/,'f','Хром'],[/(^|\s)ч[её]рн/,'f','Чёрный'],[/(^|\s)бел[аоыуе]/,'f','Белый'],[/серебр/,'f','Серебристый'],[/под дерев/,'f','Под дерево'],[/(^|\s)(дерев|массив|бук(?!ле))/,'f','Дерево'],
  [/велюр|бархат/,'m','Велюр'],[/экокож|кожзам|искусств[а-яa-z]* кож/,'m','Экокожа'],[/натуральн[а-яa-z]* кож/,'m','Натуральная кожа'],[/(^|\s)кож/,'m','Кожа?'],[/рогожк/,'m','Рогожка'],[/ткан/,'m','Ткань'],[/сетк/,'m','Сетка'],[/букле/,'m','Букле'],
  [/(4|четыр[а-яa-z]*)\s*(ножк|ног)|на ножках|ножк/,'op','Ножки'],[/колес|колёс|ролик|крестовин|на колесах/,'op','На колёсиках'],[/полоз/,'op','Полозья'],[/вращ|поворот/,'op','Одна опора, вращается'],
- [/жестк|жёстк|пластиков[а-яa-z]* сид|деревянн[а-яa-z]* сид/,'soft','Жёсткое'],[/мягк/,'soft','Мягкое'],
+ [/жестк|жёстк|пластиков[а-яa-z]* сид|деревянн[а-яa-z]* сид/,'soft','Жёсткое'],[/мягк[а-я]* сиден/,'soft','Мягкое сиденье'],[/мягк(?![а-я]* сиден)/,'soft','Мягкое'],
  [/с подлокотник/,'arm','Есть'],[/без подлокотник/,'arm','Нет'],
  [/диван/,'k','Диван'],[/барн|полубар|для стойки/,'k','Барный стул'],[/табурет/,'k','Табурет'],[/банкетк|скамь|кушетк/,'k','Банкетка / скамья'],[/пуф/,'k','Пуф'],[/компьют|рабоч|офисн[а-яa-z]* кресл|руководител/,'k','Рабочее кресло'],[/кресл[а-яa-z]* для отдых|в гостин|лаунж/,'k','Кресло для отдыха'],[/урн/,'k','Урна'],[/вешалк/,'k','Вешалка'],[/секци|зал[а-яa-z]* ожидан/,'k','Секции'],[/(^|\s)стул/,'k','Стул']];
-function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={};RX.forEach(function(r){if(r[0].test(t)){(f[r[1]]=f[r[1]]||[]).indexOf(r[2])<0&&f[r[1]].push(r[2])}});
+function parse(t){t=' '+t.toLowerCase().replace(/ё/g,'е')+' ';var f={},neg=/(^|\s)(не|без)\s+(натуральн[а-я]*\s+|искусств[а-я]*\s+)?кож/.test(t);
+ /* 21.11.2026 (Рекс CG-54, аудит): чужие размеры («высота спинки 1 метр», «глубина не больше 1 м») убираем из фразы до поиска ширины */
+ var t0=t;t=t.replace(/(глубин|высот)[а-я]*(?:\s+[а-я]+){0,2}?\s*:?\s*(?:до|не больше|не более|около|от|в|на)?\s*(?:\d+(?:[.,]\d+)?\s*(?:мм|см|метр[а-я]*|м)(?![а-я])|(?:один\s+|1\s+)?метр[а-я]*)/g,' ');RX.forEach(function(r){if(r[0].test(t)){(f[r[1]]=f[r[1]]||[]).indexOf(r[2])<0&&f[r[1]].push(r[2])}});
  /* 20.11.2026 (Рекс): «кожа» без уточнения — обе; «натуральная кожа» — не экокожа; «барный стул» — без обычных стульев */
  if(f.m){var q=f.m.indexOf('Кожа?');if(q>=0){f.m.splice(q,1);if(f.m.indexOf('Натуральная кожа')<0&&f.m.indexOf('Экокожа')<0)f.m.push('Экокожа','Натуральная кожа')}if(!f.m.length)delete f.m}
+ if(neg&&f.m){f.m=f.m.filter(function(v){return !/кож/i.test(v)});if(!f.m.length)delete f.m}
+ if(f.soft&&f.soft.indexOf('Мягкое')>=0&&f.soft.indexOf('Мягкое сиденье')<0)f.soft.push('Мягкое сиденье');
  if(f.k&&f.k.length>1&&f.k.indexOf('Стул')>=0)f.k.splice(f.k.indexOf('Стул'),1);
  if(/кресл/.test(t)&&!f.k){f.k=/колес|колёс|компьют|рабоч|офис/.test(t)?['Рабочее кресло']:['Кресло для отдыха','Рабочее кресло']}
  /* 20.11.2026 (Рекс, CG-52): размеры — по именованным полям: «ширина 55 см» — ширина; «высота: 50 см», «глубина 60» — не ширина; без имени — ширина */
  var RXD=/(?:^|\s)(?:(ширин|глубин|высот)[а-я]*(?:\s+сиден[а-я]*)?\s*:?\s*)?(?:(до|не больше|не более|не шире|меньше|уже|от|больше|более|шире|не меньше|не менее|на|в|около)\s*)?(\d+(?:[.,]\d+)?)\s*(мм|см|метр[а-я]*|м)(?![а-яa-z])(?:\s*(\d+)\s*см(?![а-яa-z]))?/g,mm2,W=null,U=null;
  while((mm2=RXD.exec(t))){var nm=mm2[1]||'';if(nm&&nm!=='ширин')continue;var v=parseFloat(mm2[3].replace(',','.')),u=mm2[4],mm=(u==='мм'?v:u==='см'?v*10:v*1000)+(mm2[5]&&u!=='см'&&u!=='мм'?+mm2[5]*10:0);
   if(mm<30||mm>5000)continue;var o={w:Math.round(mm),m:mm2[2]||''};if(nm){W=o;break}if(!U)U=o}
- var X=W||U;
+ var X=W||U,rg=/(?:^|\s)от\s*(\d+(?:[.,]\d+)?)\s*(мм|см|м)?\s*до\s*(\d+(?:[.,]\d+)?)\s*(мм|см|метр[а-я]*|м)(?![а-яa-z])/.exec(t);
+ if(rg){var uu=rg[4].charAt(0)==='м'&&rg[4]!=='мм'?'м':rg[4],k1={'мм':1,'см':10,'м':1000}[rg[2]||uu],k2={'мм':1,'см':10,'м':1000}[uu],a1=parseFloat(rg[1].replace(',','.'))*k1,a2=parseFloat(rg[3].replace(',','.'))*k2;if(a1>=30&&a2<=5000&&a1<a2){f._w=Math.round(a2);f._wlo=Math.round(a1);f._wm='rg';return f}}
+ if(!X){var bare=/(?:^|\s)ширин[а-я]*\s*:?\s*(\d{3,4})(?![\d.,а-я])/.exec(t);if(bare&&+bare[1]>=300&&+bare[1]<=5000)X={w:+bare[1],m:''}}
  if(!X&&/(^|\s)(в |на )?метр(?![а-я])|метровы/.test(t)&&!/(глубин|высот)[а-я]*(\s+сиден[а-я]*)?\s*:?\s*(в |на |около |до )?(1 |один )?метр/.test(t))X={w:1000,m:''};   /* 21.11.2026 (Рекс, CG-53): «глубина метр» — не ширина */
  if(X){f._w=X.w;if(/^(до|не больше|не более|не шире|меньше|уже)$/.test(X.m))f._wm='le';else if(/^(от|больше|более|шире|не меньше|не менее)$/.test(X.m))f._wm='ge'}
  return f}
 function match(x,f){for(var i=0;i<G.length;i++){var g=G[i],sel=f[g[0]];if(!sel||!sel.length)continue;var vs=val(g,x);if(!sel.some(function(s){return vs.indexOf(s)>=0}))return false}
- if(f._w){if(!x.w)return false;var lo=f._wm==='le'?0:f._w*(f._wm==='ge'?1:0.85),hi=f._wm==='ge'?1e9:f._w*(f._wm==='le'?1:1.15);if(x.w<lo||x.w>hi)return false}
+ if(f._w){if(!x.w)return !!f._nw;var lo=f._wm==='rg'?f._wlo:f._wm==='le'?0:f._w*(f._wm==='ge'?1:0.85),hi=f._wm==='ge'?1e9:f._w*(f._wm==='le'||f._wm==='rg'?1:1.15);if(x.w<lo||x.w>hi)return false}
  if(f._q){var n=(x.n+' '+x.k+' '+x.s).toLowerCase();if(f._q.some(function(w){return n.indexOf(w)<0}))return false}return true}
 function counts(g){var f={};for(var k in S)if(k!==g[0])f[k]=S[k];var c=new Map();D.forEach(function(x){if(match(x,f))val(g,x).forEach(function(v){c.set(v,(c.get(v)||0)+1)})});return c}
 function side(){var h='';G.forEach(function(g){var C=counts(g);var all={};D.forEach(function(x){val(g,x).forEach(function(v){all[v]=1})});var ks=Object.keys(all);if(g[0]==='w')ks=['до 50 см','50–70 см','70–100 см','100–150 см','больше 150 см'].filter(function(v){return all[v]});if(g[0]==='seat')ks=['обычная (до 60 см)','полубарная (60–70 см)','барная (от 70 см)'].filter(function(v){return all[v]});
  h+='<div class="g"><h3>'+g[1]+'</h3><div class="chips">'+ks.map(function(v){var on=(S[g[0]]||[]).indexOf(v)>=0,c=C.get(v)||0;return '<button type="button" class="chip" data-g="'+g[0]+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"'+(c||on?'':' disabled')+'>'+esc(v)+'<span class="n">'+c+'</span></button>'}).join('')+'</div></div>'});
- if(S._w)h='<div class="g"><h3>Ширина около</h3><div class="chips"><button type="button" class="chip" aria-pressed="true" data-g="_w">'+(S._wm==='le'?'до ':S._wm==='ge'?'от ':'')+Math.round(S._w/10)+' см'+(S._wm?'':' ±15 %')+' ×</button></div></div>'+h;
+ if(S._w)h='<div class="g"><h3>Ширина</h3><div class="chips"><button type="button" class="chip" aria-pressed="true" data-g="_w">'+(S._wm==='rg'?'от '+Math.round(S._wlo/10)+' до ':S._wm==='le'?'до ':S._wm==='ge'?'от ':'около ')+Math.round(S._w/10)+' см'+(S._wm?'':' ±15 %')+' ×</button></div></div>'+h;
  document.getElementById('side').innerHTML=h}
 function card(x){var p=img(x.p),ss=p?srcset(p):'',dm=[x.w&&('Ш '+x.w),x.dp&&('Г '+x.dp),x.h&&('В '+x.h)].filter(Boolean).join(' × ');
  var tg=[].concat(val(G[2],x),val(G[4],x).slice(0,2),val(G[3],x).slice(0,1));
@@ -119,12 +125,16 @@ var LIM=60;
 function render(keep){if(!keep)LIM=60;var r=D.filter(function(x){return match(x,S)});
  r.sort(function(a,b){return (b.p?1:0)-(a.p?1:0)});
  document.getElementById('cnt').textContent=r.length?('Подходит: '+r.length):'';
+ var nw=0;if(S._w&&!S._nw){var S2={};for(var kk in S)S2[kk]=S[kk];S2._nw=1;nw=D.filter(function(x){return !x.w&&match(x,S2)}).length}
  document.getElementById('grid').innerHTML=r.length?r.slice(0,LIM).map(card).join('')+(r.length>LIM?'<button type="button" class="more" id="more">Показать ещё '+Math.min(60,r.length-LIM)+(r.length-LIM>60?' (осталось '+(r.length-LIM)+')':'')+'</button>':''):'<div class="empty">Ничего не нашлось. Уберите одно из свойств или измените размер.</div>';
- var a=[];Object.keys(S).forEach(function(k){if(k.charAt(0)==='_')return;(S[k]||[]).forEach(function(v){a.push('<button type="button" class="chip" data-g="'+k+'" data-v="'+esc(v)+'" aria-pressed="true">'+esc(v)+' ×</button>')})});
+ if(nw)document.getElementById('grid').insertAdjacentHTML('beforeend','<button type="button" class="more" id="nwb">Ещё '+nw+' подходящих товаров без указанных размеров — показать</button>');
+ var a=[];Object.keys(S).forEach(function(k){if(k.charAt(0)==='_')return;(S[k]||[]).forEach(function(v){a.push('<button type="button" class="chip" data-g="'+esc(k)+'" data-v="'+esc(v)+'" aria-pressed="true">'+esc(v)+' ×</button>')})});
  document.getElementById('act').innerHTML=a.join('');side();
  try{history.replaceState(null,'','#'+encodeURIComponent(JSON.stringify(S)));}catch(e){}}
-function toggle(g,v){if(g==='_w'){delete S._w;delete S._wm}else{var a=S[g]=S[g]||[],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);if(!a.length)delete S[g]}render()}
-document.addEventListener('click',function(e){if(e.target.id==='more'){LIM+=60;render(true);return}var c=e.target.closest('.chip[data-g]');if(c&&!c.disabled){toggle(c.dataset.g,c.dataset.v)}var h=e.target.closest('.hint button');if(h){document.getElementById('q').value=h.dataset.q;go()}});
+/* 21.11.2026 (аудит Fable): состояние из адреса — только известные группы и значения (раньше ключи из #… попадали в разметку как есть) */
+function clean(o){var r={},ok={};G.forEach(function(g){ok[g[0]]=1});if(!o||typeof o!=='object')return r;Object.keys(o).forEach(function(k){var v=o[k];if(ok[k]&&Array.isArray(v)){var a=v.filter(function(x){return typeof x==='string'&&x.length<60});if(a.length)r[k]=a.slice(0,20)}});var w=+o._w;if(w>=30&&w<=5000){r._w=Math.round(w);if(o._wm==='le'||o._wm==='ge')r._wm=o._wm;var lo=+o._wlo;if(o._wm==='rg'&&lo>=30&&lo<w){r._wm='rg';r._wlo=Math.round(lo)}if(o._nw)r._nw=1}if(Array.isArray(o._q)){var q=o._q.filter(function(x){return typeof x==='string'&&/^[а-яёa-z0-9-]{2,30}$/i.test(x)});if(q.length)r._q=q.slice(0,8)}return r}
+function toggle(g,v){if(g==='_w'){delete S._w;delete S._wm;delete S._wlo;delete S._nw}else{var a=S[g]=S[g]||[],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);if(!a.length)delete S[g]}render()}
+document.addEventListener('click',function(e){if(e.target.id==='more'){LIM+=60;render(true);return}if(e.target.id==='nwb'){S._nw=1;render(true);return}var c=e.target.closest('.chip[data-g]');if(c&&!c.disabled){toggle(c.dataset.g,c.dataset.v)}var h=e.target.closest('.hint button');if(h){document.getElementById('q').value=h.dataset.q;go()}});
 function go(){var t=document.getElementById('q').value.trim();var f=parse(t);S=f;
  var rest=t.toLowerCase().replace(/ё/g,'е').split(/\s+/).filter(function(w){return w.length>3&&!RX.some(function(r){return r[0].test(' '+w+' ')})&&!/^(шир|габар|разм|метр|мягк|для|на|с|без|под|около|ножк|ножках|хром|см|мм|натур|искус|четыр|больш|более|меньш|кожи|кожа)/.test(w)&&!/\d/.test(w)&&D.some(function(x){return x.n.toLowerCase().indexOf(w)>=0})});
  if(rest.length)S._q=rest;render();if(innerWidth<=900)document.getElementById('grid').scrollIntoView({behavior:'smooth',block:'start'})}
@@ -133,7 +143,7 @@ document.getElementById('rst').onclick=function(){S={};document.getElementById('
 document.getElementById('fbtn').onclick=function(){document.getElementById('side').classList.toggle('open')};
 window.FSU_CTX=function(){return D.filter(function(x){return match(x,S)}).slice(0,40).map(function(x){return x.n+' ('+x.k+'; '+[x.op,(x.m||[]).join('/'),(x.f||[]).join('/'),x.w&&('Ш'+x.w+' Г'+(x.dp||'?')+' В'+(x.h||'?')+' мм')].filter(Boolean).join('; ')+') /fsu'+x.u}).join('\n')};
 Promise.all([fetch('/fsu/podbor.json').then(function(r){return r.json()}),fetch('/fsu/_img.json').then(function(r){return r.ok?r.json():{}}).catch(function(){return{}})]).then(function(a){D=a[0];IM=a[1]||{};
- try{var h=decodeURIComponent(location.hash.slice(1));if(h)S=JSON.parse(h)}catch(e){S={}}render()}).catch(function(){document.getElementById('grid').innerHTML='<div class="empty">Не загрузился список товаров. Обновите страницу.</div>'});
+ try{var h=decodeURIComponent(location.hash.slice(1));if(h)S=clean(JSON.parse(h))}catch(e){S={}}render()}).catch(function(){document.getElementById('grid').innerHTML='<div class="empty">Не загрузился список товаров. Обновите страницу.</div>'});
 })();
 </script>
 </body></html>

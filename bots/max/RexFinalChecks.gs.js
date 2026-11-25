@@ -5,12 +5,12 @@
  */
 var RPFIN_BOT_='539375202',RPFIN_PREFIX_='REX_PIN_ONCE_20261108_';
 var RPFIN_TARGETS_=[
-  ['-100000000003','mid.ffffbe7b4ab8222b01a1afc366235dc9'],
-  ['-100000000004','mid.ffffbe7b3f3c222b01a1afc395485dc9'],
-  ['-100000000002','mid.ffffbe751df8222b01a1b043cd895dc9'],
-  ['-100000000006','mid.ffffbe7462e4222b01a1afc3acac5dc9'],
+  ['-100000000004','mid.ffffbe7b4ab8222b01a1afc366235dc9'],
+  ['-100000000005','mid.ffffbe7b3f3c222b01a1afc395485dc9'],
+  ['-100000000003','mid.ffffbe751df8222b01a1b043cd895dc9'],
+  ['-100000000001','mid.ffffbe7462e4222b01a1afc3acac5dc9'],
   ['-100000000007','mid.ffffbe68c7a6222b01a1afc3cad85dc9'],
-  ['-100000000005','mid.ffffbe686738222b01a1afc37d5c5dc9'],
+  ['-100000000006','mid.ffffbe686738222b01a1afc37d5c5dc9'],
   ['-100000000008','mid.ffffb7f0c9ae222b01a1afc3eb735dc9']
 ];
 function rpfin_context_(effects){

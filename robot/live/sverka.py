@@ -193,6 +193,14 @@ def seal_k(key, raw):
 def open_k(key, blob):
     s = blob.decode() if isinstance(blob, bytes) else blob
     s = s.strip()
+    if s.startswith('T14B2.'):   # 21.11.2026: сжатый формат сайта (live.py seal2): ключи потока и подписи — HMAC(key, 't14-enc'/'t14-mac'), внутри zlib
+        import zlib
+        raw = base64.b64decode(s[6:]); nonce, tag, ct = raw[:16], raw[16:48], raw[48:]
+        ke = hmac.new(key, b't14-enc', hashlib.sha256).digest(); km = hmac.new(key, b't14-mac', hashlib.sha256).digest()
+        if not hmac.compare_digest(tag, hmac.new(km, nonce + ct, hashlib.sha256).digest()): return None
+        ks = b''.join(hmac.new(ke, nonce + i.to_bytes(4, 'big'), hashlib.sha256).digest() for i in range((len(ct) + 31) // 32))[:len(ct)]
+        try: return zlib.decompress((int.from_bytes(ct, 'big') ^ int.from_bytes(ks, 'big')).to_bytes(len(ct), 'big') if ct else b'')
+        except Exception: return None
     if not s.startswith('T14B1.'): return None
     raw = base64.b64decode(s[6:]); nonce, tag, ct = raw[:16], raw[16:48], raw[48:]
     if not hmac.compare_digest(tag, hmac.new(key, nonce + ct, hashlib.sha256).digest()): return None

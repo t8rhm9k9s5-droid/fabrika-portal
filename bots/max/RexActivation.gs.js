@@ -1,12 +1,12 @@
 /* Owner-only activation UI. Secrets are form inputs, never source literals. */
 function rxa_fail_(){throw Error('activation unavailable; owner inspection required');}
-function rxa_targets_(){return {max:['-100000000003','-100000000005','-100000000004','-100000000002'],telegram:['188811460','202625208','2058291998']};}
+function rxa_targets_(){return {max:['-100000000004','-100000000006','-100000000005','-100000000003'],telegram:['188811460','202625208','2058291998']};}
 function rxa_sameSet_(a,b){return Array.isArray(a)&&a.length===b.length&&a.every(function(v,i){return typeof v==='string'&&a.indexOf(v)===i&&b.indexOf(v)>=0;});}
 function rxa_actions_(bot){return bot==='max'?['status.read','chats.list','messages.read','message.send','message.reply','queue.pause','queue.resume']:['status.read','chats.list','message.send','message.reply','queue.pause','queue.resume'];}
 function rxa_approvedConfig_(p,c){
  var targets=rxa_targets_(),prepared=rxb_json_(p,'REXCTL_PREPARED_JOURNAL_V1');
  if(!rxb_exact_(c.allowed_targets,['max','telegram'])||!rxb_exact_(c.bot_ids,['max','telegram'])||c.bot_ids.max!=='539375202'||c.bot_ids.telegram!=='8743932140'||c.telegram_mode!=='direct'||c.max_origin!=='https://platform-api.max.ru'||c.owner_email!=='user1@example.org')rxa_fail_();
- if(!rxb_exact_(c.journal,['root','generation'])||!rxb_exact_(prepared,['root','generation'])||prepared.root!=='REDACTED_ID_3'||prepared.generation!=='rexctl-20261108'||RexControl.canonical(c.journal)!==RexControl.canonical(prepared))rxa_fail_();
+ if(!rxb_exact_(c.journal,['root','generation'])||!rxb_exact_(prepared,['root','generation'])||prepared.root!=='REDACTED_ID_6'||prepared.generation!=='rexctl-20261108'||RexControl.canonical(c.journal)!==RexControl.canonical(prepared))rxa_fail_();
  ['max','telegram'].forEach(function(bot){if(!rxa_sameSet_(c.allowed_targets[bot],targets[bot]))rxa_fail_();});
  ['rex','claude'].forEach(function(actor){if(!c.principals.some(function(v){return v.actor_id===actor&&v.issuer_id==='fabrika-mcp-gateway-v1';}))rxa_fail_();});
 }

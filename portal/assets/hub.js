@@ -638,10 +638,10 @@
     kpis: [{ id: 'onl', t: 'Онлайн · наши модели в интернете', ic: 'store', href: '#online' }, { id: 'rev', t: 'Продажи и план', ic: 's_sales', href: '#s-opm' }, { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf' },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl' }, { id: 'prom', t: 'Визиты, звонки, отчёты', ic: 'phone', href: '#prom' },
       { id: 'mp', t: 'Ozon · месяц и день', ic: 'box', href: '#mp' }, { id: 'rv', t: 'Отзывы маркетплейсов', ic: 'chat', href: '#mp' }],
-    // 30.10.2026: «Офисы продаж — октябрь 2026» (данные М. И. Сотрудник8, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
-    tiles: [{ id: 'ops', t: 'Офисы продаж', ic: 'store', intro: true, hdr: [/^офисы продаж(?! —)/] },
+    // 30.10.2026: «Имя2 продаж — октябрь 2026» (данные М. И. Сотрудник8, sales_frag.html → opmBlock) — свой подраздел; нет данных — плитки нет (opt)
+    tiles: [{ id: 'ops', t: 'Имя2 продаж', ic: 'store', intro: true, hdr: [/^офисы продаж(?! —)/] },
       { id: 's1c', t: 'Продажи 1С · типы и мощности', ic: 's_sales', opt: true, hdr: [/^продажи за день/, /^продажи 1/] },
-      { id: 'opm', t: 'Офисы продаж · октябрь', ic: 's_sales', opt: true, hdr: [/^офисы продаж — /] },
+      { id: 'opm', t: 'Имя2 продаж · октябрь', ic: 's_sales', opt: true, hdr: [/^офисы продаж — /] },
       { id: 'days', t: 'Сдача отчётов по дням', ic: 'toc', hdr: [/^сдача отчетов/] },
       { id: 'recl', t: 'Рекламации', ic: 's_docs', href: '#recl', hdr: [/^рекламации/] },
       { id: 'buf', t: 'Буфер заказов', ic: 'box', href: '#buf', hdr: [/^буфер/] },
@@ -670,7 +670,7 @@
       var lag = ops.filter(function (o) { var s = o.stat || {}; return s.of != null && s.of - (s.sent || 0) >= 2; }).sort(function (a, b) { return (a.stat.sent / a.stat.of) - (b.stat.sent / b.stat.of); });
       var okN = ops.filter(function (o) { var s = o.stat || {}; return s.of != null && s.of - (s.sent || 0) < 2; }).length;
       var opsN = ops.filter(function (o) { return o.stat && o.stat.of != null; }).length, opsT = opsN ? ' · отчёты офисов: сдают ' + okN + ' из ' + opsN + (lag.length ? ' (отстают ' + lag.slice(0, 2).map(function (o) { return String(o.n || '').replace(/^ОП\s+/, ''); }).join(', ') + ')' : '') : '';
-      if (lag.length) att.push({ href: '#s-ops', ic: 's_sales', t: lag.length === 1 ? lag[0].n + ': отчёты не сдаются' : 'Офисы без отчётов', s: 'сдано из рабочих дней: ' + lag.slice(0, 4).map(function (o) { return String(o.n || '').replace(/^ОП\s+/, '') + ' ' + (o.stat.sent || 0) + '/' + o.stat.of; }).join(', '), v: String(lag.length), tone: 'warn' });
+      if (lag.length) att.push({ href: '#s-ops', ic: 's_sales', t: lag.length === 1 ? lag[0].n + ': отчёты не сдаются' : 'Имя2 без отчётов', s: 'сдано из рабочих дней: ' + lag.slice(0, 4).map(function (o) { return String(o.n || '').replace(/^ОП\s+/, '') + ' ' + (o.stat.sent || 0) + '/' + o.stat.of; }).join(', '), v: String(lag.length), tone: 'warn' });
       var cp = S.cp || {};
       if (cp.late) att.push({ href: '#cp', ic: 'trend', t: 'Контрольные точки с прошедшим сроком', s: 'без статуса — ' + n(cp.open) + ', срок прошёл — ' + n(cp.late), v: n(cp.late), tone: 'warn' });
       var PR = x.PR;
@@ -714,7 +714,7 @@
       if (ZR && ZR.n) K.push({ id: 'rv', v: String((+ZR.avg).toFixed(1)).replace('.', ',') + '<small>из 5</small>', s: 'Ozon: не обработано ' + n(ZR.unproc) + (ZR.neg ? ' · плохих (≤ 3★) ' + n(ZR.neg) : '') + ' · всего ' + n(ZR.n) + (ZR.asof ? ' · выгрузка ' + dd(ZR.asof) : ''), tone: ZR.neg_unproc ? 'bad' : ZR.unproc ? 'warn' : 'ok' });
       else K.push({ id: 'rv', v: '—', s: 'выгрузка отзывов ещё не пришла', tone: 'none' });
       var TZ = x.PF && x.PF.tz, T1 = jd('tz1c-data');
-      if (T1 && T1.n) {                                    // 28.10.2026: «ТЗ в работе» из 1С — Имя2 источник по открытым ТЗ
+      if (T1 && T1.n) {                                    // 28.10.2026: «ТЗ в работе» из 1С — Имя1 источник по открытым ТЗ
         var t1pto = (T1.stages && T1.stages['у ПТО']) || 0;
         if (T1.late) att.push({ href: '#tz1c-late', ic: 'file', t: 'ТЗ: дата актуальности прошла', s: 'из ' + n(T1.n) + ' в работе · у ПТО ' + n(t1pto) + ' · 1С на ' + dd(T1.asof), v: n(T1.late), tone: 'bad' });
         tl.push({ id: 'tz', s: n(T1.n) + ' ТЗ в работе (1С) · срок прошёл ' + n(T1.late) + ' · у ПТО ' + n(t1pto) });
@@ -811,7 +811,7 @@
       var D = x.D, K = [], att = [], tl = [];
       function kind(k) { return ((D && D.kinds) || []).filter(function (r) { return r.k === k; })[0] || null; }
       var z = kind('zps'), f = kind('fts');
-      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник12), не утверждён Сотрудник6
+      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник12), не утверждён Сотрудник7
       if (!D) return { kpis: ['yday', 'late', 'open', 'old', 'med', 'term'].map(function (k) { return k === 'term' && TK ? TK : { id: k, v: '—', s: k === 'late' ? 'нет связи с отчётами ОМТС — данные приходят с хостинга' : '', tone: 'none' }; }), attn: [], attnMsg: 'Отчёты ОМТС ещё не загрузились — данные приходят с хостинга раз в 10 минут.' };
       var tz = z && z.total, tf = f && f.total, tot = (tz || 0) + (tf || 0);
       var HZ = z && z.hist, HF = f && f.hist, op = (HZ ? HZ.open || 0 : 0) + (HF ? HF.open || 0 : 0);
@@ -870,7 +870,7 @@
       var last = KS.map(function (r) { var z = ser(r); return z.length ? z[z.length - 1][0] : ''; }).sort().pop();
       return { rows: rowsFor(KS, ''), more: more, moreT: 'ЖПС и ФТС отдельно',
         note: 'По ежедневным отчётам 1С «Заявки в просрочке» (ЖПС и ФТС), за день — последний отчёт дня' + (last ? '; последний — ' + dd(last) : '') + '. ' +
-          (hasDn ? 'Сотрудник5 — заявка впервые в отчёте; ушла — в следующем отчёте её уже нет.' : 'Сотрудник5 и закрытые по дням появятся после обновления хостинга (02.11).') };
+          (hasDn ? 'Сотрудник6 — заявка впервые в отчёте; ушла — в следующем отчёте её уже нет.' : 'Сотрудник6 и закрытые по дням появятся после обновления хостинга (02.11).') };
     }
   };
 

@@ -41,9 +41,10 @@ async function openView(html, hash, data = {}, files = {}) {
     T14Live: {async bin(name) { return files[name] ?? null; }, async load() { return null; }},
   };
   ctx.window = ctx;
-  const script = html.match(/<script>\s*(\/\*[\s\S]*?|\(function[\s\S]*?)<\/script>/);
-  assert.ok(script);
-  vm.runInNewContext(script[1], ctx);
+  // 16.11 (Рекс, CG-40): на странице продаж первым идёт ранний редирект старых адресов «Структуры» — берём скрипт, который рисует #view
+  const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).find(s => /getElementById\(['"]view['"]\)/.test(s));
+  assert.ok(script, 'нет скрипта страницы с #view');
+  vm.runInNewContext(script, ctx);
   await new Promise(resolve => setImmediate(resolve));
   return {
     get html() { return view.innerHTML; },
@@ -53,7 +54,22 @@ async function openView(html, hash, data = {}, files = {}) {
   };
 }
 
+// 16.11 (Рекс, CG-40): старые адреса «Структуры» на странице продаж ведут на struct.html до загрузки данных; обычный вход — без редиректа
+function redirectOf(html, hash) {
+  const early = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).find(s => /struct\.html/.test(s) && /location\.replace/.test(s) && !/getElementById\(['"]view['"]\)/.test(s));
+  assert.ok(early, 'нет раннего редиректа старых адресов «Структуры»');
+  let to = null; vm.runInNewContext(early, {location: {hash, replace(u) { to = u; }}});
+  return to;
+}
+
 async function run() {
+  assert.equal(redirectOf(salesHtml, '#struct'), 'struct.html');
+  assert.equal(redirectOf(salesHtml, '#ko'), 'struct.html#ko');
+  assert.equal(redirectOf(salesHtml, '#sec-org'), 'struct.html#sec-org');
+  assert.equal(redirectOf(salesHtml, '#sec-sim'), 'struct.html#sec-sim');
+  assert.equal(redirectOf(salesHtml, ''), null);
+  assert.equal(redirectOf(salesHtml, '#s-days'), null);
+  assert.equal(redirectOf(salesHtml, '#kom'), null);
   const date = '2024-04-02';
   const sales = {'sales-data': {days: ['2024-04-01', date], ops: [
     {k: 'office', n: 'Office A', rep: {[date]: '17:43'}},

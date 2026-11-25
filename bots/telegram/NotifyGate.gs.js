@@ -6,7 +6,7 @@
  *   — обращение к владельцу в группе MAX («💬 MAX …») — ждёт 30 мин, потом одно сообщение «ждёт вашего ответа»;
  *   — всё остальное владельцу и админам — в очередь gate_q, уходит пачкой в 10:30, 15:00, 19:00 МСК (poll → gateTick_).
  *  Выключатель: свойство gate_off = 1 (всё сразу, как раньше). Ничего не теряется: очередь — b2 (свойства частями). */
-var GATE_IN = null, GATE_BYPASS = false, GATE_CHATS = null;
+var GATE_IN = null, GATE_BYPASS = false, GATE_CHATS = null, GATE_MAXK = null;   // GATE_MAXK — {cid, mid, ts} обращения MAX (24.11.2026)
 var GATE_SLOTS = [[10, 30, 'Утро'], [15, 0, 'День'], [19, 0, 'Вечер']];
 var GATE_SEND = { sendMessage: 1, sendPhoto: 1, sendDocument: 1, sendMediaGroup: 1, copyMessage: 1, forwardMessage: 1 };
 var GATE_MAX_WAIT = 30 * 60000, GATE_Q_BYTES = 60000;
@@ -31,7 +31,7 @@ function gateHold_(method, p) {
   var txt = String(p.text || p.caption || '');
   if (/сводк/i.test(txt.replace(/<[^>]+>/g, '').slice(0, 120)) && gateInSlot_(90)) return false;   // сама сводка в своё окно (10:30, 15:00, 19:00 + 90 мин) — сразу
   var item = { t: Date.now(), m: method, p: p };
-  if (/^💬\s*<b>MAX/.test(txt)) item.due = Date.now() + GATE_MAX_WAIT;          // обращение к нему в группе MAX — через 30 мин
+  if (/^💬\s*<b>MAX/.test(txt) && !(GATE_MAXK && GATE_MAXK.info)) { item.due = Date.now() + GATE_MAX_WAIT; if (GATE_MAXK && GATE_MAXK.cid) item.mk = GATE_MAXK; }   // 25.11.2026: без вопроса (info) — не «ждёт ответа», а в общую пачку 10:30/15:00/19:00   // 24.11.2026: ответ в группе снимает (op maxownans)          // обращение к нему в группе MAX — через 30 мин
   return gatePush_(item);
 }
 
@@ -121,4 +121,15 @@ function gateShow() {
   var q = b2Get_('gate_q', []) || [];
   console.log(q.length + ' в очереди; последний сброс ' + (props().getProperty('gate_last') || '—'));
   q.forEach(function (x) { console.log(gateMsk_(x.t) + ' → ' + x.p.chat_id + (x.due ? ' (MAX, в ' + gateMsk_(x.due) + ')' : '') + ': ' + String(x.p.text || x.m).slice(0, 80)); });
+}
+
+/** 25.11.2026, Т. В. (скрин: «Будем стараться по максимуму» пришло как «ждёт вашего ответа»): «нет вопроса — по своей сути это ответ».
+ *  true — в тексте есть вопрос или просьба к владельцу; подтверждения, отчёты и «спасибо» ответа не ждут. */
+function gateNeedsAnswer_(t) {
+  t = String(t || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  if (t.indexOf('?') >= 0) return true;
+  var low = t.toLowerCase();
+  if (/(^|[^а-яё])(подскаж(и|ите)|уточните|сообщите|напишите|ответьте|прошу|просьба|просим|согласуйте|согласовать|подтвердите|подтвердить|разрешите|утвердите|утвердить|одобрите|решите|дайте|что делать|как быть|как поступить|нужно ли|надо ли|можно ли|стоит ли|будет ли|есть ли|жд[её]м? (ваш\S*|ответ\S*|решени\S*)|нуж(ен|но|на|ны) (ваш\S*|ответ\S*|решени\S*))(?![а-яё])/.test(low)) return true;
+  return /(^|[.!…\n]\s*|,\s+)(когда|где|куда|кто|кому|какой|какая|какое|какие|сколько|почему|зачем)(?![а-яё])[^.!…]*$/.test(low) && low.length < 200 && /(^|[.!…\n]\s*)(когда|где|куда|кто|кому|какой|какая|какое|какие|сколько|почему|зачем)(?![а-яё])/.test(low);
 }

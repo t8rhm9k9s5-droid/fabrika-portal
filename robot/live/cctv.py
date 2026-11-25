@@ -96,10 +96,21 @@ def parse(r):
     return ev
 
 
-def _off(t):
+# 23.11.2026, Т. В. (опрос «Только ночь 23:00–05:00»), после ответа Сотрудник35 С. В.: у этих камер графика нет —
+#   011 парковка (дорога общего пользования) и 003 часовня (срабатывает на фары) — не фиксировать совсем;
+#   052 ворота и 002 гараж — «вне графика» только ночью 23:00–05:00 (любой день). Остальные камеры — как раньше.
+CAM_SCHED = [(re.compile(r'^0*11(?!\d)|парковк', re.I), None), (re.compile(r'^0*3(?!\d)|часовн', re.I), None),
+             (re.compile(r'^0*52(?!\d)|ворот', re.I), ('23:00', '05:00')), (re.compile(r'^0*2(?!\d)|гараж', re.I), ('23:00', '05:00'))]
+
+
+def _off(t, name=''):
     try: d = datetime.datetime.strptime(t[:16], '%Y-%m-%dT%H:%M')
     except Exception: return False
     hm = t[11:16]
+    for rx, win in CAM_SCHED:
+        if name and rx.search(name):
+            if win is None: return False
+            return hm >= win[0] or hm < win[1]
     return d.weekday() >= 5 or hm < WORK_FROM or hm >= WORK_TO
 
 
@@ -149,7 +160,7 @@ def run(L, log, jload, jsave, publish, publish_file, alert, now, mail_send=None)
             if v_:
                 e['name'] = v_; e['perim'] = bool(PERIM.search(v_))
                 if not e.get('nvr'): e['nvr'] = {'249': 'Регистратор 1', '250': 'Регистратор 2'}.get([k for k, x in nm.items() if x == v_][0].split('|')[0], '')
-        e['off'] = _off(e['t'])
+        e['off'] = _off(e['t'], e.get('name') or '')
         e['zone'] = 'perim' if e['perim'] else 'room'
         e['key'] = (not e['end']) and e['k'] not in ('test', 'sys') and e['off']
     # — снимки: периметр и ночь, свежие первыми

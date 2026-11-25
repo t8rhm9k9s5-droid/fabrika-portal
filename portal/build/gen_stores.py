@@ -64,7 +64,7 @@ details[open] > .irow .ichev{transform:rotate(90deg)}
 <script>
 (function(){
   var D = JSON.parse(document.getElementById('stores-data').textContent);
-  var NAMES = {'moscow':'Москва','nizhny-novgorod':'Сотрудник11 Имя3','samara':'Самара','ryazan':'Рязань','ekaterinburg':'Екатеринбург','saint-petersburg':'Санкт-Петербург','krasnodar':'Краснодар','simferopol':'Симферополь','almaty':'Алматы'};
+  var NAMES = {'moscow':'Москва','nizhny-novgorod':'Сотрудник14 Имя3','samara':'Самара','ryazan':'Рязань','ekaterinburg':'Екатеринбург','saint-petersburg':'Санкт-Петербург','krasnodar':'Краснодар','simferopol':'Симферополь','almaty':'Алматы'};
   var ORDER = Object.keys(NAMES);
   // расходники офиса (скотч, каталоги, бумага…) в итоги мебели не входят
   var CONS = /^(Каталог|Скотч|Стрейч|Краска аэрозольная|МФУ|Бумага|Картридж|Мешки|Перчатки|Ручка канцелярская|Зарядное устройство|Винт барашек|Образцы)/i;
@@ -99,7 +99,7 @@ details[open] > .irow .ichev{transform:rotate(90deg)}
     var q = (document.getElementById('sq') || {}).value || '';
     var h = '<h1>Остатки ОП</h1>' +
       '<div class="igroup hero" style="margin-top:14px"><div class="hnum">' + n(tot) + '<small>шт</small></div>' +
-      '<div class="hsub">Офисы продаж и склады, мебель без расходников · на ' + day(dLast) + (live && updated ? ', ' + updated : '') + '</div>' +
+      '<div class="hsub">Имя2 продаж и склады, мебель без расходников · на ' + day(dLast) + (live && updated ? ', ' + updated : '') + '</div>' +
       '<div class="hst"><div><span>за день</span><b>' + (tPrev == null ? '—' : dl(tot - tPrev)) + '</b></div><div><span>складов</span><b>' + Object.keys(H.cities).filter(function(c){ return sum(models(H.cities[c])) > 0; }).length + '</b></div><div><span>моделей</span><b>' + Object.keys(nModels).length + '</b></div></div></div>' +
       '<div class="igroup" style="margin-top:12px">' + chart(days, totals) + '</div>' +
       '<div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="sq" type="search" placeholder="Модель, например «Изо» или «Самба»" value="' + esc(q) + '"></div>';

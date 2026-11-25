@@ -26,6 +26,10 @@ function mx_dialog(u, m) {
     var pm = text.match(/^\s*итоги\s+опроса(?:\s+(\S+))?\s*$/i);
     if (pm) return mx_ownerPoll(uid, pm[1] || '');
   }
+  // 24.11.2026, Т. В. (опрос «Только полный»): «калькулятор КОД» — запрос доступа к калькулятору мебели. Только свой сотрудник (mx_dmAllowed:
+  //   владелец, dm_allow, участники рабочих групп) — тогда подписанно в калькулятор (op claim) → Т. В. в Telegram «Пустить / Отказать». Чужой — отказ, Т. В. ничего не приходит.
+  var cm = type === 'message_created' && text.match(/^\s*калькулятор\s*:?\s*(\d{6})\s*$/i);
+  if (cm) { mx_calcClaim(uid, user, cm[1]); return; }
   // 11.11.2026: ответ на вопрос бота по контрольным точкам в личке — в контроль сроков (TimersCtl), до зеркала и помощника
   if (type === 'message_created' && typeof tm_remCtlDmAnswer_ === 'function' && tm_remCtlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;   // 13.11: автор контроля — срок/исполнители
   if (type === 'message_created' && typeof tm_ctlDmAnswer_ === 'function' && tm_ctlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;
@@ -170,4 +174,25 @@ function mx_toTg(u, m, user) {
   else if (msg.voice) delete msg.text;
   else if (!t) return null;
   upd.message = msg; return upd;
+}
+
+// 24.11.2026: запрос доступа к калькулятору мебели (см. mx_dialog). Ключ CALC_KEY подставляет выкладка (HMAC ключа бота, метка fabrika-calc-v1).
+var CALC_URL = 'https://script.google.com/macros/s/REDACTED_1/exec', CALC_KEY = '__CALCK__';
+function mx_calcClaim(uid, user, code) {
+  if (!mx_dmAllowed(uid)) {
+    mx_log('dm', 'калькулятор: запрос от постороннего uid ' + uid + ' — не передан');
+    mx_sendUser(uid, 'Доступ к калькулятору мебели — только для сотрудников «Фабриканта». Ваш MAX ID не найден в рабочих группах компании, поэтому запрос не передан. Если вы сотрудник — попросите руководителя добавить вас в рабочую группу MAX.');
+    return;
+  }
+  var name = String(mx_name(user) || '').slice(0, 80), t = Math.floor(Date.now() / 1000), msg = 'max:' + t + ':' + code + ':' + uid + ':' + name;
+  var sig = Utilities.computeHmacSha256Signature(Utilities.newBlob(msg).getBytes(), Utilities.newBlob(CALC_KEY).getBytes()).map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
+  var st = '';
+  try {
+    var r = UrlFetchApp.fetch(CALC_URL + '?op=claim&code=' + code + '&uid=' + encodeURIComponent(uid) + '&name=' + encodeURIComponent(name) + '&t=' + t + '&sig=' + sig, { muteHttpExceptions: true, followRedirects: true });
+    var j = JSON.parse(r.getContentText() || '{}'); st = j && j.r && j.r.st || (j && j.error) || '';
+  } catch (x) { st = 'err'; mx_log('err', 'калькулятор: ' + mx_errText(x)); }
+  mx_log('dm', 'калькулятор: запрос uid ' + uid + ' → ' + st);
+  mx_sendUser(uid, st === 'sent' ? 'Сотрудник4 на доступ к калькулятору мебели передан Т. В. Сотрудник1. Как только он подтвердит — калькулятор откроется на вашем устройстве сам.'
+    : st === 'nocode' ? 'Код не найден или устарел. Нажмите «Сотрудник4 доступ» в калькуляторе ещё раз и пришлите новый код.'
+    : 'Не получилось передать запрос — попробуйте через пару минут.');
 }

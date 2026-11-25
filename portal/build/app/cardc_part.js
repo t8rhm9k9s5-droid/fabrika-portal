@@ -202,7 +202,7 @@
     cardK.textContent = [kindName(b), lit, ar ? (ar.free ? ar.name : 'участок ' + ar.n) : ''].filter(Boolean).join(' · ');
     let sum = '';
     if (ar) sum = [ar.free ? '' : (ar.blocks || []).join(', '), (ar.approx ? '≈\u00a0' : '') + ar.staff + '\u00a0чел.', ar.night ? 'работает и\u00a0ночью' : ''].filter(Boolean).join('\u00a0· ');
-    else if (floorsEl) sum = `Офис: ${b.floors || 3} ${plural(b.floors || 3, 'этаж', 'этажа', 'этажей')}, ${nStaff} ${plural(nStaff, 'сотрудник', 'сотрудника', 'сотрудников')}.`;
+    else if (floorsEl) sum = `Имя2: ${b.floors || 3} ${plural(b.floors || 3, 'этаж', 'этажа', 'этажей')}, ${nStaff} ${plural(nStaff, 'сотрудник', 'сотрудника', 'сотрудников')}.`;
     else if (paras.length) sum = short(paras[0].textContent.split(/\.\s/)[0].replace(/\.$/, '') + '.', 110);
 
     const peopleT = floorsEl ? 'Этажи' : (ar || drvEl) ? 'Люди' : camsEl ? 'Камеры' : '';
@@ -312,7 +312,7 @@
         `<div class="cc-bars">${s.balance.slice().sort((a, b) => b[2] - a[2]).map(x => `<div><span>${esc((t => t.charAt(0).toUpperCase() + t.slice(1))(x[0].replace(/^[А-ЯA-Z]+-\d+ — /, '')))}</span><em>${nf(x[2], 1)} %</em><i style="width:${(x[2] / mx * 100).toFixed(1)}%"></i></div>`).join('')}</div>`); })() : null;
     const banSec = banP ? section('shield', '#af52de', 'Что нельзя в зоне', '', null, [banP]) : null;
     const decSec = section('doc', '#30b0c7', 'Решение', dec ? dec[2] : '', null, null, `<p>${esc(s.decision || '')}</p>`);
-    const projSec = section('note', '#636366', 'Проект', '2019', null, null, rowsHTML([['Проект', s.title], ['Разработчик', s.dev], ['Карта границ', s.cad], ['Класс', s.cls], ['Разрешения', s.permits], ['Зона по ПЗЗ', s.zone]]));
+    const projSec = section('note', '#636366', 'Проект', '2019', null, null, rowsHTML([['Проект', s.title], ['Разработчик', s.dev], ['Карта границ', s.cad], ['Класс', s.cls], ['Разрешения', s.permits], ['Сотрудник92 по ПЗЗ', s.zone]]));
     const monSec = section('calendar', '#ff3b30', 'Натурные исследования', deadline ? 'срок ' + deadline : '', noRes ? 'bad' : null, null, `<p>${esc(s.monitor || '')}</p>${s.deadline ? `<p class="warn">${esc(s.deadline)}</p>` : ''}`);
     const notesSec = notesEl ? fromDetails(notesEl, 'note', '#8e8e93', 'Замечания к проекту', String((SZ.notes || []).length)) : null;
 

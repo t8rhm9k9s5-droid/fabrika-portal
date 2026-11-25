@@ -25,7 +25,7 @@ if not (isinstance(st, dict) and st.get('api') and st.get('seen')): sys.exit('st
 shutil.rmtree(OUT, ignore_errors=True); os.makedirs(OUT)
 P = '/fsu/'
 def rw(t):   # абсолютные пути сайта → под /fsu/
-    t = t.replace('https://fabrikant.su/', P)
+    t = re.sub(r'https?:(?:\\?/){2}(?:www\.)?fabrikant\.su(?:\\?/)', lambda m: P.replace('/', '\\/') if '\\/' in m.group(0) else P, t)   # 21.11.2026 (аудит): и http://, и вид с \/ в JSON
     for a in ('f/', 'upload/', 'api/', 'favicon'):
         t = re.sub(r'(["\'(`])/' + a, lambda m: m.group(1) + P + a, t)
     return t
@@ -39,8 +39,22 @@ for root, _, fs in os.walk(M):
         ext = os.path.splitext(f)[1].lower()
         if ext in ('.js', '.css', '.json', '.svg', '.html', '.txt'):
             t = _rd(s, errors='replace'); _wr(d, rw(t)); rep['txt'] += 1; continue
+        if os.path.getsize(s) == 0: rep.setdefault('empty', []).append(rel); continue   # 21.11.2026 (аудит): пустой файл не публикуем
         if ext in ('.png', '.jpg', '.jpeg', '.webp'):
             JOBS.append((s, d, rel)); continue
+        if ext == '.gif' and os.path.getsize(s) > 1_500_000:   # 21.11.2026 (аудит): GIF 24 МБ — в анимированный WebP до 1280 px
+            try:
+                from PIL import Image as _I
+                _g = _I.open(s); _fr = []; _du = []
+                try:
+                    while True:
+                        _f = _g.convert('RGBA'); _f.thumbnail((1280, 1280)); _fr.append(_f); _du.append(_g.info.get('duration', 100)); _g.seek(_g.tell() + 1)
+                except EOFError: pass
+                _b = __import__('io').BytesIO(); _fr[0].save(_b, 'WEBP', save_all=True, append_images=_fr[1:], duration=_du, loop=0, quality=70, method=4)
+                if _b.tell() < os.path.getsize(s):
+                    with open(d, 'wb') as _o: _o.write(_b.getvalue())
+                    rep['gif'] = rep.get('gif', 0) + os.path.getsize(s) - _b.tell(); continue
+            except Exception as _e: print('gif', rel, _e)
         if ext == '.mp4' and os.path.getsize(s) > 1_500_000:   # видео: 720p, H.264 veryfast — в разы легче
             r = subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', s, '-vf', "scale='min(1280,iw)':-2", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28',
                                 '-an', '-movflags', '+faststart', d], capture_output=True)
@@ -90,6 +104,17 @@ with MP.Pool(int(os.environ.get('FSU_PROC', '4'))) as pool:
         rep['img'] += 1; rep['img_before'] += b0; rep['img_after'] += b1
         if m: IMAP[('~' + rel[len('upload/als-1c/catalog/products/'):]) if rel.startswith('upload/als-1c/catalog/products/') else rel] = m
 _jd(IMAP, os.path.join(OUT, '_img.json'), ensure_ascii=False, separators=(',', ':'))
+_jd({'success': False, 'offline': True, 'message': 'нет снимка'}, os.path.join(OUT, '_api', '_miss.json'), ensure_ascii=False)
+# 21.11.2026 (Т. В.: «для офиса», «HoReCa» пустые): индекс фильтров каталога и файлы остатков складов — в каждую сборку копии.
+#   Индекс обновляется: python3 fsu_fidx.py <_api/getFilter.json> /home/claude/work/fsu_fidx (около 3 мин).
+_FIDX = '/home/claude/work/fsu_fidx/_fidx.json'
+if os.path.exists(_FIDX) and subprocess.run([sys.executable, os.path.join(_HERE, 'fsu_fidx_put.py'), _FIDX, OUT]).returncode == 0: pass
+else:   # 21.11.2026 (Рекс CG-56): нового индекса нет — переносим проверенный прежний из действующей копии; нет и его — сборка останавливается
+    _old = os.path.join(FINAL, '_api', '_fidx.json')
+    if os.path.exists(_old): shutil.copy2(_old, os.path.join(OUT, '_api', '_fidx.json')); print('ВНИМАНИЕ: индекс фильтров — прежний (нового нет)', file=sys.stderr)
+    else: sys.exit('нет индекса фильтров каталога — без него разделы «для офиса», «HoReCa» и др. пустые; запустить fsu_fidx.py')
+_ST = os.path.join(FINAL, 'upload/als-1c/stores')
+if os.path.isdir(_ST) and not os.path.isdir(os.path.join(OUT, 'upload/als-1c/stores')): shutil.copytree(_ST, os.path.join(OUT, 'upload/als-1c/stores'))
 rep['img_map'] = len(IMAP)
 # карта API: путь+запрос → файл
 amap = {k: v for k, v in st['api'].items() if os.path.exists(os.path.join(M, '_api', v + '.json'))}
@@ -104,6 +129,10 @@ shell = re.sub(r'<link[^>]+rel="preload"[^>]+/fsu/api/[^>]*>', '', shell)
 shell = shell.replace('<head>', '<head><script>' + shim + '</script>', 1)
 shell = shell.replace('</body>', _rd(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_back.html')) + '</body>')
 _wr(os.path.join(OUT, 'index.html'), shell)
+# 21.11.2026 (Т. В.): сверка с прайсом, характеристики 1С в карточки, недостающие модели прайса — карточками (fsu_enrich.py, отчёт — assort/)
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_enrich.py'), OUT], check=True)
+# 21.11.2026 (Т. В.): фото из других папок FTP, страницы, которые обход пропустил, и модели каталога 2025 (fsu_more.py; данные — fsu_ftp_fetch.py, fsu_catalog.py)
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fsu_more.py'), OUT], check=True)
 # 20.11.2026: подбор мебели по свойствам (Т. В.: «я потребитель, не знаю, что такое стул, кресло… ищу по набору свойств»)
 HERE = os.path.dirname(os.path.abspath(__file__))
 pb = _rd(os.path.join(HERE, 'podbor.html')).replace('</body>', _rd(os.path.join(HERE, 'fsu_back.html')) + '</body>')
@@ -116,15 +145,35 @@ if os.path.isdir(os.path.join(HERE, 'info')):
 rep['api'] = len(amap); rep['pages'] = len(st['seen'])
 _bad = [f for f in ('index.html', 'podbor.html', '_img.json') if not os.path.getsize(os.path.join(OUT, f))]
 if _bad or not rep['img'] or not amap: sys.exit('сборка неполная, старая оставлена: ' + json.dumps({'empty': _bad, 'img': rep['img'], 'api': len(amap)}))
+# 21.11.2026 (аудит): обход, оборванный на середине, не заменяет полную копию — не меньше 95 % страниц, снимков и фото прошлой сборки
+_PREV = os.path.join(os.path.dirname(FINAL), 'fsu.last.json')
+try: _pv = _jl(_PREV)
+except Exception: _pv = {}
+_low = {k: (rep.get(k), _pv.get(k)) for k in ('pages', 'api', 'img') if _pv.get(k) and (rep.get(k) or 0) < 0.95 * _pv[k]}
+if _low and os.environ.get('FSU_FORCE') != '1': shutil.rmtree(OUT, ignore_errors=True); sys.exit('обход неполный (сейчас, было): ' + json.dumps(_low) + ' — старая копия оставлена; FSU_FORCE=1 — заменить всё равно')
 # 21.11.2026 (Рекс, CG-53): атомарное переключение — build/fsu — ссылка на проверенный каталог fsu.<время>; os.replace ссылки — один шаг
 import time as _t
 VER = FINAL + '.' + _t.strftime('%Y%m%d%H%M%S'); os.rename(OUT, VER)
-if os.path.isdir(FINAL) and not os.path.islink(FINAL): os.rename(FINAL, FINAL + '.' + 'pre-link')   # один раз: прежний каталог становится версией
+# 21.11.2026 (Рекс CG-54 п.4): первая миграция каталога в ссылку — с возвратом при сбое; сборщик портала берёт копию через os.path.realpath
+_PRE = FINAL + '.pre-link'
+if os.path.isdir(FINAL) and not os.path.islink(FINAL):
+    os.rename(FINAL, _PRE)
+    try: os.symlink(os.path.basename(_PRE), FINAL)
+    except Exception: os.rename(_PRE, FINAL); raise
 _tmp = FINAL + '.lnk'
 if os.path.lexists(_tmp): os.remove(_tmp)
+_old = os.path.realpath(FINAL) if os.path.lexists(FINAL) else None
 os.symlink(os.path.basename(VER), _tmp); os.replace(_tmp, FINAL)
-for _d in sorted(x for x in os.listdir(os.path.dirname(FINAL)) if x.startswith(os.path.basename(FINAL) + '.') and x[len(os.path.basename(FINAL)) + 1:][:1].isdigit() or x == os.path.basename(FINAL) + '.pre-link'):
+_jd({k: rep.get(k) for k in ('pages', 'api', 'img')}, _PREV)
+_keep = {VER, _old}   # текущая и одна предыдущая (откат)
+for _d in os.listdir(os.path.dirname(FINAL)):
     _p = os.path.join(os.path.dirname(FINAL), _d)
-    if _p != VER and os.path.isdir(_p) and not os.path.islink(_p): shutil.rmtree(_p, ignore_errors=True)   # оставить только текущую версию (место на диске)
+    if _d.startswith(os.path.basename(FINAL) + '.') and os.path.isdir(_p) and not os.path.islink(_p) and _p not in _keep and (_d[len(os.path.basename(FINAL)) + 1:][:1].isdigit() or _p == _PRE):
+        shutil.rmtree(_p, ignore_errors=True)
 _jd(rep, os.path.join(SRC, 'build_report.json'), ensure_ascii=False, indent=1)
 print(json.dumps({k: v if k != 'big' else len(v) for k, v in rep.items()}, ensure_ascii=False))
+# 21.11.2026 (Т. В.: «новый сайт на /fsu/, начнём с каталога»): поверх свежей копии — новый каталог (work/fsu2: build_new.py → fsu_build_new.py);
+#   FSU_NEW=0 — оставить только копию. Блокировку отпускаем: fsu_build_new берёт её сам.
+_NEW = '/home/claude/fabrika/work/fsu2/fsu_build_new.py'
+if os.environ.get('FSU_NEW') != '0' and os.path.exists(_NEW):
+    _LOCK.close(); subprocess.run([sys.executable, _NEW], check=True)

@@ -1,11 +1,11 @@
 /* «Фабрика» — iOS 27 «Настройки» look (22.10.2026): grouped inset lists for every page and every sheet of the model.
    Loaded by the pages (link) and inlined into the model after glass.css. */
 html:root{--ios-bg:#f2f2f7;--ios-group:#fff;--ios-sep:rgba(60,60,67,.29);--ios-label:#000;--ios-2:rgba(60,60,67,.6);--ios-3:rgba(60,60,67,.3);
-  --ios-fill:rgba(120,120,128,.2);--ios-green:#34c759;--ios-blue:#007aff;--tile-dark:0;--sheet-group:#fff;--sheet-bg:rgba(242,242,247,.93);--sheet-bg-solid:#f2f2f7;--sheet-edge:rgba(0,0,0,.08);}
+  --ios-fill:rgba(120,120,128,.2);--ios-green:#34c759;--ios-blue:#E2452B;--tile-dark:0;--sheet-group:#fff;--sheet-bg:rgba(242,242,247,.93);--sheet-bg-solid:#f2f2f7;--sheet-edge:rgba(0,0,0,.08);}
 @media (prefers-color-scheme:dark){html:root:not([data-theme="light"]){--ios-bg:#000;--ios-group:#1c1c1e;--ios-sep:rgba(84,84,88,.62);--ios-label:#fff;--ios-2:rgba(235,235,245,.6);
-  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#0a84ff;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}}
+  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#FF5D41;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}}
 html:root[data-theme="dark"]{--ios-bg:#000;--ios-group:#1c1c1e;--ios-sep:rgba(84,84,88,.62);--ios-label:#fff;--ios-2:rgba(235,235,245,.6);
-  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#0a84ff;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}
+  --ios-3:rgba(235,235,245,.3);--ios-fill:rgba(120,120,128,.36);--ios-green:#30d158;--ios-blue:#FF5D41;--tile-dark:1;--sheet-group:#2c2c2e;--sheet-bg:rgba(28,28,30,.93);--sheet-bg-solid:#1c1c1e;--sheet-edge:rgba(255,255,255,.12);}
 
 /* the building blocks: a group of rows; a row = tile · title/subtitle · value · chevron (or a switch) */
 .ios{max-width:760px;margin:0 auto;padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:24px;padding-block:calc(10px + env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}

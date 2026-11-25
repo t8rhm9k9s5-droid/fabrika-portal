@@ -16,9 +16,9 @@ var TM_PAST = /(?<![а-яё])(не ответил[а-яё]*|был[а-яё]*|у�
 var TM_LEGAL = /^(ип|ооо|ао|зао|пао|оао|ук|гк|тд|ск|пк|нпо|мп|ч\.?п\.?)$/i;
 var TM_DATE_RE = /(?<![\d№])((?:(?<![а-яёa-z0-9])(?:от|с|по|до|к|на|в))\s+)?(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?![\d])/g;
 var TM_DATE_WRE = new RegExp('((?<![а-яёa-z0-9])(?:до|к|на|в|по)\\s+)?(\\d{1,2})\\s+(' + Object.keys(TM_MON).join('|') + ')', 'gi');
-var TM_LEAD_NAMED = /(?<![А-Яа-яЁё])(Сотрудник2[а-яё]*\s+Отчество1[а-яё]*|Т\.\s*В\.\s*Сотрудник1[а-яё]*|Сотрудник10[а-яё]*\s+М|Сотрудник17(а|ой|у)\s+А|Сотрудник23[а-яё]*\s+В[а-яё]*\.?\s*В)/;
+var TM_LEAD_NAMED = /(?<![А-Яа-яЁё])(Сотрудник2[а-яё]*\s+Отчество1[а-яё]*|Т\.\s*В\.\s*Сотрудник1[а-яё]*|Сотрудник13[а-яё]*\s+М|Сотрудник29(а|ой|у)\s+А|Сотрудник42[а-яё]*\s+В[а-яё]*\.?\s*В)/;
 
-// REDACTED_B64_38 даты в тексте (как dates_in в mx_ctl.py)
+// REDACTED_B64_9 даты в тексте (как dates_in в mx_ctl.py)
 function tm_ymd_(y, m, d) { var z = function (n) { return (n < 10 ? '0' : '') + n; }; return y + '-' + z(m) + '-' + z(d); }
 function tm_validDate_(y, m, d) { if (m < 1 || m > 12 || d < 1) return false; return d <= new Date(Date.UTC(y, m, 0)).getUTCDate(); }
 function tm_daysDiff_(a, b) { return Math.round((tm_dateMs_(a) - tm_dateMs_(b)) / 864e5); }
@@ -79,7 +79,7 @@ function tm_clauses_(text) {
   });
   return out;
 }
-/** клиент в начале пункта: «3. Ип Имя28 С. (Махачкала) — общались…» → ['каримов', 'с']; нет тире — null */
+/** клиент в начале пункта: «3. Ип Имя25 С. (Махачкала) — общались…» → ['каримов', 'с']; нет тире — null */
 function tm_subjKey_(cl) {
   var m = /^\s*(?:\d{1,2}[.)]\s*)?([^—\-–:]{2,60}?)\s*[—\-–:]/.exec(String(cl || '')); if (!m) return null;
   var ws = (m[1].toLowerCase().replace(/ё/g, 'е').match(/[A-Za-zА-Яа-я0-9]+/g) || []).filter(function (w) { return !TM_LEGAL.test(w); });
@@ -150,11 +150,11 @@ function tm_checkpoints_(msg, d0, names, skipped) {
   return res;
 }
 
-// REDACTED_B64_38 F4 C-B1: ответ на вопрос бота — кто, по какому пункту, что (выполнено / перенос / просто ответ)
+// REDACTED_B64_9 F4 C-B1: ответ на вопрос бота — кто, по какому пункту, что (выполнено / перенос / просто ответ)
 var TM_DONE_RX = /(?<![а-яё])(сделано|сделал[а-яё]*|выполнен[а-яё]*|выполнил[а-яё]*|готово|готов[аы]?|закрыт[а-яё]*|закрыл[а-яё]*|оплачен[а-яё]*|оплатил[а-яё]*|отгружен[а-яё]*|отгрузил[а-яё]*|отправлен[а-яё]*|отправил[а-яё]*|решен[а-яё]*|решил[а-яё]*|подписан[а-яё]*|подписал[а-яё]*|согласован[а-яё]*|согласовал[а-яё]*|получен[а-яё]*|получил[а-яё]*)(?![а-яё])/i;
 var TM_NOTDONE_RX = /(?<![а-яё])(не|ещё не|еще не|пока не)\s+(?:[а-яё]+\s+)?(сдела|выполн|готов|закры|оплач|оплат|отгруж|отгруз|отправ|реш|подпис|соглас|получ)/i;
 var TM_NUM_RX = /^\s*(?:п\.?|пункт|по|№)?\s*(\d{1,2})\s*(?:[).:—–-]|\s+[—–-])/i;
-var TM_FINAL_RX = /(проигра|не\s+выигра|отказал|отказа(лись|лся|лась)|отказ\s+(клиента|заказчика)|не\s+устраива|неактуал|не\s+актуал|отмен[её]н|отменил|выбрали\s+друг|купили\s+у\s+друг|закупил[аи]?\s+у\s+друг|не\s+прош(ли|ёл|ел)|вопрос\s+закрыт|сделка\s+закрыт)/i;   // 11.11 (М. Сотрудник5): итог «проиграли / не устраивает / отказ» — пункт закрыт, больше не спрашивать
+var TM_FINAL_RX = /(проигра|не\s+выигра|отказал|отказа(лись|лся|лась)|отказ\s+(клиента|заказчика)|не\s+устраива|неактуал|не\s+актуал|отмен[её]н|отменил|выбрали\s+друг|купили\s+у\s+друг|закупил[аи]?\s+у\s+друг|не\s+прош(ли|ёл|ел)|вопрос\s+закрыт|сделка\s+закрыт)/i;   // 11.11 (М. Сотрудник8): итог «проиграли / не устраивает / отказ» — пункт закрыт, больше не спрашивать
 function tm_isDone_(s) { s = String(s || ''); return TM_DONE_RX.test(s) && !TM_NOTDONE_RX.test(s); }
 /** может ли автор сообщения m отвечать по пункту it: адресат пункта, автор исходного сообщения, владелец; пункт «Коллеги» — любой участник */
 function tm_ctlMayAnswer_(m, it, st, owner) {
@@ -193,7 +193,7 @@ function tm_ctlAnswer_(m, its, d0) {
   return out;
 }
 
-// REDACTED_B64_38 12.11 (2): дубли пунктов — один человек, тот же текст или тот же клиент за 14 дней
+// REDACTED_B64_9 12.11 (2): дубли пунктов — один человек, тот же текст или тот же клиент за 14 дней
 function tm_ctlNorm_(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^0-9a-zа-я]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60); }
 function tm_ctlWho_(it) { return String(it.who_uid || '') || tm_ctlNorm_(it.who); }
 function tm_ctlDupOf_(st, cp, atIso) {
@@ -204,7 +204,7 @@ function tm_ctlDupOf_(st, cp, atIso) {
     return !!(cp.key && it.key && tm_sameSubj_(it.key, cp.key));
   });
 }
-// REDACTED_B64_38 контроль сроков: состояние tm/ctl.json
+// REDACTED_B64_9 контроль сроков: состояние tm/ctl.json
 function tm_ctlState_() {
   var st = tm_load_('ctl.json', {});
   ['items', 'names', 'asks', 'mauth'].forEach(function (k) { if (!st[k] || typeof st[k] !== 'object') st[k] = {}; });
@@ -388,7 +388,7 @@ function tm_ctl_(ctx) {
     due.forEach(function (it) {
       if ((it.asks || 0) >= TM_MAX_ASKS && !(it.moved && String(it.last_ask || '') < String(it.ans_t || ''))) { it.st = 'stale'; return; }   // 12.11 (2): повтор только по новой дате из ответа
       if (tm_isLeader_(it.who, it.who_uid, null)) { it.st = 'lead'; it.lead_t = now.iso; return; }
-      if (it.who !== 'Коллеги' && tm_banned_(pcfg, today, null, it.who)) { it.st = 'ban'; it.ban_t = now.iso; return; }   // Имя27/Джановой лично — ничего
+      if (it.who !== 'Коллеги' && tm_banned_(pcfg, today, null, it.who)) { it.st = 'ban'; it.ban_t = now.iso; return; }   // Имя7/Джановой лично — ничего
       (by[(it.who_uid || '0') + '|' + it.who] = by[(it.who_uid || '0') + '|' + it.who] || []).push(it);
     });
     var errs = [];
@@ -466,7 +466,7 @@ function tm_ctl_(ctx) {
   return res;
 }
 
-// REDACTED_B64_38 напоминания о вопросах без ответа (remind.py)
+// REDACTED_B64_9 напоминания о вопросах без ответа (remind.py)
 var TM_ASK = /\?|(?<![а-яё])(прошу|просьба|просим|подскажите|подскажи|сообщите|согласуйте|согласовать|направьте|предоставьте|пришлите|ответьте|уточните|нужно ли|можно ли|когда (будет|сможете|можно|планируете|ждать|ответите|дадите|придут|будут|сделаете|отправите|пришлют|отгрузят|оплатят)|как быть|дайте|подтвердите|рассмотрите|ваше решение|ваше мнение|что делать|как поступить|разрешите|одобрите|утвердите|посмотрите|жд[ёе]м ответа|жду ответа|нужен ответ)(?![а-яё])/i;
 var TM_ADDR_RE = /^\s*(?:(?:[Дд]обрый\s+(?:день|вечер)|[Дд]оброе\s+утро|[Зз]дравствуйте|[Пп]риветствую|[Пп]ривет|[Уу]важаем[а-яё]+)[,!.\s]+)*([А-ЯЁ][а-яё]+)(?:\s+([А-ЯЁ][а-яё]+))?\s*[,!]/;
 var TM_NOT_NAMES = {};
@@ -484,7 +484,7 @@ function tm_addressee_(m, byMid, names, bot) {
   if (ru && !rbot && String(ru) !== String(bot) && String(ru) !== me) return [String(ru), 'ответ на сообщение'];
   for (var i = 0; i < (m.mentions || []).length; i++) { var u = String(m.mentions[i]); if (u && u !== String(bot) && u !== me) return [u, 'упоминание']; }
   var head = String(m.text || '').replace(/^\s*(?:(?:[Дд]обрый\s+(?:день|вечер)|[Дд]оброе\s+утро|[Зз]дравствуйте|[Пп]риветствую|[Пп]ривет|[Уу]важаем[а-яё]+)[,!.\s]+)*/, '').toLowerCase().replace(/ё/g, 'е');
-  var byName = Object.keys(names).filter(function (u) {                      // имя участника как в MAX в начале текста («Сотрудник18 Ю. А., прошу…»)
+  var byName = Object.keys(names).filter(function (u) {                      // имя участника как в MAX в начале текста («Сотрудник26 Ю. А., прошу…»)
     if (u === String(bot) || u === me) return false;
     var nm = String(names[u] || '').split(' (@')[0].trim().toLowerCase().replace(/ё/g, 'е');
     return nm.length > 3 && head.indexOf(nm) === 0 && /^[\s,!:—-]/.test(head.slice(nm.length) || ',');
@@ -540,7 +540,7 @@ function tm_remScan_(st, G, namesOf, owner, bot, sinceMs, cfg, org) {
 var TM_COURTESY_RX = /^[\s,.!?)(+👍🙏😊🙂]*(?:(?:всем|коллеги|друзья)\s*)?(?:доброе\s+утро|добрый\s+(?:день|вечер)|здравствуйте|привет(?:ствую)?|спасибо(?:\s+большое)?|благодарю|ок(?:ей)?|хорошо|понял[аи]?|принято|принял[аи]?|да|нет|ага|угу)(?:[\s,.!?)(+👍🙏😊🙂]+(?:(?:всем|коллеги|друзья)\s*)?(?:доброе\s+утро|добрый\s+(?:день|вечер)|здравствуйте|привет(?:ствую)?|спасибо(?:\s+большое)?|благодарю|ок(?:ей)?|хорошо|понял[аи]?|принято|принял[аи]?|да|нет|ага|угу))*[\s,.!?)(+👍🙏😊🙂]*$/i;   // 12.11 CodeQL (redos): слова — через разделитель, «поняла» входит в «понял[аи]?»
 var TM_STEM_STOP = { 'пожал': 1, 'спаси': 1, 'здрав': 1, 'колле': 1, 'добры': 1, 'добро': 1, 'сегод': 1, 'завтр': 1, 'вчера': 1, 'тимур': 1, 'викто': 1, 'можно': 1, 'нужно': 1, 'будет': 1, 'когда': 1, 'почем': 1, 'какой': 1, 'какая': 1, 'какие': 1, 'сколь': 1, 'подск': 1, 'скажи': 1, 'ответ': 1, 'вопро': 1 };
 function tm_stems_(s) { var o = {}; tm_words_(s).forEach(function (w) { if (w.length >= 5 && !TM_STEM_STOP[w.slice(0, 5)]) o[w.slice(0, 5)] = 1; }); return o; }
-/** 13.11.2026 (Т. В.; Сотрудник19 К. В.: «когда бота ставят в группе в сообщении, он не берёт его на контроль»): отметка бота в сообщении группы —
+/** 13.11.2026 (Т. В.; Сотрудник16 К. В.: «когда бота ставят в группе в сообщении, он не берёт его на контроль»): отметка бота в сообщении группы —
     явная постановка на контроль. Каждый отмеченный (кроме бота и автора) — свой вопрос в st.q (ctl: true); никого не отметили — вопрос группе.
     Подтверждение в группе — ответом на сообщение (tm_remAck_, не в тихие часы); нет ответа 2 ч — бот лично (tm_remLadder_), затем группа и письмо. */
 var TM_BOT_FALLBACK = '539375202', TM_BOT_RX = /@id6215018827_bot/i;
@@ -580,7 +580,7 @@ function tm_remCtlMention_(st, g, cid, m, names, owner, bot, cfg, org, text, byM
     who: to.map(function (u) { return u === 'group' ? '' : String(names[u] || 'участник группы').split(' (@')[0]; }).filter(Boolean) };
   return n;
 }
-/** 13.11: имена участников, набранные в тексте без отметки («Имя19 Имя18 Andrei Retrunin»): полное имя как в MAX — сразу;
+/** 13.11: имена участников, набранные в тексте без отметки («Имя17 Сотрудник66 Andrei Retrunin»): полное имя как в MAX — сразу;
     одно слово (имя или фамилия) — только если такое слово у одного участника группы. */
 function tm_namesInText_(text, names) {
   var low = ' ' + String(text || '').toLowerCase().replace(/ё/g, 'е').replace(/[^0-9a-zа-я]+/g, ' ') + ' ', out = [], words = {};
@@ -595,6 +595,44 @@ function tm_namesInText_(text, names) {
 /** 13.11.2026 (Т. В.: «сделаем на портале раздел Поручения… невыполненное в ботах и в совещаниях — всё в одно; дальше работает робот»):
     poruch.bin («От ботов» → хостинг st/poruch.bin, bots_drive.py) — отметки бота (контроль), поручения руководства, контрольные точки
     офисов продаж («Коммерческий отдел»), задачи утренних совещаний (meet_tasks.json — из Plaud, пишет Claude после совещания). */
+/** 21.11.2026: «Журнал происшествий и охраны — Фабрика» (охрана и диспетчер заполняют сами): последние 60 дней, до 200 строк; текст — через tm_mask_. */
+var TM_EV_SHEET = 'REDACTED_ID_7';   // 21.11.2026: журнал — на рабочем аккаунте user1@example.org
+function tm_events_(ctx) {
+  try {
+    var id = PropertiesService.getScriptProperties().getProperty('EV_SHEET_ID') || TM_EV_SHEET;
+    var v = SpreadsheetApp.openById(id).getSheets()[0].getDataRange().getDisplayValues(), from = tm_addDays_(ctx.today, -60), rows = [];
+    for (var i = 1; i < v.length; i++) {   // 21.11.2026 (Рекс CG-56): читаем все строки, ограничение — после сортировки по дате
+      var r = v[i], d = String(r[0] || '').trim(), k = String(r[2] || '').trim().toLowerCase();
+      if (!d || !k || k.indexOf('пример') >= 0) continue;
+      var m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(d); if (m) d = m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+      if (!/^\d{4}-\d\d-\d\d$/.test(d) || d < from) continue;
+      var kind = /периметр|забор|проникн|посторон/.test(k) ? 'per' : /машин|подач|транспорт|авто/.test(k) ? 'car' : 'inc';
+      rows.push({ d: d, tm: String(r[1] || '').slice(0, 5), k: kind, place: tm_mask_(r[3]).slice(0, 80), what: tm_mask_(r[4]).slice(0, 300), who: tm_mask_(r[5]).slice(0, 60),
+                  act: tm_mask_(r[6]).slice(0, 200), st: /^\s*(закрыт[оа]?|решен[оа]?|выполнен[оа]?|готово)\s*$/i.test(String(r[7] || '')) ? 'done' : 'open' });   // точный статус: «не закрыто» — открыто
+    }
+    // 21.11.2026, Т. В. («происшествия — из совещаний и почты»): письма 1c@ за 30 дней с признаками происшествия или неподанной машины — строками журнала (источник «письмо 1c@»).
+    //   Свои письма робота и камер, сверки поручений — не берутся; письмо, уже внесённое в таблицу (та же тема), — один раз.
+    var MAILOK = true;
+    try {
+      var seen = {}; rows.forEach(function (x) { seen[String(x.what).slice(0, 60).toLowerCase()] = 1; });
+      var Q = 'newer_than:30d -from:user1@example.org -from:user32@example.org -subject:"NVR ALERT" (происшествие OR авария OR травма OR пожар OR возгорание OR задымление OR кража OR хищение OR протечка OR затопление OR "несчастный случай" OR ДТП OR "машина не подана" OR "не подали машину" OR "машину не подали")';
+      GmailApp.search(Q, 0, 40).forEach(function (th) {
+        var tid = th.getId(); if (seen['t:' + tid]) return; seen['t:' + tid] = 1; var sub = String(th.getFirstMessageSubject() || ''); if (/поручени[яй] на|видеонаблюдени|сводк|отчёт|отчет|совещани|протокол|договор|служебн|сч[её]т|замечани/i.test(sub)) return;   // повестки, договоры, счета — не происшествия
+        var RXI = /происшеств|авари[яи]|травм|пожар|возгоран|задымл|краж[аиу]|хищени|протечк|затоплен|несчастн[а-я]* случа|(^|[^а-я])дтп([^а-я]|$)|машин[а-я]* не подан|не подали машин|проникновени/;
+        var m = null, txt = ''; th.getMessages().some(function (mm) { var tx = (sub + ' ' + mm.getPlainBody().slice(0, 1500)).toLowerCase(); if (RXI.test(tx)) { m = mm; txt = tx; return true; } return false; });   // 21.11.2026 (Рекс CG-56): письмо цепочки, в котором совпало
+        if (!m) return; var dt = m.getDate();
+        if (!/происшеств|авари[яи]|травм|пожар|возгоран|задымл|краж[аиу]|хищени|протечк|затоплен|несчастн[а-я]* случа|(^|[^а-я])дтп([^а-я]|$)|машин[а-я]* не подан|не подали машин|проникновени/.test(txt)) return;   // поиск Gmail нестрогий — слово должно быть в теме или начале письма
+        var d2 = Utilities.formatDate(dt, 'Europe/Moscow', 'yyyy-MM-dd'); if (d2 < from) return;
+        var key = sub.replace(/^(re|fwd?|fw):\s*/ig, '').slice(0, 60).toLowerCase(); if (seen[key]) return; seen[key] = 1;
+        var kind = /машин[а-я]* не подан|не подали машин|машину не подал/.test(txt) ? 'car' : /периметр|проникн|посторон/.test(txt) ? 'per' : 'inc';
+        rows.push({ d: d2, tm: Utilities.formatDate(dt, 'Europe/Moscow', 'HH:mm'), k: kind, place: '', what: tm_mask_(sub).slice(0, 300), who: tm_mask_(String(m.getFrom()).replace(/<[^>]*>/, '').trim()).slice(0, 50) + ' (письмо 1c@)',
+                    act: '', st: 'open', src: 'mail' });
+      });
+    } catch (em) { MAILOK = false; }   // почта недоступна — строки таблицы есть, писем нет (mail:false — портал пишет об этом)
+    rows.sort(function (a, b) { var x = a.d + ' ' + (a.tm || ''), y = b.d + ' ' + (b.tm || ''); return x < y ? 1 : x > y ? -1 : 0; });
+    return { ok: true, rows: rows.slice(0, 200), mail: MAILOK };   // 21.11.2026 (GPT): не больше 200 строк и с письмами
+  } catch (e) { return { ok: false, err: String(e && e.message || e).slice(0, 120) }; }
+}
 function tm_poruch_(ctx, st, ctl) {
   var today = ctx.today, wk = tm_addDays_(today, -7), nm = function (s) { return String(s || '').split(' (@')[0].trim(); };
   var out = { v: 1, t: ctx.msk.iso, ctl: [], lead: [], cp: [], meet: [] }, by = {};
@@ -620,6 +658,7 @@ function tm_poruch_(ctx, st, ctl) {
   if (M && Array.isArray(M.meetings)) out.meet = M.meetings.map(function (m) {
     return { id: m.id, date: m.date, title: m.title, tasks: (m.tasks || []).map(function (x, i) { return { i: i, who: x.who, what: tm_mask_(x.what).slice(0, 300), due: x.due || '', st: x.st || 'open', note: x.note || '' }; }) };
   });
+  out.ev = tm_events_(ctx);   // 21.11.2026, Т. В.: журнал происшествий и охраны (таблица) — для «Щекотливого» и сводки «Происшествия»
   out.stats = { ctl: out.ctl.filter(function (e) { return e.who.some(function (w) { return w.st === 'open'; }); }).length, lead: out.lead.length, cp: out.cp.length,
                 meet: out.meet.reduce(function (s, m) { return s + m.tasks.filter(function (x) { return x.st !== 'done'; }).length; }, 0) };
   return tm_publish_('poruch.bin', out) ? out.stats : 'не записан';
@@ -783,7 +822,7 @@ function tm_remIsAnswer_(m, q, byMid, qMids) {
 /** 10.11.2026 (Т. В.: «Исправь код ошибки напоминания»): ответ без текста — фото, файл, голосовое или пересылка — снимает вопрос,
     если пришёл не позже TM_MEDIA_ANS_H часов после вопроса или после напоминания бота о нём (связи reply нет — её проверяет вызывающий).
     До исправления такие ответы не засчитывались, и бот каждые 2 часа писал «на этот вопрос ещё нет ответа»
-    («Снабжение _Производство», 09.11: на «Почему нет!?» 11:14 О. Сотрудник64 ответила пересылками в 11:18 и 11:20). */
+    («Снабжение _Производство», 09.11: на «Почему нет!?» 11:14 О. Сотрудник76 ответила пересылками в 11:18 и 11:20). */
 var TM_MEDIA_ANS_H = 3;
 function tm_remMediaAns_(m, q) {
   if (!m.fwd && !(m.att && m.att.length)) return false;

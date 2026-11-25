@@ -70,22 +70,50 @@
     return S && S.sday;
   }
   function lastDay(SD) { var D = SD && SD.days; if (!D) return null; var ks = Object.keys(D).filter(function (k) { return D[k] && D[k].types && D[k].types.tot && D[k].types.tot[1] > 0 && D[k].types.tot[1] < 6e7; }).sort(); return ks.length ? [ks[ks.length - 1], D[ks[ks.length - 1]]] : null; }
+  // 21.11.2026 (Т. В.: «продажи 73, а тут 45 — карточка некорректна»): факт месяца — из тех же продаж 1С, что «Продажи за день» (sales.bin),
+  //   план — из плана Сотрудник16; «надо на дату» — план × отработанные дни / рабочие дни месяца. Один источник факта на весь портал.
+  function planNow(P, SD) {
+    if (window.T14M && T14M.plan) { var X = T14M.plan(); if (X && X.live) return X; }   // 21.11.2026: один расчёт для всех страниц — в metrics.js
+    var T = P.tot || {}; if (!T.plan) return T;
+    var D = SD && SD.days, mon = (P.month || MSK().slice(0, 7)), f = 0, last = '', nd = 0;
+    if (D) Object.keys(D).forEach(function (k) { var t = D[k] && D[k].types && D[k].types.tot; if (k.slice(0, 7) === mon && t && t[1] > 0) { f += t[1]; nd++; if (k > last) last = k; } });
+    // 21.11.2026 (аудит): факт — та же цифра, что «Продажи за месяц» (единый модуль T14M: отчёт «Выполнение плана» + рассылки после него)
+    var SM = M('sales'); if (SM && SM.v != null && SM.ym === mon) { f = SM.v; if (SM.to) last = String(SM.to).slice(0, 10); nd = nd || 1; }
+    if (!nd) return T;
+    var HOL = { '2026-11-04': 1, '2026-12-31': 1, '2027-01-01': 1, '2027-01-02': 1, '2027-01-05': 1, '2027-01-06': 1, '2027-01-07': 1, '2027-01-08': 1 }, wp = 0;   // производственный календарь РФ
+    for (var dt = new Date(mon + '-01T12:00:00Z'); dt.toISOString().slice(0, 10) <= last; dt.setUTCDate(dt.getUTCDate() + 1)) { var w = dt.getUTCDay(), ds = dt.toISOString().slice(0, 10); if (w > 0 && w < 6 && !HOL[ds]) wp++; }
+    // 21.11.2026 (аудит): рабочие дни месяца — по тому же календарю, что прошедшие (ноябрь 2026 — 20, а не 21 из файла плана)
+    var wd = 0; for (var d2 = new Date(mon + '-01T12:00:00Z'); d2.toISOString().slice(0, 7) === mon; d2.setUTCDate(d2.getUTCDate() + 1)) { var w2 = d2.getUTCDay(); if (w2 > 0 && w2 < 6 && !HOL[d2.toISOString().slice(0, 10)]) wd++; }
+    wd = wd || P.wd || P.wd_month || 21; wp = Math.min(wd, Math.max(wp, 1)); var need = T.plan * wp / wd;
+    return { plan: T.plan, fact: f, need: need, diff: f - need, pct: 100 * f / T.plan, onDate: 100 * f / need, asof: last, live: 1, wd: wd, wp: wp };
+  }
+  // 21.11.2026 (аудит): поручения — тот же счёт, что на странице «Поручения» (poruch.bin): отметки бота, руководство, офисы продаж,
+  //   совещания по единому протоколу (списки отдельных совещаний второй раз не считаются); просрочено — срок-дата раньше сегодня
+  function poruchCnt(d) {
+    if (d && window.T14M && T14M.poruch) { var X = T14M.poruch(d); if (X) return { open: X.open, late: X.late, n: X.open, inc: X.inc }; }
+    if (!d) return null; var td = MSK().slice(0, 10), open = 0, late = 0;
+    function one(due) { open++; if (/^\d{4}-\d\d-\d\d/.test(due || '') && due.slice(0, 10) < td) late++; }
+    (d.ctl || []).forEach(function (e) { if ((e.who || []).some(function (w) { return w.st === 'open' || w.st === 'stale'; })) one(e.due); });
+    (d.lead || []).forEach(function (r) { one(r.due); }); (d.cp || []).forEach(function (r) { one(r.due); });
+    var M = d.meet || [], pr = M.filter(function (m) { return m.id === 'ctl_protocol'; }); (pr.length ? pr : M).forEach(function (m) { (m.tasks || []).forEach(function (x) { if (x.st !== 'done') one(x.due); }); });
+    return { open: open, late: late, n: open };
+  }
   var SEC = {
     sales: function () {
-      var P = ST.planm || {}, T = P.tot || {}, S = bin('sales.bin'), Ld = bin('leads.bin'), SD = salesDays(S), ld = lastDay(SD), NC = ST.newcl || {};
+      var P = ST.planm || {}, S = bin('sales.bin'), Ld = bin('leads.bin'), SD = salesDays(S), ld = lastDay(SD), NC = ST.newcl || {}, T = planNow(P, SD);
       var ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : null, td = MSK(), rep = ops ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : null;
       var SH = ST.ship || {};
-      var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? d1(T.pct) + ' % от плана месяца: ' + mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на ' + ((P.asof || T.asof) ? (P.asof || T.asof).slice(8, 10) + '.' + (P.asof || T.asof).slice(5, 7) : 'дату') + ' надо ' + mln(T.need) : 'нет данных', T.pct, 'sales.html#planm'),
+      var k = [K('План месяца', C.o, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? d1(T.pct) + ' % от плана месяца: ' + mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽ · на ' + ((T.asof || P.asof) ? (T.asof || P.asof).slice(8, 10) + '.' + (T.asof || P.asof).slice(5, 7) : 'дату') + ' надо ' + mln(T.need) + (T.onDate ? ' (' + Math.round(T.onDate) + ' % на дату)' : '') + (T.live ? ' · факт по 1С' : ' · факт из плана Сотрудник16') : 'нет данных', T.pct, 'sales.html#planm'),
         K('Продажи за день', C.b, ld ? d1(ld[1].types.tot[1] / 1e6) : '—', 'млн ₽', ld ? dd(ld[0]) + ' · ' + n(ld[1].types.tot[0]) + ' шт' : 'данные робота ещё не пришли', null, 'sales.html#s-s1c'),
         K('Отчёты офисов', C.g, rep != null ? rep : '—', ops ? 'из ' + ops.length : '', ops ? 'сдали вечерний отчёт сегодня' : 'данные робота ещё не пришли', ops && ops.length ? Math.round(rep / ops.length * 100) : null, 'sales.html#s-days-' + td),
-        K('Лиды выставок', C.v, Ld && Ld.tot ? n(Ld.tot.done) : '—', Ld && Ld.tot ? 'из ' + n(Ld.tot.rows) : '', Ld && Ld.tot ? 'отмечено ' + Math.round(Ld.tot.done / Ld.tot.rows * 100) + ' % · сверка 20.11' : 'робот собирает раз в час', Ld && Ld.tot ? Ld.tot.done / Ld.tot.rows * 100 : null, 'sales.html#leads'),
-        K('Сотрудник6 клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов · контакты до ' + NC.due : 'нет данных', null, 'sales.html#s-cls'),
+        K('Лиды выставок', C.v, Ld && Ld.tot ? n(Ld.tot.done) : '—', Ld && Ld.tot ? 'из ' + n(Ld.tot.rows) : '', Ld && Ld.tot ? 'отмечено ' + Math.round(Ld.tot.done / Ld.tot.rows * 100) + ' %' + (Ld.t ? ' · на ' + dd(Ld.t) : '') : 'робот собирает раз в час', Ld && Ld.tot ? Ld.tot.done / Ld.tot.rows * 100 : null, 'sales.html#leads'),
+        K('Сотрудник6 клиенты', C.y, NC.n != null ? NC.n : '—', 'в 2026', NC.n != null ? 'в таблицах ' + NC.of + ' офисов' : 'нет данных', null, 'sales.html#s-cls'),
         K('Отгрузка недели', C.r, SH.tot && SH.tot.s ? d1(SH.tot.s / 1e6) : '—', 'млн ₽', SH.from ? n(SH.tot.q) + ' шт · ' + dd(SH.from) + '–' + dd(SH.to) : 'график отгрузки 1С', null, 'sales.html#ship')];   // 13.11.2026: отгрузки — в продажах
       var D = SD && SD.days, ym = MSK().slice(0, 7), days = D ? Object.keys(D).filter(function (x) { return x.slice(0, 7) === ym && D[x].types && D[x].types.tot && D[x].types.tot[1] > 1e5 && D[x].types.tot[1] < 6e7; }).sort().slice(-12) : [];
       var b1 = ['Продажи по дням — ' + ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'][+ym.slice(5) - 1], 'млн ₽ · рассылки 1С «Продажи по номенклатурным группам»', 'bars',
         days.map(function (x) { var v = D[x].types.tot[1] / 1e6; return [dd(x), v, d1(v)]; })];
-      var kk = P.wd ? P.wp / P.wd * 100 : null;
-      var b2 = ['План и факт по менеджерам', '% месячного плана' + (kk ? ' · черта — сколько должно быть на ' + dd(P.asof) + ' (' + Math.round(kk) + ' %)' : ''), 'hbars',
+      var kk = P.wd ? P.wp / P.wd * 100 : null, old = P.asof && (Date.parse(MSK().slice(0, 10)) - Date.parse(P.asof.slice(0, 10))) / 864e5 > 2;   // 21.11.2026 (аудит): дата данных и пометка, если файлу больше 2 дней
+      var b2 = ['План и факт по менеджерам' + (P.asof ? ' — на ' + dd(P.asof) + (old ? ' (устарело, ждём новый файл)' : '') : ''), '% месячного плана · файл Сотрудник16' + (kk ? ' · черта — сколько должно быть на ' + dd(P.asof) + ' (' + Math.round(kk) + ' %)' : ''), 'hbars',
         (P.rows || []).slice().sort(function (a, b) { return (b[3] || 0) - (a[3] || 0); }).map(function (r) { var v = r[3] || 0; return [r[0].replace(/\s+[А-ЯЁ]\.\s*[А-ЯЁ]?\.?$/, '').replace(/^(\S+)\s+(\S)\S*.*/, '$1 $2.'), v, kk == null ? C.b : v >= kk ? C.g : v >= kk * 0.6 ? C.y : C.r, d1(v)]; }), kk];
       return [k, [b1, b2]];
     },
@@ -126,11 +154,29 @@
         K('Имя2 продаж', C.g, A.op != null ? n(A.op) : '—', 'шт', 'остатки складов офисов', A.v ? A.op / A.v * 100 : null, 'stores.html'),
         K('Брак на складах', C.r, b.length ? n(b[b.length - 1]) : '—', 'шт', b.length ? 'на начало месяца ' + n(b[0]) : '', null, 'stock.html#brak'),
         K('Минусовые остатки', C.y, R.neg ? R.neg.length : '—', 'позиций', R.neg && R.neg[0] ? R.neg[0][0] + ' ' + R.neg[0][2] : '', null, 'stock.html#s-mis'),
-        K('Заявки ОМТС', C.v, O.v != null ? n(O.v) : '—', O.v != null ? 'в просрочке' : '', O.fail ? 'данные снабжения ещё не пришли' : (O.card || ''), null, 'omts.html#s-hist')];
+        K('Заявки ОМТС', C.v, O.v != null ? n(O.v) : '—', O.v != null ? 'в просрочке' : '', 'раздел «ОМТС»', null, 'razdel.html#omts')];
       // 14.11.2026 (ревью Рекса CG-10 п. 7): строка склада — массив [имя, начало, приход, расход, конец] (smvs.bin) или объект {n, v} (smv.bin)
       var g = (A.g || []).map(function (x) { var a = Array.isArray(x); return [String(a ? x[0] : x.n).replace(/^ОП\s+/, ''), +(a ? x[4] : (x.v || [])[3]) || 0]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 9), mx = g.length && g[0][1] > 0 ? g[0][1] : 1;
       var b1 = ['Остатки по складам', 'шт · на ' + dd(A.date), 'hbars', g.map(function (x) { return [x[0], x[1] / mx * 100, C.b, n(x[1])]; }), null];
       var b2 = ['Движение за месяц — все склады', 'шт · начало, приход, расход, конец', 'bars', t.length === 4 ? [['начало', t[0], n(t[0])], ['приход', t[1], n(t[1])], ['расход', t[2], n(t[2])], ['конец', t[3], n(t[3])]] : []];
+      return [k, [b1, b2]];
+    },
+    // 24.11.2026, Т. В.: «ОМТС — отдельная служба, должен быть отдельный раздел» — пульс по рассылкам 1С о просрочке (omts.bin, метрика omts)
+    omts: function () {
+      var O = M('omts') || {}, D = bin('omts.bin'), KS = ((D && D.kinds) || []).filter(function (r) { return (r.k === 'zps' || r.k === 'fts') && r.hist && r.hist.dn; });
+      var NM = { zps: 'Жилпромсервис', fts: 'Фабрика торговых систем' }, byD = {}, last = {};
+      KS.forEach(function (r) { var dn = r.hist.dn || []; dn.forEach(function (z) { var e = byD[z[0]] = byD[z[0]] || [0, 0, 0, 0]; e[0] += z[1] || 0; e[1] += z[2] || 0; e[2] += z[3] || 0; e[3] += z[4] || 0; }); if (dn.length) last[r.k] = dn[dn.length - 1]; });
+      var ds = Object.keys(byD).sort(), ld = ds[ds.length - 1], L = ld ? byD[ld] : null, src = O.fail ? 'данные снабжения ещё не пришли' : '';
+      var k = [K('В просрочке всего', C.v, O.v != null ? n(O.v) : '—', O.v != null ? 'позиций' : '', O.fail ? src : (O.card || ''), null, 'omts.html#s-hist'),
+        K('Жилпромсервис', C.o, O.z != null ? n(O.z) : '—', O.z != null ? 'в просрочке' : '', last.zps ? 'на ' + dd(last.zps[0]) : src, O.v ? O.z / O.v * 100 : null, 'omts.html#s-zps'),
+        K('Фабрика торговых систем', C.b, O.f != null ? n(O.f) : '—', O.f != null ? 'в просрочке' : '', last.fts ? 'на ' + dd(last.fts[0]) : src, O.v ? O.f / O.v * 100 : null, 'omts.html#s-fts'),
+        K('Заявок в просрочке', C.y, L ? n(L[0]) : '—', L ? 'заявок' : '', L ? n(L[1]) + ' позиций · на ' + dd(ld) : 'нет данных', null, 'omts.html#s-hist'),
+        K('Попали в просрочку', C.r, L ? n(L[2]) : '—', L ? 'заявок' : '', L ? 'за ' + dd(ld) : 'нет данных', null, 'omts.html#s-hist'),
+        K('Ушли из просрочки', C.g, L ? n(L[3]) : '—', L ? 'заявок' : '', L ? 'поставлено или закрыто за ' + dd(ld) : 'нет данных', null, 'omts.html#s-hist')];
+      var tl = ds.slice(-10).map(function (d) { return [dd(d), byD[d][0], n(byD[d][0])]; });
+      var b1 = ['Заявки в просрочке по дням', 'заявок на конец дня · рассылки 1С', 'bars', tl];
+      var hv = KS.map(function (r) { var z = last[r.k]; return [NM[r.k] || r.k, z ? z[1] || 0 : 0]; }), mx = Math.max.apply(null, hv.map(function (x) { return x[1]; }).concat([1]));
+      var b2 = ['Просрочка по компаниям', 'заявок · последний отчёт', 'hbars', hv.map(function (x, i) { return [x[0], x[1] / mx * 100, i ? C.b : C.o, n(x[1])]; }), null];
       return [k, [b1, b2]];
     },
     log: function () {                                     // 13.11.2026, Т. В.: «логистика — только автотранспорт, перемещение грузов, свой транспорт; отгрузки — продажи»
@@ -171,7 +217,7 @@
       return [k, [b1, b2]];
     },
     fin: function () {
-      var S = M('sales') || {}, P = ST.planm || {}, T = P.tot || {}, R = M('stockRz') || {}, Q = M('recl') || {}, H = ST.ship || {};
+      var S = M('sales') || {}, P = ST.planm || {}, T = planNow(P, salesDays(bin('sales.bin'))), R = M('stockRz') || {}, Q = M('recl') || {}, H = ST.ship || {};
       // 14.11.2026, Т. В.: «выручка 0,3 млн — это что такое?» — пока свежие продажи с хостинга не пришли, бралась сборка с одним днём месяца.
       //   Теперь: без свежих данных — «обновляю», а не неполная цифра; подпись — за какой месяц и по какой день.
       var MN = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
@@ -180,7 +226,7 @@
         K('Прошлый месяц', C.b, S.prev ? mln(S.prev.v) : '—', 'млн ₽', 'итог по 1С', null, 'sales.html#s-s1c'),
         K('План менеджеров', C.g, T.pct != null ? d1(T.pct) : '—', '%', T.plan ? mln(T.fact) + ' из ' + mln(T.plan) + ' млн ₽' : '', T.pct, 'sales.html#planm'),
         K('Склад Рязань, ₽', C.v, R.rub ? mln(R.rub) : '—', 'млн ₽', R.date ? 'на ' + dd(R.date) : '', null, 'stock.html'),
-        K('Рекламации, ₽', C.r, Q.all_sum ? mln(Q.all_sum) : '—', 'млн ₽', Q.all ? Q.all + ' открытых' : '', null, 'sales.html#s-recl'),
+        K('Рекламации открыты', C.r, Q.all != null ? n(Q.all) : '—', '', Q.all ? (Q.all_sum ? 'сумма ' + mln(Q.all_sum) + ' млн ₽ указана в ' + (Q.all_sum_n || '?') + ' из ' + Q.all : 'суммы в 1С не указаны') + (Q.asof ? ' · на ' + dd(Q.asof) : '') : '', null, 'sales.html#s-recl'),   // 21.11.2026 (аудит): сумма по части документов — не итог
         K('Отгрузка недели', C.y, H.tot && H.tot.s ? d1(H.tot.s / 1e6) : '—', 'млн ₽', H.from ? dd(H.from) + '–' + dd(H.to) : '', null, 'sales.html#ship')];
       var MS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
       var b1 = ['Выручка по месяцам', 'млн ₽ · 1С «Продажи»', 'bars', (S.bars || []).map(function (b) { return [MS[b[0] - 1], b[1] / 1e6, d1(b[1] / 1e6)]; })];
@@ -202,16 +248,16 @@
       return [k, [b1, b2]];
     },
     people: function () {
-      var Pp = ST.people || {}, S = bin('sales.bin'), ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : [], cp = S && S.cp, td = MSK();
+      var Pp = ST.people || {}, S = bin('sales.bin'), ops = S && S.ops ? S.ops.filter(function (o) { return o.k !== 'net'; }) : [], cp = poruchCnt(bin('poruch.bin')), td = MSK();
       var days = S && S.days ? S.days.slice(-10) : [];
       var k = [K('Людей в структуре', C.o, Pp.n || '—', '', 'оргструктура портала', null, 'sales.html#struct'),
         K('Контактов', C.b, Pp.contacts || '—', '', 'справочник «Кому звонить»', null, 'calls.html#s-all'),
         K('Имя2 продаж', C.g, ops.length || '—', '', 'с вечерними отчётами', null, 'sales.html#s-days'),
         K('Отчёты сегодня', C.v, ops.length ? ops.filter(function (o) { return o.rep && o.rep[td]; }).length : '—', ops.length ? 'из ' + ops.length : '', 'вечерние отчёты офисов', null, 'sales.html#s-days-' + td),
-        K('Поручения открыты', C.y, cp ? cp.open : '—', '', cp ? 'всего ' + cp.n : 'данные робота ещё не пришли', null, 'poruch.html'),
+        K('Поручения открыты', C.y, cp ? n(cp.open) : '—', '', cp ? 'отметки бота, руководство, совещания, офисы' : 'данные робота ещё не пришли', null, 'poruch.html'),
         K('Поручения просрочены', C.r, cp ? cp.late : '—', '', cp && cp.open ? Math.round(cp.late / cp.open * 100) + ' % открытых' : '', cp && cp.open ? cp.late / cp.open * 100 : null, 'poruch.html')];
       var b1 = ['Сдача вечерних отчётов', '% рабочих дней за последние ' + days.length + ' · по офисам', 'hbars', ops.map(function (o) { var c = days.filter(function (d) { return o.rep && o.rep[d]; }).length, v = days.length ? c / days.length * 100 : 0; return [String(o.n).replace(/^ОП\s+/, ''), v, v >= 80 ? C.g : v >= 50 ? C.y : C.r, c + '/' + days.length]; }), null];
-      var b2 = ['Поручения', 'шт · контрольные точки и задачи', 'bars', cp ? [['открыто', cp.open, n(cp.open)], ['просрочено', cp.late, n(cp.late)], ['всего', cp.n, n(cp.n)]] : []];
+      var b2 = ['Поручения', 'шт · как на странице «Поручения»', 'bars', cp ? [['открыто', cp.open, n(cp.open)], ['просрочено', cp.late, n(cp.late)]] : []];
       return [k, [b1, b2]];
     },
     docs: function () {

@@ -92,7 +92,7 @@
       var L0 = lg.lastChild.value, P0 = pw.lastChild.value;
       A.signIn(L0, P0).then(function () { G.dispatchEvent(new Event('t14acct')); qlOffer(s, L0.trim(), P0); }, function (e) { busy(go, false); msg(f1, e.message, true); });
     });
-    var nm = field('Имя и фамилия', 'text', 'Имя1 Имя1', 'name'), lg2 = field('Логин', 'text', 'латиницей, например ivanov', 'username'), p1 = field('Пароль', 'password', 'не короче 8 знаков', 'new-password'),
+    var nm = field('Имя и фамилия', 'text', 'Сотрудник5 Сотрудник5', 'name'), lg2 = field('Логин', 'text', 'латиницей, например ivanov', 'username'), p1 = field('Пароль', 'password', 'не короче 8 знаков', 'new-password'),
       p2 = field('Пароль ещё раз', 'password', '', 'new-password'), sp = field('Общий пароль сайта', 'password', 'тот, которым вы вошли', 'off'), go2 = btn('Отправить запрос', 'pri');
     f2.append(el('div', 'igroup iflds'), el('div', 'igroup iflds'), el('p', 'ifoot', 'Общий пароль подтверждает, что вы с площадки. Сотрудник4 подтвердит администратор; после этого входите со своим логином.'), go2);
     f2.children[0].append(nm, lg2, p1, p2); f2.children[1].append(sp);
@@ -114,7 +114,7 @@
     A.api('me', { tok: A.tok() }).then(function (r) { var q = Object.assign({}, p, { name: r.me.name, role: r.me.role, st: r.me.st }); A.saveMe(q); g.querySelector('.isub').textContent = 'логин ' + q.login + ' · ' + (q.role === 'admin' ? 'администратор' : 'сотрудник'); G.dispatchEvent(new Event('t14acct')); }, function (e) { if (/подтвержд/.test(e.message)) g.querySelector('.isub').textContent = 'логин ' + p.login + ' · ждёт подтверждения';
       // 02.11.2026 замечание 02: срок входа истёк (30 дней без пароля) или пароль сменили на другом устройстве — выйти и показать вход
       else if (/войдите заново|нет доступа/.test(e.message)) A.forget().then(function () { s.close(); toast(/нет доступа/.test(e.message) ? 'Личный вход отключён — обратитесь к администратору' : 'Срок входа истёк — войдите заново'); G.dispatchEvent(new Event('t14acct')); account(); }); });
-    var f = el('div', 'iform'), np = field('Сотрудник5 пароль', 'password', 'не короче 8 знаков', 'new-password'), go = btn('Сменить пароль');
+    var f = el('div', 'iform'), np = field('Сотрудник6 пароль', 'password', 'не короче 8 знаков', 'new-password'), go = btn('Сменить пароль');
     var out = btn('Выйти из личного входа', 'red');
     f.append(el('p', 'ihdr', 'Пароль'), el('div', 'igroup iflds'), go, out); f.children[1].append(np);
     s.body.appendChild(f);
@@ -132,7 +132,7 @@
       });
     }
     // 14.11.2026, Т. В.: «галочка «Использовать PIN-код»; иначе Touch ID / Face ID / Windows Hello…». 15.11.2026, Т. В.: «убери пока Face ID,
-    //   оставь на усмотрение пользователя — включить или отключить; по умолчанию его нет» — Имя2 переключатель; замок только при включённом.
+    //   оставь на усмотрение пользователя — включить или отключить; по умолчанию его нет» — Имя1 переключатель; замок только при включённом.
     function swRow(title, sub, on, dis, onChange) {
       var row = el('label', 'igroup qlx'); row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;margin:8px 0 0;cursor:pointer';
       var t = el('span'); t.style.flex = '1'; t.innerHTML = '<b style="font-weight:500"></b><small style="display:block;color:var(--ios-2);font-size:13px;margin-top:2px"></small>';

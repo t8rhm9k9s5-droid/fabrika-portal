@@ -15,8 +15,8 @@ html:root,html:root[data-theme="light"]{
   --p-fg:#1C1C1E; --p-fg2:rgba(60,60,67,.74); --p-fg3:rgba(60,60,67,.58); --p-line:rgba(60,60,67,.17); --p-inset:rgba(255,255,255,.9);
   --p-glass-a:rgba(255,255,255,.58); --p-glass-s:#F7F7FA; --p-glass-edge:rgba(255,255,255,.78); --p-glass-out:rgba(20,30,50,.09); --p-glass-rim:rgba(255,255,255,.95);
   --p-sheet-a:rgba(247,247,250,.9); --p-sheet-s:#F4F4F7; --p-shadow-a:0 10px 30px rgba(30,40,70,.13),0 1px 3px rgba(30,40,70,.06); --p-card-sh:0 1px 2px rgba(30,40,70,.05);
-  --p-tint:#0A6FE0; --p-active:#0A6FE0; --p-on-tint:#fff;
-  --ic-home:#0A6FE0; --ic-map:#6550CC; --ic-prod:#9941BD; --ic-stock:#AC6200; --ic-omts:#9A5A00; --ic-sales:#C33D32; --ic-items:#0877D8;
+  --p-tint:#E2452B; --p-active:#E2452B; --p-on-tint:#fff;
+  --ic-home:#E2452B; --ic-map:#6550CC; --ic-prod:#9941BD; --ic-stock:#AC6200; --ic-omts:#9A5A00; --ic-sales:#C33D32; --ic-items:#8A5A2B;
   --ic-docs:#157F98; --ic-calls:#218847; --ic-chat:#218847; --ic-err:#C33D32; --ic-grey:#626266; --ic-ai:#6550CC;
   --t-bad:#D2342A; --t-warn:#B25E00; --t-ok:#1E8A45;
   --map-bg:#E9EDF5; --map-bld:#C9D3E6; --map-edge:#8C9AB8; --map-line:#D6DCE8;
@@ -30,8 +30,8 @@ html:root[data-theme="dark"]{
   --p-fg:#F2F2F7; --p-fg2:rgba(235,235,245,.66); --p-fg3:rgba(235,235,245,.5); --p-line:rgba(84,84,88,.62); --p-inset:rgba(255,255,255,.07);
   --p-glass-a:rgba(120,120,135,.22); --p-glass-s:#2C2E37; --p-glass-edge:rgba(255,255,255,.15); --p-glass-out:rgba(0,0,0,.25); --p-glass-rim:rgba(255,255,255,.26);
   --p-sheet-a:rgba(34,35,43,.9); --p-sheet-s:#23242B; --p-shadow-a:0 14px 40px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.22); --p-card-sh:none;
-  --p-tint:#4DA3FF; --p-active:#4DA3FF; --p-on-tint:#06121F;
-  --ic-home:#389BFF; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#4FA8FF;
+  --p-tint:#FF5D41; --p-active:#FF5D41; --p-on-tint:#FFFFFF;
+  --ic-home:#FF5D41; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#D9A066;
   --ic-docs:#54BFD3; --ic-calls:#66D98A; --ic-chat:#66D98A; --ic-err:#FF776B; --ic-grey:#BABAC1; --ic-ai:#9B8AFF;
   --t-bad:#FF8A7E; --t-warn:#FFB547; --t-ok:#4CD97B;
   --map-bg:#1E2433; --map-bld:#3A4560; --map-edge:#55628A; --map-line:#2E3750;
@@ -44,8 +44,8 @@ html:root[data-theme="dark"]{
   --p-fg:#F2F2F7; --p-fg2:rgba(235,235,245,.66); --p-fg3:rgba(235,235,245,.5); --p-line:rgba(84,84,88,.62); --p-inset:rgba(255,255,255,.07);
   --p-glass-a:rgba(120,120,135,.22); --p-glass-s:#2C2E37; --p-glass-edge:rgba(255,255,255,.15); --p-glass-out:rgba(0,0,0,.25); --p-glass-rim:rgba(255,255,255,.26);
   --p-sheet-a:rgba(34,35,43,.9); --p-sheet-s:#23242B; --p-shadow-a:0 14px 40px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.22); --p-card-sh:none;
-  --p-tint:#4DA3FF; --p-active:#4DA3FF; --p-on-tint:#06121F;
-  --ic-home:#389BFF; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#4FA8FF;
+  --p-tint:#FF5D41; --p-active:#FF5D41; --p-on-tint:#FFFFFF;
+  --ic-home:#FF5D41; --ic-map:#9B8AFF; --ic-prod:#D079ED; --ic-stock:#FFAD37; --ic-omts:#E8A33D; --ic-sales:#FF776B; --ic-items:#D9A066;
   --ic-docs:#54BFD3; --ic-calls:#66D98A; --ic-chat:#66D98A; --ic-err:#FF776B; --ic-grey:#BABAC1; --ic-ai:#9B8AFF;
   --t-bad:#FF8A7E; --t-warn:#FFB547; --t-ok:#4CD97B;
   --map-bg:#1E2433; --map-bld:#3A4560; --map-edge:#55628A; --map-line:#2E3750;
@@ -562,7 +562,7 @@ body.pg-plan.pfull.has-portal .tabbar{left:16px!important;right:16px!important}
 @media (max-width:900px){   /* iPad вертикально: колонка контента узкая (боковое меню) — тоже по одному периоду */
   .fhome .hp-seg{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
   .fhome .hp-seg button{flex:none;border:0;border-radius:14px;padding:7px 12px;font:600 13.5px/1.2 var(--f-body);background:var(--p-soft);color:var(--p-fg2);cursor:pointer}
-  .fhome .hp-seg button[aria-pressed="true"]{background:var(--ic-items,#0877D8);color:#fff}
+  .fhome .hp-seg button[aria-pressed="true"]{background:var(--ic-items,#8A5A2B);color:#fff}
   .fhome table.hp,.fhome table.hp{min-width:0}
   .fhome .hp[data-sel="0"] tr > :not(:first-child):not(:nth-child(2)),.fhome .hp[data-sel="1"] tr > :not(:first-child):not(:nth-child(3)),
   .fhome .hp[data-sel="2"] tr > :not(:first-child):not(:nth-child(4)),.fhome .hp[data-sel="3"] tr > :not(:first-child):not(:nth-child(5)){display:none}
@@ -720,7 +720,7 @@ html body .ptip.ptip.ptip::before{content:"";position:absolute;left:-5px;top:50%
 /* 18.11.2026: «Отчёты ПДО по дням · с 01.11» — все дни отчёта в одной таблице, листается вбок (не по одному периоду, как «Вчера · неделя · месяц») */
 .fhome .pdo-seg{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
 .fhome .pdo-seg button{flex:none;border:0;border-radius:14px;padding:7px 12px;font:600 13.5px/1.2 var(--f-body);background:var(--p-soft);color:var(--p-fg2);cursor:pointer}
-.fhome .pdo-seg button[aria-pressed="true"]{background:var(--ic-items,#0877D8);color:#fff}
+.fhome .pdo-seg button[aria-pressed="true"]{background:var(--ic-items,#8A5A2B);color:#fff}
 .fhome .pdt-box{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .fhome table.hp.pdt{min-width:0;width:max-content}
 .fhome .hp.pdt tr > *{display:table-cell}
@@ -734,3 +734,37 @@ html body .ptip.ptip.ptip::before{content:"";position:absolute;left:-5px;top:50%
 .fhome .pdt-g small{display:inline;color:var(--p-fg3);font-size:12px}
 .fhome .pdt-m{display:block;padding-left:16px;font:400 13px/1.3 var(--f-body);color:var(--p-fg2)}
 .fhome .hp.pdt tr.pdt-mod td b{font-size:14px;font-weight:550}
+
+/* ===================================================================== 21.11.2026 ds2030 — единая система портала и сайта
+   Т. В.: «Ставим сразу на оба». Старые токены (--p-*, --ios-*, ui.css) — алиасы на --ds-* из assets/ds.css (грузится перед portal.css).
+   Тёмная/светлая переключаются в ds.css по тем же правилам (data-theme / prefers-color-scheme), поэтому здесь один блок на все темы.
+   Синий #0A6FE0 больше не используется: акцент один — красный «Фабриканта»; статусы — свои цвета ds. */
+html:root:root{
+  --p-bg:var(--ds-ground); --p-bg-hi:var(--ds-surface-2); --p-bg-lo:var(--ds-ground); --p-grad:var(--ds-ground-glow);
+  --p-card:var(--ds-surface); --p-card2:var(--ds-surface-2); --p-fg:var(--ds-ink); --p-fg2:var(--ds-ink-2); --p-fg3:var(--ds-ink-3); --p-line:var(--ds-line);
+  --p-glass-a:var(--ds-glass); --p-glass-rim:var(--ds-glass-rim); --p-glass-out:var(--ds-glass-edge);
+  --p-tint:var(--ds-accent); --p-active:var(--ds-accent); --p-on-tint:var(--ds-on-accent);
+  --ic-home:var(--ds-accent); --ic-items:#8A5A2B;
+  --t-bad:var(--ds-bad); --t-warn:var(--ds-warn); --t-ok:var(--ds-good);
+  --ios-blue:var(--ds-accent); --ios-bg:var(--ds-ground); --ios-group:var(--ds-surface); --ios-label:var(--ds-ink); --ios-2:var(--ds-ink-2); --ios-3:var(--ds-ink-3); --sheet-group:var(--ds-surface);
+  --bg:var(--ds-ground); --fg:var(--ds-ink); --muted:var(--ds-ink-2); --line:var(--ds-line); --accent:var(--ds-accent); --on-accent:var(--ds-on-accent);
+  --f-body:var(--ds-font-text); --f-display:var(--ds-font-display); --f-narrow:var(--ds-font-text);
+  --r-panel:var(--ds-r-card); --spring:var(--ds-spring);
+  font-synthesis-weight:none;   /* у ALS Gorizont одно начертание — без искусственного жирного */
+}
+@media (prefers-color-scheme:dark){html:root:root:not([data-theme="light"]){--ic-items:#D9A066}}
+html:root:root[data-theme="dark"]{--ic-items:#D9A066}
+html:root:root[data-plat="android"]{--p-tint:var(--ds-accent); --p-active:var(--ds-accent); --p-on-tint:var(--ds-on-accent); --m-active:var(--ds-accent-soft); --m-on-active:var(--ds-ink)}
+/* таблицы и плотные цифры — ALS Departure (Gorizont Expanded для них слишком широкий) */
+table,th,td,.num,input,select,textarea{font-family:var(--ds-font-text)}
+
+/* 23.11.2026, Т. В.: «меню иногда уезжает» — без масштаба страницы двойным тапом и без горизонтального расширения страницы широкими таблицами */
+@media (pointer:coarse){ html{touch-action:pan-x pan-y} html,body{overflow-x:clip} }
+
+/* 23.11.2026, Т. В. (скрин 21:29, «Профиль»): «меню улетает в середину, через ~5 с возвращается». После того как клавиатура спряталась, iPhone
+   (приложение с иконки) ещё несколько секунд держит окно коротким на высоту клавиатуры — меню, привязанное к низу окна (bottom), поднимается.
+   На телефоне меню и кнопку поиска считаем от верха по полной высоте экрана (100lvh — не меняется от клавиатуры). Пока клавиатура открыта, меню и так скрыто (kb-open). */
+@supports (height:100lvh){ @media (pointer:coarse){
+  html:not(.kb-open) body .tabbar{bottom:auto;top:calc(100lvh - var(--dock-b) - 56px)}
+  html:not(.kb-open) body .psrch{bottom:auto;top:calc(100lvh - var(--dock-b) - 62px)}
+} }

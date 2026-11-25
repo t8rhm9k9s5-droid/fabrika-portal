@@ -12,9 +12,9 @@
   window.T14Alerts = { items: L, secOf: secOf };
   if (!L.length) return;
   var page = (location.pathname.split('/').pop() || 'home.html');
-  var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'supply', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
+  var DOMOF = { 'sales.html': 'sales', 'staff.html': 'prod', 'omts.html': 'omts', 'stock.html': 'supply', 'stores.html': 'supply', 'products.html': 'items',
     'library.html': 'docs', 'docs.html': 'docs', 'archive.html': 'docs', 'calls.html': 'people', 'plan.html': 'site', 'index.html': 'site', 'utils.html': 'site', 'cams.html': 'site', 'jps.html': 'sales', 'mts.html': 'people', 'ftp.html': 'docs', 'transport.html': 'log' };
-  function secOf() { return page === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[page] || ''; }
+  function secOf() { var x = page === 'razdel.html' ? decodeURIComponent(location.hash.slice(1)) : DOMOF[page] || ''; return x === 'omts' ? 'supply' : x; }   // 24.11.2026: тревоги снабжения — и в разделе ОМТС
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function day() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function hidden(id) { try { return (JSON.parse(localStorage.getItem('t14.alhide') || '{}') || {})[id] === day(); } catch (e) { return false; } }

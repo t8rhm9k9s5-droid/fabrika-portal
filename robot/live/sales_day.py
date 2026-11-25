@@ -91,7 +91,7 @@ def parse(data):
 
 
 def parse_month(data):
-    """30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник6, «Продажи в разрезе … за месяц.xlsx»): «Период: Октябрь 2026 г.»,
+    """30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10, «Продажи в разрезе … за месяц.xlsx»): «Период: Октябрь 2026 г.»,
     группировка «По дням» → номенклатурная группа (types) или вид номенклатуры сбыт (cap); колонки «Сумма продажи в руб.», «Количество».
     → {'kind', 'month': 'ГГГГ-ММ', 'days': {дата: {'rows': [[название, шт, ₽]], 'tot': [шт, ₽]}}} или None (не этот отчёт)"""
     R = rows(data)
@@ -129,6 +129,59 @@ def parse_month(data):
         cur['rows'].append([nm, round(q, 3), round(s, 2)])
     if not days: return None
     return {'kind': kind, 'month': month, 'days': days}
+
+
+def parse_roll(data):
+    """23.11.2026 (Т. В.: «на портале опять старые данные… каждое утро одни и те же ошибки»): с 20.11 1С присылает
+    «Продажи в течение месяца по номенклатурным группам и группам производства от ДД.ММ.ГГГГ» — два вложения
+    «Продажи за вчера-месяц по … claude.xlsx»: скользящее окно ~30 дней по вчерашний день, «День» → группы.
+    Поздно проведённые документы 1С меняют прошлые дни (13.11: в дневном письме 1,50 млн, сейчас 4,24 млн) — окно их исправляет.
+    → {'kind', 'days': {дата: {'rows', 'tot'}}, 'from', 'to'} или None (не этот отчёт)"""
+    R = rows(data)
+    hdr = kind = None
+    for i, r in enumerate(R[:10]):
+        txt = [str(x).strip() for x in r if isinstance(x, str) and x.strip()]
+        if txt and txt[0].lower() == 'день' and any(y.lower().startswith('количество') for y in txt): hdr = i; continue
+        if hdr is not None and txt and kind is None:
+            t0 = txt[0].lower()
+            if t0.startswith('номенклатурная группа'): kind = 'types'
+            elif t0.startswith('номенклатура.вид номенклатуры') or t0.startswith('группа производства'): kind = 'cap'
+            if kind: break
+    if hdr is None or not kind: return None
+    head = [str(x or '').strip().lower() for x in R[hdr]]
+    cq = next(j for j, x in enumerate(head) if x.startswith('количество'))
+    cs = next(j for j, x in enumerate(head) if x.startswith('стоимость') or x.startswith('сумма'))
+    num = lambda v: float(v) if isinstance(v, (int, float)) else 0.0
+    get = lambda r, j: r[j] if j < len(r) else None
+    days, cur = {}, None
+    for r in R[hdr + 1:]:
+        name = next((x for x in r if isinstance(x, str) and x.strip()), None)
+        q, s = num(get(r, cq)), num(get(r, cs))
+        if name and re.match(r'^\s*\d\d\.\d\d\.\d{4}\s*$', name):
+            d, mo, y = name.strip().split('.')
+            cur = days.setdefault('%s-%s-%s' % (y, mo, d), {'rows': [], 'tot': [round(q, 3), round(s, 2)]}); continue
+        if name and name.strip().lower() == 'итого': break
+        if cur is None or not name: continue
+        low = name.strip().lower()
+        if low.startswith('номенклатур') or low.startswith('группа производства'): continue
+        cur['rows'].append([re.sub(r'^\d+\.\s*', '', re.sub(r'\s+', ' ', name).strip()), round(q, 3), round(s, 2)])
+    if not days: return None
+    return {'kind': kind, 'days': days, 'from': min(days), 'to': max(days)}
+
+
+def merge_roll(D, rec, got=None, src=None):
+    """запись parse_roll() → D['days'][дата][kind] за каждый день окна (закрытые месяцы не трогаем — merge() отклоняет);
+    месяц, который окно покрывает с 1-го числа, отмечается как полный (D['months']) — итог месяца = сумма дней. → сколько дней записано"""
+    n = 0
+    for d, v in sorted(rec['days'].items()):
+        if _locked(d[:7]): continue                                   # закрытый месяц: окно каждый день его захватывает — не шумим в реестре отклонений
+        if merge(D, {'kind': rec['kind'], 'date': d, 'rows': v['rows'], 'tot': v['tot']}, got, src): n += 1
+    for ym in sorted({d[:7] for d in rec['days']}):
+        if rec['from'] > ym + '-01' or _locked(ym): continue
+        mm = D.setdefault('months', {}).setdefault(ym, {})
+        if not mm.get('got') or not got or got >= mm['got']:
+            mm.update({'got': got, 'src': src, 'from': ym + '-01', 'to': max(d for d in rec['days'] if d[:7] == ym), 'roll': True})
+    return n
 
 
 def _locked(ym):
