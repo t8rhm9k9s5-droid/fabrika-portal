@@ -1422,7 +1422,8 @@ function cleanName_(s, n) { return String(s || '').replace(/[<>\u0000-\u001f]/g,
 
 function acctPost_(q) {
   var op = q.op;
-  if (/^mx(req|get|list|give|deny)$/.test(String(op))) return mxPost_(op, q);   // 25.11.2026: вход по MAX ID (MxLogin.gs)
+  if (/^mx(req|get|list|give|deny)$/.test(String(op))) return mxPost_(op, q);
+  if (/^vs(hit|err|sum)$/.test(String(op))) return vsPost_(op, q);   // 26.11.2026: посещения и ошибки устройств (Visits.gs)   // 25.11.2026: вход по MAX ID (MxLogin.gs)
   if (op === 'salt') return saltOf_(q.id);
   if (op === 'login') return login_(q);
   if (op === 'register') return register_(q);
