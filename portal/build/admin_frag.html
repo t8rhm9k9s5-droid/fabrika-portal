@@ -69,7 +69,8 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
     var a1 = row('button', IC.add, '#34c759', 'Добавить человека'); a1.addEventListener('click', addPerson); acts.appendChild(a1);
     var a2 = row('button', IC.bell, '#ff3b30', 'Отправить уведомление', '', 'уведомления включены у ' + D.users.filter(function (u) { return u.push && u.st === 'active'; }).length + ' чел.'); a2.addEventListener('click', pushForm); acts.appendChild(a2);
     var a3 = row('button', IC.doc, '#30b0c7', 'Загрузить документ', '', 'сертификат, прайс-лист, каталог…'); a3.addEventListener('click', docForm); acts.appendChild(a3);
-    var a4 = row('button', IC.max, '#5856d6', 'Обращения', '', 'вопросы к ботам: на что бот не ответил и кто отвечает'); a4.addEventListener('click', evForm); acts.appendChild(a4);   // 02.11.2026
+    var a4 = row('button', IC.max, '#5856d6', 'Обращения', '', 'вопросы к ботам: на что бот не ответил и кто отвечает'); a4.addEventListener('click', evForm); acts.appendChild(a4);
+    var a5 = row('button', IC.doc, '#34a0a4', 'Посещения и ошибки', '', 'кто открывает портал и что ломается на устройствах'); a5.addEventListener('click', visForm); acts.appendChild(a5);   // 26.11.2026   // 02.11.2026
     var L = $('lists'); L.innerHTML = '';
     mxDraw(L);
     [['pending', 'Ждут подтверждения'], ['admin', 'Администраторы'], ['user', 'Сотрудники'], ['off', 'Отключены']].forEach(function (g) {
@@ -161,6 +162,25 @@ body{background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSy
       UI.busy(no, true);
       A.api('mxdeny', { tok: A.tok(), code: q.code }).then(function () { MXR = MXR.filter(function (x) { return x.code !== q.code; }); s.close(); draw(); }, function (e) { UI.busy(no, false); UI.msg(f, e.message, true); });
     });
+  }
+  // 26.11.2026, Т. В.: статистика посещений и ошибки на устройствах сотрудников (свой счётчик, данные в служебной таблице под 1c@).
+  function visForm() {
+    var s = UI.sheet('Посещения и ошибки', 'Кто и что открывает на портале и какие ошибки видят устройства. За 7 дней.'), f = UI.el('div', 'iform'); s.body.appendChild(f);
+    UI.msg(f, 'Загружаю…');
+    function line(g, t, sub, v) { var r = UI.el('div', 'irow static', '<span class="ic"><span class="ibody"><span class="ititle"></span><span class="isub"></span></span><span class="ival"></span></span>'); r.querySelector('.ititle').textContent = t; r.querySelector('.isub').textContent = sub || ''; r.querySelector('.ival').textContent = v == null ? '' : v; g.appendChild(r); }
+    function grp(title, cnt) { f.appendChild(UI.el('p', 'ihdr', UI.esc(title) + (cnt == null ? '' : ' <span class="cnt">· ' + cnt + '</span>'))); var g = UI.el('div', 'igroup'); f.appendChild(g); return g; }
+    function dm(d) { return d.slice(8, 10) + '.' + d.slice(5, 7); }
+    function when(t) { var d = new Date(t + 3 * 36e5), p = function (x) { return (x < 10 ? '0' : '') + x; }; return p(d.getUTCDate()) + '.' + p(d.getUTCMonth() + 1) + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()); }
+    A.api('vssum', { tok: A.tok(), days: 7 }).then(function (r) {
+      UI.msg(f, '');
+      if (!r.hits) { UI.msg(f, 'Посещений пока нет: счётчик включён 26.11.2026, данные появятся, когда сотрудники откроют портал.'); }
+      var g1 = grp('По дням'); r.byDay.slice().reverse().forEach(function (d) { line(g1, dm(d.d), 'человек: ' + d.people, d.hits + ' откр.'); });
+      var g2 = grp('Люди', r.people.length); r.people.forEach(function (p) { line(g2, p.name, 'был ' + when(p.last) + ' · разделов: ' + p.pages + ' · ' + p.dev, p.hits); });
+      var g3 = grp('Разделы', r.pages.length); r.pages.forEach(function (p) { line(g3, p.p, '', p.hits); });
+      var g4 = grp('Ошибки на устройствах', r.errors.length);
+      if (!r.errors.length) line(g4, 'Ошибок нет', '', '');
+      r.errors.forEach(function (e) { line(g4, e.msg, when(e.t) + ' · ' + e.name + ' · ' + e.page + ' · ' + e.dev + ' · версия ' + e.ver + (e.src ? ' · ' + e.src + (e.line ? ':' + e.line : '') : ''), ''); });
+    }, function (e) { UI.msg(f, e.message, true); });
   }
   function showPw(where, r) {
     var c = UI.el('div', 'igroup pwcard'); c.append(UI.copyRow('Логин', r.login), UI.copyRow('Пароль', r.pw));
