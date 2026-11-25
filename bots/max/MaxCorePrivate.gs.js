@@ -30,6 +30,10 @@ function mx_dialog(u, m) {
   //   владелец, dm_allow, участники рабочих групп) — тогда подписанно в калькулятор (op claim) → Т. В. в Telegram «Пустить / Отказать». Чужой — отказ, Т. В. ничего не приходит.
   var cm = type === 'message_created' && text.match(/^\s*калькулятор\s*:?\s*(\d{6})\s*$/i);
   if (cm) { mx_calcClaim(uid, user, cm[1]); return; }
+  // 25.11.2026, Т. В. («Подтверждаю я с телефона»): «портал КОД» — вход на портал по MAX ID. Свой сотрудник (mx_dmAllowed) → подписанно в скрипт личных входов (op mxbot);
+  //   администратор подтверждает в «Управлении». Чужой — отказ, администратору ничего не приходит.
+  var pc = type === 'message_created' && text.match(/^\s*портал\s*:?\s*(\d{6})\s*$/i);
+  if (pc) { mx_portalClaim(uid, user, pc[1]); return; }
   // 11.11.2026: ответ на вопрос бота по контрольным точкам в личке — в контроль сроков (TimersCtl), до зеркала и помощника
   if (type === 'message_created' && typeof tm_remCtlDmAnswer_ === 'function' && tm_remCtlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;   // 13.11: автор контроля — срок/исполнители
   if (type === 'message_created' && typeof tm_ctlDmAnswer_ === 'function' && tm_ctlDmAnswer_(uid, String(user.name || ((user.first_name || '') + ' ' + (user.last_name || ''))).trim(), text, m)) return;
@@ -177,7 +181,7 @@ function mx_toTg(u, m, user) {
 }
 
 // 24.11.2026: запрос доступа к калькулятору мебели (см. mx_dialog). Ключ CALC_KEY подставляет выкладка (HMAC ключа бота, метка fabrika-calc-v1).
-var CALC_URL = 'https://script.google.com/macros/s/REDACTED_1/exec', CALC_KEY = '__CALCK__';
+var CALC_URL = 'https://script.google.com/macros/s/REDACTED_1/exec', CALC_KEY = 'REDACTED_HEX_14';
 function mx_calcClaim(uid, user, code) {
   if (!mx_dmAllowed(uid)) {
     mx_log('dm', 'калькулятор: запрос от постороннего uid ' + uid + ' — не передан');
@@ -194,5 +198,27 @@ function mx_calcClaim(uid, user, code) {
   mx_log('dm', 'калькулятор: запрос uid ' + uid + ' → ' + st);
   mx_sendUser(uid, st === 'sent' ? 'Сотрудник4 на доступ к калькулятору мебели передан Т. В. Сотрудник1. Как только он подтвердит — калькулятор откроется на вашем устройстве сам.'
     : st === 'nocode' ? 'Код не найден или устарел. Нажмите «Сотрудник4 доступ» в калькуляторе ещё раз и пришлите новый код.'
+    : 'Не получилось передать запрос — попробуйте через пару минут.');
+}
+
+// 25.11.2026: вход на портал «Фабрика» по MAX ID (см. mx_dialog). Бот проверяет, что пишет свой сотрудник, и подписанно (mx_tgCall, как tgcall)
+//   передаёт код в скрипт личных входов; сам вход подтверждает администратор в «Управлении» портала. Ключей и паролей бот не видит.
+function mx_portalClaim(uid, user, code) {
+  if (!mx_dmAllowed(uid)) {
+    mx_log('dm', 'портал: запрос входа от постороннего uid ' + uid + ' — не передан');
+    mx_sendUser(uid, 'Вход на портал «Фабрика» — только для сотрудников «Фабриканта». Ваш MAX ID не найден в рабочих группах компании, поэтому запрос не передан. Если вы сотрудник — попросите руководителя добавить вас в рабочую группу MAX.');
+    return;
+  }
+  var name = String(mx_name(user) || '').slice(0, 80), st = '';
+  try { var r = mx_tgCall({ op: 'mxbot', code: String(code), uid: String(uid), name: name }); st = (r && r.st) || (r && r.error) || ''; }
+  catch (x) { st = 'err'; mx_log('err', 'портал: ' + mx_errText(x)); }
+  mx_log('dm', 'портал: запрос входа uid ' + uid + ' → ' + st);
+  if (st === 'sent') {
+    var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+    try { mx_tgOwner('Вход на портал по MAX ID: <b>' + esc(name || 'без имени') + '</b> (MAX ID ' + esc(uid) + '). Бот проверил — это наш сотрудник. Подтвердить: портал → «Управление» → «Вход по MAX ID». Сотрудник4 живёт 30 минут.', null, { id: 'mxlogin:' + code }); }
+    catch (x2) { mx_log('err', 'портал: владельцу — ' + mx_errText(x2)); }
+  }
+  mx_sendUser(uid, st === 'sent' ? 'MAX ID подтверждён. Сотрудник4 на вход передан администратору портала. Вернитесь на страницу входа и не закрывайте её — портал откроется сам, как только администратор подтвердит.'
+    : st === 'nocode' ? 'Код не найден или устарел. Нажмите «Войти через MAX» на странице входа ещё раз и пришлите новый код.'
     : 'Не получилось передать запрос — попробуйте через пару минут.');
 }

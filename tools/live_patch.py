@@ -87,6 +87,11 @@ def main():
     for p in (regp, A + '/enc_map.json'): shutil.copy2(p, p + '.before-patch-' + ver[:8])
     json.dump(reg, open(regp, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')); json.dump(full, open(A + '/enc_map.json', 'w', encoding='utf-8'), ensure_ascii=False)
     items += [('code/docs_registry.json', regp), ('m.bin', str(out / 'm.bin')), ('sw.js', str(out / 'sw.js'))]
+    if '--public' in sys.argv:   # 25.11.2026: открытая страница входа (index.html, login.html, 404.html в корне хостинга) — из каталога, только эти три имени
+        pub = pathlib.Path(sys.argv[sys.argv.index('--public') + 1]); names = ('index.html', 'login.html', '404.html')
+        assert all((pub / n).is_file() for n in names) and len({(pub / n).read_bytes() for n in names}) == 1, '--public: нужны три одинаковых файла index.html, login.html, 404.html'
+        assert b'T14_ACCT_CFG' in (pub / 'index.html').read_bytes() and b'id="fp"' in (pub / 'index.html').read_bytes(), '--public: это не страница входа'
+        items += [(n, str(pub / n)) for n in names]; print('страница входа: 3 файла,', (pub / 'index.html').stat().st_size, 'байт')
     tf = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8')
     json.dump({'rid': time.strftime('%Y%m%d%H%M', time.gmtime(time.time() + 3 * 3600)) + '-' + uuid.uuid4().hex[:8], 'i': 1, 'n': 1}, tf); tf.close()
     DP.KEY = bytes.fromhex(json.loads(pathlib.Path(A + '/deploy_secret.json').read_text())['k_deploy'])

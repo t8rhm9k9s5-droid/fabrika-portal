@@ -134,7 +134,7 @@ for a, b in [('Столбец или правило', 'Как заполнять
 es = wb.create_sheet('Пример новой камеры')
 es['A1'] = 'Пример строки новой камеры'; es['A1'].font = f_title
 es['A2'] = 'Так выглядит заполненная строка на листе «Камеры». Этот лист сайт не читает — пример не загрузится.'; es['A2'].font = f_leg
-ex = {'name': 'Ворота склада, въезд', 'ip': '10.0.0.19', 'model': 'HiWatch DS-I200(C)', 'port': 'SW-3, порт 4', 'chan': 'NVR-2, канал 5',
+ex = {'name': 'Ворота склада, въезд', 'ip': '10.0.0.13', 'model': 'HiWatch DS-I200(C)', 'port': 'SW-3, порт 4', 'chan': 'NVR-2, канал 5',
       'hr': 3.5, 'az': 180, 'tilt': 20, 'lens': 2.8, 'fov': None, 'range': 20, 'X': None, 'Y': None, 'hidden': 'нет', 'note': 'смонтирована в 2026 г.'}
 # a real spot by the warehouse: the first camera on «Склад готовой продукции №1», 4 m to the south
 sk = next((rw for rw in rows[1:] if 'Склад готовой' in str(rw[keys.index('bld')])), rows[1])
