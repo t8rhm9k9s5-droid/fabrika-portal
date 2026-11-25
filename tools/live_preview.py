@@ -2,11 +2,15 @@
 #   python3 live_preview.py <каталог заплатки plain> <порт>   → http://localhost:<порт>/plan.html
 import sys, os, mimetypes, http.server, socketserver
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import live_get as g
-PL = sys.argv[1]; PORT = int(sys.argv[2]); CACHE = {}
+PL = sys.argv[1]; ROOT = os.path.realpath(PL); PORT = int(sys.argv[2]); CACHE = {}
 class H(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def do_GET(self):
-        rel = self.path.split('?')[0].lstrip('/') or 'home.html'; f = os.path.join(PL, rel)
+        rel = os.path.normpath(self.path.split('?')[0].lstrip('/') or 'home.html').replace(os.sep, '/')
+        if rel.startswith(('..', '/')) or '\x00' in rel:   # только файлы заплатки и портала, никаких путей наружу
+            self.send_response(400); self.end_headers(); return
+        f = os.path.join(ROOT, rel)
+        if os.path.commonpath([ROOT, os.path.realpath(f)]) != ROOT: self.send_response(400); self.end_headers(); return
         try:
             if os.path.isfile(f): b = open(f, 'rb').read()
             else:
