@@ -1,10 +1,11 @@
 {
- "portal_version": "2.24.6",
- "exported_utc": "2026-11-26T06:15Z",
- "files_sha": "446678f6cb4d721a",
+ "portal_version": "2.24.7",
+ "exported_utc": "2026-11-26T07:44Z",
+ "files_sha": "deff32a2eda9777a",
  "files": [
-  "portal/assets/acct.js",
-  "portal/assets/portal.css",
-  "portal/assets/site.js"
+  "portal/assets/hub.js",
+  "portal/assets/versions_full.js",
+  "portal/pricelist/build_patch_2611d.py",
+  "portal/pricelist/legend_doc.py"
  ]
 }

@@ -30,7 +30,7 @@ S.append(('Сокращения: механизмы, подлокотники, �
     ['Альфа, WD, PL-540, PL-600, Кванта; PL 680, PL 600', 'крестовины (опоры); число — диаметр в мм'], ['кр. Альфа(700)CH', 'крестовина «Альфа», диаметр 700 мм, хром'],
     ['ролик ст.', 'стандартные ролики ST, Ø51 мм — для мягких покрытий'], ['ролик обрезиненный (PU)', 'ролики с обрезиненной поверхностью для жёстких полов, Ø51 мм'], ['Люкс', 'ролики «Люкс» (вид — стр. 7 PDF прайса)'], ['Глайдер', 'статическая опора вместо роликов'],
     ['BOX1, BOX2, BOX4, BOX5', 'упаковка: сколько стульев в коробке']], ['34%', '66%'])))
-S.append(('Опора против опрокидывания вперёд (дополнение портала 26.11.2026)', '<p>Пластиковая опора-подпятник: не даёт стулу опрокинуться вперёд. Перечень — ответ менеджера по рекламациям А. Сотрудник43 20.11.2026 и предписания производственно-технического отдела.</p>' + tbl(['Модель (как в прайсе)', 'Что стоит', 'Основание'], [
+S.append(('Опора против опрокидывания вперёд (дополнение портала 26.11.2026)', '<p>Пластиковая опора-подпятник: не даёт стулу опрокинуться вперёд. Перечень — ответ менеджера по рекламациям А. Сотрудник44 20.11.2026 и предписания производственно-технического отдела.</p>' + tbl(['Модель (как в прайсе)', 'Что стоит', 'Основание'], [
     ['Бонд PLZ кресло, Виктория PLZ, Элис PLZ кресло', 'основание «Бонд»: 2 опоры универсальные У22-25ЧН + 2 опоры треугольные, арт. 112019202, чёрные', 'предписание №265 от 19.02.2021'],
     ['Тренд PLZ (Тренд NET PLZ — по предписанию)', 'полозья «Тренд»: то же, 2 + 2', 'предписание №265 от 19.02.2021'],
     ['Синти, Синти СТ', 'то же, 2 + 2', 'предписание №265 от 19.02.2021'],
@@ -58,9 +58,13 @@ css = """@font-face{font-family:H;src:url(%s)}@font-face{font-family:T;src:url(%
 @page{size:A4;margin:16mm 15mm}body{font:10pt/1.45 T,sans-serif;color:#1d1d1f}h1{font:20pt/1.15 H,sans-serif;margin:0 0 4mm}h2{font:12.5pt/1.2 H,sans-serif;margin:7mm 0 2.5mm;color:#e0412d;break-after:avoid}
 .kick{font:700 8pt/1 T;letter-spacing:.12em;text-transform:uppercase;color:#e0412d;margin-bottom:2mm}.lead{color:#555;margin:0 0 4mm}
 table{width:100%%;border-collapse:collapse;margin:2mm 0 3mm;break-inside:auto}th{text-align:left;font-weight:700;font-size:8.5pt;color:#555;border-bottom:1.2pt solid #1d1d1f;padding:1.6mm 2mm}
-td{border-bottom:.5pt solid #ddd;padding:1.6mm 2mm;vertical-align:top}tr{break-inside:avoid}.n{color:#666;font-size:8.5pt}p{margin:0 0 2mm}li{margin:0 0 1.5mm}""" % (
+td{border-bottom:.5pt solid #ddd;padding:1.6mm 2mm;vertical-align:top}tr{break-inside:avoid}.n{color:#666;font-size:8.5pt}p{margin:0 0 2mm}li{margin:0 0 1.5mm}figure{margin:0 0 5mm;break-inside:avoid}figure img{width:100%%;border:.5pt solid #ddd}figcaption{font-size:8.5pt;color:#666;margin-top:1mm}h2.pics{break-before:page}""" % (
     P.font('als_gorizont/ALSGorizont2.1-MediumExpanded.woff2'), P.font('als_departure/ALSDeparture-Regular.woff2'), P.font('als_departure/ALSDeparture-Bold.woff2'))
-body = '<div class="kick">Справочник · ГК «Фабрикант»</div><h1>Легенда прайс-листа от 28.10.2026</h1><p class="lead">Что означает каждая колонка, базисы отгрузки I–V, сокращения и доплаты. Составлено по легенде прайс-листа и Excel-файлу прайса; дополнения портала отмечены.</p>' + ''.join('<h2>%s</h2>%s' % (e(t), h) for t, h in S)
+import base64 as _b64
+_IMG = [('legend_img/p-0%d.jpg' % i, t) for i, t in [(3, 'Стр. 3. Базисы отгрузки и условия'), (4, 'Стр. 4. Изменение базовой комплектации: упаковка, опоры, ткани, наценки'), (5, 'Стр. 5. Механизмы, крестовины, ролики'), (6, 'Стр. 6. Подлокотники, дополнительные опции, металлические покрытия'), (7, 'Стр. 7. Подлокотники, ролики, крестовины, механизмы — картинками'), (8, 'Стр. 8. Как выглядит лист прайса (пример: «Кресла»)')]]
+_ih = ''.join('<figure><img src="data:image/jpeg;base64,%s"><figcaption>%s</figcaption></figure>' % (_b64.b64encode(open('/home/claude/fabrika/work/pricelist/' + f, 'rb').read()).decode(), e(t)) for f, t in _IMG)
+S.append(('Оригинал легенды из прайс-листа — с картинками', '<p class="n">Страницы 3–8 PDF прайс-листа от 28.10.2026 без изменений.</p>' + _ih))
+body = '<div class="kick">Справочник · ГК «Фабрикант»</div><h1>Легенда прайс-листа от 28.10.2026</h1><p class="lead">Что означает каждая колонка, базисы отгрузки I–V, сокращения и доплаты. Составлено по легенде прайс-листа и Excel-файлу прайса; дополнения портала отмечены. В конце — оригинальные страницы легенды с картинками.</p>' + ''.join('<h2%s>%s</h2>%s' % (' class="pics"' if t.startswith('Оригинал') else '', e(t), h) for t, h in S)
 html = '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Легенда прайс-листа 28.10.2026</title><style>%s</style></head><body>%s</body></html>' % (css, body)
 out = 'REDACTED_B64_36'
 pathlib.Path(out + '.html').write_text(html, encoding='utf-8')
