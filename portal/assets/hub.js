@@ -983,12 +983,12 @@
     anchor: function () { var m = document.getElementById('main'); return m && m.querySelector(':scope > h2, :scope > section#catalog'); },
     // 02.11.2026, Т. В.: «только каталог» — без продаж, склада и «главного типа»; продукция по типам из прайс-листа 28.10
     kpis: [{ id: 'types', t: 'Типов продукции', ic: 's_grid', href: '#s-catalog' }, { id: 'items', t: 'Моделей в прайсе', ic: 's_items', href: '#s-catalog' },
-      { id: 'isp', t: 'Исполнений', ic: 'layers', href: '#s-catalog' }, { id: 'docs', t: 'Прайсы и сертификаты', ic: 's_docs', href: 'library.html#pcc~products' }],
+      { id: 'isp', t: 'Исполнений', ic: 'layers', href: '#s-catalog' }, { id: 'docs', t: 'Прайсы и сертификаты', ic: 's_docs', href: 'library.html#pcc' }],
     tiles: [{ id: 'catalog', t: 'Каталог по типам', ic: 's_grid', hdr: [/^каталог/, /#catalog/] },
       { id: 'models', t: 'Модели с фото', ic: 's_items', hdr: [/^модели/] },
       { id: 'mat', t: 'Материалы', ic: 'layers', hdr: [/^материалы/] },
       { id: 'out', t: 'Внешние пространства', ic: 'cube', opt: true, hdr: [/^внешние/] },
-      { id: 'lib', t: 'Прайсы, каталоги, сертификаты', ic: 's_docs', href: 'library.html#pcc~products', s: '«Документы» → прайсы, каталоги, сертификаты' }],
+      { id: 'lib', t: 'Прайсы, каталоги, сертификаты', ic: 's_docs', href: 'library.html#pcc', s: '«Документы» → прайсы, каталоги, сертификаты' }],
     data: function () { return {}; },
     fill: function () {
       var K = [], tl = [], ty = document.querySelectorAll('#catalog details.ctype').length, md = document.querySelectorAll('#catalog details.cmod').length, ri = document.querySelectorAll('#catalog .ctab tbody tr').length;

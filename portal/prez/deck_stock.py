@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Презентация «Со склада» по застойным остаткам одного склада: python3 deck_stock.py "Рязань" [N моделей]   (данные — work/rasprodazha/out_stale.json)"""
-import sys, json, re, collections
+import sys, json, re, collections, pathlib
+sys.path.insert(0, '/home/claude/fabrika/work/pricelist'); import price_cols as PC
+PR = json.loads(pathlib.Path('/home/claude/fabrika/work/pricelist/price_2810.json').read_text(encoding='utf-8'))
 sys.path.insert(0, '/home/claude/fabrika/work/prez'); import prez as P
 reg = sys.argv[1]; N = int(sys.argv[2]) if len(sys.argv) > 2 else 12
 R = [r for r in json.load(open('/home/claude/fabrika/work/rasprodazha/out_stale.json')) if r['reg'] == reg and r['st'] in ('2мес', '1мес') and not re.search('выставк|маркетплейс', r['wh'], re.I)]
@@ -27,9 +29,16 @@ def short(ch):
 sl = [P.s_cover('Мебель со склада %s' % loc, 'Кресла и стулья «Фабрикант», которые можно отгрузить сразу: без ожидания производства, по прайс-листу, со специальными условиями в декабре.', 'Декабрь 2026', 'ГК «Фабрикант» · +7 000 000-00-14 · fabrikant.su', P.img(P.card(top[0][2]['c'])['th']['day'], '') if (P.card(top[0][2]['c']).get('th') or {}).get('day') else None),
       P.s_text('Коротко', 'Что в этой подборке', '%d моделей, которые лежат на складе %s и готовы к отгрузке в день оплаты. Цены — по действующему прайс-листу; на объём и на комплект действуют декабрьские условия.' % (len(top), loc),
                boxes=[('Сразу со склада', 'Не нужно ждать производства: срок — только доставка.', '1'), ('Проверенные модели', 'Серийные изделия собственного производства, гарантия завода.', '2'), ('Условия декабря', 'Специальная цена на партию — уточняйте у менеджера.', '3')])]
+PRICES = []
 for m, a, e in top:
     vs = ', '.join('%s — %d шт.' % (short(c), q) for c, q in a['v'].most_common(3))
-    sl.append(P.s_model(e['c'], stock='На складе %s: <b>%d шт.</b><br>%s' % (loc, a['q'], P.esc(vs))))
+    ch0 = a['v'].most_common(1)[0][0]; row, how = PC.find(PR, m, ch0); col = PC.REG.get(city, 'I'); pv = row and row['pr'].get(col)
+    ex = ', '.join(x for x in (row['spec'] if row else []) if x)[:60]
+    lab = 'колонка %s прайс-листа 28.10.2026 (%s), с НДС · %s' % (col, city, ('за исполнение со склада: ' + short(ch0)) if how == 'исполнение' else 'базовое исполнение по прайсу — точную цену исполнения со склада назовёт менеджер') if pv else ''
+    PRICES.append((m, ch0, col, pv, how, ex))
+    sl.append(P.s_model(e['c'], stock='На складе %s: <b>%d шт.</b><br>%s' % (loc, a['q'], P.esc(vs)), price=(pv, lab) if pv else None, show_price=bool(pv)))
 sl.append(P.s_text('Как заказать', 'Отгрузим в день оплаты', bullets=['Выберите модели и количество — менеджер подтвердит наличие и исполнение.', 'Специальная цена декабря действует на партию и на комплект из нескольких моделей.', 'Доставка транспортной компанией или самовывоз со склада %s.' % loc, 'Телефон +7 000 000-00-14, сайт fabrikant.su.'],
-                   small='Наличие указано на 24.11.2026 и меняется каждый день. Цены — по прайс-листу от 28.10.2026, с НДС.'))
+                   small='Наличие указано на 24.11.2026 и меняется каждый день. Цены — по прайс-листу от 28.10.2026, колонка %s (базис отгрузки %s), с НДС.' % (PC.REG.get(city, 'I'), city)))
 print(P.build('Со_склада_%s_декабрь_2026' % city.replace(' ', '_'), sl), len(sl), 'слайдов;', [(m, a['q']) for m, a, e in top])
+
+pathlib.Path('/home/claude/fabrika/work/prez/out/_prices_%s.json' % city.replace(' ', '_')).write_text(json.dumps(PRICES, ensure_ascii=False, indent=1), encoding='utf-8')
