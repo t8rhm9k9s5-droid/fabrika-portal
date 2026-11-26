@@ -266,6 +266,21 @@ def img(p):
     return k
 
 
+LIVEN = '/home/claude/build/live_mirror/fsu/n'   # 26.11.2026: копия действующего «Сайта» (tools/live_mirror.py)
+def _live(c):
+    try: return _rj(os.path.join(LIVEN, 'd', 'p', c + '.json'))
+    except Exception: return None
+def _keep(k):   # снимок действующего портала в out/ (как img(), только из копии)
+    if k in used: return True
+    src = [(os.path.join(LIVEN, 'i', k + '.webp'), os.path.join(N, 'i', k + '.webp')), (os.path.join(LIVEN, 'i', 'm', k + '.webp'), os.path.join(N, 'i', 'm', k + '.webp')),
+           (os.path.join(LIVEN, 'i', 't', k + '.webp'), os.path.join(N, 'i', 't', k + '.webp'))]
+    if not all(os.path.exists(a) for a, _ in src): return False
+    for a, b in src:
+        try: os.link(a, b)
+        except OSError: shutil.copy2(a, b)
+    used.add(k); return True
+
+
 idx = []; cards = {}
 for it in ITEMS:
     c = it['code']; d = PAGE.get(c, {}); it['_nm'] = clean(it['name']).lower(); iid = int(it['id'])
@@ -290,6 +305,18 @@ for it in ITEMS:
     sub = subs[0] if subs else ('drugie' if G[3] else '')
     gl = [{'k': img(x['p']), 'ai': x['ai'], 't': x['k']} for x in gal[c]]; gl = [x for x in gl if x['k']]
     lit = {x['t']: x['k'] for x in gl if x['t'] in LITK}; cvs = {x['t'][3:]: x['k'] for x in gl if x['t'].startswith('cv:')}; gl = [x for x in gl if x['t'] not in LITK and not x['t'].startswith('cv:')]
+    # 26.11.2026 (полная сборка): исходники ИИ-кадров и интерьеров после перезапуска облака 25.11 утеряны — карточка действующего портала
+    #   (копия build/live_mirror) — основа: её снимки, кадры тем и цвета сохраняются как есть, новые местные фото добавляются в конец
+    LV = _live(c)
+    if LV:
+        _loc = gl; _have = set(); gl = []
+        for x in (LV.get('ph') or []) + (LV.get('in') or []):
+            if x.get('k') and x['k'] not in _have and _keep(x['k']): gl.append(dict(x)); _have.add(x['k'])
+        gl += [x for x in _loc if x['k'] not in _have]
+        for t, k in (LV.get('th') or {}).items():
+            if k and _keep(k): lit[t] = k
+        for t, k in (LV.get('cv') or {}).items():
+            if t not in cvs and k and _keep(k): cvs[t] = k
     photos = [x for x in gl if x['t'] not in ('interior', 'info')]; inter = [x for x in gl if x['t'] == 'interior']; infg = [x for x in gl if x['t'] == 'info']
     h = [num(d.get('heightMin')) or None, num(d.get('heightMax')) or None]
     w = num(d.get('widthMax')) or num(d.get('widthMin')); dp = num(d.get('depthMax')) or num(d.get('depthMin'))

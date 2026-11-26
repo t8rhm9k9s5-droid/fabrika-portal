@@ -738,8 +738,8 @@
         var b = el('div', 'igroup pai'), r = irow('button', ICON.ai, 'var(--ic-map)', 'Спросить помощника', 'Enter'); r.type = 'button';
         r.querySelector('.ititle').textContent = 'Спросить помощника: «' + inp.value.trim().slice(0, 60) + '»';
         var out = el('div', 'pai-a'); out.hidden = true; b.appendChild(r);
-        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник11 (пользователь: «Берем Gemini и Сотрудник11 в дополнение к ChatGPT в раздел поиска»)
-        // 02.11.2026, замечания Т. В.: «Удали Сотрудник11 из поиска и ИИ-интеграций портала» (Сотрудник11 Имя4 и Сотрудник11 Сотрудник27 не трогаем)
+        // 28.10.2026: кого спросить — ChatGPT, Gemini или Сотрудник12 (пользователь: «Берем Gemini и Сотрудник12 в дополнение к ChatGPT в раздел поиска»)
+        // 02.11.2026, замечания Т. В.: «Удали Сотрудник12 из поиска и ИИ-интеграций портала» (Сотрудник12 Имя4 и Сотрудник12 Сотрудник28 не трогаем)
         // 15.11.2026 ~20:00, Т. В.: «Gemini выключай, если он не работает» — не работает: модели Gemini 2.5 закрыты для ключа (404), 3.x — 429 без
         //   оплаченной квоты (проверка 12.11, SnabGpt). Кнопка убрана; сохранённый выбор gemini сбрасывается на «Авто» (проверка ниже).
         var AIS = [['', 'Авто'], ['gpt', 'ChatGPT']], prov = '';
@@ -778,7 +778,7 @@
           // 30.10.2026, скрин пользователя: «Помощник не ответил — Gemini (503): This model is currently experiencing high demand…».
           //   Выбранный помощник перегружен (429/500/502/503/504/529, «high demand», «overloaded») — один раз спрашиваем «Авто» (сервер берёт следующего
           //   подключённого) и пишем, кто ответил; если не ответил никто — понятный текст по-русски, Enter — повторить.
-          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник11' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
+          var NAMES = { gpt: 'ChatGPT', gemini: 'Gemini', yandex: 'Сотрудник12' }, busy = function (m) { return /\((?:429|5\d\d)\)|high demand|overload|unavailable|rate limit|quota|перегруж|не подключ/i.test(String(m || '')); };
           var ask = function (pv) { return A.api('ask', { tok: A.tok(), q: 'Сотрудник4 в поиске портала: ' + qq + '\nОтветь по данным ниже; если это поиск — скажи, в каком разделе это найти.', ctx: ctx.slice(0, 12000), page: 'Поиск', hist: [], prov: pv }); };
           var via = '', my = (go.n = (go.n || 0) + 1);
           // 15.11.2026 ~20:00, Т. В. (видео 19:43): «ChatGPT вообще никакого поиска не делает» — «Помощник думает…» висел без конца: у запроса не было
@@ -1262,7 +1262,7 @@
       }, 250);
     });
   })();
-  // REDACTED_B64_9 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
+  // REDACTED_B64_10 12.11.2026, Т. В.: «на главной внизу слева повтори основное из структуры, и в каждом отделе должны
   //   быть части общей структуры, и где прописан функционал — тоже дублируем». Только тем, кто видит «Структуру» (владелец и А. В.): данные отдаёт бот (op sec).
   //   Главная — блок «Структура» под «Требует внимания»; разделы — «Структура отдела» внизу страницы (люди, телефоны, почта; у продаж — функционал из пакета).
   // 16.11.2026, Т. В.: «структура должна лежать в структуре и больше нигде не нужна» — только раздел «Структура», «Люди» и Главная;
@@ -1392,6 +1392,24 @@
   // 23.11.2026: после закрытия клавиатуры iPhone держит окно коротким — лёгкий «пинок» прокруткой заставляет его пересчитать высоту сразу
   document.addEventListener('focusout', function () { setTimeout(function () { if (window.innerHeight < screen.height * 0.85 && !document.querySelector('input:focus,textarea:focus')) { var y = window.scrollY; window.scrollTo(window.scrollX, y + 1); window.scrollTo(window.scrollX, y); } }, 350); });
   addEventListener('pageshow', kick);   // возврат из фона — сбросить временную геометрию (Рекс, №23)
+  // 26.11.2026: окно короче обычной высоты больше чем на 150 px (клавиатура открыта или iPhone ещё держит окно коротким после неё) — html.vv-short,
+  //   нижнее меню скрыто (portal.css), вместо того чтобы висеть посередине. Обычная высота — наибольшая за время в этой ориентации.
+  var maxIH = 0, orient = '';
+  function shortChk() {
+    var o = (screen.orientation && screen.orientation.type) || (innerWidth > innerHeight ? 'l' : 'p');
+    if (o !== orient) { orient = o; maxIH = 0; }
+    var ih = window.innerHeight; if (ih > maxIH) maxIH = ih;
+    // 26.11.2026 (Т. В., скрин 12:50: «меню то нет, то появилось»): прятать только при открытой клавиатуре — фокус в поле ввода.
+    //   Раньше хватало «окно короче обычного»: в Safari при сворачивании панели и после возврата из фона меню пропадало до следующего resize.
+    var ae = document.activeElement, typing = !!ae && (ae.tagName === 'TEXTAREA' || ae.isContentEditable ||
+      (ae.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color|image|hidden)$/i.test(ae.type || '')));
+    document.documentElement.classList.toggle('vv-short', typing && (maxIH - ih > 150 || (vv.height && ih - vv.height > 120 && (vv.scale || 1) < 1.01)));
+  }
+  addEventListener('resize', shortChk); vv.addEventListener('resize', shortChk); addEventListener('pageshow', shortChk);
+  document.addEventListener('focusin', function () { setTimeout(shortChk, 80); setTimeout(shortChk, 450); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) shortChk(); });
+  document.addEventListener('focusout', function () { setTimeout(shortChk, 150); setTimeout(shortChk, 700); setTimeout(shortChk, 2000); setTimeout(shortChk, 5000); });
+  shortChk();
 })();
 
 // 16.11.2026, Т. В.: «приложение должно имитировать приложение для iPhone — точка входа всегда одна и та же, как будто вышел и зашёл
