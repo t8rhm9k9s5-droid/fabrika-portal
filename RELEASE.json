@@ -1,14 +1,10 @@
 {
- "portal_version": "2.24.5",
- "exported_utc": "2026-11-26T06:06Z",
- "files_sha": "3437b3c177036f88",
+ "portal_version": "2.24.6",
+ "exported_utc": "2026-11-26T06:15Z",
+ "files_sha": "446678f6cb4d721a",
  "files": [
-  "portal/fsu/live_vs_build.py",
-  "portal/prez/deck_sale.py",
-  "portal/prez/deck_stock.py",
-  "portal/pricelist/build_patch_2611a.py",
-  "portal/pricelist/build_patch_2611b.py",
-  "portal/pricelist/legend_doc.py",
-  "portal/pricelist/price_cols.py"
+  "portal/assets/acct.js",
+  "portal/assets/portal.css",
+  "portal/assets/site.js"
  ]
 }
