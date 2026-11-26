@@ -38,7 +38,7 @@ def _free(F, path):
     """свободное имя: занято — « (2)», « (3)» … перед расширением"""
     if not _exists(F, path): return path
     b, e = posixpath.splitext(path)
-    for i in range(2, 100):
+    for i in range(2, 1000):
         q = '%s (%d)%s' % (b, i, e)
         if not _exists(F, q): return q
     raise RuntimeError('нет свободного имени')
@@ -67,7 +67,7 @@ def shrink_image(raw, ext, side=SIDE, limit=BIG):
         j = _nef_jpeg(raw)
         if not j: return None
         raw = j
-    im = Image.open(io.BytesIO(raw))
+    im = Image.open(raw if hasattr(raw, 'read') else io.BytesIO(raw))
     try: im.draft('RGB', (side, side))                            # JPEG: декодировать сразу уменьшенным — меньше памяти и процессора
     except Exception: pass
     im.load()
@@ -82,6 +82,13 @@ def shrink_image(raw, ext, side=SIDE, limit=BIG):
     im.thumbnail((side * 3 // 4, side * 3 // 4), Image.LANCZOS)
     b = io.BytesIO(); im.save(b, 'JPEG', quality=80, optimize=True, progressive=True)
     return b.getvalue() if b.tell() <= limit else None
+
+
+def shrink_image_file(path, ext, side=SIDE, limit=BIG):
+    """то же, что shrink_image, но с диска: PNG/TIFF/PSD открываются из файла (без второй копии в памяти), NEF читается целиком (~25 МБ)"""
+    if ext == '.nef':
+        with open(path, 'rb') as f: return shrink_image(f.read(), ext, side, limit)
+    with open(path, 'rb') as f: return shrink_image(f, ext, side, limit)
 
 
 def _video(src, dst):
@@ -132,12 +139,18 @@ def _pil(st, log):
         return False
 
 
+def _skip(e):
+    """ошибка навсегда: «не трогаю» или 3 сбоя подряд; старые записи-строки (до 26.11) — повторить"""
+    return isinstance(e, dict) and (e.get('perm') or e.get('n', 0) >= 3)
+
+
 def run(F, items, L, log, jload, jsave, t):
     st = jload('ftp_shrink.json', {}) or {}
     done = st.get('done') or {}; err = st.get('err') or {}
     if st.get('off'): return {'state': 'выключено'}
     pil = _pil(st, log)
-    todo = [i for i in items if not i.get('d') and i.get('s', 0) > BIG and not i['p'].startswith(DEST + '/') and i['p'] not in done]
+    todo = [i for i in items if not i.get('d') and i.get('s', 0) > BIG and not i['p'].startswith(DEST + '/') and i['p'] not in done
+            and os.path.splitext(i['p'])[1].lower() in IMG | MOVE | VIDEO and not _skip(err.get(i['p']))]
     t0, n_img, n_mv, made = time.time(), 0, 0, set()
     tmpd = os.path.join(L, 'tmp_shrink'); os.makedirs(tmpd, exist_ok=True)
     for it in sorted(todo, key=lambda x: (os.path.splitext(x['p'])[1].lower() in IMG | VIDEO, x['p'])):   # сначала быстрые переносы
@@ -147,43 +160,59 @@ def run(F, items, L, log, jload, jsave, t):
         if ext in IMG | VIDEO and (n_img >= SHR_PER_RUN or (ext in IMG and not pil)): continue
         try:
             out = None
-            if ext in IMG and it['s'] > IMG_MAX: ext_conv = False
-            else: ext_conv = True
-            if ext in IMG | VIDEO and ext_conv:
+            if ext in IMG and it['s'] > IMG_MAX: raise RuntimeError('крупнее %d МБ — не трогаю (память тарифа)' % (IMG_MAX // 2 ** 20))
+            if ext in IMG | VIDEO:
                 tf = os.path.join(tmpd, 'src' + ext)
                 with open(tf, 'wb') as f: F.retrbinary('RETR ' + p, f.write)
-                if ext in IMG:
-                    with open(tf, 'rb') as f: out = shrink_image(f.read(), ext)
-                    if out is None: raise RuntimeError('не ужалось до 3 МБ')
-                else:
-                    vo = os.path.join(tmpd, 'out.mp4')
-                    if _video(tf, vo):
-                        with open(vo, 'rb') as f: out = f.read()
-                    try: os.remove(vo)
+                try:
+                    if ext in IMG:
+                        out = shrink_image_file(tf, ext)
+                        if out is None: raise RuntimeError('не ужалось до 3 МБ')
+                    else:
+                        vo = os.path.join(tmpd, 'out.mp4')
+                        if _video(tf, vo):
+                            with open(vo, 'rb') as f: out = f.read()
+                        try: os.remove(vo)
+                        except Exception: pass
+                        if out is None: raise RuntimeError('видео не пережато (нет ffmpeg или не стало меньше) — не трогаю')
+                finally:
+                    try: os.remove(tf)
                     except Exception: pass
-                try: os.remove(tf)
-                except Exception: pass
                 n_img += 1
             _ensure_dir(F, posixpath.dirname(dst), made)
             dst = _free(F, dst)
-            F.rename(p, dst)                                      # оригинал — в «Большие файлы» (переименование внутри FTP, мгновенно)
             rec = {'to': dst, 's': it['s'], 't': t}
             if out is not None:
-                base = posixpath.splitext(p)[0]
-                newp = base + ('.mp4' if ext in VIDEO else '.jpg')
-                if _exists(F, newp): newp = _free(F, base + ' (сжато)' + ('.mp4' if ext in VIDEO else '.jpg'))
-                F.storbinary('STOR ' + newp, io.BytesIO(out))
+                newp = posixpath.splitext(p)[0] + ('.mp4' if ext in VIDEO else '.jpg')
+                if newp != p and _exists(F, newp): newp = _free(F, posixpath.splitext(p)[0] + ' (сжато)' + ('.mp4' if ext in VIDEO else '.jpg'))
+                if newp == p:                                     # то же имя (тяжёлый .jpg): копия под временным именем → оригинал в «Большие файлы» → копию на место
+                    tp = p + '.shrinkpart'
+                    F.storbinary('STOR ' + tp, io.BytesIO(out))
+                    F.rename(p, dst)
+                    try: F.rename(tp, p)
+                    except Exception:
+                        try: F.rename(dst, p)
+                        except Exception: pass
+                        raise
+                else:                                             # 26.11.2026 (ревью GPT): сначала копия на месте, потом перенос оригинала
+                    F.storbinary('STOR ' + newp, io.BytesIO(out))
+                    F.rename(p, dst)
                 rec.update({'new': newp, 'ns': len(out)})
-            else: n_mv += 1
+            else:
+                F.rename(p, dst); n_mv += 1                       # ZIP, .tmp — переносом
             done[p] = rec; err.pop(p, None)
-        except Exception as e:
-            err[p] = '%s: %s' % (e.__class__.__name__, str(e)[:100]); log('  FTP ужатие:', p[-70:], err[p])
+        except Exception as e:                                    # RuntimeError — решение «не трогаю»; сбой связи — повтор, не больше 3 раз
+            o = err.get(p) if isinstance(err.get(p), dict) else {}
+            err[p] = {'e': '%s: %s' % (e.__class__.__name__, str(e)[:100]), 'n': o.get('n', 0) + 1, 'perm': isinstance(e, RuntimeError), 't': t}
+            log('  FTP ужатие:', p[-70:], err[p]['e'])
     try: shutil.rmtree(tmpd)
     except Exception: pass
-    left = len([i for i in todo if i['p'] not in done and i['p'] not in err and os.path.splitext(i['p'])[1].lower() in IMG | MOVE | VIDEO])
+    left = len([i for i in todo if i['p'] not in done and not _skip(err.get(i['p'])) and os.path.splitext(i['p'])[1].lower() in IMG | MOVE | VIDEO])
+    if len(done) > 4000: done = dict(sorted(done.items(), key=lambda kv: kv[1].get('t') or '')[-4000:])
+    if len(err) > 2000: err = dict(list(err.items())[-2000:])
     st.update({'done': done, 'err': err, 't': t, 'left': left, 'pil': pil, 'ffmpeg': bool(shutil.which('ffmpeg'))})
     if not left and not st.get('fin'): st['fin'] = t
     jsave('ftp_shrink.json', st)
     saved = sum(r['s'] - r.get('ns', 0) for r in done.values() if r.get('new'))
-    return {'state': 'готово' if not left else 'идёт', 'done': len(done), 'left': left, 'errors': len(err), 'pil': pil,
+    return {'state': 'готово' if not left else 'идёт', 'done': len(done), 'left': left, 'errors': len([e for e in err.values() if _skip(e)]), 'pil': pil,
             'pip': (st.get('pip') or '')[:160], 'moved_gb': round(sum(r['s'] for r in done.values()) / 2 ** 30, 2), 'saved_gb': round(saved / 2 ** 30, 2), 'fin': st.get('fin')}

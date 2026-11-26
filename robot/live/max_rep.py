@@ -90,8 +90,10 @@ _MON = {'январ': 1, 'феврал': 2, 'март': 3, 'апрел': 4, 'м�
 _SEC = re.compile(r'^\s*(звон\w*|визит\w*|встреч\w*|результативн\w*.*)\s*:?\s*$', re.I)
 _ROW = re.compile(r'^\s*(\d{1,2})[.)]?\s*(.+)$')
 _HDR = re.compile(r'^\s*\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\b|^\s*\d{1,2}\s*[-–]\s*\d{1,2}\.\d{1,2}')
-_SUM = re.compile(r'(?:сумм\w*|сч\w*|счет\w*|счёт\w*|на|оплат\w*)\s*(?:на\s*)?(\d[\d  ]{2,}(?:[.,]\d+)?)\s*(?:т\b|тыс)?', re.I)
+_SUM = re.compile(r'(?:сумм\w*|сч\w*|счет\w*|счёт\w*|оплат\w*)\s*(?:на\s*)?(\d[\d   ]{2,}(?:[.,]\d+)?)\s*(?:т\b|тыс)?', re.I)
 _CUT = re.compile(r'\s+(?:[—–-]\s+|запрос\w*|отгрузк\w*|потребност\w*|тендер\w*|выиграл\w*|проигра\w*|контрольн\w*|сч\b|счет\w*|счёт\w*|вопрос\w*|данные|пришла|приехал\w*|ищет|когда|предостав\w*|заказ\w*|ранее|обратн\w*|согласова\w*|поступил\w*|был\b|взял\b|ждем|ждём|направ\w*|выход\w*|приш\w*)', re.I)
+
+_OFC = {'нн': 'Н.Новгород', 'ннов': 'Н.Новгород', 'нновгород': 'Н.Новгород', 'нижний': 'Н.Новгород', 'нижнийновгород': 'Н.Новгород'}
 
 
 def _free_report(t, d):
@@ -102,9 +104,9 @@ def _free_report(t, d):
     om = re.search(r'\bОП\s+([А-ЯЁ][\w.\-]*)', lines[0]) or re.search(r'\bОП\s+([А-ЯЁ][\w.\-]*)', head)
     secs = sum(1 for x in lines if _SEC.match(x))
     rows_raw = [x for x in lines if _ROW.match(x) and not _HDR.match(x)]
-    if len(rows_raw) < 3 or not (om or secs): return None
-    day = ''
     dm = re.search(r'(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?', head)
+    if len(rows_raw) < 3 or not (om or secs >= 2 or (secs and dm)): return None   # 26.11 ревью: одной строки «звонки» мало
+    day = ''
     if dm: day = _day(dm.group(1), dm.group(2), d)
     else:
         mm = re.search(r'(\d{1,2})\s+([а-яё]+)', head.lower())
@@ -122,12 +124,13 @@ def _free_report(t, d):
         client = (body[:c.start()] if c and 1 < c.start() <= 45 else ' '.join(body.split()[:3])).strip(' .,—–-')[:80]
         sm = list(_SUM.finditer(body)); val = _num(sm[-1].group(1)) if sm else None
         if val is None:                                       # «Клименко - 379 600 (счет оплатили)»
-            nums = [_num(n) for n in re.findall(r'(?<![\d.])(\d{1,3}(?:[  ]\d{3})+|\d{4,})(?![\d.]|\s*шт)', body)]
+            nums = [_num(n) for n in re.findall(r'(?<![\d.])(\d{1,3}(?:[   ]\d{3})+|\d{4,})(?![\d.]|\s*шт)', body)]
             nums = [n for n in nums if n and n >= 1000]; val = nums[-1] if nums else None
-        if val is not None and val < 1000 and re.search(r'\d\s*т\b|тыс', body[sm[-1].start():]): val *= 1000
+        if val is not None and val < 1000 and sm and re.search(r'\d\s*т\b|тыс', body[sm[-1].start():]): val *= 1000
         rows.append({'client': client, 'did': body[len(client):].strip(' .,—–-')[:200] or body[:200], 'when': day[8:10] + '.' + day[5:7], 'next': '',
                      'sum': val, 'kind': sec})
-    office = om.group(1).strip() if om else ''
+    office = om.group(1).strip(' .') if om else ''
+    office = _OFC.get(office.lower().replace('.', '').replace(' ', ''), office)   # «НН», «Н.Новгород» → одно имя
     return {'day': day, 'office': office, 'rows': rows, 'raw': '', 'free': 1}
 
 def extract(groups, MC):

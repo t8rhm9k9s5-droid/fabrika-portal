@@ -217,7 +217,7 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
             shr = FX.run(F, items, L, log, jload, jsave, t)
         except Exception as e2:
             shr = {'state': 'ошибка: %s' % (str(e2)[:120] or e2.__class__.__name__)}
-        st['shr_left'] = shr.get('left') or 0
+        st['shr_left'] = shr.get('left', st.get('shr_left') or 0)   # при сбое — прежнее значение
         try: F.quit()
         except Exception: pass
     except Exception as e:
