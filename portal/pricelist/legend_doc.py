@@ -1,7 +1,7 @@
 # «Легенда прайс-листа 28.10.2026» — справочник для сотрудников: базисы и колонки цен, колонки листа, сокращения, доплаты; дополнено по Excel-файлу прайса. 26.11.2026
-import sys, json, collections
+import sys, json, collections, pathlib
 sys.path.insert(0, '/home/claude/fabrika/work/prez'); import prez as P
-R = json.load(open('/home/claude/fabrika/work/pricelist/price_2810.json', encoding='utf-8'))
+R = json.loads(pathlib.Path('/home/claude/fabrika/work/pricelist/price_2810.json').read_text(encoding='utf-8'))
 same = collections.Counter(r['model'].strip() for r in R if len({r['pr'][c] for c in ('I', 'II', 'III', 'IV')} - {None}) == 1)
 F = collections.OrderedDict()
 for r in R: F.setdefault(r['sheet'], list(r['f'].keys()))
@@ -63,7 +63,7 @@ td{border-bottom:.5pt solid #ddd;padding:1.6mm 2mm;vertical-align:top}tr{break-i
 body = '<div class="kick">Справочник · ГК «Фабрикант»</div><h1>Легенда прайс-листа от 28.10.2026</h1><p class="lead">Что означает каждая колонка, базисы отгрузки I–V, сокращения и доплаты. Составлено по легенде прайс-листа и Excel-файлу прайса; дополнения портала отмечены.</p>' + ''.join('<h2>%s</h2>%s' % (e(t), h) for t, h in S)
 html = '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Легенда прайс-листа 28.10.2026</title><style>%s</style></head><body>%s</body></html>' % (css, body)
 out = 'REDACTED_B64_36'
-open(out + '.html', 'w', encoding='utf-8').write(html)
+pathlib.Path(out + '.html').write_text(html, encoding='utf-8')
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(); pg.set_content(html, wait_until='load'); pg.pdf(path=out + '.pdf', format='A4', print_background=True, margin={'top': '16mm', 'bottom': '16mm', 'left': '15mm', 'right': '15mm'}); b.close()

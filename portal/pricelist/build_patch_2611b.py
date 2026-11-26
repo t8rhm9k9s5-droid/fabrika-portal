@@ -28,15 +28,15 @@ NEW = [  # (номер-группа, cat, путь, источник, title, dat
   'Прислал А. Сотрудник43 (рекламации) 20.11.2026 по запросу портала; Т. В.: «для прайс-листа»')]
 for rel, src in rep.items(): (P / rel).parent.mkdir(parents=True, exist_ok=True); shutil.copy2(src, P / rel)
 for _, _, rel, src, *_ in NEW: (P / rel).parent.mkdir(parents=True, exist_ok=True); shutil.copy2(src, P / rel)
-sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
-lib = open(M + '/library.html', encoding='utf-8').read(); m = re.search(r'(<script id="lib-data" type="application/json">)(.*?)(</script>)', lib, re.S)
+sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+lib = pathlib.Path(M + '/library.html').read_text(encoding='utf-8'); m = re.search(r'(<script id="lib-data" type="application/json">)(.*?)(</script>)', lib, re.S)
 d = json.loads(m.group(2)); have = {i['file']: i for i in d['items']}
 for rel, src in rep.items():
     it = have[rel]; it['bytes'] = os.path.getsize(src); it['sha256'] = sha(src)
     if 'rasprodazha' in rel: it['source'] = re.sub(r'; (рядом с ценой распродажи|в таблице цен)[^;]*', '', it['source']).rstrip('.') + '; в таблице цен: цена прайс-листа 28.10.2026 по колонке базиса (зачёркнута), цена распродажи и скидка в % (26.11.2026)'
     else: it['pages'] = pymupdf.open(src).page_count; it['source'] = it['source'].split('; 26.11 дополнено')[0] + '; 26.11 дополнено: опора против опрокидывания (предписания №124, №265)'
-NUMF = '/home/claude/build/doc_numbers.json'; num = json.load(open(NUMF)); base = num['next']; nums = {}
-S = json.load(open(M + '/assets/search.json', encoding='utf-8'))
+NUMF = '/home/claude/build/doc_numbers.json'; num = json.loads(pathlib.Path(NUMF).read_text()); base = num['next']; nums = {}
+S = json.loads(pathlib.Path(M + '/assets/search.json').read_text(encoding='utf-8'))
 for g, cat, rel, src, title, date, source in NEW:
     no = nums.setdefault(g, 'ФАБ-%04d' % (base + len(nums)))
     it = {'cat': cat, 'title': title, 'file': rel, 'bytes': os.path.getsize(src), 'date': date, 'source': source, 'sha256': sha(src), 'received': T, 'number': no}
@@ -46,5 +46,5 @@ for g, cat, rel, src, title, date, source in NEW:
 j = json.dumps(d, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 (P / 'library.html').write_text(lib[:m.start(2)] + j + lib[m.end(2):], encoding='utf-8')
 (P / 'assets').mkdir(exist_ok=True); (P / 'assets' / 'search.json').write_text(json.dumps(S, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-num['next'] = base + len(nums); json.dump(num, open(NUMF, 'w'))
+num['next'] = base + len(nums); pathlib.Path(NUMF).write_text(json.dumps(num))
 print('номера:', nums, '· файлов:', sum(1 for _ in P.rglob('*') if _.is_file()))

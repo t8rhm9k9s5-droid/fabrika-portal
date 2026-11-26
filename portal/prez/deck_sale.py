@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Презентация распродажи склада офиса продаж по списку, согласованному Т. В. (списки Сотрудник8 М. И. от 16.11.2026: work/rasprodazha/traush_lists.json).
   python3 deck_sale.py Самара|Краснодар|Екатеринбург    Цены — из списка: «Цена» и, где есть, «Цена со скидкой»."""
-import sys, json, re, collections
+import sys, json, re, collections, pathlib
 sys.path.insert(0, '/home/claude/fabrika/work/prez'); import prez as P
 sys.path.insert(0, '/home/claude/fabrika/work/pricelist'); import price_cols as PC
-PR = json.load(open('/home/claude/fabrika/work/pricelist/price_2810.json', encoding='utf-8')); COLR = PC.REG[sys.argv[1]]
+PR = json.loads(pathlib.Path('/home/claude/fabrika/work/pricelist/price_2810.json').read_text(encoding='utf-8')); COLR = PC.REG[sys.argv[1]]
 reg = sys.argv[1]; L = json.load(open('/home/claude/fabrika/work/rasprodazha/traush_lists.json'))[reg]
 def nk(s): return re.sub(r'\s+', ' ', re.sub(r'[^a-zа-я0-9+ ]+', ' ', str(s).lower().replace('ё', 'е'))).strip()
 STOP = {'кресло', 'стул', 'box2', 'box4', 'box5', 'new', 'диван', 'табурет', 'х', 'мест', 'полубар', 'бар'}

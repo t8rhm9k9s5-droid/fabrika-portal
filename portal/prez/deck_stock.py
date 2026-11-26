@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Презентация «Со склада» по застойным остаткам одного склада: python3 deck_stock.py "Рязань" [N моделей]   (данные — work/rasprodazha/out_stale.json)"""
-import sys, json, re, collections
+import sys, json, re, collections, pathlib
 sys.path.insert(0, '/home/claude/fabrika/work/pricelist'); import price_cols as PC
-PR = json.load(open('/home/claude/fabrika/work/pricelist/price_2810.json', encoding='utf-8'))
+PR = json.loads(pathlib.Path('/home/claude/fabrika/work/pricelist/price_2810.json').read_text(encoding='utf-8'))
 sys.path.insert(0, '/home/claude/fabrika/work/prez'); import prez as P
 reg = sys.argv[1]; N = int(sys.argv[2]) if len(sys.argv) > 2 else 12
 R = [r for r in json.load(open('/home/claude/fabrika/work/rasprodazha/out_stale.json')) if r['reg'] == reg and r['st'] in ('2мес', '1мес') and not re.search('выставк|маркетплейс', r['wh'], re.I)]
@@ -41,4 +41,4 @@ sl.append(P.s_text('Как заказать', 'Отгрузим в день оп
                    small='Наличие указано на 24.11.2026 и меняется каждый день. Цены — по прайс-листу от 28.10.2026, колонка %s (базис отгрузки %s), с НДС.' % (PC.REG.get(city, 'I'), city)))
 print(P.build('Со_склада_%s_декабрь_2026' % city.replace(' ', '_'), sl), len(sl), 'слайдов;', [(m, a['q']) for m, a, e in top])
 
-json.dump(PRICES, open('/home/claude/fabrika/work/prez/out/_prices_%s.json' % city.replace(' ', '_'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+pathlib.Path('/home/claude/fabrika/work/prez/out/_prices_%s.json' % city.replace(' ', '_')).write_text(json.dumps(PRICES, ensure_ascii=False, indent=1), encoding='utf-8')

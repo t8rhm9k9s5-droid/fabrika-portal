@@ -1,12 +1,12 @@
 # Прайс-лист 28.10.2026 по колонкам базисов отгрузки (легенда, стр. 3 PDF): I — Рязань, Москва; II — Краснодар, Сотрудник14 Имя3; III — Самара; IV — Екатеринбург; V — Крым. Цены с НДС. 26.11.2026
-import re, json, pandas as pd
+import re, json, pandas as pd, pathlib, math
 XL = '/home/claude/fabrika/src/Исходники/library/raw/prices/prais_2026-10-28.xlsx'
 REG = {'Рязань': 'I', 'Москва': 'I', 'Краснодар': 'II', 'Сотрудник14 Имя3': 'II', 'Самара': 'III', 'Екатеринбург': 'IV', 'Симферополь': 'V', 'Крым': 'V'}
 SPEC = ['Обивка', 'Цвет каркаса', 'Механизм', 'Подлокотники', 'Опора', 'Ролики', 'Доп. свойства']
 def num(v):
     try: x = float(str(v).replace(' ', '').replace(',', '.'))
     except ValueError: return None
-    return x if x == x and x > 0 else None          # NaN и нули — нет цены
+    return x if not math.isnan(x) and x > 0 else None          # NaN и нули — нет цены
 def clean(v): s = str(v).strip(); return '' if s in ('nan', '-', '—', '') else s
 CANON = ['обивка', 'цвет каркаса', 'механизм', 'подлокотники', 'опора', 'ролики', 'доп. свойства']
 def load():
@@ -48,7 +48,7 @@ def find(rows, model, ch=''):
     best = max(cand, key=lambda r: (score(r, ch), -(r['pr']['I'] or 1e9)))
     return best, ('исполнение' if score(best, ch) >= 4 or (len(cand) == 1 and score(best, ch) >= 2) else 'базовое')
 if __name__ == '__main__':
-    R = load(); json.dump(R, open('/home/claude/fabrika/work/pricelist/price_2810.json', 'w', encoding='utf-8'), ensure_ascii=False)
+    R = load(); pathlib.Path('/home/claude/fabrika/work/pricelist/price_2810.json').write_text(json.dumps(R, ensure_ascii=False), encoding='utf-8')
     same = [r for r in R if len({r['pr'][c] for c in ('I', 'II', 'III', 'IV')} - {None}) == 1]
     nonds = sum(1 for r in R if r['nonds'])
     print('строк прайса', len(R), '· по листам', dict(__import__('collections').Counter(r['sheet'] for r in R)), '· «без НДС» заполнена в', nonds, '· одинаковая цена в I–IV:', len(same), '· во всех I–V:', sum(1 for r in R if len(set(r['pr'].values()) - {None}) == 1))

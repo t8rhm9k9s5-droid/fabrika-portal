@@ -1,13 +1,11 @@
 {
  "portal_version": "2.24.5",
- "exported_utc": "2026-11-26T06:02Z",
- "files_sha": "72edc692e4544076",
+ "exported_utc": "2026-11-26T06:06Z",
+ "files_sha": "3437b3c177036f88",
  "files": [
-  "bots/telegram/Код.gs.js",
   "portal/fsu/live_vs_build.py",
   "portal/prez/deck_sale.py",
   "portal/prez/deck_stock.py",
-  "portal/prez/prez.py",
   "portal/pricelist/build_patch_2611a.py",
   "portal/pricelist/build_patch_2611b.py",
   "portal/pricelist/legend_doc.py",
