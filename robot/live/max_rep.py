@@ -4,7 +4,7 @@
 # Бот — администратор групп, GET /messages отдаёт их сообщения. История каждой группы — ~/.fabrika_max/rep_<cid>.json (телефоны → [тел.]),
 # дочитывается назад до SINCE не больше MAX_CALLS запросов за прогон. Из неё — отчёты → st/maxrep.bin (шифр, ключ портала):
 #   visits   — вечерние отчёты менеджеров (ответы на «📊 Вечерний отчёт»): клиент — что сделано — дата — срок — сумма;
-#   out      — машины, уехавшие с погрузки (Сотрудник26: «DD.MM уехало N машин»);
+#   out      — машины, уехавшие с погрузки (Сотрудник27: «DD.MM уехало N машин»);
 #   inbound  — машины поставщиков на территорию (Сотрудник11: «Машины на завтра — …»);
 #   supply   — поставки за день (итог бота «Снабжение — итог за …»): документы, поставщики, сумма;
 #   absent   — отсутствующие по участкам (итог бота «Отсутствующие за …»);
@@ -85,11 +85,56 @@ def _num(s):
     except ValueError: return None
 
 
+
+_MON = {'январ': 1, 'феврал': 2, 'март': 3, 'апрел': 4, 'ма': 5, 'июн': 6, 'июл': 7, 'август': 8, 'сентябр': 9, 'октябр': 10, 'ноябр': 11, 'декабр': 12}
+_SEC = re.compile(r'^\s*(звон\w*|визит\w*|встреч\w*|результативн\w*.*)\s*:?\s*$', re.I)
+_ROW = re.compile(r'^\s*(\d{1,2})[.)]?\s*(.+)$')
+_HDR = re.compile(r'^\s*\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\b|^\s*\d{1,2}\s*[-–]\s*\d{1,2}\.\d{1,2}')
+_SUM = re.compile(r'(?:сумм\w*|сч\w*|счет\w*|счёт\w*|на|оплат\w*)\s*(?:на\s*)?(\d[\d  ]{2,}(?:[.,]\d+)?)\s*(?:т\b|тыс)?', re.I)
+_CUT = re.compile(r'\s+(?:[—–-]\s+|запрос\w*|отгрузк\w*|потребност\w*|тендер\w*|выиграл\w*|проигра\w*|контрольн\w*|сч\b|счет\w*|счёт\w*|вопрос\w*|данные|пришла|приехал\w*|ищет|когда|предостав\w*|заказ\w*|ранее|обратн\w*|согласова\w*|поступил\w*|был\b|взял\b|ждем|ждём|направ\w*|выход\w*|приш\w*)', re.I)
+
+
+def _free_report(t, d):
+    """вечерний отчёт офиса свободным текстом → {'day', 'office', 'rows', 'raw'} или None"""
+    lines = [x.strip() for x in t.split('\n') if x.strip()]
+    if len(lines) < 4: return None
+    head = ' '.join(lines[:2])
+    om = re.search(r'\bОП\s+([А-ЯЁ][\w.\-]*)', lines[0]) or re.search(r'\bОП\s+([А-ЯЁ][\w.\-]*)', head)
+    secs = sum(1 for x in lines if _SEC.match(x))
+    rows_raw = [x for x in lines if _ROW.match(x) and not _HDR.match(x)]
+    if len(rows_raw) < 3 or not (om or secs): return None
+    day = ''
+    dm = re.search(r'(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?', head)
+    if dm: day = _day(dm.group(1), dm.group(2), d)
+    else:
+        mm = re.search(r'(\d{1,2})\s+([а-яё]+)', head.lower())
+        if mm:
+            mon = next((v for k, v in _MON.items() if mm.group(2).startswith(k)), None)
+            if mon: day = _day(mm.group(1), mon, d)
+    if not day: day = d.date().isoformat()
+    sec, rows = '', []
+    for x in lines:
+        if _SEC.match(x): sec = _SEC.match(x).group(1).lower()[:12]; continue
+        r = _ROW.match(x)
+        if not r or _HDR.match(x): continue
+        body = r.group(2).strip(' .')
+        c = _CUT.search(body)
+        client = (body[:c.start()] if c and 1 < c.start() <= 45 else ' '.join(body.split()[:3])).strip(' .,—–-')[:80]
+        sm = list(_SUM.finditer(body)); val = _num(sm[-1].group(1)) if sm else None
+        if val is None:                                       # «Клименко - 379 600 (счет оплатили)»
+            nums = [_num(n) for n in re.findall(r'(?<![\d.])(\d{1,3}(?:[  ]\d{3})+|\d{4,})(?![\d.]|\s*шт)', body)]
+            nums = [n for n in nums if n and n >= 1000]; val = nums[-1] if nums else None
+        if val is not None and val < 1000 and re.search(r'\d\s*т\b|тыс', body[sm[-1].start():]): val *= 1000
+        rows.append({'client': client, 'did': body[len(client):].strip(' .,—–-')[:200] or body[:200], 'when': day[8:10] + '.' + day[5:7], 'next': '',
+                     'sum': val, 'kind': sec})
+    office = om.group(1).strip() if om else ''
+    return {'day': day, 'office': office, 'rows': rows, 'raw': '', 'free': 1}
+
 def extract(groups, MC):
     """groups: {title: [msgs]} → отчёты"""
     R = {'visits': [], 'out': [], 'inbound': [], 'supply': [], 'absent': [], 'money': [], 'objects': [], 'files': []}
     for title, msgs in groups.items():
-        msgs = sorted(msgs, key=lambda m: m['ts']); by = {m['mid']: m for m in msgs}
+        msgs = sorted(msgs, key=lambda m: m['ts']); by = {m['mid']: m for m in msgs}; ofc = {}
         for m in msgs:
             t = m.get('text') or ''; d = _dt(MC, m); who = (m.get('name') or '')[:60]
             # визиты: ответ на «📊 Вечерний отчёт, DD.MM»
@@ -106,6 +151,15 @@ def extract(groups, MC):
                                          'sum': _num(re.sub(r'[^\d\s,.]', '', parts[4])) if len(parts) > 4 else None})
                     R['visits'].append({'day': day, 'who': who, 'g': title, 'rows': rows, 'raw': '' if rows else t[:600]})
                     continue
+            # 26.11.2026 (слот 20:30: с 20.11 отчёты офисов не попадали на портал): менеджеры пишут вечерний отчёт отдельным сообщением,
+            #   не ответом боту: «23.11 ОП Самара / Звонок 1 … / Визит 1 …», «ОП НН 23 ноября 1.…». Признаки: «ОП <город>» или разделы
+            #   «Звонок/Визит/Встреча» и не меньше 3 нумерованных строк. Дата — из заголовка, иначе дата сообщения.
+            if not m.get('bot'):
+                fr = _free_report(t, d)
+                if fr:
+                    if fr['office']: ofc[who] = fr['office']
+                    else: fr['office'] = ofc.get(who, '')
+                    fr.update({'who': who, 'g': title}); R['visits'].append(fr); continue
             if m.get('bot'):
                 sm = re.search(r'Снабжение\s+—\s+итог за\s+\S+\s+(\d{1,2})\.(\d{1,2})', t)
                 if sm:

@@ -33,6 +33,7 @@ shutil.copytree(f'{B}/fonts_www', f'{OUT}/fonts', dirs_exist_ok=True)   # the lo
 # archive: phone copies, fetched when opened and kept for offline use
 h = _cg1_read_file(f'{SITE}/archive.html', encoding='utf-8')
 ARCH = json.loads(re.search(r'<script id="arch-data" type="application/json">(.*?)</script>', h, re.S).group(1))
+os.makedirs(f'{OUT}/archive', exist_ok=True)   # 26.11.2026: после восстановления папки archive в основе может не быть
 for d in ARCH['docs']: shutil.copy(f'{B}/arch_small/{d["file"]}', f'{OUT}/archive/{d["file"]}')
 DOC_FILES = ['archive/' + d['file'] for d in ARCH['docs']]
 # camera photos: relative path with an extension, so the site works from any folder of the server

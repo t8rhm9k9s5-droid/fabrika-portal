@@ -8,16 +8,17 @@
 # Выкладка: архив загружается в www/techfabrikant.ru и распаковывается там; после — python3 host_pack.py --done.
 set -euo pipefail
 A=/home/claude/app_build; OUT=$A/enc_reg
+python3 /home/claude/fabrika/tools/overlay_live.py --apply   # 26.11.2026: файлы, которых ещё нет в исходниках, — с действующего портала (overlay_live.json)
 python3 "$A/build_enc.py" --base / --out "$OUT"
 python3 "$A/docs_registry.py" >/dev/null   # 13.11.2026: реестр портала и документов → host/live/docs_registry.json (робот сверяет раз в сутки)
 [[ -f /home/claude/sync/bot_done.json ]] && cp /home/claude/sync/bot_done.json "$OUT/bot_done.json"
 (cd /home/claude/bot && python3 bot_data.py >/dev/null && python3 bot_live.py "$OUT")
 rm -f "$OUT/.nojekyll" "$OUT/README.md" "$OUT/gs.bin"
-cp "$A/host/htaccess" "$OUT/.htaccess"
+if [[ -f "$A/host/htaccess" ]]; then cp "$A/host/htaccess" "$OUT/.htaccess"; else echo "htaccess: исходника нет (потерян 25.11) — на хостинге остаётся действующий"; fi
 # 15.11.2026, Т. В.: тест нижнего меню — отдельное приложение techfabrikant.ru/menutest/ (без данных портала; deploy.py пропускает только эти 4 файла)
 (cd "$A/menutest" && python3 make.py >/dev/null) && mkdir -p "$OUT/menutest/full" && cp "$A/menutest/index.html" "$A/menutest/manifest.webmanifest" "$OUT/menutest/" && cp "$A/menutest/full/index.html" "$A/menutest/full/manifest.webmanifest" "$OUT/menutest/full/"
 # открытого текста в публичной сборке быть не должно; и только известные публичные файлы
-if grep -rlqF --binary-files=text -e "192.168" -e "Сотрудник96" -e "+7 910" -e "Сотрудник12" -e "кадастр" -e "Ekibastuz" "$OUT"; then echo "STOP: открытый текст в публичной сборке"; exit 1; fi
+if grep -rlqF --binary-files=text -e "192.168" -e "Сотрудник96" -e "+7 910" -e "Сотрудник13" -e "кадастр" -e "Ekibastuz" "$OUT"; then echo "STOP: открытый текст в публичной сборке"; exit 1; fi
 BAD=$(cd "$OUT" && find . -type f | sed 's#^\./##' | grep -vE '^(b|k|icons)/' | grep -vxE 'menutest/(full/)?(index\.html|manifest\.webmanifest)' \
       | grep -vxE 'index\.html|login\.html|404\.html|sw\.js|m\.bin|mf\.bin|ml\.bin|manifest\.webmanifest|robots\.txt|fabrika\.apk|applink\.js|bot_done\.json|bd\.bin|bn\.bin|\.htaccess' || true)
 if [[ -n "$BAD" ]]; then echo "STOP: неизвестные файлы в публичной сборке: $BAD"; exit 1; fi

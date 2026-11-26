@@ -17,7 +17,7 @@ PER_RUN = 300                                                   # 20.11.2026: п
 TOTAL_MAX = 8000 * 1024 * 1024                                  # 21.11.2026: было 2000 МБ — упёрлись, вся инфографика (1100 шт.) не выкладывалась; на хостинге свободно > 40 ГБ
 PREVIEW = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.pdf')
 REPORT_EXT = ('.xlsx', '.xls', '.pdf', '.csv', '.xml', '.json', '.txt', '.docx')
-REM_TO, REM_CC, REM_MAX = ['user33@example.org'], ['user2@example.org', 'user5@example.org'], 3
+REM_TO, REM_CC, REM_MAX = ['user33@example.org'], ['user2@example.org', 'user6@example.org'], 3
 STORE_DIRS = re.compile(r'^/stores/[^/]+\.xlsx$', re.I)               # 20.11.2026, Т. В.: раздел «Сайт» — магазины по городам (таблицы xlsx)
 THUMB_MIN, THUMB_PX = 350 * 1024, 1000                         # 20.11.2026: картинки тяжелее 350 КБ — превью до 1000 px (оригинал остаётся на FTP)
 BIG_MAX = 30 * 1024 * 1024                                     # главная картинка товара/проекта крупнее 3 МБ — скачать и уменьшить
@@ -174,10 +174,10 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
     t = now.strftime('%Y-%m-%dT%H:%M')
     last = st.get('t') or ''
     try:
-        gap = (FTP_EVERY if not st.get('backlog') else 9) * 60
+        gap = (FTP_EVERY if not (st.get('backlog') or st.get('shr_left')) else 9) * 60   # 26.11.2026: идёт ужатие тяжёлых файлов — чаще
         if last and (now - datetime.datetime.strptime(last, '%Y-%m-%dT%H:%M')).total_seconds() < gap: return {'state': 'ждём', 't': last, 'backlog': st.get('backlog')}
     except Exception: pass
-    pubs = st.get('pub') or {}; total = int(st.get('bytes') or 0); n_new = 0; rep = 0
+    pubs = st.get('pub') or {}; total = int(st.get('bytes') or 0); n_new = 0; rep = 0; shr = {}
     try:
         F = ftplib.FTP(c['host'], timeout=40); F.login(c['user'], c['pass']); F.set_pasv(True)
         try: F.encoding = 'utf-8'
@@ -212,6 +212,12 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
                 raw = _thumb(raw, ext)
                 if len(raw) > FILE_MAX: log('  FTP: крупная картинка без превью', it['p'][-60:]); continue
                 if publish_file(fid, raw): pubs[fid] = it['p']; total += len(raw); n_new += 1
+        try:                                                       # 26.11.2026, Т. В.: файлы > 3 МБ — ужатые на место, оригиналы в «/Большие файлы» (ftp_shrink.py)
+            import ftp_shrink as FX
+            shr = FX.run(F, items, L, log, jload, jsave, t)
+        except Exception as e2:
+            shr = {'state': 'ошибка: %s' % (str(e2)[:120] or e2.__class__.__name__)}
+        st['shr_left'] = shr.get('left') or 0
         try: F.quit()
         except Exception: pass
     except Exception as e:
@@ -228,4 +234,4 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
     left = sum(1 for i in items if not i.get('d') and os.path.splitext(i['p'])[1].lower() in PREVIEW and i.get('id') not in pubs and (i['s'] <= FILE_MAX))
     st.update({'t': t, 'pub': pubs, 'bytes': total, 'n': len(items), 'err': None, 'backlog': left})
     jsave('ftp_state.json', st)
-    return {'state': 'ok', 'n': len(items), 'new': n_new, 'left': left, 'reports': rep, 'mb': round(total / 1048576, 1), 'stores': len(stores)}
+    return {'state': 'ok', 'n': len(items), 'new': n_new, 'left': left, 'reports': rep, 'mb': round(total / 1048576, 1), 'stores': len(stores), 'shrink': shr}
