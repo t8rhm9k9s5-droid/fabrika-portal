@@ -3,6 +3,8 @@
   python3 deck_sale.py Самара|Краснодар|Екатеринбург    Цены — из списка: «Цена» и, где есть, «Цена со скидкой»."""
 import sys, json, re, collections
 sys.path.insert(0, '/home/claude/fabrika/work/prez'); import prez as P
+sys.path.insert(0, '/home/claude/fabrika/work/pricelist'); import price_cols as PC
+PR = json.load(open('/home/claude/fabrika/work/pricelist/price_2810.json', encoding='utf-8')); COLR = PC.REG[sys.argv[1]]
 reg = sys.argv[1]; L = json.load(open('/home/claude/fabrika/work/rasprodazha/traush_lists.json'))[reg]
 def nk(s): return re.sub(r'\s+', ' ', re.sub(r'[^a-zа-я0-9+ ]+', ' ', str(s).lower().replace('ё', 'е'))).strip()
 STOP = {'кресло', 'стул', 'box2', 'box4', 'box5', 'new', 'диван', 'табурет', 'х', 'мест', 'полубар', 'бар'}
@@ -19,20 +21,28 @@ for r in L:
     nm = str(r['Товары (работы, услуги)']); m = re.match(r'^(.*?)\s*\((.*)\)\s*$', nm, re.S)
     model, var = (m.group(1).strip(), m.group(2).strip()) if m else (nm.strip(), '')
     q = int(r.get('Кол-во') or 0); p = r.get('Цена'); ps = r.get('Цена со скидкой')
+    if p and not ps:   # 26.11.2026: в списках Екатеринбурга и Краснодара «Цена» — уже цена распродажи (медиана 38 % и 60 % от прайса); рядом — цена прайса колонки региона, только при точном совпадении исполнения
+        row, how = PC.find(PR, model, var); lp = row and row['pr'].get(COLR)
+        if how == 'исполнение' and lp and lp > p * 1.02: p, ps = lp, p
     G.setdefault(model, []).append((var, q, p, ps)); tot_q += q; tot_s += (ps or p or 0) * q
 loc = {'Самара': 'в Самаре', 'Краснодар': 'в Краснодаре', 'Екатеринбург': 'в Екатеринбурге'}[reg]
 def table(rows):
+    # 26.11.2026, Т. В.: «где цена со скидкой — я не увидел»: отдельные колонки — цена по прайсу (зачёркнута), цена распродажи (крупно, красным), скидка (плашка)
     has = any(r[3] for r in rows)
-    h = '<table class="sale"><tr><th>Исполнение</th><th class="n">На складе</th><th class="n">%s</th></tr>' % ('Цена → распродажа' if has else 'Цена распродажи')
-    for var, q, p, ps in rows:
-        price = ('<s>%s</s>%s<span class="pc">−%d %%</span>' % (P.rub(p).replace(' ₽', ''), P.rub(ps), round((1 - ps / p) * 100)) if ps and p else P.rub(p) if p else '—')
-        h += '<tr><td>%s</td><td class="n">%d шт.</td><td class="p">%s</td></tr>' % (P.esc(var[:120]), q, price)
+    if has:
+        h = '<table class="sale"><tr><th>Исполнение</th><th class="n">На складе</th><th class="n">По прайсу</th><th class="n">Распродажа</th><th class="n">Скидка</th></tr>'
+        for var, q, p, ps in rows:
+            if ps and p: h += '<tr><td>%s</td><td class="n">%d шт.</td><td class="lp">%s</td><td class="sp">%s</td><td class="dc"><span class="bd">−%d %%</span></td></tr>' % (P.esc(var[:110]), q, P.rub(p), P.rub(ps), round((1 - ps / p) * 100))
+            else: h += '<tr><td>%s</td><td class="n">%d шт.</td><td class="lp"></td><td class="sp">%s</td><td></td></tr>' % (P.esc(var[:110]), q, P.rub(p) if p else '—')
+    else:
+        h = '<table class="sale"><tr><th>Исполнение</th><th class="n">На складе</th><th class="n">Цена распродажи</th></tr>'
+        for var, q, p, ps in rows: h += '<tr><td>%s</td><td class="n">%d шт.</td><td class="sp">%s</td></tr>' % (P.esc(var[:110]), q, P.rub(p) if p else '—')
     return h + '</table>'
 first = next((find(m) for m in G if find(m)), None); c0 = P.card(first['c']) if first else None
 ph = P.img(((c0.get('th') or {}).get('day') or c0['ph'][0]['k']), '') if c0 else None
 sl = [P.s_cover('Распродажа склада %s' % loc, 'Кресла и стулья «Фабрикант» со склада офиса продаж: цены распродажи, количество ограничено остатком.', 'Декабрь 2026', 'ГК «Фабрикант» · +7 000 000-00-14 · fabrikant.su', ph),
       P.s_text('Коротко', 'Что в распродаже', '%d моделей, %d исполнений, %d шт. на складе %s. Отгрузка в день оплаты, цены действуют, пока товар есть на складе.' % (len(G), len(L), tot_q, loc),
-               boxes=[('Со склада', 'Товар лежит на складе офиса: срок — только доставка.', '1'), ('Цена распродажи', 'Цена указана у каждого исполнения, с НДС.', '2'), ('Пока есть остаток', 'Количество — по каждому исполнению; повторной поставки по этим ценам не будет.', '3')])]
+               boxes=[('Со склада', 'Товар лежит на складе офиса: срок — только доставка.', '1'), ('Цена распродажи', 'Цена указана у каждого исполнения, с НДС; зачёркнута — цена прайс-листа 28.10.2026, колонка %s (базис %s).' % (COLR, reg), '2'), ('Пока есть остаток', 'Количество — по каждому исполнению; повторной поставки по этим ценам не будет.', '3')])]
 nophoto = []
 for model, rows in G.items():
     e = find(model)

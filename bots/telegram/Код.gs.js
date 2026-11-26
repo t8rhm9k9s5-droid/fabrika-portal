@@ -2759,6 +2759,9 @@ function dmPing() {
 }
 function b2Dm_(N) {
   if (!N.dm || !N.dm.length) return 0;
+  var P26 = PropertiesService.getScriptProperties();          // 26.11.2026: первый запуск после исправления — накопленное с 16.11 не рассылаем (устарело), только отмечаем
+  if (!P26.getProperty('b2_dm_fix2611')) { var s0 = marksLoad_('b2_dm_ids') || []; N.dm.forEach(function (D) { if (D && D.id && s0.indexOf(D.id) < 0) s0.push(D.id); });
+    marksSave_('b2_dm_ids', keepBytes_(s0)); P26.setProperty('b2_dm_fix2611', String(N.dm.length)); return 0; }
   var quiet = quietNow_(), sent = marksLoad_('b2_dm_ids'), U = tgUsers_(), done = [], miss = [], wait = 0;
   if (sent == null && pbWiped_()) {                                // 30.10.2026 аудит: после стирания свойств — старые сообщения повторно не уходят
     var init = []; N.dm.forEach(function (D) { if (D && D.id) init.push(D.id); });
@@ -3270,7 +3273,8 @@ function evTick_(U, now, h, day) {   // 04.11.2026 (замечания GPT 06, 0
     tgMsg_(U[ITM_TO].chat, L.join('\n'));
   }
 }
-function b2Dm_(d) { return String(d).split('-').reverse().slice(0, 2).join('.'); }
+// 26.11.2026: было второе b2Dm_ — перекрывало рассылку личных сообщений b2Dm_(N) с 16.11; дата теперь b2Dmy_
+function b2Dmy_(d) { return String(d).split('-').reverse().slice(0, 2).join('.'); }
 function b2PrevWork_(t) { var d = t - 864e5; for (var i = 0; i < 14 && !evWorkDay_(d); i++) d -= 864e5; return b2Msk_(d, 'yyyy-MM-dd'); }   // прошлый рабочий день (EV_HOL)
 // 16.11.2026: ждём отчёт о выпуске после утреннего предупреждения — пришёл → сообщение подписчикам утра; к 12:00 нет — ещё одно предупреждение
 function b2VypWait_(U, p, h, day) {
@@ -3280,7 +3284,7 @@ function b2VypWait_(U, p, h, day) {
     var D = b2Live_(), V = D.vyp, O = D.output, last = (V && V.date) || (O && O.date) || '', t = '';
     if (V && V.date >= vw && V.rows && V.rows.length) t = b2Vyp_(D); else if (O && O.date >= vw) t = b2OutAgg_(O);
     if (t) { p.deleteProperty('b2_vyp_wait'); b2Send_(to, '📥 <b>Пришёл отчёт о выпуске</b>\n' + t); return; }
-    if (h >= 12 && p.getProperty('b2_vyp_late') !== day) { p.setProperty('b2_vyp_late', day); b2Send_(to, '⚠️ <b>Отчёт о выпуске за ' + h_(b2Dm_(vw)) + ' так и не пришёл</b> к 12:00' + (last ? ' — последний за ' + h_(b2Dm_(last)) : '') + '. Отчёт присылает ПДО (imm@) в itm@, папка «производство».'); }
+    if (h >= 12 && p.getProperty('b2_vyp_late') !== day) { p.setProperty('b2_vyp_late', day); b2Send_(to, '⚠️ <b>Отчёт о выпуске за ' + h_(b2Dmy_(vw)) + ' так и не пришёл</b> к 12:00' + (last ? ' — последний за ' + h_(b2Dmy_(last)) : '') + '. Отчёт присылает ПДО (imm@) в itm@, папка «производство».'); }
   } catch (e) { console.log('vyp wait: ' + e); }
 }
 function b2Morning_() {
@@ -3296,7 +3300,7 @@ function b2Morning_() {
   var ot = '';
   if (V && V.date >= want && V.rows && V.rows.length) ot = b2Vyp_(D); else if (D.output && D.output.date >= want) ot = b2OutAgg_(D.output);
   if (ot) { L.push(ot); props().deleteProperty('b2_vyp_wait'); }   // >= (а не ===): отчёт за сегодня до 9:00 не бывает; старое ожидание снимаем
-  else { L.push('⚠️ <b>Выпуска за ' + h_(b2Dm_(want)) + ' ещё нет</b>' + (have ? ' — последний отчёт ПДО за ' + h_(b2Dm_(have)) : ' — данных о выпуске нет') + '. Пришлю, как только придёт.'); props().setProperty('b2_vyp_wait', want); }
+  else { L.push('⚠️ <b>Выпуска за ' + h_(b2Dmy_(want)) + ' ещё нет</b>' + (have ? ' — последний отчёт ПДО за ' + h_(b2Dmy_(have)) : ' — данных о выпуске нет') + '. Пришлю, как только придёт.'); props().setProperty('b2_vyp_wait', want); }
   var rq = b2RqOpen_(); if (rq.length) L.push('🛠 Заявки на ремонт: открыто ' + rq.length + ' (новых ' + rq.filter(function (r) { return r.st === 'new'; }).length + ', в работе ' + rq.filter(function (r) { return r.st === 'work'; }).length + ')' + (rq.some(function (r) { return r.urg; }) ? ', есть срочные 🔥' : ''));
   var cf = b2CfOpen_(); if (cf.length) L.push('🎥 Камеры не работают: ' + cf.length + ' — ' + cf.slice(0, 4).map(function (c) { return h_(c.cam.label.replace(/^Камера /, '')); }).join(', '));
   var sp = b2SpList_().map(function (s) { var d = b2SpDue_(s); return d && d.left <= 3 ? h_(s.n) + (d.left < 0 ? ' — просрочено' : ' — через ' + d.left + ' дн.') : ''; }).filter(Boolean); if (sp.length) L.push('🛢 Септики: ' + sp.join('; '));
@@ -3369,7 +3373,7 @@ function b2LiveAlert_() {
 function b2OutAgg_(O) {   // сводка выпуска по участкам (если построчного D.vyp нет)
   if (!O || !O.areas) return ''; var dp = 0, df = 0, low = [];
   O.areas.forEach(function (a) { dp += a.dp; df += a.df; if (a.dp > 0 && a.df / a.dp < 0.8) low.push('№' + a.n + ' — ' + b2Num_(a.df / a.dp * 100) + ' %'); });
-  return dp ? '🏭 Выпуск за ' + h_(b2Dm_(O.date)) + ': план ' + b2Num_(dp) + ', факт ' + b2Num_(df) + ' (' + b2Num_(df / dp * 100) + ' %)' + (low.length ? '; отстают: ' + low.slice(0, 5).join(', ') : '') : '';
+  return dp ? '🏭 Выпуск за ' + h_(b2Dmy_(O.date)) + ': план ' + b2Num_(dp) + ', факт ' + b2Num_(df) + ' (' + b2Num_(df / dp * 100) + ' %)' + (low.length ? '; отстают: ' + low.slice(0, 5).join(', ') : '') : '';
 }
 function b2Vyp_(D) {
   var V = D.vyp, L = [], tp = 0, tf = 0;

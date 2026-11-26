@@ -1,19 +1,16 @@
 {
- "portal_version": "2.24.3",
- "exported_utc": "2026-11-25T21:32Z",
- "files_sha": "5ce82a42b8440030",
+ "portal_version": "2.24.5",
+ "exported_utc": "2026-11-26T06:02Z",
+ "files_sha": "72edc692e4544076",
  "files": [
-  "bots/telegram/Visits.gs.js",
   "bots/telegram/Код.gs.js",
-  "portal/build/acct/acct_stat.js",
-  "portal/build/admin_frag.html",
-  "portal/tidy/reports_plan.py",
-  "portal/visits/Visits.gs.js",
-  "portal/visits/acct_stat.js",
-  "portal/visits/admin_vs.js",
-  "portal/visits/build_vs.py",
-  "portal/visits/deploy_vs.py",
-  "portal/visits/vs_test_page.js",
-  "portal/visits/vs_test_server.js"
+  "portal/fsu/live_vs_build.py",
+  "portal/prez/deck_sale.py",
+  "portal/prez/deck_stock.py",
+  "portal/prez/prez.py",
+  "portal/pricelist/build_patch_2611a.py",
+  "portal/pricelist/build_patch_2611b.py",
+  "portal/pricelist/legend_doc.py",
+  "portal/pricelist/price_cols.py"
  ]
 }
