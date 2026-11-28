@@ -1,0 +1,243 @@
+<title>Фабрика — чаты</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* «Чаты» — 28.11.2026, задача №353: группы MAX, личные сообщения ботам Telegram и MAX, вопросы к Т. В. без ответа.
+   Только администраторам (Т. В., А. В.). Данные отдаёт скрипт бота после входа: op chats (grp.bin, grpp.bin, ua.bin без почты — ключ владельца)
+   и op ev (обращения к ботам). Почта (ящик владельца) здесь не показывается. Вид — как «Поручения» (poruch.html). */
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.back{display:inline-flex;align-items:center;gap:4px;margin:0 0 2px -4px;padding:4px;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);cursor:pointer;text-decoration:none}
+.back::before{content:"";width:10px;height:10px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 2px 0 4px;border-radius:1px}
+.lead{color:var(--ios-2);margin:4px 0 0;font-size:15px;max-width:66ch}
+.ch-sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media(min-width:900px){.ch-sum{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ch-sum button{text-align:left;border:0;border-radius:16px;padding:12px 14px;background:var(--ios-group);color:inherit;font:inherit;cursor:pointer;box-shadow:0 0 0 .5px var(--ios-sep);transition:transform .15s ease-out,box-shadow .15s ease-out;min-width:0}
+.ch-sum button:hover{transform:translateY(-2px);box-shadow:0 0 0 .5px var(--ios-sep),0 4px 12px rgba(0,0,0,.08)}
+.ch-sum button:active{transform:none}
+.ch-sum button:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-sum button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--t-press,#0866c6)}
+.ch-sum b{display:block;font:600 26px/1.1 var(--f-display);color:var(--ios-label)}
+.ch-sum b.bad{color:var(--t-red,#d70015)}
+.ch-sum span{display:block;font:600 14px var(--f-body);color:var(--ios-label);margin-top:2px}
+.ch-sum small{display:block;color:var(--ios-2);font-size:13px;margin-top:2px}
+.ch-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.ch-chips button{border:0;border-radius:999px;padding:7px 12px;font:600 13.5px var(--f-body);background:var(--ios-fill);color:var(--ios-label);cursor:pointer;min-height:34px}
+.ch-chips button[aria-pressed="true"]{background:var(--t-press,#0866c6);color:#fff}
+.ch-chips button:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-chips button b{font-weight:700;margin-left:4px;opacity:.85}
+.ch-h{font:600 13px/1.3 var(--f-body);text-transform:uppercase;letter-spacing:.01em;color:var(--ios-2);margin:20px 2px 6px}
+.ch-list{display:grid;gap:10px;margin-top:8px}
+.ch-in .ch-list{gap:6px}.ch-in .ch-card{padding:9px 14px}.ch-in .ch-top{margin-bottom:2px}
+.ch-card{background:var(--ios-group);border-radius:14px;padding:12px 14px;box-shadow:0 0 0 .5px var(--ios-sep);min-width:0}
+.ch-card .ch-x{font-size:15px;line-height:1.45;color:var(--ios-label);overflow-wrap:anywhere;white-space:pre-line}
+.ch-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:4px}
+.ch-top .ch-n{font:600 15px var(--f-body);color:var(--ios-label)}
+.ch-top .ch-t{margin-left:auto;font-size:13px;color:var(--ios-2);font-variant-numeric:tabular-nums}
+.ch-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:6px;font-size:13px;color:var(--ios-2)}
+.ch-tag{font:600 11.5px var(--f-body);border-radius:999px;padding:2px 8px;background:var(--ios-fill);color:var(--ios-label);white-space:nowrap}
+.ch-tag.max{background:color-mix(in srgb,var(--ic-chat,#0a84ff) 16%,transparent);color:var(--ios-label)}
+.ch-tag.tg{background:color-mix(in srgb,var(--ic-items,#30b0c7) 18%,transparent);color:var(--ios-label)}
+.ch-tag.no{background:color-mix(in srgb,var(--t-red,#d70015) 14%,transparent);color:var(--t-red,#d70015)}
+.ch-tag.bot{background:var(--ios-fill);color:var(--ios-2)}
+.ch-late{color:var(--t-red,#d70015);font-weight:600}
+.ch-q{margin:2px 0 6px;padding:4px 10px;border-left:3px solid var(--ios-sep);color:var(--ios-2);font-size:13.5px;overflow-wrap:anywhere}
+.ch-q b{font-weight:600}
+.ch-card.isbot{background:transparent;box-shadow:0 0 0 .5px var(--ios-sep)}
+.ch-card.open{box-shadow:0 0 0 1.5px var(--t-red,#d70015)}
+.ch-grp{margin-top:10px}
+.ch-grp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ios-group);box-shadow:0 0 0 .5px var(--ios-sep);min-width:0}
+.ch-grp>summary:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-grp>summary::-webkit-details-marker{display:none}
+.ch-grp>summary::after{content:'';flex:none;width:8px;height:8px;border-right:2px solid var(--ios-2);border-bottom:2px solid var(--ios-2);transform:rotate(45deg);transition:transform .2s ease-out;margin-left:4px}
+.ch-grp[open]>summary::after{transform:rotate(-135deg)}
+.ch-gb{flex:1;min-width:0}
+.ch-gb b{display:block;font:600 16px var(--f-body);color:var(--ios-label)}
+.ch-gb small{display:block;font-size:13px;color:var(--ios-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-cnt{flex:none;font:600 13px var(--f-body);border-radius:999px;padding:2px 9px;background:var(--ios-fill);color:var(--ios-label);font-variant-numeric:tabular-nums}
+.ch-cnt.bad{background:color-mix(in srgb,var(--t-red,#d70015) 14%,transparent);color:var(--t-red,#d70015)}
+.ch-in{padding:4px 2px 2px}
+@media(max-width:520px){.ch-grp>summary{flex-wrap:wrap;row-gap:6px}.ch-gb{flex:1 1 calc(100% - 80px)}.ch-grp>summary .ch-cnt{order:3}.ch-grp>summary::after{order:2}.ch-gb small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
+.ch-who{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.ch-who button{border:0;font:500 13px var(--f-body);border-radius:8px;padding:5px 9px;background:var(--ios-fill);color:var(--ios-label);cursor:pointer;min-height:30px}
+.ch-who button b{font-weight:700;margin-left:4px;color:var(--ios-2)}
+.ch-who button[aria-pressed="true"]{background:var(--t-press,#0866c6);color:#fff}
+.ch-who button[aria-pressed="true"] b{color:#fff}
+.ch-who button:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-more{margin:10px 0 0;border:0;border-radius:12px;padding:10px 14px;width:100%;background:var(--ios-fill);color:var(--ios-blue);font:600 15px var(--f-body);cursor:pointer}
+.ch-more:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-dm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+@media(min-width:900px){.ch-dm{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ch-dm div{background:var(--ios-group);border-radius:14px;padding:10px 14px;box-shadow:0 0 0 .5px var(--ios-sep)}
+.ch-dm b{display:block;font:600 22px var(--f-display);color:var(--ios-label)}
+.ch-dm small{color:var(--ios-2);font-size:13px}
+.ch-note{background:var(--ios-group);border-radius:14px;padding:12px 14px;box-shadow:0 0 0 .5px var(--ios-sep);color:var(--ios-2);font-size:14px;margin-top:8px}
+.ch-note b{color:var(--ios-label)}
+.ch-err{color:var(--t-red,#d70015)}
+.ch-retry{margin-top:10px;border:0;border-radius:12px;padding:10px 16px;background:var(--t-press,#0866c6);color:#fff;font:600 15px var(--f-body);cursor:pointer}
+.ch-retry:hover{filter:brightness(.92)}
+.ch-retry:focus-visible{outline:2px solid var(--ios-blue,#0a84ff);outline-offset:2px}
+.ch-skel{height:64px;border-radius:14px;background:var(--ios-fill);margin-top:10px;animation:chp 1.2s ease-in-out infinite alternate}
+@keyframes chp{from{opacity:.55}to{opacity:1}}
+.pfoot{color:var(--ios-2);font-size:12.5px;margin:16px 2px 0;max-width:80ch}
+@media (prefers-reduced-motion: reduce){.ch-sum button,.ch-grp>summary::after{transition:none}.ch-skel{animation:none}}
+</style>
+<main class="ios" id="chaty">
+  <a class="back" href="home.html">Главная</a>
+  <h1>Чаты</h1>
+  <p class="lead">Группы MAX, личные сообщения ботам Telegram и MAX и вопросы к вам без ответа — в одном месте. Видят только администраторы.</p>
+  <div id="chSum" class="ch-sum" role="group" aria-label="Сводка"></div>
+  <div class="ch-chips" id="chChips" role="group" aria-label="Что показать"></div>
+  <div id="chView" aria-live="polite"><div class="ch-skel"></div><div class="ch-skel"></div><div class="ch-skel"></div></div>
+  <p class="pfoot" id="chFoot"></p>
+</main>
+<script>
+(function () {
+  var D = null, EV = null, F = 'ua', SHOW = {}, WHO = {}, NOW = new Date(Date.now() + 3 * 3600e3), today = NOW.toISOString().slice(0, 10);
+  var TABS = [['ua', 'Без ответа'], ['grp', 'Группы'], ['dm', 'Личные']];
+  try { F = sessionStorage.getItem('t14.ch.f') || 'ua'; } catch (e) {}
+  if (/^#(ua|grp|dm)$/.test(location.hash)) F = location.hash.slice(1);
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var DOW = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  function dayName(d) { if (!d) return ''; if (d === today) return 'Сегодня'; var y = new Date(Date.parse(today + 'T12:00:00Z') - 864e5).toISOString().slice(0, 10);
+    return (d === y ? 'Вчера, ' : '') + d.slice(8, 10) + '.' + d.slice(5, 7) + ' (' + DOW[new Date(d + 'T12:00:00Z').getUTCDay()] + ')'; }
+  function hm(iso) { iso = String(iso || ''); return iso.slice(11, 16); }
+  function when(iso) { iso = String(iso || ''); var d = iso.slice(0, 10); return (d === today ? '' : d.slice(8, 10) + '.' + d.slice(5, 7) + ' ') + hm(iso); }
+  function unix(t) { return new Date((t || 0) * 1000 + 3 * 36e5).toISOString().slice(0, 16); }
+  function num(n) { return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function plural(n, a, b, c) { n = Math.abs(n) % 100; var k = n % 10; return n > 10 && n < 20 ? c : k > 1 && k < 5 ? b : k === 1 ? a : c; }
+  function isAdmin() { try { var p = JSON.parse(localStorage.getItem('t14.me') || 'null'); return !!(p && p.role === 'admin' && p.st !== 'pending'); } catch (e) { return false; } }
+
+  // --- данные: группы MAX и вопросы без ответа (op chats), личные обращения к ботам (op ev)
+  function groups() { return (D && D.groups) || []; }
+  function uaItems() { return (D && D.ua && D.ua.items) || []; }
+  function evOpen() { var E = (D && D.ev) || EV; return (E && E.open) || []; }
+  function evObj() { return (D && D.ev) || EV; }
+  function key(g, t, x) { return String(g || '') + '|' + String(t || '').slice(0, 16) + '|' + String(x || '').slice(0, 40); }
+  var OPEN = {};
+  function indexOpen() { OPEN = {}; uaItems().forEach(function (i) { OPEN[key(i.g, i.t, i.x)] = 1; }); }
+
+  function sum() {
+    if (DENY) { $('chSum').innerHTML = ''; $('chChips').innerHTML = ''; return; }
+    var LD = ERR ? 'нет данных' : 'загружаю…';
+    var G = groups(), msgs = G.reduce(function (s, g) { return s + g.msgs.length; }, 0), td = 0, ppl = {};
+    G.forEach(function (g) { g.msgs.forEach(function (m) { if (String(m.t).slice(0, 10) === today) { td++; if (!m.b) ppl[m.n] = 1; } }); });
+    var ua = uaItems(), uaT = ua.filter(function (i) { return i.day === today; }).length, eo = evOpen(), late = eo.filter(function (x) { return x.late; }).length;
+    var T = [
+      ['ua', D ? num(ua.length) : '—', 'Без ответа в группах', D ? (D.ua ? 'сегодня ' + uaT + ' · за 3 рабочих дня' : 'нет данных') : LD, ua.length > 0],
+      ['dm', evObj() ? num(eo.length) : '—', 'Личные: ждут ответа', evObj() ? (late ? 'просрочено ' + late : 'просрочек нет') : LD, late > 0],
+      ['grp', D ? num(G.length) : '—', G.length === 1 ? 'Группа MAX' : 'Группы MAX', D ? num(msgs) + ' ' + plural(msgs, 'сообщение', 'сообщения', 'сообщений') + ' за 3 дня' : LD, false],
+      ['grp', D ? num(td) : '—', 'Сегодня в группах', D ? 'писали ' + Object.keys(ppl).length + ' чел.' : LD, false]];
+    $('chSum').innerHTML = T.map(function (x, i) { return '<button type="button" data-f="' + x[0] + '" aria-pressed="' + (F === x[0] && (i < 3) ? 'true' : 'false') + '"><b class="' + (x[4] ? 'bad' : '') + '">' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span><small>' + esc(x[3]) + '</small></button>'; }).join('');
+    $('chChips').innerHTML = TABS.map(function (t) {
+      var n = t[0] === 'ua' ? (D ? uaItems().length : '') : t[0] === 'grp' ? (D ? groups().length : '') : (evObj() ? evOpen().length : '');
+      return '<button type="button" data-f="' + t[0] + '" aria-pressed="' + (F === t[0]) + '">' + esc(t[1]) + (n !== '' ? '<b>' + n + '</b>' : '') + '</button>'; }).join('');
+  }
+
+  function cardUa(i) {
+    var who = [i.role, i.dep].filter(Boolean).join(', ');
+    return '<div class="ch-card open"><div class="ch-top"><span class="ch-n">' + esc(i.fio) + '</span>' + (who ? '<span class="ch-meta" style="margin:0">' + esc(who) + '</span>' : '') +
+      '<span class="ch-t">' + esc(when(i.t)) + '</span></div><div class="ch-x">' + esc(i.x) + '</div><div class="ch-meta"><span class="ch-tag max">MAX</span><span>«' + esc(i.g) + '»</span>' +
+      (i.why ? '<span>' + esc(i.why) + '</span>' : '') + (i['new'] ? '<span>нет в оргструктуре</span>' : '') + '</div></div>';
+  }
+  function viewUa() {
+    if (!D) return wait();
+    if (!D.ua) return '<div class="ch-note">' + (D.err && D.err.ua ? '<span class="ch-err">Вопросы без ответа не загрузились: ' + esc(D.err.ua) + '</span>' : 'Нет данных о вопросах без ответа: бот MAX собирает их раз в час с 06:00 до 23:00.') + '</div>';
+    var L = uaItems().slice().sort(function (a, b) { return a.t < b.t ? 1 : -1; }), days = D.ua.days || [];
+    var h = D.ua.max && D.ua.max.err ? '<div class="ch-note ch-err">Группы MAX не проверены: ' + esc(D.ua.max.err) + '</div>' : '';
+    if (!L.length) return h + '<div class="ch-note"><b>Все вопросы к вам в группах MAX отвечены</b> за ' + esc(days.map(dayName).join(', ').toLowerCase() || 'последние 3 рабочих дня') + (D.ua.max && D.ua.max.asked ? ' · обращений к вам: ' + D.ua.max.asked : '') + '.</div>';
+    var by = {}; L.forEach(function (i) { (by[i.day] = by[i.day] || []).push(i); });
+    Object.keys(by).sort().reverse().forEach(function (d) { h += '<div class="ch-h">' + esc(dayName(d)) + ' · ' + by[d].length + '</div><div class="ch-list">' + by[d].map(cardUa).join('') + '</div>'; });
+    return h + '<p class="pfoot">Обращения к вам по имени, упоминанием или ответом на ваше сообщение, с вопросом или просьбой, на которые вы не ответили в группе. Вы ответили — строка уйдёт при следующем сборе (раз в час).</p>';
+  }
+
+  function cardMsg(m, g) {
+    var op = !m.b && OPEN[key(g.title, m.t, m.x)];
+    return '<div class="ch-card' + (m.b ? ' isbot' : '') + (op ? ' open' : '') + '"><div class="ch-top"><span class="ch-n">' + esc(m.n || 'без имени') + '</span>' + (m.b ? '<span class="ch-tag bot">бот</span>' : '') +
+      (op ? '<span class="ch-tag no">вам, без ответа</span>' : '') + '<span class="ch-t">' + esc(hm(m.t)) + '</span></div>' +
+      (m.r ? '<div class="ch-q">↪ <b>' + esc(m.r) + '</b>' + (m.rx ? ': ' + esc(m.rx) : '') + '</div>' : '') + '<div class="ch-x">' + esc(m.x || '(вложение без текста)') + '</div></div>';
+  }
+  function viewGrp() {
+    if (!D) return wait();
+    var G = groups(), h = '';
+    if (!G.length) h += '<div class="ch-note">' + (D.err && (D.err.grp || D.err.grpp) ? '<span class="ch-err">Группы не загрузились: ' + esc(D.err.grp || D.err.grpp) + '</span>' : 'Нет данных групп MAX: файлы ещё не собраны ботом и роботом.') + '</div>';
+    G.forEach(function (g, gi) {
+      var L = g.msgs.slice().sort(function (a, b) { return a.t < b.t ? 1 : -1; }), last = L[0], nOpen = L.filter(function (m) { return !m.b && OPEN[key(g.title, m.t, m.x)]; }).length;
+      var cnt = {}; L.forEach(function (m) { if (!m.b) cnt[m.n] = (cnt[m.n] || 0) + 1; });
+      var ppl = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }), wf = WHO[g.id] || '';
+      var LL = wf ? L.filter(function (m) { return m.n === wf; }) : L, lim = SHOW[g.id] || 20, P = LL.slice(0, lim);
+      h += '<details class="ch-grp" data-g="' + esc(g.id) + '"' + (gi === 0 || SHOW[g.id] || wf ? ' open' : '') + '><summary><span class="ch-tag max">MAX</span><span class="ch-gb"><b>' + esc(g.title) + '</b><small>' +
+        (last ? 'последнее ' + esc(when(last.t)) + ' · ' + esc(last.n || '') + ': ' + esc(String(last.x || '').slice(0, 90)) : 'сообщений за 3 дня нет') + '</small></span>' +
+        (nOpen ? '<span class="ch-cnt bad" title="вопросы к вам без ответа">' + nOpen + ' без ответа</span>' : '') + '<span class="ch-cnt" title="сообщений за 3 дня">' + L.length + '</span></summary><div class="ch-in">';
+      if (ppl.length) h += '<div class="ch-who" role="group" aria-label="Кто писал">' + ppl.map(function (p) { return '<button type="button" data-who="' + esc(p) + '" aria-pressed="' + (wf === p) + '">' + esc(p) + '<b>' + cnt[p] + '</b></button>'; }).join('') + '</div>';
+      var cur = '';
+      P.forEach(function (m, k) { var d = String(m.t).slice(0, 10); if (d !== cur) { h += (cur ? '</div>' : '') + '<div class="ch-h">' + esc(dayName(d)) + '</div><div class="ch-list">'; cur = d; } h += cardMsg(m, g); });
+      if (cur) h += '</div>';
+      if (LL.length > lim) h += '<button type="button" class="ch-more" data-more="' + esc(g.id) + '">Показать ещё ' + Math.min(40, LL.length - lim) + (LL.length - lim > 40 ? ' из ' + (LL.length - lim) : '') + '</button>';
+      h += '<p class="pfoot">Собрано ' + esc(String(g.t || '').replace('T', ' ')) + ' МСК · сообщения за 3 рабочих дня, телефоны и почты скрыты.</p></div></details>';
+    });
+    h += '<div class="ch-note"><span class="ch-tag tg">Telegram</span> <b>Группы Telegram</b> — бот «Фабрика — уведомления» в группах сообщения не читает, поэтому здесь их нет. Личные сообщения ботам Telegram — на вкладке «Личные».</div>';
+    return h;
+  }
+
+  function viewDm() {
+    var E = evObj();
+    if (!E) return D || EV === false ? '<div class="ch-note">Личных обращений к ботам пока нет.</div>' : wait();
+    var T = E.today || {}, L = evOpen();
+    var h = '<div class="ch-dm"><div><b>' + num(T.n || 0) + '</b><small>написали сегодня</small></div><div><b>' + num(T.bot || 0) + '</b><small>бот ответил сам</small></div><div><b>' + num(T.resp || 0) + '</b><small>передано ответственным</small></div><div><b>' + num(T.done || 0) + '</b><small>закрыто</small></div></div>';
+    h += '<div class="ch-h">Ждут ответа · ' + L.length + '</div>';
+    if (!L.length) return h + '<div class="ch-note"><b>Все личные обращения закрыты.</b></div>';
+    h += '<div class="ch-list">' + L.map(function (x) {
+      var tg = x.src !== 'max';
+      return '<div class="ch-card' + (x.late ? ' open' : '') + '"><div class="ch-top"><span class="ch-n">' + esc(x.name || 'без имени') + '</span><span class="ch-tag ' + (tg ? 'tg">Telegram' : 'max">MAX') + '</span><span class="ch-t">' + esc(when(unix(x.t))) + '</span></div>' +
+        '<div class="ch-x">' + esc(x.text || '') + '</div><div class="ch-meta">' + (x.resp ? '<span>передано: ' + esc(x.resp) + '</span>' : '<span>ждёт вас</span>') +
+        (x.due_at ? '<span class="' + (x.late ? 'ch-late' : '') + '">' + (x.late ? 'просрочено, срок ' : 'ответить до ') + esc(when(unix(x.due_at))) + '</span>' : '') + '</div></div>';
+    }).join('') + '</div>';
+    return h + '<p class="pfoot">Вопросы людей в личных чатах с ботами, на которые бот не ответил сам. Обновлено ' + esc(String(E.t || '').replace('T', ' ')) + '.</p>';
+  }
+
+  var ERR = '', DENY = false;
+  function wait() { return ERR ? '<div class="ch-note">' + esc(ERR) + '</div>' : '<div class="ch-skel"></div><div class="ch-skel"></div>'; }
+  function render() {
+    sum();
+    var v = $('chView');
+    if (ERR && !D && !evObj()) { v.innerHTML = '<div class="ch-note"><span class="ch-err">' + esc(ERR) + '</span>' + (DENY ? '' : '<br><button type="button" class="ch-retry" id="chRetry">Повторить</button>') + '</div>'; }
+    else v.innerHTML = F === 'grp' ? viewGrp() : F === 'dm' ? viewDm() : viewUa();
+    var src = [];
+    if (D && D.t) src.push('загружено ' + String(D.t).replace('T', ' ') + ' МСК');
+    if (D && D.ua && D.ua.t) src.push('вопросы без ответа собраны ' + hm(D.ua.t));
+    $('chFoot').textContent = (src.length ? src.join(' · ') + '. ' : '') + 'Источники: группы MAX «Коммерческий отдел» и «Производство» (бот MAX и робот, раз в час), обращения к ботам Telegram и MAX. Почта сюда не входит. Видят только администраторы.';
+  }
+  function setF(f) { F = f; try { sessionStorage.setItem('t14.ch.f', F); } catch (e) {} try { history.replaceState(history.state, '', '#' + F); } catch (e) {} render(); }
+  $('chSum').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setF(b.getAttribute('data-f')); });
+  $('chChips').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setF(b.getAttribute('data-f')); });
+  $('chView').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    if (b.id === 'chRetry') { ERR = ''; render(); load(); return; }
+    var gd = b.closest('details[data-g]'), g = gd && gd.getAttribute('data-g');
+    if (b.hasAttribute('data-more')) { SHOW[g] = (SHOW[g] || 20) + 40; render(); return; }
+    if (b.hasAttribute('data-who')) { var w = b.getAttribute('data-who'); WHO[g] = WHO[g] === w ? '' : w; SHOW[g] = 20; render(); }
+  });
+  window.addEventListener('hashchange', function () { if (/^#(ua|grp|dm)$/.test(location.hash) && location.hash.slice(1) !== F) setF(location.hash.slice(1)); });
+
+  function load() {
+    var A = window.T14Acct;
+    if (!A || !A.tok || !A.tok()) { DENY = true; ERR = 'Раздел открывается после личного входа: «Профиль» → «Личный вход».'; return render(); }
+    if (!isAdmin()) { DENY = true; ERR = 'Раздел «Чаты» — только для администраторов портала.'; return render(); }
+    A.api('chats', { tok: A.tok() }).then(function (r) {
+      if (r && r.ok && Array.isArray(r.groups)) { D = r; indexOpen(); render(); return; }
+      // скрипт бота ещё без op chats — показываем хотя бы личные обращения (op ev работает с 02.11)
+      ERR = 'Группы и вопросы без ответа появятся после обновления скрипта бота.';
+      return A.api('ev', { tok: A.tok() }).then(function (e) { EV = e && e.ev ? e.ev : false; render(); });
+    }).catch(function (e) {
+      return A.api('ev', { tok: A.tok() }).then(function (x) { EV = x && x.ev ? x.ev : false; ERR = 'Группы и вопросы без ответа пока недоступны — скрипт бота ещё не обновлён' + (e && e.message ? ' (ответ: ' + e.message + ')' : '') + '.'; render(); },
+        function () { ERR = ((e && e.message) || 'Нет связи с сервером') + ' Проверьте интернет и нажмите «Повторить».'; render(); });
+    });
+  }
+  render();
+  var tries = 0;
+  (function go() { if (window.T14Acct && T14Acct.api) return load(); if (++tries < 40) setTimeout(go, 250); else { ERR = 'Портал не загрузился полностью — обновите страницу.'; render(); } })();
+})();
+</script>

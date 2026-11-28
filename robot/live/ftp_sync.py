@@ -14,12 +14,12 @@ DEPTH = 8                                                       # 20.11.2026: в
 MAX_ENTRIES = 20000
 FILE_MAX = 3 * 1024 * 1024
 PER_RUN = 300                                                   # 20.11.2026: пока есть очередь — обход каждые 10 мин (BACKLOG), иначе раз в FTP_EVERY
-TOTAL_MAX = 8000 * 1024 * 1024                                  # 21.11.2026: было 2000 МБ — упёрлись, вся инфографика (1100 шт.) не выкладывалась; на хостинге свободно > 40 ГБ
+TOTAL_MAX = 12000 * 1024 * 1024                                 # 28.11.2026: было 8000 МБ — упёрлись: превью шли без уменьшения (Pillow не был в пути) и счёт не забывал убранные файлы
 PREVIEW = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.pdf')
 REPORT_EXT = ('.xlsx', '.xls', '.pdf', '.csv', '.xml', '.json', '.txt', '.docx')
-REM_TO, REM_CC, REM_MAX = ['user33@example.org'], ['user2@example.org', 'user5@example.org'], 3
+REM_TO, REM_CC, REM_MAX = ['user33@example.org'], ['user2@example.org'], 3   # 27.11: itm@ в копию не ставим (правило Т. В.)
 STORE_DIRS = re.compile(r'^/stores/[^/]+\.xlsx$', re.I)               # 20.11.2026, Т. В.: раздел «Сайт» — магазины по городам (таблицы xlsx)
-THUMB_MIN, THUMB_PX = 350 * 1024, 1000                         # 20.11.2026: картинки тяжелее 350 КБ — превью до 1000 px (оригинал остаётся на FTP)
+THUMB_MIN, THUMB_PX = 350 * 1024, 2000                         # 28.11.2026: превью до 2000 px — сайт строит карточки из них (Т. В.: фото сайта не хуже 2K); было 1000 px
 BIG_MAX = 30 * 1024 * 1024                                     # главная картинка товара/проекта крупнее 3 МБ — скачать и уменьшить
 MAIN_RE = re.compile(r'/(main|cover)[^/]*$', re.I)
 REPORT_DIRS = re.compile(r'(^|/)(reports?|otchet\w*|отч[её]т\w*|exchange|obmen|обмен)(/|$)', re.I)
@@ -98,6 +98,22 @@ def _order(items):
     return sorted([i for i in items if not i.get('d')], key=lambda i: (0 if i['p'] in lead else 1, i['p'])), lead
 
 
+def _pil_path():
+    """28.11.2026: робот запускается с -I — папка пакетов пользователя (там Pillow, ftp_shrink._pil) в sys.path не попадает; добавить"""
+    try:
+        import sys, site
+        up = site.getusersitepackages()
+        if up not in sys.path and os.path.isdir(up): sys.path.append(up)
+    except Exception: pass
+
+
+def _has_pil():
+    try:
+        import PIL  # noqa
+        return True
+    except Exception: return False
+
+
 def _thumb(raw, ext):
     """превью для портала, если на хостинге есть Pillow; иначе — оригинал"""
     if len(raw) < THUMB_MIN or ext not in ('.jpg', '.jpeg', '.png', '.webp'): return raw
@@ -174,10 +190,11 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
     t = now.strftime('%Y-%m-%dT%H:%M')
     last = st.get('t') or ''
     try:
-        gap = (FTP_EVERY if not st.get('backlog') else 9) * 60
+        gap = (FTP_EVERY if not (st.get('backlog') or st.get('shr_left')) else 9) * 60   # 26.11.2026: идёт ужатие тяжёлых файлов — чаще
         if last and (now - datetime.datetime.strptime(last, '%Y-%m-%dT%H:%M')).total_seconds() < gap: return {'state': 'ждём', 't': last, 'backlog': st.get('backlog')}
     except Exception: pass
-    pubs = st.get('pub') or {}; total = int(st.get('bytes') or 0); n_new = 0; rep = 0
+    pubs = st.get('pub') or {}; psz = st.get('psz') or {}; n_new = 0; rep = 0; shr = {}; put = {}; full = False
+    _pil_path()                                                    # 28.11.2026: Pillow робота — в папке пользователя; без неё _thumb отдавал оригинал
     try:
         F = ftplib.FTP(c['host'], timeout=40); F.login(c['user'], c['pass']); F.set_pasv(True)
         try: F.encoding = 'utf-8'
@@ -185,6 +202,14 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
         items = []; _walk(F, c.get('root') or '/', 0, items)
         rdir = os.path.join(L, 'arch', 'ftp'); os.makedirs(rdir, exist_ok=True)
         order, lead = _order(items); stores = st.get('stores') or {}; sto_new = 0
+        # 28.11.2026, Т. В.: «всё, что на FTP, — и в каталоге, и на сайте». Счёт места — только по превью файлов, которые сейчас есть на FTP
+        #   (переименованные/ужатые/убранные больше не занимают лимит); размер старых превью без записи — по размеру файла (не больше FILE_MAX)
+        cur = {}
+        for it in items:
+            if not it.get('d'): cur[_fid(it['p'], it['s'], it['m'])] = it
+        pubs = {f: v for f, v in pubs.items() if f in cur}
+        psz = {f: v for f, v in psz.items() if f in pubs}
+        total = sum(int(psz.get(f) or min(cur[f]['s'], FILE_MAX)) for f in pubs)
         for it in order:
             ext = os.path.splitext(it['p'])[1].lower()
             if STORE_DIRS.search(it['p']):
@@ -200,7 +225,7 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
             want_rep = bool(REPORT_DIRS.search(it['p'])) and ext in REPORT_EXT
             want_pub = ext in PREVIEW and (it['s'] <= FILE_MAX or ((it['p'] in lead or it['p'].startswith('/infographic/')) and it['s'] <= BIG_MAX))   # 21.11.2026: инфографика крупнее 3 МБ — тоже (уменьшается _thumb)
             if fid in pubs or not (want_rep or want_pub): continue
-            if n_new >= PER_RUN or total + it['s'] > TOTAL_MAX: continue
+            if n_new >= PER_RUN or (full and not want_rep): continue
             bio = io.BytesIO()
             try: F.retrbinary('RETR ' + it['p'], bio.write)
             except Exception as e: log('  FTP: не скачан', it['p'][-80:], str(e)[:60]); continue
@@ -211,7 +236,19 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
             if want_pub:
                 raw = _thumb(raw, ext)
                 if len(raw) > FILE_MAX: log('  FTP: крупная картинка без превью', it['p'][-60:]); continue
-                if publish_file(fid, raw): pubs[fid] = it['p']; total += len(raw); n_new += 1
+                if total + len(raw) > TOTAL_MAX: full = True; continue      # лимит — по размеру превью, а не оригинала
+                if publish_file(fid, raw): pubs[fid] = it['p']; psz[fid] = len(raw); total += len(raw); n_new += 1
+        try:                                                       # 26.11.2026, Т. В.: файлы > 3 МБ — ужатые на место, оригиналы в «/Большие файлы» (ftp_shrink.py)
+            import ftp_shrink as FX
+            shr = FX.run(F, items, L, log, jload, jsave, t)
+        except Exception as e2:
+            shr = {'state': 'ошибка: %s' % (str(e2)[:120] or e2.__class__.__name__)}
+        st['shr_left'] = shr.get('left', st.get('shr_left') or 0)   # при сбое — прежнее значение
+        try:                                                       # 28.11.2026, Т. В.: файлы из пакета (фото Рекса и др.) → FTP (ftp_put.py)
+            import ftp_put as FP
+            put = FP.run(F, L, log, jload, jsave, t)
+        except Exception as e3:
+            put = {'state': 'ошибка: %s' % (str(e3)[:120] or e3.__class__.__name__)}
         try: F.quit()
         except Exception: pass
     except Exception as e:
@@ -226,6 +263,6 @@ def run(L, log, jload, jsave, publish, publish_file, now, mail_send=None):
         publish('ftp_stores.bin', {'v': 1, 't': t, 'stores': {k: {x: v[x] for x in ('h', 'rows', 'n', 'err', 'm') if x in v} for k, v in stores.items()}})
     st['stores'] = stores; st['stores_pub'] = st.get('stores_pub') or bool(stores)
     left = sum(1 for i in items if not i.get('d') and os.path.splitext(i['p'])[1].lower() in PREVIEW and i.get('id') not in pubs and (i['s'] <= FILE_MAX))
-    st.update({'t': t, 'pub': pubs, 'bytes': total, 'n': len(items), 'err': None, 'backlog': left})
+    st.update({'t': t, 'pub': pubs, 'psz': psz, 'bytes': total, 'n': len(items), 'err': None, 'backlog': left, 'full': full})
     jsave('ftp_state.json', st)
-    return {'state': 'ok', 'n': len(items), 'new': n_new, 'left': left, 'reports': rep, 'mb': round(total / 1048576, 1), 'stores': len(stores)}
+    return {'state': 'ok', 'n': len(items), 'new': n_new, 'left': left, 'full': full, 'pil': _has_pil(), 'reports': rep, 'mb': round(total / 1048576, 1), 'stores': len(stores), 'shrink': shr, 'put': put}

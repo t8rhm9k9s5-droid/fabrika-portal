@@ -10,7 +10,7 @@ const VERSION = '__VERSION__';
 const CORE = 't14-core-' + VERSION, DOCS = 't14-docs', PUB = 't14-public';
 const BASE = new URL('./', self.location).href;
 const PUBLIC = new Set(['sw.js', 'manifest.webmanifest', 'm.bin', '404.html', 'login.html', 'fabrika.apk', 'applink.js']);   // applink.js: «Приложение для Android» в меню (24.10.2026)
-const isPublic = p => PUBLIC.has(p) || p.startsWith('b/') || p.startsWith('icons/') || p.startsWith('k/') || p.startsWith('wx/') || p.startsWith('st/') || p.startsWith('menutest/');   // 15.11.2026: тест меню — отдельное приложение, не через портал   // st/q.php: анонимная статистика устройств для «Качество: Авто» (26.10.2026)   // wx/f.php: погода Сотрудник11 с сервера (26.10.2026)   // k/<id>.bin: the site key for each personal login (wrapped by the person's key)
+const isPublic = p => PUBLIC.has(p) || p.startsWith('b/') || p.startsWith('icons/') || p.startsWith('k/') || p.startsWith('wx/') || p.startsWith('st/') || p.startsWith('menutest/');   // 15.11.2026: тест меню — отдельное приложение, не через портал   // st/q.php: анонимная статистика устройств для «Качество: Авто» (26.10.2026)   // wx/f.php: погода Сотрудник12 с сервера (26.10.2026)   // k/<id>.bin: the site key for each personal login (wrapped by the person's key)
 
 // ---------- key and map in IndexedDB ----------
 // 21.11.2026 (аудит): одно соединение с базой на весь Service Worker — раньше каждое фото «Сайта» после сна SW открывало базу заново
@@ -169,7 +169,11 @@ self.addEventListener('activate', e => {
     await self.clients.claim();
   })());
 });
+// 28.11.2026 (CodeQL js/missing-origin-check 1629): сообщения — только от страниц своего сайта (у Service Worker'а и так только свои клиенты,
+//   проверка — вторая стена). js/remote-property-injection 1627: id набора групп — только вида «sales», «prod+sales» (access.set_id).
+const validSetId = s => typeof s === 'string' && s.length <= 120 && /^[a-z0-9_]+(\+[a-z0-9_]+)*$/.test(s) && s !== '__proto__' && s !== 'constructor' && s !== 'prototype';
 self.addEventListener('message', e => {
+  if (e.origin && e.origin !== self.location.origin) return;
   const d = e.data || {}, src = e.source;
   if (d.type === 'unlock') e.waitUntil((async () => {
     try {
@@ -183,7 +187,7 @@ self.addEventListener('message', e => {
       // ключи наборов групп — тоже в сообщении (Safari не даёт Service Worker'у ключи, записанные страницей)
       if (d.sets && typeof d.sets === 'object') {
         const sets = {};
-        for (const s in d.sets) if (/^[0-9a-f]{64}$/.test(d.sets[s])) sets[s] = await crypto.subtle.importKey('raw', new Uint8Array(d.sets[s].match(/../g).map(h => parseInt(h, 16))), 'AES-GCM', false, ['decrypt']);
+        for (const s of Object.keys(d.sets)) if (validSetId(s) && /^[0-9a-f]{64}$/.test(d.sets[s])) sets[s] = await crypto.subtle.importKey('raw', new Uint8Array(d.sets[s].match(/../g).map(h => parseInt(h, 16))), 'AES-GCM', false, ['decrypt']);
         await kvSet('sets', sets);
       }
       const map = await loadMap(key), prev = await kvGet('map');
@@ -304,6 +308,17 @@ async function serve0(p, req) {
   const c = await caches.open(name);
   const hit = await c.match(BASE + p);
   if (hit && (name === CORE || hit.headers.get('X-T14-Blob') === st.map.files[p][0])) return hit;   // a document changed on the site: download it again
+  // 28.11.2026 (скорость, Т. В.: «быстро на слабом интернете и на iPhone»): вышла новая версия портала, а установка (не дольше 8 с) не успела
+  //   перенести эту страницу в новый кэш — та же страница (тот же блок, X-T14-Blob) берётся из кэша прошлой версии сразу, без скачивания.
+  //   Раньше в этом случае страница (до 1,3 МБ) заново качалась с хостинга и расшифровывалась — на 1–2 Мбит/с это секунды на каждый раздел.
+  if (!hit && name === CORE) {
+    try {
+      for (const k of (await oldCores()).reverse()) {
+        const o = await (await caches.open(k)).match(BASE + p);
+        if (o && o.headers.get('X-T14-Blob') === st.map.files[p][0]) { try { await c.put(BASE + p, o.clone()); } catch (e) { /* места нет — не страшно */ } return o; }
+      }
+    } catch (e) { /* нет — с хостинга, как раньше */ }
+  }
   try {
     const r = await plain(st, p);
     try { await c.put(BASE + p, r.clone()); } catch (e) { /* 15.11.2026: места в браузере нет — страница всё равно открывается */ }

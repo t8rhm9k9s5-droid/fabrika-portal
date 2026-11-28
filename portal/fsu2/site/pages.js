@@ -83,7 +83,7 @@
         '<p class="lead2">Одно из крупнейших мебельных производств в России: Рязань и Москва, склады и офисы продаж в 9 городах.</p></section>' +
         (f.length ? '<div class="facts2">' + f.slice(0, 4).map(function (x) { return '<div><b class="num">' + esc(x.h) + '</b><span>' + esc(x.s) + '</span></div>'; }).join('') + '</div>' : '') +
         '<div class="cotiles">' + CO.map(function (x) { var h = x[0].charAt(0) === '/' ? '/fsu' + x[0] : '/fsu/company/' + x[0]; return '<a href="' + h + '"><b>' + x[1] + '</b><span class="muted">' + x[2] + '</span></a>'; }).join('') + '</div>' +
-        '<section><div class="sh"><h2>Новости</h2><a href="/fsu/company/news">Все новости</a></div><div class="nws">' + S.news_list.slice(0, 4).map(newsTile).join('') + '</div></section>' +
+        '<section><div class="sh"><h2>Новости</h2><a href="/fsu/company/news">Все новости</a></div><div class="nws n4">' + S.news_list.slice(0, 4).map(newsTile).join('') + '</div></section>' +
         (S.projects.length ? '<section><div class="sh"><h2>Проекты</h2><a href="/fsu/projects">Все проекты</a></div><div class="pjs">' + S.projects.slice(0, 3).map(projTile).join('') + '</div></section>' : '');
     });
   }
@@ -114,7 +114,7 @@
       d.title = x.n + ' — Фабрикант';
       var L = S.news_list.filter(function (e) { return e.has; }), i = L.findIndex(function (e) { return e.c === c; });
       return '<article class="post"><time class="muted num">' + dt(x.ts) + '</time><h1 class="ph1">' + esc(x.n) + '</h1>' +
-        (x.big && x.h.indexOf(x.big) < 0 ? '<img class="cover" src="' + x.big + '" alt="" decoding="async">' : '') + '<div class="prose">' + x.h + '</div></article>' +
+        (x.big && x.h.indexOf(x.big) < 0 && !/<img\s/i.test(x.h) ? '<figure class="ncov"><img src="' + x.big + '" data-big="' + x.big + '" alt="" decoding="async" fetchpriority="high"></figure>' : '') + '<div class="prose">' + x.h + '</div></article>' +
         '<nav class="pn">' + (i > 0 ? '<a href="/fsu/company/news/' + L[i - 1].c + '"><span class="muted">Новее</span>' + esc(L[i - 1].n) + '</a>' : '<span></span>') +
         (i >= 0 && i < L.length - 1 ? '<a href="/fsu/company/news/' + L[i + 1].c + '"><span class="muted">Раньше</span>' + esc(L[i + 1].n) + '</a>' : '') + '</nav>';
     });
@@ -128,12 +128,17 @@
   function vProject(c) {
     load('pr', 'Проект', [['Проекты', '/fsu/projects'], ['Проект']], ['proj/' + c + '.json'], function (x) {
       d.title = x.n + ' — Фабрикант'; var u = U(), D = u.data();
-      return '<article class="proj"><span class="eyebrow">' + esc(x.cat) + (x.cli ? ' · ' + esc(x.cli) : '') + (x.days ? ' · ' + n(x.days, 'день', 'дня', 'дней') : '') + '</span><h1 class="ph1">' + esc(x.n) + '</h1>' +
-        (x.big ? '<img class="cover" src="' + x.big + '" alt="" decoding="async">' : '') +
-        (x.task ? '<section><h2>Задача</h2><p class="lead2">' + esc(x.task) + '</p>' + (x.dtask ? '<p>' + esc(x.dtask) + '</p>' : '') + (x.after ? '<p class="pre">' + esc(x.after) + '</p>' : '') + '</section>' : '') +
-        (x.comp && x.comp.length ? '<section><h2>Что поставили</h2><div class="comp">' + x.comp.map(function (q) { return '<div>' + (q.i ? '<img src="' + q.i + '" alt="" loading="lazy">' : '') + '<b class="num">' + esc(q.v) + '</b><span>' + esc(q.d) + '</span></div>'; }).join('') + '</div>' + (x.acomp ? '<p class="pre">' + esc(x.acomp) + '</p>' : '') + '</section>' : '') +
-        (x.ba && x.ba.length ? '<section><h2>До и после</h2><div class="ph2g"><figure><img src="' + x.ba[0].t + '" data-big="' + x.ba[0].s + '" alt="До" loading="lazy"><figcaption>До</figcaption></figure><figure><img src="' + x.ba[1].t + '" data-big="' + x.ba[1].s + '" alt="После" loading="lazy"><figcaption>После</figcaption></figure></div></section>' : '') +
-        (x.ph && x.ph.length ? '<section><h2>Фото</h2><div class="pgal">' + x.ph.map(function (p) { return '<img src="' + p.t + '" data-big="' + p.s + '" alt="" loading="lazy" decoding="async">'; }).join('') + '</div></section>' : '') +
+      // 28.11.2026 №470: проект — как карточка товара: слева крупное фото (по нажатию — крупно), справа суть и действия; ниже — задача, состав, фото, результат
+      var kd = [x.cat ? ['Тип', x.cat] : null, x.cli ? ['Клиент', x.cli] : null, x.days ? ['Срок', n(x.days, 'день', 'дня', 'дней')] : null, x.dt ? ['Год', x.dt.slice(0, 4)] : null].filter(Boolean).slice(0, 3);
+      return '<article class="proj"><div class="cardA pcardA"><div class="pgalA">' + (x.big ? '<button type="button" class="pfrA" data-zoom aria-label="Фото проекта на весь экран"><img src="' + (x.i || x.big) + '"' + (x.i && x.i !== x.big ? ' srcset="' + x.i + ' 640w, ' + x.big + ' 1280w" sizes="(max-width: 900px) 100vw, 55vw"' : '') + ' data-big="' + x.big + '" alt="' + esc(x.n) + '" decoding="async" fetchpriority="high"></button>' : '<div class="pfrA"><span class="muted">Фото готовится</span></div>') + '</div>' +
+        '<div class="infoA"><span class="eyebrow">Проект' + (x.cat ? ' · ' + esc(x.cat) : '') + '</span><h1>' + esc(x.n) + '</h1>' +
+        (x.pi && x.pi.v ? '<p class="pbig"><b class="num">' + esc(x.pi.v) + '</b>' + esc(x.pi.d) + '</p>' : (x.p ? '<p class="lead2">' + esc(x.p) + '</p>' : '')) +
+        (kd.length ? '<div class="keyd">' + kd.map(function (k) { return '<div><span>' + esc(k[0]) + '</span><b>' + esc(k[1]) + '</b></div>'; }).join('') + '</div>' : '') +
+        '<div class="cta"><a class="btn pri" href="mailto:user7@example.org?subject=' + encodeURIComponent('Проект как «' + x.n + '»') + '">Обсудить похожий проект</a><a class="btn" href="/fsu/projects">Все проекты</a></div></div></div>' +
+        (x.task ? '<section class="descA"><div><h2>Задача</h2><p class="lead2">' + esc(x.task) + '</p>' + (x.dtask ? '<p>' + esc(x.dtask) + '</p>' : '') + '</div>' + (x.after ? '<div><h2>Что сделали</h2><p class="pre">' + esc(x.after.replace(/^Что сделали:\s*/i, '')) + '</p></div>' : '') + '</section>' : '') +
+        (x.comp && x.comp.length ? '<section><h2>Что поставили</h2><div class="comp">' + x.comp.map(function (q) { return '<div>' + (q.i ? '<span class="im"><img src="' + q.i + '" alt="" loading="lazy" decoding="async"></span>' : '') + '<b class="num">' + esc(q.v) + '</b><span>' + esc(q.d) + '</span></div>'; }).join('') + '</div>' + (x.acomp ? '<p class="pre prose">' + esc(x.acomp) + '</p>' : '') + '</section>' : (x.acomp ? '<section><h2>О проекте</h2><p class="pre prose">' + esc(x.acomp) + '</p></section>' : '')) +
+        (x.ba && x.ba.length ? '<section><h2>До и после</h2><div class="ph2g"><figure><img src="' + x.ba[0].t + '" data-big="' + x.ba[0].s + '" alt="До" loading="lazy" decoding="async"><figcaption>До</figcaption></figure><figure><img src="' + x.ba[1].t + '" data-big="' + x.ba[1].s + '" alt="После" loading="lazy" decoding="async"><figcaption>После</figcaption></figure></div></section>' : '') +
+        (x.ph && x.ph.length ? '<section><div class="sh"><h2>Фото</h2><span class="muted num">' + x.ph.length + '</span></div><div class="pgal">' + x.ph.map(function (p) { return '<img src="' + p.t + '" data-big="' + p.s + '" alt="" loading="lazy" decoding="async">'; }).join('') + '</div></section>' : '') +
         (x.res ? '<section><h2>Результат</h2><p class="lead2">' + esc(x.res) + '</p></section>' : '') + '</article>';
     });
   }
@@ -212,12 +217,20 @@
     if (sq && sb) {
       var run = function () { var v = sq.q.value.trim(); history.replaceState(null, '', location.pathname + (v ? '?q=' + encodeURIComponent(v) : '')); if (v.length < 2) { sb.innerHTML = ''; return; }
         get('site.json').then(function (S) { return Promise.all(S.stock.map(function (c) { return get('st/' + c.c + '.json'); })); }).then(function (all) {
-          var o = []; all.forEach(function (x) { stockRows(x.rows, v).forEach(function (m) { m.n = m.n; m.city = x.n; o.push(m); }); });
+          var o = []; all.forEach(function (x) { stockRows(x.rows, v).forEach(function (m) { m.city = x.n; o.push(m); }); });
           sb.innerHTML = '<section><h2>Найдено на складах</h2>' + (o.length ? '<div class="stl">' + o.slice(0, 60).map(function (m) { return stockTable([m], m.city).replace(/^<div class="stl">|<\/div>$/g, ''); }).join('') + '</div>' : '<div class="empty">На складах не нашлось — модель под заказ, уточните у отдела продаж.</div>') + '</section>';
         }); };
       var t2; sq.addEventListener('submit', function (e) { e.preventDefault(); run(); }); sq.q.addEventListener('input', function () { clearTimeout(t2); t2 = setTimeout(run, 300); }); if (sq.q.value) run();
     }
   }
+  // 28.11.2026 №470: «Показать ещё» в новостях — дописывает плитки на месте, без прыжка наверх (раньше переход открывал страницу с начала)
+  d.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[data-keep]'); if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    var u = new URL(a.href, location.href); if (u.pathname !== location.pathname) return;
+    e.preventDefault(); var y = window.scrollY; history.replaceState(history.state, '', u.pathname + u.search);
+    var p = u.pathname.replace(/\/+$/, '').split('/').slice(2), q = new URLSearchParams(u.search);
+    if (window.FSU_PAGES.route(p, q)) requestAnimationFrame(function () { window.scrollTo(0, y); });
+  });
   d.addEventListener('click', function (e) {   // фото на странице — крупно поверх
     var im = e.target.closest && e.target.closest('main.pg img[data-big]'); if (!im) return;
     var o = d.createElement('div'); o.className = 'zoom'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Фото');

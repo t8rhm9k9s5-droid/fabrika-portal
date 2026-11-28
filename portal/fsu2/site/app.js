@@ -13,7 +13,7 @@ window.fitPh = function (im) {
   } catch (e) { }
 };
 /* 21.11.2026 — новый каталог techfabrikant.ru/fsu/ (Т. В.: главная «По пространствам», 5–7 фото + 1–2 в интерьере, ИИ-снимки с подписью «визуализация»).
-   Адреса: /fsu/ · /fsu/catalog/[группа/[подраздел/]][код] · /fsu/resheniya/[пространство/] · /fsu/poisk?q=
+   Адреса: /fsu/ · /fsu/catalog/[группа/[подраздел/]][код] · /fsu/resheniya/[пространство/] · /fsu/poisk?q= · /fsu/podbor?gde=&dlya=&ob=&b= (28.11.2026, подбор в 4 вопроса)
    Старые адреса копии /fsu/catalog/<раздел>/<код> открывают карточку и заменяются новым адресом. Данные — /fsu/n/d/idx.json и /fsu/n/d/p/<код>.json. */
 (function () {
   var d = document, $ = function (s, r) { return (r || d).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
@@ -91,7 +91,7 @@ window.fitPh = function (im) {
       '<div class="acts"><a class="aB pri" href="/fsu/catalog/">Открыть каталог</a><a class="aB soft" href="/fsu/resheniya/">Подобрать под помещение</a></div></div>' +
       (K ? '<a class="pic" href="' + K.u + '">' + pic(K) + '<span class="tag"><small>Кресло руководителя</small><b>' + esc(K.n) + '</b></span></a>' : '') + '</section>' +
       '<section class="aCat"><div class="wrap"><div class="sh2"><h2>Каталог</h2><a href="/fsu/catalog/">' + mod(M.total) + ' →</a></div><div class="lt">' +
-      L.map(function (l) { return '<a href="/fsu/catalog/' + l[1] + '/"><i>' + l[0] + '</i><img src="/fsu/f/media/products/letters/' + l[2] + '.png" alt="" loading="lazy"><b>' + l[3] + '</b><span class="num">' + (gk[l[1]] || '') + '</span></a>'; }).join('') +
+      L.map(function (l) { return '<a href="/fsu/catalog/' + l[1] + '/"><i>' + l[0] + '</i><img src="/fsu/f/media/products/letters/' + l[2] + '.png" alt="" loading="lazy" decoding="async"><b>' + l[3] + '</b><span class="num">' + (gk[l[1]] || '') + '</span></a>'; }).join('') +
       '</div></div></section>' +
       (S ? '<section class="wrap aCfg"><a class="pic" href="' + S.u + '">' + pic(S) + '</a><div class="tx"><p class="ey">Новое на сайте</p><h2>Соберите своё исполнение и сразу увидите фото</h2>' +
         '<p class="ld">Каркас, обивка, цвет — из того, что реально есть в прайсе. Самба: 5 обивок и 2 цвета каркаса.</p>' +
@@ -100,17 +100,20 @@ window.fitPh = function (im) {
       '<section class="aB2"><div class="wrap"><h2>Оптовым клиентам в 2 раза выгоднее закупать у производителя</h2><div class="nums">' +
       '<div><b>10 000</b><span>единиц мебели в сутки</span></div><div><b>1000+</b><span>реализованных проектов</span></div><div><b>РФ и СНГ</b><span>представительства и доставка</span></div><div><b>' + M.stores.length + '</b><span>складов с остатками онлайн</span></div></div>' +
       '<a class="aB pri" href="/fsu/company/contacts">Стать партнёром</a></div></section>' +
-      '<section class="wrap aPrj"><img src="/fsu/f/media/projects/phantom/after.png" alt="Проект: интерьер после обновления мебели" loading="lazy"><div class="tx"><small>Проект · 2024</small><h2>400 человек на площади 45 м²</h2>' +
+      // 28.11.2026 №470 (стиль сайта): у проекта — фото самого проекта «Додо Пицца» (было фото стула), у новостей — обложки; даты как в новостях
+      '<section class="wrap aPrj"><a class="pic" href="/fsu/projects/interery-seti-dodo-pitstsa"><img src="/fsu/upload/als-1c/projects/000000002/main.jpg.640.webp" srcset="/fsu/upload/als-1c/projects/000000002/main.jpg.640.webp 480w, /fsu/upload/als-1c/projects/000000002/main.jpg 960w" sizes="(max-width: 900px) 100vw, 50vw" alt="Интерьер кафе «Додо Пицца» с мебелью «Фабриканта»" loading="lazy" decoding="async"></a><div class="tx"><small>Проект · 2024</small><h2>400 человек на площади 45 м²</h2>' +
       '<p class="ld">Интерьеры сети «Додо Пицца». Превращаем обычные помещения в проекты, которые работают на бизнес.</p><a class="more" href="/fsu/projects">Все проекты →</a></div></section>' +
-      '<section class="wrap aNews"><h2>Новости</h2><div class="nw">' +
-      [['16.09.2026', 'Новинки в коллекции обивочных тканей', 'novinki-v-kollektsii-obivochnykh-tkaney'], ['24.08.2026', 'Новинка: опоры из массива бука', 'novinka-opory-iz-massiva-buka'], ['23.08.2026', 'Заключение Минпромторга', 'vazhno-zaklyuchenie-minpromtorga-']]
-        .map(function (n) { return '<a href="/fsu/company/news/' + n[2] + '"><small>' + n[0] + '</small><b>' + n[1] + '</b></a>'; }).join('') + '</div></section>' +
+      '<section class="wrap aNews"><div class="sh2"><h2>Новости</h2><a href="/fsu/company/news">Все новости →</a></div><div class="nw">' +
+      [['17.09.2026', 'Новинки в коллекции обивочных тканей', 'novinki-v-kollektsii-obivochnykh-tkaney', 'REDACTED_B64_27.-2026-g._-18_23_20.png'],
+       ['25.08.2026', 'Новинка: опоры из массива бука', 'novinka-opory-iz-massiva-buka', 'REDACTED_B64_28.png.640.webp'],
+       ['24.08.2026', 'Заключение Минпромторга', 'vazhno-zaklyuchenie-minpromtorga-', 'REDACTED_B64_29.jpeg']]
+        .map(function (n) { return '<a href="/fsu/company/news/' + n[2] + '"><span class="im"><img src="' + n[3] + '" alt="" loading="lazy" decoding="async"></span><small>' + n[0] + '</small><b>' + n[1] + '</b></a>'; }).join('') + '</div></section>' +
       '</main>' + foot();
   }
   function vSpaces() {
     return hdr('sp') + '<main><div class="wrap">' + crumbs([['Решения']]) + '<section class="heroB" style="padding-top:8px"><h1>Решения по пространствам</h1><div class="spaces">' + M.spaces.map(function (s) {
       return '<a class="spc' + (s.d || s.nt ? ' li' : '') + '" href="/fsu/resheniya/' + s.c + '/"><span class="tx"><h3>' + esc(s.n) + '</h3><span class="c num">' + mod(s.k) + '</span></span><span class="im">' +
-        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li).replace(/sizes="[^"]*"/, 'sizes="(max-width: 560px) 100vw, (max-width: 1100px) 66vw, 50vw"') + ' alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
+        (function () { var li = DK() ? (s.nt || s.d) : (s.d || s.nt); if (li) return '<img class="cov1" src="' + TH(li) + '"' + SST(li).replace(/sizes="[^"]*"/, 'sizes="(max-width: 560px) 50vw, (max-width: 1100px) 50vw, 33vw"') + ' alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span>';   // 22.11.2026: интерьер на всю плитку, как в карточке
           return s.i.map(function (k) { return '<img src="' + TH(k) + '" alt="" loading="lazy">'; }).join('') + (s.i.some(function (k) { return AIK()[k]; }) ? '<span class="vis">визуализация</span>' : ''); })() + '</span></a>'; }).join('') + '</div></section></div></main>' + foot();
   }
 
@@ -209,7 +212,7 @@ window.fitPh = function (im) {
 
   // ---------- карточка: вариант А (Т. В. 22.11.2026) ----------
   // фото целиком без обрезки и полос; по нажатию — на весь экран с листанием; все исполнения из прайса с ценой; описание, документы и видео
-  var GO = ['Обивка', 'Цвет каркаса', 'Подлокотники', 'Опора', 'механизм', 'Ролики'];
+  var GO = ['Модель', 'Обивка', 'Цвет каркаса', 'Подлокотники', 'Опора', 'механизм', 'Ролики'];   // 28.11.2026: «Модель» — когда в карточке несколько моделей прайса (Венус и Венус с покрытием, банкетки по длине)
   var CS = null;   // состояние открытой карточки
   function cfgGroups(pr) {
     return GO.map(function (k) { var v = []; pr.forEach(function (r) { var x = r[1][k]; if (x && v.indexOf(x) < 0) v.push(x); }); return { k: k, v: v }; }).filter(function (g) { return g.v.length; });
@@ -219,7 +222,7 @@ window.fitPh = function (im) {
   function cfgHtml() {
     var c = CS.c, pr = c.pr || []; if (!pr.length) return '<div class="note">' + I.info + '<span>Цену и исполнения подскажет отдел продаж: +7 000 000-00-14.</span></div>';
     var gs = cfgGroups(pr), row = cfgRow(pr, CS.sel) || pr[0];
-    return '<div class="cfgA"><div class="prA"><b class="num">' + rub(row[0]) + '</b><span>за 1 шт · по прайсу 28.10.2026</span></div>' + gs.map(function (g) {
+    return '<div class="cfgA"><div class="prA"><b class="num">' + rub(row[0]) + '</b><span>за 1 шт · цена для Москвы и Рязани (колонка I прайса 28.10.2026)</span></div>' + gs.map(function (g) {
       if (g.v.length < 2) return '<div class="og"><small>' + esc(g.k === 'механизм' ? 'Механизм' : g.k) + '</small><div><span class="chip on">' + esc(g.v[0]) + '</span></div></div>';
       return '<div class="og"><small>' + esc(g.k === 'механизм' ? 'Механизм' : g.k) + '</small><div>' + g.v.map(function (v) {
         var t = Object.assign({}, CS.sel); t[g.k] = v; var r = cfgRow(pr, t), on = CS.sel[g.k] === v;
@@ -397,6 +400,131 @@ window.fitPh = function (im) {
   }
   function vMiss(t) { return hdr() + '<main><div class="wrap">' + crumbs([['Не найдено']]) + '<div class="empty" style="margin:24px 0">' + esc(t) + ' <a href="/fsu/catalog/" style="color:var(--accent-ink);font-weight:700">Открыть каталог</a></div></div></main>' + foot(); }
 
+  // ---------- 28.11.2026, задача №439: «Подбор в 4 вопроса» вместо фильтров — /fsu/podbor?gde=&dlya=&ob=&b= ----------
+  // где будет стоять → для чего → обивка → бюджет за 1 шт; каждый ответ — обычная ссылка (шаг назад = кнопка «назад» браузера), «any» = неважно.
+  // Данные — /fsu/n/d/pw.json (work/fsu2/podbor_wizard.py): пространства, роли, обивка, цена «от» по прайсу. Прежний подбор с галочками — /fsu/podbor?all=1 (pages.js).
+  var PW = null, PWP = null;
+  function pwLoad() { if (!PWP) PWP = fetch('/fsu/n/d/pw.json?v=' + (window.FSU_NEW_V || '')).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) { PW = j.r || {}; return PW; }, function (e) { PWP = null; throw e; }); return PWP; }
+  var PKQ = { gde: ['Где будет стоять мебель?', 'Выберите помещение — покажем модели, которые для него делаем.'], dlya: ['Для чего она нужна?', 'От этого зависит, кресло это, стул, диван или стол.'],
+    ob: ['Какая обивка нужна?', 'Ткань тёплая и мягкая, экокожу легко протирать, сетка не даёт спине потеть.'], b: ['Бюджет за одно место', 'Цена за 1 шт по прайсу на 28.10.2026, без доставки. Оптом — дешевле, уточнит отдел продаж.'] };
+  var PKR = [['rab', 'Рабочее место', 'Сидят весь день — кресло с регулировками'], ['ruk', 'Кабинет руководителя', 'Представительное кресло'], ['pos', 'Посетители и переговоры', 'Стулья для гостей и конференц-зала'],
+    ['ozh', 'Ожидание и отдых', 'Диваны, кресла, секции, банкетки'], ['gost', 'Гости за столом', 'Стулья для кафе, столовой, кухни'], ['bar', 'Барная стойка', 'Барные и полубарные стулья'],
+    ['ucheb', 'Ученики и дети', 'Ученические и детские стулья, парты'], ['stol', 'Столы', 'Столы и подстолья'], ['aks', 'Вешалки и урны', 'Для холла и входа']];
+  var PKRX = { medicina: { rab: ['Кабинет врача, лаборатория', 'Кушетки, табуреты, медицинские стулья'], ozh: ['Пациенты в холле', 'Секции, банкетки, мягкие кресла'] },
+    shkoly: { rab: ['Учитель, компьютерный класс', 'Кресла для работы за компьютером'], pos: ['Учительская, аудитория', 'Стулья для посетителей и занятий'] },
+    horeca: { ozh: ['Лаунж и лобби', 'Диваны и мягкие кресла'], pos: ['Номера и переговорные', 'Стулья для гостей'] },
+    'zaly-ozhidaniya': { ozh: ['Зал ожидания, театр', 'Секции, диваны, театральные кресла, банкетки'], pos: ['Стулья для посетителей', 'Отдельные стулья в холл'] },
+    dom: { rab: ['Домашний кабинет', 'Кресло для работы за компьютером'], gost: ['Кухня и столовая', 'Стулья к обеденному столу'], ozh: ['Гостиная', 'Диваны и кресла'], ucheb: ['Детская', 'Детские стулья и кресла'] } };
+  var PKO = [['tkan', 'Ткань', 'Велюр, рогожка, букле — тёплая и мягкая'], ['ekokozha', 'Экокожа', 'Легко протирать — для кафе и клиник'], ['kozha', 'Натуральная кожа', 'Для кабинета руководителя'],
+    ['setka', 'Сетка', 'Спинка дышит — не жарко весь день'], ['bez', 'Без обивки', 'Пластик или дерево — проще мыть']];
+  var PKB = [[3000, 'до 3 000 ₽'], [6000, 'до 6 000 ₽'], [12000, 'до 12 000 ₽'], [25000, 'до 25 000 ₽']];
+  var PKK = ['gde', 'dlya', 'ob', 'b'];
+  function pkNoOb(st) { return st.dlya === 'stol' || st.dlya === 'aks'; }   // у столов и вешалок обивки нет — вопрос пропускаем
+  function pkSteps(st) { return PKK.filter(function (k) { return k !== 'ob' || !pkNoOb(st); }); }
+  function pkU(st, add) {
+    var o = Object.assign({}, st, add || {}), p = new URLSearchParams();
+    PKK.concat(['go', 'sort']).forEach(function (k) { if (o[k] != null && o[k] !== '') p.set(k, o[k]); });
+    var s = p.toString(); return '/fsu/podbor' + (s ? '?' + s : '');
+  }
+  function pkPass(c, e, st, skip, noPrice) {   // noPrice: модели без цены в прайсе проходят бюджет (их показываем отдельно)
+    if (!e || !BY[c]) return false;
+    if (skip !== 'gde' && st.gde && st.gde !== 'any' && e.s.indexOf(st.gde) < 0) return false;
+    if (skip !== 'dlya' && st.dlya && st.dlya !== 'any' && e.r.indexOf(st.dlya) < 0) return false;
+    if (skip !== 'ob' && st.ob && st.ob !== 'any' && !pkNoOb(st) && (e.o || []).indexOf(st.ob) < 0) return false;
+    if (skip !== 'b' && st.b && st.b !== 'any') { var pr = pkPr(e, st); if (!pr) return !!noPrice; if (pr > +st.b) return false; }
+    return true;
+  }
+  function pkPr(e, st) { return (st.ob && st.ob !== 'any' && e.po && e.po[st.ob]) || e.p || 0; }   // цена «от» с выбранной обивкой
+  function pkPool(st, skip, noPrice) { var r = []; for (var c in PW) if (pkPass(c, PW[c], st, skip, noPrice)) r.push(c); return r; }
+  function pkLbl(k, v, st) {
+    if (v === 'any') return 'Неважно';
+    if (k === 'gde') return (SP[v] || {}).n || v;
+    if (k === 'dlya') { var x = (PKRX[st.gde] || {})[v], r = PKR.filter(function (q) { return q[0] === v; })[0]; return x ? x[0] : r ? r[1] : v; }
+    if (k === 'ob') { var o = PKO.filter(function (q) { return q[0] === v; })[0]; return o ? o[1] : v; }
+    if (k === 'b') { var b = PKB.filter(function (q) { return String(q[0]) === String(v); })[0]; return b ? b[1] : 'до ' + rub(v); }
+    return v;
+  }
+  function pkSum(st, cur) {   // ответы: нажать — вернуться к вопросу, остальное сохраняется
+    return pkSteps(st).filter(function (k) { return st[k] && k !== cur; }).map(function (k) {
+      var o = {}; o[k] = ''; o.go = ''; return '<a class="chip pkA" href="' + pkU(st, o) + '" aria-label="Изменить: ' + esc(PKQ[k][0]) + '"><small>' + esc({ gde: 'Где', dlya: 'Для чего', ob: 'Обивка', b: 'Бюджет' }[k]) + '</small>' + esc(pkLbl(k, st[k], st)) + '</a>';
+    }).join('');
+  }
+  function pkOpt(href, t, h, n, on, pic, unit) {
+    var c = n ? pl(n, 'модель', 'модели', 'моделей') : 'нет моделей';
+    var inner = (pic || '') + '<span class="tx"><b>' + esc(t) + '</b>' + (h ? '<span class="h">' + esc(h) + '</span>' : '') + '</span><span class="c num">' + esc(unit ? unit(n) : c) + '</span>';
+    return n ? '<a class="pkC' + (on ? ' on' : '') + (pic ? ' pic' : '') + '" href="' + href + '"' + (on ? ' aria-current="true"' : '') + '>' + inner + '</a>'
+      : '<span class="pkC off' + (pic ? ' pic' : '') + '" aria-disabled="true">' + inner + '</span>';
+  }
+  function vPick(q) {
+    var st = {}; PKK.concat(['go', 'sort']).forEach(function (k) { var v = q.get(k); if (v) st[k] = v; });
+    if (st.gde && st.gde !== 'any' && !SP[st.gde]) delete st.gde;
+    d.title = 'Подбор мебели — Фабрикант';
+    if (!PW) return hdr('pb') + '<main class="pk"><div class="wrap">' + crumbs([['Подбор']]) + '<div class="loading">Загружаю подбор…</div></div></main>' + foot();
+    var steps = pkSteps(st), cur = st.go ? null : steps.filter(function (k) { return !st[k]; })[0];
+    if (!cur) return pkResult(st);
+    var i = steps.indexOf(cur), all = pkPool(st, cur, true), opts = '', has = PKK.some(function (k) { return st[k]; });   // есть ответы — сводка и «Показать сразу»
+    var any = function (n) { var o = {}; o[cur] = 'any'; return pkOpt(pkU(st, o), cur === 'b' ? 'Бюджет неважен' : 'Неважно', cur === 'gde' ? 'Покажем всё, кроме материалов и комплектующих' : 'Пропустить вопрос', n, st[cur] === 'any'); };
+    if (cur === 'gde') {
+      opts = M.spaces.map(function (s) { var n = pkPool(Object.assign({}, st, { gde: s.c }), null, true).length, li = DK() ? (s.nt || s.d) : (s.d || s.nt);
+        return pkOpt(pkU(st, { gde: s.c }), s.n, '', n, false, li ? '<span class="im"><img src="' + TH(li) + '" alt="" loading="lazy" decoding="async"><span class="vis">визуализация</span></span>' : ''); }).join('') + any(all.length);
+    } else if (cur === 'dlya') {
+      opts = PKR.map(function (r) { var n = pkPool(Object.assign({}, st, { dlya: r[0] }), null, true).length; if (!n) return ''; var x = (PKRX[st.gde] || {})[r[0]] || [r[1], r[2]];
+        return pkOpt(pkU(st, { dlya: r[0] }), x[0], x[1], n); }).join('') + any(all.length);
+    } else if (cur === 'ob') {
+      opts = PKO.map(function (o) { var n = pkPool(Object.assign({}, st, { ob: o[0] }), null, true).length; return pkOpt(pkU(st, { ob: o[0] }), o[1], o[2], n); }).join('') + any(all.length);
+    } else {
+      var np = all.filter(function (c) { return !pkPr(PW[c], st); }).length;
+      opts = PKB.map(function (b) { var n = pkPool(Object.assign({}, st, { b: b[0] }), null, false).length; return pkOpt(pkU(st, { b: b[0] }), b[1], '', n, false, '', function (n) { return n ? pl(n, 'модель', 'модели', 'моделей') + ' с ценой' : 'нет моделей'; }); }).join('') + any(all.length);
+      if (np) opts += '<p class="pkNote">' + I.info + '<span>У ' + pl(np, 'модели', 'моделей', 'моделей') + ' из подходящих цены в прайсе нет — покажем их отдельно, цену назовёт отдел продаж: <a class="num" href="tel:+7 000 000-00-17">+7 000 000-00-14</a>.</span></p>';
+    }
+    var prev = i ? (function () { var o = {}; o[steps[i - 1]] = ''; return pkU(st, o); })() : '';
+    return hdr('pb') + '<main class="pk"><div class="wrap">' + crumbs([['Подбор', i ? '/fsu/podbor' : '']].concat(i ? [['Шаг ' + (i + 1)]] : [])) +
+      '<div class="pkTop"><span class="eyebrow num">Шаг ' + (i + 1) + ' из ' + steps.length + '</span><span class="pkBar" aria-hidden="true">' + steps.map(function (k, j) { return '<i' + (j <= i ? ' class="on"' : '') + '></i>'; }).join('') + '</span></div>' +
+      (has ? '<div class="chips pkSum">' + pkSum(st, cur) + '</div>' : '') +
+      '<h1 class="pkH">' + esc(PKQ[cur][0]) + '</h1><p class="pkLd">' + esc(PKQ[cur][1]) + '</p>' +
+      '<div class="pkO' + (cur === 'gde' ? ' pics' : '') + '">' + opts + '</div>' +
+      '<div class="pkNav">' + (i ? '<a class="btn" href="' + prev + '">' + I.back + 'Назад</a>' : '') + (has ? '<a class="btn pri" href="' + pkU(st, { go: '1' }) + '">Показать ' + pl(all.length, 'модель', 'модели', 'моделей') + '</a>' : '') + '</div>' +
+      (has ? '' : '<p class="pkMore muted">Нужно точнее — опора, подлокотники, габариты? <a href="/fsu/podbor?all=1">Подробный подбор по свойствам</a></p>') +
+      '</div></main>' + foot();
+  }
+  var PKS = { n: 24 };
+  function pkScore(c, st) { var x = BY[c]; return (st.gde && x.sp.indexOf(st.gde) >= 0 ? 4 : 0) + (x.hit ? 3 : 0) + (x.st ? 2 : 0) + (x.ts || x.tm ? 1 : 0) + (x.np >= 3 ? 1 : 0) + (pkPr(PW[c], st) ? 1 : 0); }
+  function pkTile(c) { var p = pkPr(PW[c], PKS.st || {}); return tile(BY[c]).replace(/<\/div><\/a>$/, '<span class="pkP num' + (p ? '' : ' no') + '">' + (p ? 'от ' + rub(p) : 'цена по запросу') + '</span></div></a>'); }
+  function pkSort(r, st) {
+    var s = st.sort || 'fit';
+    return r.sort(function (a, b) { var pa = pkPr(PW[a], st) || 9e9, pb = pkPr(PW[b], st) || 9e9;
+      return s === 'cheap' ? pa - pb : s === 'dear' ? pkPr(PW[b], st) - pkPr(PW[a], st) : pkScore(b, st) - pkScore(a, st) || pa - pb || BY[a].n.localeCompare(BY[b].n, 'ru'); });
+  }
+  function pkResult(st) {
+    var hasB = st.b && st.b !== 'any', r = pkSort(pkPool(st), st), np = hasB ? pkSort(pkPool(st, null, true).filter(function (c) { return !pkPr(PW[c], st); }), st) : [];
+    PKS = { st: st, r: r, n: 24 };   // до разметки: pkTile берёт обивку из PKS.st
+    var tl = r.length ? 'Подходит ' + pl(r.length, 'модель', 'модели', 'моделей') : np.length ? 'С ценой в бюджете моделей нет' : 'Ничего не нашлось';
+    var soft = r.length || np.length ? '' : '<div class="empty pkE"><p>Под все условия сразу моделей нет. Уберите одно условие:</p><div class="chips">' + pkSteps(st).filter(function (k) { return st[k] && st[k] !== 'any'; }).map(function (k) {
+      var o = {}; o[k] = 'any'; var n = pkPool(Object.assign({}, st, o), null, true).length;
+      return n ? '<a class="chip" href="' + pkU(st, o) + '">' + esc(k === 'b' ? 'Любой бюджет' : k === 'ob' ? 'Любая обивка' : k === 'dlya' ? 'Любое назначение' : 'Любое помещение') + ' <span class="c">' + n + '</span></a>' : ''; }).join('') + '</div></div>';
+    return hdr('pb') + '<main class="pk"><div class="wrap">' + crumbs([['Подбор', '/fsu/podbor'], ['Результат']]) +
+      '<div class="lhead"><div><h1 class="pkH">' + esc(tl) + '</h1><p class="pkLd">' + (r.length ? 'Сначала — сделанные для этого помещения, хиты и те, что есть на складах.' : '') + '</p></div></div>' +
+      '<div class="chips pkSum">' + pkSum(st) + '<a class="chip pkR" href="/fsu/podbor">Начать заново</a></div>' +
+      (r.length > 1 ? '<div class="tools"><select id="pksort" aria-label="Сортировка">' + [['fit', 'Сначала подходящие'], ['cheap', 'Сначала дешевле'], ['dear', 'Сначала дороже']].map(function (o) {
+        return '<option value="' + o[0] + '"' + ((st.sort || 'fit') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '') +
+      soft + '<div class="grid" id="pkgrid"></div><div class="more" id="pkmore"></div>' +
+      (np.length ? '<section class="pkNp"><div class="sh"><h2>Ещё ' + pl(np.length, 'модель', 'модели', 'моделей') + ' — цена по запросу</h2></div><p class="muted pkLd">В прайсе на 28.10.2026 цены нет — назовёт отдел продаж: <a class="num" href="tel:+7 000 000-00-17">+7 000 000-00-14</a>.</p><div class="grid">' +
+        np.slice(0, 12).map(pkTile).join('') + '</div>' + (np.length > 12 ? '<p class="pkMore muted">И ещё ' + (np.length - 12) + ' — <a href="' + pkU(st, { b: 'any' }) + '">показать все без учёта бюджета</a></p>' : '') + '</section>' : '') +
+      '<p class="pkMore muted">Нужно точнее — опора, подлокотники, габариты? <a href="/fsu/podbor?all=1">Подробный подбор по свойствам</a> · <a href="/fsu/catalog/">Весь каталог</a></p>' +
+      '</div></main>' + foot();
+  }
+  function pkPaint() {
+    var g = $('#pkgrid'), m = $('#pkmore'); if (!g || !PKS.r) return; var r = PKS.r;
+    g.innerHTML = r.slice(0, PKS.n).map(pkTile).join('');
+    m.innerHTML = r.length > PKS.n ? '<button class="btn" type="button" id="pkmorebtn">Показать ещё ' + Math.min(24, r.length - PKS.n) + ' из ' + (r.length - PKS.n) + '</button>' : '';
+  }
+  function bindPick() {
+    if (!PW) { var my = seq; pwLoad().then(function () { if (my === seq) route(); }, function () { if (my === seq) show(vMiss('Подбор не загрузился — нет связи. Обновите страницу.')); }); return; }
+    pkPaint();
+    var s = $('#pksort'); if (s) s.addEventListener('change', function () { var st = PKS.st; st.sort = s.value === 'fit' ? '' : s.value; history.replaceState(history.state, '', pkU(st)); PKS.r = pkSort(PKS.r, st); PKS.n = Math.max(24, PKS.n); pkPaint(); });
+    var m = $('#pkmore'); if (m) m.addEventListener('click', function (e) { if (e.target.id === 'pkmorebtn') { PKS.n += 24; pkPaint(); } });
+  }
+
   // ---------- маршрутизация ----------
   var seq = 0;
   function show(h, after) { $('#app').innerHTML = h; if (after) after(); }
@@ -431,6 +559,8 @@ window.fitPh = function (im) {
       }
       return card(p[p.length - 1], true);
     }
+    // 28.11.2026, №439: подбор в 4 вопроса; прежний подбор с галочками (pages.js) — по его параметрам или ?all=1
+    if (p[0] === 'podbor' && !p[1] && !['all', 'k', 'op', 'm', 'soft', 'arm', 'w', 'h'].some(function (k) { return q.has(k); })) return show(vPick(q), bindPick);
     if (window.FSU_PAGES && window.FSU_PAGES.route(p, q)) return;   // 21.11.2026: страницы компании, проекты, остатки, подбор — pages.js
     show(vMiss('Страница не найдена.'));
   }

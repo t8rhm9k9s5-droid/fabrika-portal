@@ -461,3 +461,57 @@ h1{font-size:clamp(30px,5.2vw,56px)}
 .spc.li{min-height:240px}
 .spc.li .tx{align-self:flex-start;max-width:none!important;background:color-mix(in srgb,#fff 88%,transparent);color:#1C1C1E;padding:10px 14px;border-radius:16px}
 .spc.li .vis{position:absolute;right:12px;bottom:12px;left:auto;z-index:2}
+
+/* 28.11.2026, задача №439: «Подбор в 4 вопроса» (/fsu/podbor) — один вопрос на экран, ответ — карточка с числом подходящих моделей */
+.pk .pkTop{display:flex;align-items:center;gap:14px;margin:14px 0 10px}
+.pkBar{display:flex;gap:4px;flex:1;max-width:220px}
+.pkBar i{flex:1;height:4px;border-radius:99px;background:var(--line)}
+.pkBar i.on{background:var(--accent)}
+.pkSum{margin:0 0 14px}
+.pkSum .pkA{height:auto;min-height:36px;padding:5px 14px;white-space:normal;text-align:left}
+.pkSum .pkA small{color:var(--ink-2);font-size:13px;margin-right:2px}
+.pkSum .pkA::after{content:"";width:14px;height:14px;flex:none;opacity:.6;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16v4z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16v4z'/%3E%3C/svg%3E") center/contain no-repeat}
+.pkSum .chip:hover{border-color:var(--ink-2)}
+.pkSum .pkR{color:var(--accent-ink);font-weight:700}
+.pkH{font-size:clamp(28px,4.4vw,48px);line-height:1.05}
+.pkLd{margin:10px 0 22px;font-size:17px;color:var(--ink-2);max-width:40em}
+.lhead .pkLd{margin-bottom:0}
+.pkO{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.pkO.pics{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.pkC{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 14px;min-height:76px;padding:14px 18px;background:var(--card);border:1px solid var(--line);border-radius:var(--ds-r-inner,18px);transition:transform .15s ease-out,box-shadow .2s,border-color .15s}
+a.pkC:hover{transform:translateY(-2px);box-shadow:0 12px 30px var(--shade);border-color:var(--ink-2)}
+a.pkC:active{transform:translateY(0);box-shadow:none}
+.pkC .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pkC b{font-size:17px;line-height:1.25}
+.pkC .h{font-size:14px;line-height:1.35;color:var(--ink-2)}
+.pkC .c{font-size:14px;font-weight:700;color:var(--accent-ink);white-space:nowrap;text-align:right}
+.pkC.on{border:2px solid var(--ink);padding:13px 17px}
+.pkC.off{opacity:.55;cursor:default}
+.pkC.off .c{color:var(--ink-2);font-weight:400}
+.pkC.pic{grid-template-columns:1fr auto;padding:0 0 14px;overflow:hidden}
+.pkC.pic .im{grid-column:1/-1;position:relative;display:block;aspect-ratio:16/9;background:var(--stone);margin-bottom:10px;overflow:hidden}
+.pkC.pic .im img{width:100%;height:100%;object-fit:cover;object-position:50% 62%}
+.pkC.pic .tx{padding-left:18px}.pkC.pic .c{padding-right:18px}
+.pkNav{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.pkNav .btn .ico{margin-left:-6px}
+.pkNote{grid-column:1/-1;display:flex;gap:10px;margin:4px 0 0;padding:12px 14px;border-radius:var(--ds-r-inner,18px);background:var(--card);font-size:15px;color:var(--ink-2)}
+.pkNote a,.pkMore a,.pkNp a{color:var(--accent-ink);font-weight:700}
+.pkMore{margin:26px 0 0;font-size:15px}
+.pkP{font-size:15px;font-weight:700;color:var(--ink);margin-top:2px}
+.pkP.no{font-weight:400;font-size:13px;color:var(--ink-2)}
+.pkE p{margin:0 0 14px}.pkE .chips{justify-content:center}
+.pkNp{padding-top:36px}
+@media (max-width:600px){
+  .pkLd{font-size:16px;margin-bottom:18px}
+  .pkO{gap:8px}
+  .pkO.pics{grid-template-columns:1fr 1fr}
+  .pkC{min-height:64px;padding:12px 14px}
+  .pkC.on{padding:11px 13px}
+  .pkC.pic{grid-template-columns:1fr;padding:0 0 12px;gap:2px}
+  .pkC.pic .im{aspect-ratio:4/3;margin-bottom:8px}
+  .pkC.pic .tx{padding:0 12px}.pkC.pic .c{padding:0 12px;text-align:left;font-size:13px}
+  .pkC.pic b{font-size:15px}
+  .pkNav .btn{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){a.pkC,a.pkC:hover{transition:none;transform:none}}
+.pkO.pics .pkC:not(.pic){grid-column:1/-1}   /* «Неважно» под плитками помещений — на всю ширину */

@@ -29,6 +29,11 @@ def K(sub): return next(k for k in A if sub in k)
 X = _rj(os.path.join(BASE, '_api', '_fidx.json')); FV = X.get('v') or {}
 _A = os.path.join(FSU, 'assort')
 PT = _rj(os.path.join(_A, 'price_tier.json')) if os.path.exists(os.path.join(_A, 'price_tier.json')) else {}
+# 28.11.2026 (агент sait, сверка с прайсом 28.10 и 1С 17.11): модели прайса по карточке — список (assort/price_map.json, важнее price_tier.m);
+#   габариты и вес из 1С там, где в карточке пусто (assort/dims_fill.json), и исправления расхождений (assort/dims_review.json — только с FSU_DIMS_REVIEW=1)
+PMAP = (_rj(os.path.join(_A, 'price_map.json')).get('map') or {}) if os.path.exists(os.path.join(_A, 'price_map.json')) else {}
+DIMF = (_rj(os.path.join(_A, 'dims_fill.json')).get('items') or {}) if os.path.exists(os.path.join(_A, 'dims_fill.json')) else {}
+DIMR = (_rj(os.path.join(_A, 'dims_review.json')).get('items') or {}) if os.environ.get('FSU_DIMS_REVIEW') == '1' and os.path.exists(os.path.join(_A, 'dims_review.json')) else {}
 PR = _rj(os.path.join(_A, 'prais_rows.json')) if os.path.exists(os.path.join(_A, 'prais_rows.json')) else []
 COLS = _rj(os.path.join(_A, 'colors.json')) if os.path.exists(os.path.join(_A, 'colors.json')) else {}
 OKNIGHT = {'katrin-kreslo', 'samba-box4-stul', 'chestermen-kreslo', 'metro-urna', 'kombi-urna', 'domik-urna', 'karandash-urna-213351698', 'opora-urna-statsionarnaya', 'zamok-urna', 'atlant-kreslo-1030986919', 'milan-kreslo'}
@@ -266,6 +271,21 @@ def img(p):
     return k
 
 
+LIVEN = '/home/claude/build/live_mirror/fsu/n'   # 26.11.2026: копия действующего «Сайта» (tools/live_mirror.py)
+def _live(c):
+    try: return _rj(os.path.join(LIVEN, 'd', 'p', c + '.json'))
+    except Exception: return None
+def _keep(k):   # снимок действующего портала в out/ (как img(), только из копии)
+    if k in used: return True
+    src = [(os.path.join(LIVEN, 'i', k + '.webp'), os.path.join(N, 'i', k + '.webp')), (os.path.join(LIVEN, 'i', 'm', k + '.webp'), os.path.join(N, 'i', 'm', k + '.webp')),
+           (os.path.join(LIVEN, 'i', 't', k + '.webp'), os.path.join(N, 'i', 't', k + '.webp'))]
+    if not all(os.path.exists(a) for a, _ in src): return False
+    for a, b in src:
+        try: os.link(a, b)
+        except OSError: shutil.copy2(a, b)
+    used.add(k); return True
+
+
 idx = []; cards = {}
 for it in ITEMS:
     c = it['code']; d = PAGE.get(c, {}); it['_nm'] = clean(it['name']).lower(); iid = int(it['id'])
@@ -290,6 +310,18 @@ for it in ITEMS:
     sub = subs[0] if subs else ('drugie' if G[3] else '')
     gl = [{'k': img(x['p']), 'ai': x['ai'], 't': x['k']} for x in gal[c]]; gl = [x for x in gl if x['k']]
     lit = {x['t']: x['k'] for x in gl if x['t'] in LITK}; cvs = {x['t'][3:]: x['k'] for x in gl if x['t'].startswith('cv:')}; gl = [x for x in gl if x['t'] not in LITK and not x['t'].startswith('cv:')]
+    # 26.11.2026 (полная сборка): исходники ИИ-кадров и интерьеров после перезапуска облака 25.11 утеряны — карточка действующего портала
+    #   (копия build/live_mirror) — основа: её снимки, кадры тем и цвета сохраняются как есть, новые местные фото добавляются в конец
+    LV = _live(c)
+    if LV:
+        _loc = gl; _have = set(); gl = []
+        for x in (LV.get('ph') or []) + (LV.get('in') or []):
+            if x.get('k') and x['k'] not in _have and _keep(x['k']): gl.append(dict(x)); _have.add(x['k'])
+        gl += [x for x in _loc if x['k'] not in _have]
+        for t, k in (LV.get('th') or {}).items():
+            if k and _keep(k): lit[t] = k
+        for t, k in (LV.get('cv') or {}).items():
+            if t not in cvs and k and _keep(k): cvs[t] = k
     photos = [x for x in gl if x['t'] not in ('interior', 'info')]; inter = [x for x in gl if x['t'] == 'interior']; infg = [x for x in gl if x['t'] == 'info']
     h = [num(d.get('heightMin')) or None, num(d.get('heightMax')) or None]
     w = num(d.get('widthMax')) or num(d.get('widthMin')); dp = num(d.get('depthMax')) or num(d.get('depthMin'))
@@ -302,6 +334,18 @@ for it in ITEMS:
          'st': len(d.get('inStores') or []), 'q': ' '.join([clean(it['name']), clean(d.get('articul')), ' '.join(pur), ' '.join(mat), G[1]]).lower().replace('ё', 'е')}
     idx.append(e)
     ch = [{'t': clean(g0.get('title')), 'v': [[clean(v.get('name')), clean(v.get('value'))] for v in g0.get('values', [])]} for g0 in (d.get('characteristics') or [])]
+    for _mode, _src in (('fill', DIMF), ('fix', DIMR)):   # 28.11.2026: габариты/вес из 1С — пустые дополняем, расхождения (с FSU_DIMS_REVIEW=1) заменяем
+        _dx = _src.get(c)
+        if not _dx: continue
+        _g = next((g0 for g0 in ch if g0['t'] == 'Габариты'), None)
+        if _g is None: _g = {'t': 'Габариты', 'v': []}; ch.insert(0, _g)
+        for _n in ('Ширина', 'Глубина', 'Высота', 'Вес'):
+            if _n not in _dx: continue
+            _i = next((j for j, v in enumerate(_g['v']) if v[0] == _n), None)
+            if _i is None: _g['v'].append([_n, _dx[_n]])
+            elif _mode == 'fix': _g['v'][_i][1] = _dx[_n]
+        for _k in ('w', 'dp', 'h'):
+            if _dx.get(_k) and (_mode == 'fix' or not (e[_k] if _k != 'h' else any(e['h']))): e[_k] = _dx[_k]
     ft = [{'n': clean(f.get('name')), 'i': img(fpath((f.get('image') or {}).get('src'))) if f.get('image') else None} for f in ((d.get('features') or {}).get('items') or [])]
     desc = re.split(r'По прайсу', clean(d.get('description')))[0].strip()
     if len(re.sub(r'<[^>]+>', '', desc)) < 200 and DESCN.get(c): desc = DESCN[c]; DESC_USED.append(c)   # 22.11.2026, Т. В.: «полное описание — если нет, написать» (work/fsu/desc/out.json, проверено Claude)
@@ -309,7 +353,8 @@ for it in ITEMS:
     cards[c] = {'c': c, 'n': e['n'], 'art': clean(d.get('articul')), 'desc': desc, 'ph': photos, 'in': inter, 'inf': infg, 'th': lit, 'ch': ch, 'ft': ft, 'st': d.get('inStores') or [], 'sim': sim}
     # 22.11.2026, Т. В. (карточка А): все исполнения по прайсу 28.10 — цена и опции; документы/видео товара — assort/docs.json
     _pm = (PT.get(c) or {}).get('m')
-    cards[c]['pr'] = [[r['p1'], {k.strip(): str(v).strip() for k, v in r['opt'].items() if str(v).strip() not in ('-', '') and k.strip() not in ('I',)}] for r in PR if _pm and r['m'].strip() == _pm.strip()]
+    _pms = {x.strip() for x in (PMAP[c] if c in PMAP else ([_pm] if _pm else []))}   # 28.11.2026: несколько моделей прайса на карточку; [] — своей модели в прайсе нет
+    cards[c]['pr'] = [[r['p1'], dict({k.strip(): str(v).strip() for k, v in r['opt'].items() if str(v).strip() not in ('-', '') and k.strip() not in ('I',)}, **({'Модель': re.sub(r'\s+', ' ', r['m']).strip()} if len(_pms) > 1 else {}))] for r in PR if r['m'].strip() in _pms]   # несколько моделей — выбор «Модель» (n/app.js: GO)
     cards[c]['docs'] = [x for x in DOCS.get(c, []) if isinstance(x, dict) and DOCS_RX.match(str(x.get('u', '')))]
     cards[c]['col'] = COLS.get(c, {}); cards[c]['cv'] = cvs
 # похожие: из копии, иначе — тот же подраздел (хиты первыми)
@@ -396,9 +441,11 @@ logo = re.sub(r'<svg([^>]*?)\swidth="(\d+)"\s+height="(\d+)"', lambda m: '<svg c
 _wt(os.path.join(N, 'logo.svg'), logo)
 def _rb(p):
     with open(p, 'rb') as f: return f.read()
+# 28.11.2026 (№439): подбор в 4 вопроса — n/d/pw.json (podbor_wizard.py), входит в версию
+sys.path.insert(0, HERE); import podbor_wizard; PWREP = podbor_wizard.build(BASE, N, idx, cards)
 _ch = hashlib.md5()   # CG-67: версия учитывает и im.json, и данные карточек (описания, документы, фото)
 for _p in sorted(os.listdir(os.path.join(N, 'd', 'p'))): _ch.update(_rb(os.path.join(N, 'd', 'p', _p)))
-ver = hashlib.md5(b''.join(_rb(os.path.join(N, f)) for f in ('ds.css', 'app.css', 'app.js', 'boot.js')) + _rb(os.path.join(N, 'd', 'idx.json')) + _rb(os.path.join(N, 'd', 'im.json')) + _ch.digest()).hexdigest()[:10]
+ver = hashlib.md5(b''.join(_rb(os.path.join(N, f)) for f in ('ds.css', 'app.css', 'app.js', 'boot.js')) + _rb(os.path.join(N, 'd', 'idx.json')) + _rb(os.path.join(N, 'd', 'im.json')) + _rb(os.path.join(N, 'd', 'pw.json')) + _ch.digest()).hexdigest()[:10]
 print('описания: применено %d из %d' % (len(DESC_USED), len(DESCN)))
 # 21.11.2026 (B3): остальные страницы сайта — компания, новости, проекты, акции, остатки, подбор (pages_new.py; данные n/d/pg, pages.js/pages.css)
 sys.path.insert(0, HERE); import pages_new; ver = pages_new.build(BASE, OUT, N, A, idx, ver)

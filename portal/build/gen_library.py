@@ -14,10 +14,12 @@ import json, re, html, os
 B = '/home/claude/build/'
 L = _cg1_read_json('/home/claude/library/library.json', encoding='utf-8')
 esc = lambda s: html.escape(str(s), quote=True)
-CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник8 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
-        ('certs', 'Сертификаты и декларации', '#34c759', 'cert'), ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
+CATS = [('cards', 'Карточки предприятий (реквизиты)', '#5ac8fa', 'form'), ('memo', 'Служебные записки', '#ff9500', 'form'), ('hr', 'Кадры: порядок, вакансии, программы', '#34c759', 'book'),   # 11.11.2026, Сотрудник16 К. В.: карточки ЗАО «Жилпромсервис» и ООО «ФТС»
+        ('certs', 'Сертификаты и декларации', '#34c759', 'cert'),
+        ('legal', 'Правовые и регистрационные документы', '#5856d6', 'cert'),   # 28.11.2026 (агент znak, задача № 409): свидетельство на товарный знак — свой тип, номер ФАБ в поле fab
+        ('prices', 'Прайс-листы и акции', '#ff9500', 'price'),
         ('catalogs', 'Каталоги и презентации', '#007aff', 'book'), ('brand', 'Фирменный стиль: бланки и логотип', '#ff2d55', 'form'), ('reports', 'Отчёты и сводки', '#5ac8fa', 'chart'),
-        ('marketing', 'Имя4: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
+        ('marketing', 'Имя5: черновики и предложения', '#af52de', 'book'),   # 02.11.2026, Т. В.: черновики маркетинга — в «Документы», с пометкой «черновик, не утверждено»
         ('omtsreg', 'Реестр заявок ОМТС (1С, ежедневно)', '#9a5a00', 'chart'),   # 19.11.2026, Т. В.: системная информация из почты 1c@ — на портал (mail_reg.py → st/mreg.bin)
         ('opexp', 'Расходы офисов продаж: счета, акты, аренда', '#ff9500', 'price'),
         ('export', 'Экспорт: Узбекистан и Казахстан', '#30b0c7', 'folder'),
@@ -26,7 +28,7 @@ CATS = [('cards', 'Карточки предприятий (реквизиты)'
         ('protocols', 'Протоколы переговоров с поставщиками', '#9a5a00', 'form'),   # 13.11.2026, Т. В.: «всему отделу МТС — протоколы переговоров с поставщиками приложить в раздел МТС»
         # 14.11.2026: график ППР и ТО (Сотрудник1 А. В., 13.11) — «Производство → Оборудование»
         ('equip', 'Оборудование: графики ППР и ТО', '#ff9500', 'chart'),
-        ('objects', 'Объекты ФТС и ВиТ: ТЗ и новые изделия', '#30b0c7', 'form'),
+        ('objects', 'Объекты и ТЗ: Фабрика торговых систем, «Вкусно — и точка»', '#30b0c7', 'form'),
         ('drawings', 'Чертежи и технические эскизы', '#5856d6', 'form'),   # 14.11.2026: ТШ-15НМ к котельной «Гефест» (obj — здание модели, obj_t — подпись)   # 14.11.2026: запросы заказчиков (ООО «Система ПБО» и др.) — разбор, план, замечания
         ('other', 'Гарантия, политики и прочее', '#8e8e93', 'folder')]
 # internal documents of the departments (24.10.2026): by process, forms, 1С, register — rendered from regs.json, not from CATS
@@ -65,6 +67,8 @@ if os.path.exists('/home/claude/library/regs.json'):
         if r.get('orig'): r['orig'] = 'library/' + r['orig'].replace('raw/', '', 1)
         for t in r.get('tpl', []): t['file'] = 'library/' + t['file'].replace('raw/', '', 1)
         for k in ('src_sha256',): r.pop(k, None)
+        _rn = _NUM.get('raw/' + _re_num.sub(r'\.pdf$', '', r['file'].replace('library/', '', 1)))   # 28.11.2026 (агент dokumenty): номер ФАБ в карточке регламента
+        if _rn: r['num'] = _rn
 # типовые договоры от юриста (27.10.2026, тред 1a16debd72d0efed): library/dogovory.json, файлы library/raw/dogovory/
 DOG = None
 if os.path.exists('/home/claude/library/dogovory.json'):
@@ -82,9 +86,9 @@ PUB = _cg1_read_json('/home/claude/library/fabrikant_su.json', encoding='utf-8')
 #   каталог, гарантии и сертификаты (замена файлов на сайте) — маркетологу (письмо 26.10, срок 30.10, ответа нет). Служебные пометки
 #   проверки («WebFetch…») из текста убраны — сотрудникам они не нужны.
 PUB_TO = {'agreements': 'юрист Сотрудник49 Н. Я.', 'edo': 'юрист Сотрудник49 Н. Я.', 'claims': 'юрист Сотрудник49 Н. Я.', 'policy': 'юрист Сотрудник49 Н. Я.',
-          'catalogs': 'маркетолог Сотрудник33 Д. Р.', 'warranty': 'маркетолог Сотрудник33 Д. Р.', 'certs': 'маркетолог Сотрудник33 Д. Р.'}
-PUB_ST = {'маркетолог Сотрудник33 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
-          'юрист Сотрудник49 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник33 придержано (ищем её письмо с прайсом)
+          'catalogs': 'маркетолог Сотрудник35 Д. Р.', 'warranty': 'маркетолог Сотрудник35 Д. Р.', 'certs': 'маркетолог Сотрудник35 Д. Р.'}
+PUB_ST = {'маркетолог Сотрудник35 Д. Р.': 'письмо 26.10, срок был 30.10 — ответа нет',
+          'юрист Сотрудник49 Н. Я.': 'письмо 02.11, срок 05.11 12:00'}   # 02.11.2026: письмо юристу ушло 08:00; напоминание Сотрудник35 придержано (ищем её письмо с прайсом)
 def _pub_clean(x):
     x = re.sub(r'\s*\((?:WebFetch|бинарные данные)[^)]*\)', '', x)
     x = re.sub(r'^Файл (\.\w+) не прочитан\s*—\s*', r'Файл \1 в старом формате — ', x)
@@ -145,6 +149,8 @@ LATEST = {}
 for _k, _rx in _LT.items():
     _c = sorted([i for i in items if _rx.search(i.get('title', ''))], key=lambda i: (i.get('received') or i.get('date') or '', i.get('file', '')))
     if _c: LATEST[_k] = _c[-1]['file']
+# 28.11.2026 (агент dokumenty): старые редакции реестра 28.10 и 11.11 скрыты — ссылка ведёт на редакцию 16.11 в «Цены и мощность»
+if 'reestr-fts' not in LATEST and os.path.exists('/home/claude/library/raw/econ/vit_plan.xlsx'): LATEST['reestr-fts'] = 'library/econ/vit_plan.xlsx'
 data = json.dumps({'mbx': MBX, 'pub': PUB, 'cats': [{'k': k, 't': t, 'c': c, 'i': ic} for k, t, c, ic in CATS], 'int': [{'k': k, 't': t, 'c': c, 'i': ic, 'x': x} for k, t, c, ic, x in INT], 'items': [i for i in items if i['cat'] != 'regs'], 'links': links,
                    'docs': n_docs, 'arch': n_arch, 'upd': L.get('updated'), 'regs': REGS, 'econ': ECON, 'dog': DOG, 'view': VIEW, 'latest': LATEST,
                    # 29.10.2026: «Перевыпуск документов» — журнал замечаний по сканам/фото/не фирменному стилю (fabrika/tools/build_inventory.py → docs_reissue.json);
@@ -267,7 +273,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
     return bytes ? esc(file.split('.').pop().toUpperCase()) + ' · ' + kb(bytes) : '';
   }
   function docRow(it, cat){
-    var sub = [it.obj_t ? esc(it.obj_t) : '', it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', fileLabel(it.file, it.bytes), it.previewBytes ? 'Просмотр PDF · ' + kb(it.previewBytes) : ''].filter(Boolean).join(' · ');
+    var sub = [it.fab ? esc(it.fab) : '', it.obj_t ? esc(it.obj_t) : '', it.number ? '№ ' + esc(it.number) : '', it.date ? 'от ' + dmy(it.date) : '', it.pages ? it.pages + ' стр.' : '', fileLabel(it.file, it.bytes), it.previewBytes ? 'Просмотр PDF · ' + kb(it.previewBytes) : ''].filter(Boolean).join(' · ');
     var pdf = /\\.pdf$/i.test(it.file) ? ' data-pdf="1" data-t="' + esc(it.title) + '" data-m="' + esc(sub.replace(/<[^>]+>/g, '')) + '" data-b="' + (it.bytes || 0) + '" data-back="' + esc(cat.t.split(' ')[0]) + '"' : '';
     return '<a class="irow" href="' + esc(it.file) + '" target="_blank" rel="noopener"' + pdf + '>' + tile(cat.c, cat.i) + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(it.title) + '</span>' +
       (sub || it.valid_to ? '<span class="isub">' + sub + (it.valid_to ? ' ' + validity(it) : '') + '</span>' : '') + '</span><span class="ichev"></span></span></a>' + pubAlso(it.pub);
@@ -319,8 +325,10 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   var TYPES = [
     {k: 'dog', t: 'Договоры', c: '#5856d6', i: 'rules', x: 'Типовые договоры по юрлицам, соглашения, ЭДО'},
     {k: 'hr', t: 'Кадры: порядок, вакансии, программы', c: '#34c759', i: 'docs', x: 'Порядок табеля учёта рабочего времени, вакансии, «Приведи друга»'},   // 11.11.2026, группа «Кадры»
-    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «ФТС» — PDF и Word'},
-    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — PDF и Word'},   // 12.11.2026, Сотрудник8 К. В.: записки на возврат   // 11.11.2026, Сотрудник8 К. В.
+    {k: 'cards', t: 'Карточки предприятий', c: '#5ac8fa', i: 'form', x: 'Реквизиты ЗАО «Жилпромсервис» и ООО «Фабрика торговых систем» — Word, просмотр PDF'},
+    // 28.11.2026, задача № 409: свидетельство на товарный знак — отдельный тип «Правовые и регистрационные»
+    {k: 'legal', t: 'Правовые и регистрационные документы', c: '#5856d6', i: 'cert', x: 'Товарные знаки, свидетельства о регистрации — со сроком действия'},
+    {k: 'memo', t: 'Служебные записки', c: '#ff9500', i: 'form', x: 'Бланки служебных записок — Word, просмотр PDF'},   // 12.11.2026, Сотрудник16 К. В.: записки на возврат   // 11.11.2026, Сотрудник16 К. В.
     {k: 'regs', t: 'Регламенты и инструкции', c: '#5856d6', i: 'rules', x: 'По шагам работы — вместе с инструкциями по 1С; бланки шага — ссылкой'},
     {k: 'forms', t: 'Бланки, формы и шаблоны', c: '#34c759', i: 'form', x: 'Распечатать или заполнить в Word и Excel; фирменный бланк и логотип'},
     {k: 'prices', t: 'Прайс-листы и акции', c: '#ff9500', i: 'price', x: 'Действующий прайс, дополнения к нему и акции'},
@@ -399,7 +407,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       h += '<p class="ihdr">Перевыпуск документов</p><div class="igroup"><a class="irow" href="#reissue">' + tile('#ff3b30', 'review') + '<span class="ic"><span class="ibody"><span class="ititle">Единый фирменный стиль — журнал замечаний</span><span class="isub">' + D.reissue.items.length + ' замечаний · ' + D.reissue.by_owner.length + ' исполнителей · срок ' + dmy(D.reissue.deadline) + (D.reissue.ai_done ? ' · 🤖 ИИ подготовил ' + D.reissue.ai_done : '') + '</span></span><span class="ival">' + Math.round(dn / D.reissue.items.length * 100) + '%</span><span class="ichev"></span></span></a></div>'; }
     TYPES.forEach(function(c){
       var v = typeN(c.k), soon = '';
-      if (c.k === 'certs') { var bad = D.items.filter(function(i){ return i.cat === 'certs' && i.valid_to && (new Date(i.valid_to + 'T00:00') - today) / 864e5 <= 90; }).length; if (bad) soon = '<span style="color:#ff3b30">истекают: ' + bad + '</span> · '; }
+      if (c.k === 'certs' || c.k === 'legal') { var bad = D.items.filter(function(i){ return i.cat === c.k && i.valid_to && (new Date(i.valid_to + 'T00:00') - today) / 864e5 <= 90; }).length; if (bad) soon = '<span style="color:#ff3b30">истекают: ' + bad + '</span> · '; }
       h += '<p class="ihdr">' + esc(c.t) + '</p><div class="igroup"><a class="irow" href="' + (c.href || '#' + c.k) + '">' + tile(c.c, c.i) + '<span class="ic"><span class="ibody"><span class="ititle">' + esc(c.t) + '</span><span class="isub">' + soon + esc(c.x) + '</span></span><span class="ival">' + (v === '' || v == null ? '' : v) + '</span><span class="ichev"></span></span></a></div>';
     });
     h += '<p class="ihdr">Служебное</p><div class="igroup">' +
@@ -448,7 +456,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function formsView(T){
     var R = D.regs, h = regsHead(T, 'Бланки в фирменном стиле: PDF — распечатать и заполнить от руки, Word и Excel — в карточке бланка, заполнить на компьютере. По шагам работы, фирменный бланк и логотип — внизу.');
     R.procs.forEach(function(p){
-      // 29.10.2026 (Сотрудник8, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
+      // 29.10.2026 (Сотрудник16, задача №23: «убрать задвоенные формы»): форма — одной строкой, Word/Excel — внутри карточки.
       // 30.10.2026 (владелец: «дубли документов, зачем!?»): чек-листы и памятки с шаблоном живут в «Регламентах» (их Word/Excel — в карточке там), здесь — ссылкой
       var fx = R.docs.filter(function(r){ return CUR(r) && isForm(r) && r.topic === p.t; }), tx = R.docs.filter(function(r){ return CUR(r) && r.tpl && !isForm(r) && r.topic === p.t; });
       if (!fx.length && !tx.length) return;
@@ -615,7 +623,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
       h += '<p class="ihdr">Действующий</p><div class="igroup">' + docRow(pcur[0], c) + '</div>';
       if (pex.length) h += '<p class="ihdr">Для клиентов</p><div class="igroup">' + pex.map(function(i){ return docRow(i, c); }).join('') + '</div>';
       if (pcur.length > 1) h += '<p class="ihdr">Прошлые</p><div class="igroup">' + pcur.slice(1).map(function(i){ return docRow(i, c); }).join('') + '</div>';
-    } else if (k === 'certs' && its.length) {
+    } else if ((k === 'certs' || k === 'legal') && its.length) {
       its.sort(function(a, b){ return String(a.valid_to || '9999').localeCompare(String(b.valid_to || '9999')); });
       h += '<div class="igroup" style="margin-top:14px">' + its.map(function(i){ return docRow(i, c); }).join('') + '</div><p class="ifoot">Сверху — те, что истекают раньше. Оранжевым — меньше 90 дней, красным — уже истёк.</p>';
     } else if (its.length) {
@@ -659,7 +667,7 @@ details.pubis{padding:0 16px 8px 60px;font-size:13.5px;color:var(--ios-2)}detail
   function cardHref(r){ return '#' + (CUR(r) && isForm(r) ? 'forms' : 'regs') + '/' + encodeURIComponent(r.id); }
   function rBadge(r){ var b = ST[r.status] || ['', '']; return b[0] ? ' <span class="badge ' + b[1] + '">' + b[0] + '</span>' : ''; }
   function rDate(r){ return r.datenote || (r.date ? dmy(r.date) : ''); }
-  function rKind(r){ return r.code ? r.kind + ' ' + r.code + ' · ред. ' + (r.ed || 1) : r.kind; }
+  function rKind(r){ return (r.code ? r.kind + ' ' + r.code + ' · ред. ' + (r.ed || 1) : r.kind) + (r.num ? ' · № ' + r.num : ''); }   // 28.11.2026: сквозной номер ФАБ в карточке регламента
   function rOpen(r, label){
     var pdf = /\\.pdf$/i.test(r.file) ? ' data-pdf="1" data-t="' + esc(r.title) + '" data-m="' + esc([rKind(r), r.pages ? r.pages + ' стр.' : ''].filter(Boolean).join(' · ')) + '" data-b="' + (r.bytes || 0) + '" data-back="Регламенты"' : '';
     return '<a href="' + esc(r.file) + '" target="_blank" rel="noopener"' + pdf + '>' + (label || 'Открыть') + '</a>';

@@ -149,7 +149,7 @@ def render(rows, pages, stem):
     src = 'library/prices/' + quote(stem)
     date_label = date.fromisoformat(stem.removeprefix('prais_')).strftime('%d.%m.%Y')
     blocks = [CSS, '<section class="pcat" id="catalog"><h2>Каталог по прайс-листу ' + date_label + '</h2>',
-              '<p class="plead">Цены в рублях с НДС. Базис I — Рязань и Москва. '
+              '<p class="plead">Цены в рублях с НДС. Базис I — Рязань и Москва. ' +   # 28.11.2026 (CodeQL 1557): склейка строк явная
               'Цены для других базисов указаны в прайсе.</p>',
               '<div class="ios" style="padding:0;max-width:none"><div class="igroup">']
     linked = 0

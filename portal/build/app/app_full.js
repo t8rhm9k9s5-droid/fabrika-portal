@@ -1030,7 +1030,7 @@ function buildWorkshop(){
   const cInfo={sys:'каркас',title:'Стойка торцевого фахверка С1/С2',rows:[['Сечение','труба 120×4'],['Место','торец по оси 1 — в 2,48 и 5,6 м от оси А; торец по оси 10 — в 5,6 м (КР, разрез 4-4, фундаменты Ф2)']],src:SRC.kr};
   wbox(g.ws_frame,-.06,.06,2.42,2.54,0,ztc(2.48),st,cInfo);
   [0,49.5].forEach(s=>wbox(g.ws_frame,s-.06,s+.06,5.54,5.66,0,ztc(5.6),st,cInfo));
-  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник15 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
+  const fI={sys:'каркас',title:'Ферма Ф1, пролёт 11,2 м',rows:[['Сотрудник10 пояс','труба 100×80×5, +5,020'],['Верхний пояс','труба 120×80×5, уклон к оси А'],['Высота на опорах','1,15 м (ось А), 2,35 м (ось Б)'],['Раскосы, стойки','трубы 60×3 – 100×60×3'],['Масса','553,9 кг']],text:'Десять ферм, по одной на каждую ось 1–10. Решётка показана упрощённо.',src:SRC.kr};
   const posts=[0,1.203,3.987,5.379,6.771,9.555,W], zig=[[.12,'t'],[1.203,'b'],[2.6,'t'],[3.987,'b'],[5.379,'t'],[6.771,'b'],[8.16,'t'],[9.555,'b'],[11.08,'t']];
   AX.forEach(s=>{
     wbeam(g.ws_frame,P(s,0,ZBC),P(s,W,ZBC),.1,.08,st,fI);wbeam(g.ws_frame,P(s,0,ztc(0)),P(s,W,ztc(W)),.12,.08,st,fI);
@@ -2151,7 +2151,7 @@ function camVisual(c, on){
   if (!camLab[c.key]){ const el = document.createElement('div'); labelsEl.appendChild(el); camLab[c.key] = {el, pos:new THREE.Vector3()}; }
   const L = camLab[c.key];
   L.el.className = 'lbl cam' + (c.approx ? ' approx' : '') + (c.isNew ? ' new' : '') + (on ? ' on' : '');
-  L.el.textContent = c.num || (c.isNew ? c.name : c.ip.split('.').slice(-1)[0]);
+  L.el.textContent = c.num || c.name;
   L.pos.copy(C).add(new THREE.Vector3(0, 0.75, 0)); L.c = c;
 }
 function dropCam(key){
@@ -2891,7 +2891,7 @@ function areaColors(){
 /* ===================== LABELS ===================== */
 const labelsEl = $('#labels');
 const rulLabels = [];
-const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Имя2 мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Корпусная мебель',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
+const SHORT={b37n:'Мат. склад, 2 эт.',b43:'Цех металлоизделий',b38:'Мебельпромплюс',b30:'Гараж',b26:'Гальваника',b40:'Трубопрокатный стан',b37:'Мягкая мебель',b35:'Столярный цех',b22:'Имя2 мебель',b25:'Порошковая покраска',b31:'Механический цех',bProd:'Производственный цех',b29:'Участок операторских кресел',b18:'Цех поролона',b10:'Админ. здание',b45:'Склад',b15:'КПП',chapel:'Часовня',nSklad:'Склад №1',sklad2:'Склад №2 (2-й этап)',nGef:'Котельная «Гефест»',b57:'ТП-1',tp2:'ТП-2',tp3:'ТП-3',tr1:'Трансформатор',ws:'Швейный цех'};
 if (ND && ND.short) Object.assign(SHORT, ND.short);
 SHORT.dg1 = 'ДГУ 64 кВт';
 const bLab = {};
@@ -3183,7 +3183,7 @@ function infoOther(u){
     const dupTxt=uu.dup!=null?'<p><b>Расхождение:</b> на топосъёмке 2016 г. этот участок надземный, а на генплане 03.26 по той же трассе нарисован газ в земле. Показаны оба варианта; вопрос задан главному инженеру.</p>':'';
     const fix=uu.aerial?`<dt>Крепление</dt><dd>${esc(uu.aerial)}</dd>`:over&&uu.t==='gas_over'?`<dt>Крепление</dt><dd>кронштейны на стене или заборе ≈ через 2,5 м, на открытых участках стойки ≈ через 5 м; высокие переходы над проездами опираются по краям — места опор условные</dd>`:'';
     return {k:'Сеть', t:u.name, d:`<dl class="kv">${uu.label?`<dt>На плане</dt><dd>${uu.label}</dd>`:''}${uu.labels&&uu.src!=='gp_label'?`<dt>Подписи рядом</dt><dd>${uu.labels.join(', ')}</dd>`:''}${uu.dmm?`<dt>Диаметр</dt><dd>${uu.dsrc}</dd>`:''}${over?`<dt>Высота над землёй</dt><dd>${rng(hh)}</dd>`:`<dt>Глубина</dt><dd>${rng(dep)} до оси трубы</dd>`}${fix}<dt>Длина</dt><dd>≈ ${nf(uu.len||plen(uu.pts),0)} м</dd></dl><p>${src}${uu.note?' '+uu.note:''} Перед земляными работами вызывайте представителей эксплуатирующих организаций.</p>${lkTxt}${dupTxt}`}; }
-  if (k==='n'){ const n=u.n; return {k:'Сеть видеонаблюдения', t:n.name, d:`<dl class="kv">${n.ip?`<dt>IP</dt><dd class="mono">${n.ip}</dd>`:''}${n.host?`<dt>Здание</dt><dd>${esc(bname(n.host))}</dd>`:''}<dt>Источник</dt><dd>${esc(n.src||'схема видеонаблюдения')}, место приблизительное (± 3–5 м): схема не в масштабе</dd></dl>${n.note?`<p>${esc(n.note)}</p>`:''}`}; }
+  if (k==='n'){ const n=u.n; return {k:'Сеть видеонаблюдения', t:n.name, d:`<dl class="kv">${n.host?`<dt>Здание</dt><dd>${esc(bname(n.host))}</dd>`:''}<dt>Источник</dt><dd>${esc(n.src||'схема видеонаблюдения')}, место приблизительное (± 3–5 м): схема не в масштабе</dd></dl>${n.note?`<p>${esc(n.note)}</p>`:''}`}; }
   if (k==='rv'){ const o=u.o; return {k:o.cat, t:o.name, d:`${o.rows&&o.rows.length?`<dl class="kv">${o.rows.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('')}</dl>`:''}${o.note?`<p>${esc(o.note)}</p>`:''}${o.src?`<p class="note">Источник: ${esc(o.src)}.</p>`:''}`}; }
   if (k==='pcan'){ const C=S.projcanopy; return {k:'Проект', t:C.name, d:`<dl class="kv">${C.rows.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('')}</dl><p>${esc(C.note)}</p>`}; }
   if (k==='eq'){ const e=u.e; return {k:'Оборудование', t:e.name, d:`<p>${esc(e.note)}</p><p>Источник: ${esc(e.src||'')}.</p>`}; }
@@ -3482,23 +3482,27 @@ function distRefresh(){
 
 // ---------- cameras ----------
 function lensText(c){ const l = LENS.find(x=>x[2] && x[0] === c.lens); return l ? `объектив ${l[0].replace('.',',')} мм` : 'свой угол обзора'; }
-function camTitle(c){ return c.num ? `<span class="n">${esc(c.num)}</span>${esc(c.name)}` : esc(c.name) + (c.ip && !c.isNew ? ' · ' + c.ip.split('.').slice(-2).join('.') : ''); }
+function camTitle(c){ return c.num ? `<span class="n">${esc(c.num)}</span>${esc(c.name)}` : esc(c.name); }
 function mountText(c, g){
   const ce = E.get(c.key) || {}, fixH = t => (ce.hr != null && t) ? t.replace(/(≈\s?)?\d+(?:[.,]\d+)?\s?м(?![а-яё])/, '≈' + fm(c.hr) + ' м') : t;
   if (c.moved) return g.mt.txt ? fixH(g.mt.txt) + ' (передвинута)' : 'передвинута';
   return fixH((c.mount && c.mount.txt) || g.mt.txt) || '—'; }
+// 28.11.2026: IP камер на портал не выводим; регистратор — из подписи на схеме («NNN_Название /250»), канал — номер камеры
+function regRow(c){ const r = c.nvr || ((/\/\s*(\d+)\s*$/.exec(c.orig || '') || [])[1] || '');
+  if (c.chan) return `<dt>Регистратор</dt><dd>${r ? esc(r) + ', ' : ''}${/канал/i.test(c.chan) ? '' : 'канал '}${esc(c.chan)}</dd>`;
+  return r ? `<dt>Регистратор</dt><dd>${esc(r)}${c.num ? ', канал ' + Number(c.num) : ''}</dd>` : ''; }
 function camInfo(c){
   const g = camObjs[c.key] ? camObjs[c.key].g : camGeo(c), [la, lo] = ll(c.x, c.y), [X, Y] = ms(c.x, c.y);
-  let d = `<dl class="kv">${c.ip ? `<dt>IP</dt><dd class="mono">${esc(c.ip)}</dd>` : ''}${c.model ? `<dt>Модель</dt><dd>${esc(c.model)}</dd>` : ''}${c.port ? `<dt>Коммутатор</dt><dd class="mono">${esc(c.port)}</dd>` : ''}${c.chan ? `<dt>Регистратор</dt><dd class="mono">канал ${esc(c.chan)}</dd>` : ''}<dt>Крепление</dt><dd>${esc(mountText(c, g))}${c.floor ? ', ' + c.floor + ' этаж' : ''}</dd>
+  let d = `<dl class="kv">${c.alt ? `<dt>Другое имя</dt><dd>${esc(c.alt)}</dd>` : ''}${c.model ? `<dt>Модель</dt><dd>${esc(c.model)}</dd>` : ''}${c.port ? `<dt>Коммутатор</dt><dd class="mono">${esc(c.port)}</dd>` : ''}${regRow(c)}<dt>Крепление</dt><dd>${esc(mountText(c, g))}${c.floor ? ', ' + c.floor + ' этаж' : ''}</dd>
     ${c.host ? `<dt>Здание</dt><dd><button type="button" class="go" style="margin:0;height:26px" data-b="${esc(c.host)}">${esc(bname(c.host))}</button></dd>` : ''}
     <dt>Обзор</dt><dd>${lensText(c)}, ${Math.round(c.fov)}° по горизонтали, на ${DIRW[pt16(c.az)]} (${Math.round(c.az)}°), наклон ${Math.round(c.tilt)}°, высота ${fm(c.hr)} м</dd>
     ${c.orig ? `<dt>На схеме</dt><dd class="mono">${esc(c.orig)}</dd>` : ''}</dl>`;
   if (c.note2) d = `<p class="warn">Заметка: ${esc(c.note2)}</p>` + d;
   if (c.photo) d = `<button type="button" class="photo" data-photo-open title="Открыть фото"><img src="${esc(photoSrc(c))}" alt="Фото с места: ${esc(c.name)}" loading="lazy" onerror="this.parentNode.hidden=true"></button>` + d;
   if (c.src2026) d += '<p>' + ({'новая':'Новая камера на схеме видеокамер от 24.09.2026 (А. Сотрудник1); на схеме 2023 г. её не было.', 'перенесена':'На схеме от 24.09.2026 камера нарисована в другом месте, чем на схеме 2023 г.; место перенесено' + (c.was_pos ? '' : '') + '.',
-    'переименована':'На схеме от 24.09.2026 камера подписана по-новому' + (c.was ? ' (было «' + esc(c.was) + '»)' : '') + '.', 'новый IP':'На схеме от 24.09.2026 у камеры новый IP' + (c.was_ip ? ' (был ' + esc(c.was_ip) + ')' : '') + '.'}[c.src2026] || '') + '</p>';
+    'переименована':'На схеме от 24.09.2026 камера подписана по-новому' + (c.was ? ' (было «' + esc(c.was) + '»)' : '') + '.', 'новый IP':'На схеме от 24.09.2026 у камеры новый сетевой адрес.'}[c.src2026] || '') + '</p>';
   if (c.approx) d += '<p>Место по схеме условное: схема не в масштабе, а точка выходила за ограждение или здание вне съёмки.</p>';
-  if (c.dup) d += '<p>На схеме этот IP подписан у двух камер (060 и 063). Стоит проверить.</p>';
+  if (c.dup) d += '<p>На схеме у этой камеры тот же сетевой адрес, что у камеры ' + esc(typeof c.dup === 'string' ? c.dup : 'с другим номером') + '. Стоит проверить.</p>';
   if (c.chk) d += '<p>' + esc(c.chk) + '</p>';   // 28.10.2026: сверено по кадру с камеры (review/corr_cams_1028.py)
   else if (!c.isNew && !E.saved(c.key)) d += '<p>Объектив, наклон и высота на схеме не указаны — заданы типовые, поправьте по факту.</p>';
   d += mapLinks(la, lo);
@@ -3550,7 +3554,6 @@ function camCard(){
       ${c.isNew ? '<button type="button" class="btn danger" data-cact="del">Удалить</button>' : `<button type="button" class="btn" data-cact="hide">${c.hidden ? 'Показать снова' : 'Скрыть'}</button><button type="button" class="btn danger" data-cact="reset" ${c.edited ? '' : 'disabled'}>Вернуть как было</button>`}
     </div></details>
     <details class="pos" ${c.model || c.port || c.chan || c.photo ? 'open' : ''}><summary>Паспорт камеры</summary>
-      <label class="fld wide"><span>IP-адрес</span><input type="text" data-ck="ip" value="${esc(c.ip)}" maxlength="40" autocomplete="off" placeholder="192.168.10.…"></label>
       <label class="fld wide"><span>Модель</span><input type="text" data-ck="model" value="${esc(c.model)}" maxlength="60" autocomplete="off" placeholder="Например: HiWatch DS-I200"></label>
       <label class="fld wide"><span>Коммутатор и порт</span><input type="text" data-ck="port" value="${esc(c.port)}" maxlength="40" autocomplete="off" placeholder="Например: SW-2, порт 7"></label>
       <label class="fld wide"><span>Регистратор и канал</span><input type="text" data-ck="chan" value="${esc(c.chan)}" maxlength="30" autocomplete="off" placeholder="Например: NVR-1, канал 12"></label>
@@ -3874,9 +3877,9 @@ let listQ = '';
 const LIST = {
   build(){
     const q = objQ.value.trim().toLowerCase(), m = s => !q || String(s).toLowerCase().includes(q); listQ = q;
-    const camM = c => m([c.num||'', c.name, c.ip, c.orig, c.model, c.port, c.chan].join(' '));
+    const camM = c => m([c.num||'', c.name, c.alt||'', c.orig, c.model, c.port, c.chan].join(' '));
     const camsOf = {}; CAMS.forEach(c=>{ if (c.host && S.buildings.some(b=>b.k===c.host)) (camsOf[c.host] = camsOf[c.host] || []).push(c); });
-    const sortCams = a => a.slice().sort((x,y)=>String(x.num||'999').localeCompare(String(y.num||'999')) || String(x.ip||x.name).localeCompare(String(y.ip||y.name), 'ru', {numeric:true}));
+    const sortCams = a => a.slice().sort((x,y)=>String(x.num||'999').localeCompare(String(y.num||'999')) || String(x.name).localeCompare(String(y.name), 'ru', {numeric:true}));
     const row = (c, noHost) => `<li><button type="button" data-cam="${esc(c.key)}" class="${c.edited?'edited':''}">${c.num ? `<span class="num">${esc(c.num)}</span>` : '<i class="camdot"></i>'}<span class="nm">${esc(c.name)}</span><small>${Math.round(c.fov)}° · ${pt16(c.az)}${c.hidden?' · скрыта':''}</small></button></li>`;
     const sec = (id, title, cnt, body, def, cls) => `<details class="${cls||'sec'}" data-sec="${esc(id)}"${(q || isOpen(id, def)) ? ' open' : ''}><summary><span>${title}</span><span class="cnt">${cnt}</span></summary>${body}</details>`;
     const used = new Set(), parts = [];
@@ -4072,7 +4075,7 @@ const FILE = (()=>{
 /* ---------- the camera table: export to CSV / Excel and loading it back ---------- */
 const TABLE = (()=>{
   const COLS = [
-    ['id','ID (не менять)',17],['num','Номер',8],['name','Название',28],['ip','IP',15],['model','Модель',22],['port','Коммутатор, порт',16],['chan','Регистратор, канал',17],
+    ['id','ID (не менять)',17],['num','Номер',8],['name','Название',28],['model','Модель',22],['port','Коммутатор, порт',16],['chan','Регистратор, канал',17],
     ['bld','Здание',26],['mount','Крепление',30],['hr','Высота, м',10],['az','Направление, ° (0 — север)',13],['side','Сторона',9],['tilt','Наклон вниз, °',10],
     ['lens','Объектив, мм',11],['fov','Угол обзора, °',11],['range','Дальность, м',11],['X','МСК-62 X',13],['Y','МСК-62 Y',13],['lat','Широта',11],['lon','Долгота',11],
     ['hidden','Скрыта',8],['note','Примечание',30],['flags','Отметки',24],['orig','На схеме',22]];
@@ -4104,7 +4107,7 @@ const TABLE = (()=>{
     return {id:c.key, num:c.num||'', name:c.name, ip:c.ip||'', model:c.model||'', port:c.port||'', chan:c.chan||'', bld:c.host ? bname(c.host) : '', mount:mountText(c, g),
       hr:round2(c.hr), az:Math.round(c.az), side:pt16(c.az), tilt:Math.round(c.tilt), lens:lensNum(c), fov:Math.round(c.fov), range:round2(c.range),
       X:Math.round(X*100)/100, Y:Math.round(Y*100)/100, lat:Math.round(la*1e6)/1e6, lon:Math.round(lo*1e6)/1e6, hidden:c.hidden ? 'да' : '', note:c.note2||'',
-      flags:[c.isNew ? 'новая' : '', c.approx ? 'место по схеме условное' : '', c.dup ? 'IP повторяется на схеме' : ''].filter(Boolean).join('; '), orig:c.orig||''};
+      flags:[c.isNew ? 'новая' : '', c.approx ? 'место по схеме условное' : '', c.dup ? 'сетевой адрес повторяется на схеме' : ''].filter(Boolean).join('; '), orig:c.orig||''};
   }
   const order = (a, b) => (a.isNew - b.isNew) || String(a.num || '999').localeCompare(String(b.num || '999')) || a.name.localeCompare(b.name, 'ru');
   function rows(){ return [COLS.map(c=>c[1])].concat(CAMS.slice().sort(order).map(c=>{ const r = camRow(c); return COLS.map(k=>r[k[0]]); })); }
@@ -4420,17 +4423,20 @@ function abkView(instant){
   if (instant){ camera.position.copy(p); controls.target.copy(t); controls.update(); } else flyTo(p, t);
   return true;
 }
-if (!location.hash) abkView(true);
 // a link like index.html#b18 opens that building, #area6 the buildings of production area 6
 function openHash(){
-  const h = decodeURIComponent(location.hash.slice(1)); if (!h) return;
+  let h = ''; try { h = decodeURIComponent(location.hash.slice(1)); } catch(e){ return false; } if (!h) return false;
   const m = h.match(/^area(\d+)$/);
-  if (m){ const a = AREAS.find(x=>x.n === Number(m[1])); if (!a) return; setLayer('areas', true); const ks = Object.keys(areaNow).filter(k=>areaNow[k] === a);
-    if (ks.length){ selectObj(ks[0], null, true); } else flash(`Участок ${a.n}: здание ещё не выбрано — откройте здание и укажите участок в карточке`); return; }
+  if (m){ const a = AREAS.find(x=>x.n === Number(m[1])); if (!a) return false; setLayer('areas', true); const ks = Object.keys(areaNow).filter(k=>areaNow[k] === a);
+    if (ks.length){ selectObj(ks[0], null, true); } else flash(`Участок ${a.n}: здание ещё не выбрано — откройте здание и укажите участок в карточке`); return true; }
   if (S.buildings.find(b=>b.k===h)) selectObj(h, null, true);
   else if (camByKey('c:'+h)) selectCam('c:'+h, true);
+  else return false;
+  return true;
 }
-openHash(); window.addEventListener('hashchange', openHash);
+// 28.11.2026, Т. В.: «3D при открытии — с вида на АБК»: если # не ведёт к зданию, участку или камере — тоже АБК
+if (!openHash()) abkView(true);
+window.addEventListener('hashchange', openHash);
 let kickUntil = 0, lastDraw = 0, lastLab = 0; const camSig = new Float64Array(17);
 const kick = (ms) => { kickUntil = Math.max(kickUntil, performance.now() + (ms || 1200)); };
 for (const ev of ['pointerdown', 'pointerup', 'click', 'keydown', 'input', 'change', 'wheel', 'transitionend']) document.addEventListener(ev, ()=>kick(), {passive:true, capture:true});
@@ -5864,8 +5870,8 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
    Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников. */
 /* «Фабрика»: время суток и погода на площадке (23.10.2026, просьба «поставь на план актуальное время суток и погоду»).
    Солнце — по формулам NOAA для Поляны, ул. Терехина, 14 (54,7223 с. ш., 39,8346 в. д.); время — московское.
-   Сотрудник27 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
-   На techfabrikant.ru — Сотрудник12 Сотрудник27 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
+   Сотрудник28 — MET Norway (api.met.no, данные CC BY 4.0), раз в 15 минут; последняя сводка хранится на устройстве (до 3 часов).
+   На techfabrikant.ru — Сотрудник12 Сотрудник28 через wx/f.php (там же — предупреждения). 26.10.2026 (пользователь): предупреждения только о грозе,
    сильном снегопаде, шторме и урагане в ближайшие 24 часа — баннер вверху, метка на кнопке погоды; Гидрометцентр и OpenWeatherMap не показываем.
    window.T14SKY: state(), on(fn), mode() 'now' | 'day', setMode(m), mount('left' | 'right'), has3d.
    Один и тот же текст: внутри модели (index.html) и отдельным файлом assets/sky.js на странице плана. */
@@ -6000,7 +6006,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   function load(){
     if (busy || (wxGot && Date.now() - wxGot < 14 * 6e4)) return; busy = true;
     var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function(){ if (ctl) ctl.abort(); }, 12000);
-    // 26.10.2026 (пользователь): погода на сайте — Сотрудник12 Сотрудник27; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник12 не ответил
+    // 26.10.2026 (пользователь): погода на сайте — Сотрудник12 Сотрудник28; wx/f.php на хостинге (кэш 50 мин, ключ на сервере), MET — только если Сотрудник12 не ответил
     // 03.11.2026, Т. В.: «куда делась погода? Была, потом исчезла» — на хостинге при сбое wx/f.php погода пропадала совсем: запасного пути не было.
     // Теперь: Сотрудник12 (wx/f.php, 20 с) → MET Norway напрямую → последняя удачная сводка с телефона (до 12 ч) → прогноз из сборки.
     if (/(^|\.)techfabrikant\.ru$/.test(location.hostname)) {
@@ -6098,7 +6104,7 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
   }
   function close(){ if (win) { win.remove(); win = null; } if (pill) pill.setAttribute('aria-expanded', 'false'); }
   function open(){
-    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник27 на площадке');
+    close(); win = document.createElement('div'); win.className = 't14skyw ' + side; win.setAttribute('role', 'dialog'); win.setAttribute('aria-label', 'Сотрудник28 на площадке');
     // 29.10.2026 (прогон «нажать всё»): у окна погоды не было кнопки «Закрыть» и оно не закрывалось по Esc — кнопка × сверху, Esc закрывает
     win.addEventListener('click', function(e){ e.stopPropagation(); if (e.target.closest && e.target.closest('.skyx')) { close(); return; } var b = e.target.closest && e.target.closest('button[data-m]'); if (b) setMode(b.getAttribute('data-m')); });
     document.body.appendChild(win); fill(state()); load();
@@ -6131,9 +6137,9 @@ if (window.__t14) Object.assign(window.__t14, {orgShow, orgOpenRoom, orgRoomMesh
           return '<tr><td>' + hm(new Date(r[0])) + '</td><td class="t">' + deg(r[1]) + '</td><td>' + esc(p.text || '') + (r[3] >= 0.1 ? ', ' + num1(r[3]) + ' мм' : '') + '</td><td class="wd">' + (r[4] != null ? Math.round(r[4]) + (r[5] != null && r[5] >= r[4] + 1 ? '–' + Math.round(r[5]) : '') + ' м/с' : '') + '</td></tr>'; }).join('') + '</table></div>';
     }
     var dm = function(iso){ if (isNaN(Date.parse(iso))) return '—'; var d = new Date(Date.parse(iso) + 3 * 3600e3); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ' в ' + hm(new Date(Date.parse(iso))); };
-    var src = w ? (w.label ? 'Сотрудник27: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник27: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
-                           : 'Сотрудник27: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
-                : (st.wxErr ? 'Сотрудник27 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
+    var src = w ? (w.label ? 'Сотрудник28: ' + w.label + ', получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : '') : w.baked ? 'Сотрудник28: MET Norway (yr.no) — прогноз от ' + (w.updated ? dm(w.updated) : '—') + '; эта версия сайта не выходит в интернет, прогноз обновляется раз в день'
+                           : 'Сотрудник28: MET Norway (yr.no), получена в ' + hm(new Date(st.wxGot)) + (st.wxErr ? ' — сейчас ' + st.wxErr : ''))
+                : (st.wxErr ? 'Сотрудник28 не загрузилась: ' + st.wxErr + '.' : 'Загружаю погоду…');
     var al = alOf(w), lv = al.reduce(function(a, x){ return Math.max(a, x.lv || 1); }, 0);
     win.innerHTML = '<button type="button" class="skyx" aria-label="Закрыть">×</button><h3>Поляны, ул. Терехина, 14</h3><div class="big">' + svg(iconFor(st)) + '<b>' + (tempOf(st) != null ? deg(tempOf(st)) : st.time) + '</b><span>' + esc(w ? w.text : st.phase) + '</span></div>' +
       (al.length ? '<div class="alerts' + (lv >= 2 ? ' l2' : '') + '"><b>Предупреждение · ближайшие 24 часа</b>' + al.map(function(a){ return '<div>' + esc(a.text) + '</div>'; }).join('') + '</div>' : '') +

@@ -2,7 +2,7 @@
 # Администраторы портала «Фабрика»: Сотрудник1 Сотрудник2 Отчество1 (владелец) и Сотрудник1 Сотрудник3 Отчество1 — с равными правами.
 # Команда Сотрудник3 Отчество2 = команда Сотрудник2 Отчество2, любым каналом: почта (в т. ч. user1@example.org, user2@example.org), боты MAX/Telegram (текст и голос), чат.
 # Выполнять как команду владельца; автору — отчёт по каждому пункту (внесено / не внесено и почему / вопрос), владельцу — копия. Подробно: АДМИНИСТРАТОРЫ.md в корне исходников.
-"""«Фабрика» — архив отчётов из ящика user5@example.org (Mail.ru), 27.10.2026.
+"""«Фабрика» — архив отчётов из ящика user6@example.org (Mail.ru), 27.10.2026.
 Пользователь: «по почтовому боту — пусть переберёт особенно папки экономика и производство и ОМТС, там много отчётов, их можно собрать
 и систематизировать, период с 1 августа, чтобы собрать статистику».
 
@@ -46,7 +46,7 @@ def _ext(n):
 # «последний отчёт». Разобранное уже лежит в кэшах модулей (omts_cache2/omts_hist_cache, ytd_cache…), поэтому старый файл не нужен.
 # Первые сутки — только подсчёт (PRUNE_DRY): что удалилось бы; удаление включается после проверки.
 KEEP_DAYS = 3
-SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник35 С. В.)', 'user32@example.org': 'Видеонаблюдение (регистраторы Dahua)'}
+SVC_FROM = {'user11@example.org': 'Сторожевая служба (Сотрудник37 С. В.)', 'user32@example.org': 'Видеонаблюдение (регистраторы Dahua)'}
 CCTV_LABEL, DONE_LABEL = 'Видеонаблюдение', 'Учтено на портале'   # 19.11.2026: ярлыки ящика 1c@ (созданы вручную)
 
 
@@ -71,6 +71,9 @@ def _file_1c(M, raw, mv, log):
 MTS_FROM = 'user38@example.org'   # 20.11.2026: детализации МТС (mts.py берёт .xls из arch/files) — после сохранения вложения в «Учтено на портале»
 CCTV_FROM = 'user32@example.org'   # 19.11.2026: письма регистраторов — снимки .jpg тоже в arch/files (cctv.py → портал)   # 13.11.2026, Т. В.: «расходы транспорта и обходы охраны — выводить на портал»
 KEEP_LAST = 2
+# 28.11.2026 (№421): протоколы переговоров ОМТС часто присылают фото скана с телефона — снимки .jpg/.png из таких писем тоже в arch/files
+#   (prot_mail.py выкладывает их в «Документы → Протоколы переговоров»); от 40 КБ — логотипы и картинки подписи мельче; остальные картинки из почты, как и раньше, не сохраняются
+PROT_SUBJ = re.compile(r'протокол\w*\s+(переговор|разноглас|согласовани)', re.I)
 PRUNE_DRY = False   # 13.11.2026 ~13:45, Т. В. (опрос): «Да, включай» — удаление вложений старше 3 дней включено
 _MON = re.compile(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*')
 
@@ -121,7 +124,7 @@ def prune(L, log, jload, jsave, keep_days=KEEP_DAYS):
 
 
 def run(L, CFG, ingest, log, jload, jsave, budget=110, limit=150):
-    return run_box(L, ingest, log, jload, jsave, IT.HOST, (CFG.get('itm_mail') or 'user5@example.org').lower(), IT.password(L),
+    return run_box(L, ingest, log, jload, jsave, IT.HOST, (CFG.get('itm_mail') or 'user6@example.org').lower(), IT.password(L),
                    lambda fl: [(raw, name) for raw, name, flags in fl if FOLDERS.match(name.strip())], 'arch.json', None, 'itm@', budget, limit)
 
 
@@ -256,7 +259,8 @@ def run_box(L, ingest, log, jload, jsave, host, me, pw, pick, stname, label, who
                         sha = hashlib.sha256(data_).hexdigest()
                         a = {'n': fn[:160], 'sz': len(data_), 'sha': sha[:24]}
                         ext = _ext(fn)
-                        if data_ and (ext in DOC_EXT or (frm == CCTV_FROM and ext in ('.jpg', '.jpeg') and len(data_) <= 2 * 1024 * 1024)):
+                        if data_ and (ext in DOC_EXT or (frm == CCTV_FROM and ext in ('.jpg', '.jpeg') and len(data_) <= 2 * 1024 * 1024)
+                                      or (ext in ('.jpg', '.jpeg', '.png') and PROT_SUBJ.search(subj) and 40 * 1024 <= len(data_) <= 8 * 1024 * 1024)):
                             dst = os.path.join(root, sha[:24] + ext)
                             if os.path.exists(dst): a['p'] = 1
                             elif st['bytes'] + len(data_) <= ARCH_CAP:

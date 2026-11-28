@@ -201,7 +201,7 @@ if _bn:
     _P = _np.array(_bn['poly'], float); _i = max(range(len(_P)), key=lambda i: ((_P[i] + _P[(i + 1) % len(_P)]) / 2) @ _np.array([.46, .89]))
     _A, _B = _P[_i], _P[(_i + 1) % len(_P)]; _t = (_B - _A) / _np.linalg.norm(_B - _A); _n = _np.array([_t[1], -_t[0]])
     if _n @ (((_A + _B) / 2) - _P.mean(axis=0)) < 0: _n = -_n
-    _src = 'фото 21.10.2026 (О. Сотрудник12, ОМТС), «дорога у нового склада»'
+    _src = 'фото 21.10.2026 (О. Сотрудник13, ОМТС), «дорога у нового склада»'
     d['front']['surfaces'] += [
         {'kind': 'concrete', 'h': .15, 'name': 'Бетонная отмостка вдоль стены материального склада', 'src': _src, 'poly': _strip(_A, _B, _n, 0, 1.0),
          'note': 'Бетонная полоса ≈ 1 м вдоль северо-восточной стены двухэтажной части цеха мягкой мебели, с бортом ≈ 15 см. Ширина — по фото, приблизительно.'},
@@ -275,9 +275,9 @@ import sys as _sys; _sys.path.insert(0, B + 'detail'); import specs as _DS   # d
 _det = _DS.specs(d['buildings'])
 for _b in d['buildings']:
     if _b['k'] in _det: _b['det'] = _det[_b['k']]
-import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник29
-import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник29 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
-import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник12 (кирпич, арочная кровля, главка с крестом)
+import corr_1026 as _C26; _C26.apply(d, _RV._zat(d))   # 26.10.2026: стык лит. Б–П, погрузочная площадка, эстакада у админздания, остатки «КН», цех директорских кресел, тексты Сотрудник32
+import corr_1027 as _C27; _C27.apply(d)   # 27.10.2026: Сотрудник32 B4 (раздевалки — кирпич, скатная кровля), B13 (спуски фидера № 8 к ТП-3 и КТП), B17 (отвод канализации W07)
+import corr_1028 as _C28; _C28.apply(d)   # 28.10.2026: бот №17 — часовня лит. Н по фото О. Сотрудник13 (кирпич, арочная кровля, главка с крестом)
 import corr_cams_1028 as _CC; _CC.apply(d, _RV._zat(d))   # 28.10.2026: камеры — места, направление, наклон, угол обзора по кадрам 26.10 и скриншотам А. Сотрудник1
 import corr_cams_1028b as _CB; _CB.apply(d, _RV._zat(d))   # 28.10.2026, второй заход: ответ А. Сотрудник1 — 053 выше, 042 на забор, 019 и 024 внутрь, 063 с вагончиком, новая 028, склад ТПА вплотную, 10 бытовок
 import corr_alex_1106 as _AX; _AX.apply(d, _RV._zat(d))   # 09.11.2026: правки А. В. Сотрудник1 (письмо 06.11, «да» 09.11) — work/alex_0611/plan.md
@@ -294,6 +294,7 @@ import base64 as _b64
 _BP = _cg1_read_json(B + 'bld_photos.json', encoding='utf-8') if os.path.exists(B + 'bld_photos.json') else {}
 d['bphotos'] = {k: [{'src': 'data:image/jpeg;base64,' + _b64.b64encode(_cg1_read_file(B + 'bld_photos/' + x['f'], 'rb')).decode(), 'cap': x.get('cap', ''), 'by': x.get('by', ''), 'date': x.get('date', '')}
                     for x in v if os.path.exists(B + 'bld_photos/' + x['f'])] for k, v in _BP.items() if not k.startswith('_')}
+import corr_cams_2811 as _K28; _K28.apply(d)   # 28.11.2026 (агент karta): камеры по ответу Сотрудник50 И. 27.11 (028 «ГКЗ улица», 017/019, 004 → рег. 249, вторые имена 005/016), IP с экрана сняты
 site_json = json.dumps(d, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
 edits_js = _cg1_read_file('/home/claude/site/assets/edits.js', encoding='utf-8')
 import perf_hooks as _PH; app = _PH.app(app)   # 26.10.2026: качество отрисовки по силе устройства (app/perf.js)

@@ -6,7 +6,7 @@
      только то, чего в карточке нет (значения сайта не меняются), группы «Упаковка», «Поставка», «Исполнения» и строка в описании;
   3) моделей прайса, которых на сайте нет, — карточки (фото из прайса, характеристики 1С), в своих разделах; списки разделов и фильтров — из индекса (SW /fsu/_q).
   python3 fsu_enrich.py <папка копии> [прайс.xlsx] [номенклатура.xlsx]"""
-import sys, os, re, json, zipfile, io, hashlib, collections, difflib
+import sys, os, re, json, zipfile, io, hashlib, collections, difflib, math   # 28.11.2026: math.isnan (CodeQL 1670/1671)
 import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__)); AS = os.path.join(HERE, 'assort')
 FSU = sys.argv[1]
@@ -22,9 +22,9 @@ def key(s):
     s = re.sub(r'\d{3,4}\s*[xх]\s*\d{3,4}(\s*[xх]\s*\d{3,4})?|l=\d+|\bмм\b|\d-мест\.?|\(в разборе\)|в разборе|\(компл\)|компл', ' ', s)
     t = [w.translate(LAT) for w in s.split()]
     return ' '.join(w for w in t if w not in DROP and not re.fullmatch(r'\d+-?х?', w))
-def S(x): return '' if x is None or (isinstance(x, float) and x != x) else str(x).strip()
+def S(x): return '' if x is None or (isinstance(x, float) and math.isnan(x)) else str(x).strip()
 def num(x):
-    try: v = float(str(x).replace(',', '.')); return v if v == v and v > 0 else None
+    try: v = float(str(x).replace(',', '.')); return v if not math.isnan(v) and v > 0 else None
     except Exception: return None
 def fixzip(src):   # 1С пишет «SharedStrings.xml» — openpyxl ищет «sharedStrings.xml»
     zi = zipfile.ZipFile(src); bio = io.BytesIO(); zo = zipfile.ZipFile(bio, 'w', zipfile.ZIP_DEFLATED)
@@ -85,7 +85,7 @@ def jl(h): return json.load(open(os.path.join(API, h + '.json'), encoding='utf-8
 def jw(obj):
     b = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('utf-8'); h = hashlib.md5(b).hexdigest()[:16]
     p = os.path.join(API, h + '.json'); tmp = p + '.tmp'; open(tmp, 'wb').write(b); os.replace(tmp, p); return h
-def nb(s): return s.replace(' ', '&nbsp;', 1) if False else s
+def nb(s): return s   # 28.11.2026 (CodeQL 1669): замена пробела на &nbsp; была выключена «if False» — оставлено как работало
 rep = {'site_cards': 0, 'enriched': 0, 'no_1c': [], 'added': [], 'mismatch': []}
 # ---------- 2) характеристики в карточки сайта ----------
 seen_keys = set()

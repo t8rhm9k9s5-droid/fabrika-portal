@@ -23,13 +23,22 @@ NIGHT_MAX = 6
 SILENT_H = 12
 GAP_MIN = 60
 # 19.11.2026, Т. В.: «ключевых событий не зафиксировано: пересечение периметра, проезд машин, в каких помещениях движение, в какое время,
-#   соответствуют ли рабочему графику; не соответствует — оповещение Сотрудник35 и объяснение, почему там находились люди».
+#   соответствуют ли рабочему графику; не соответствует — оповещение Сотрудник37 и объяснение, почему там находились люди».
 WORK_FROM, WORK_TO = '07:30', '20:00'            # рабочий график по умолчанию: пн–пт; сб, вс и вне этих часов — «вне графика»
-IT_TO, IT_CC = ['user33@example.org'], ['user2@example.org', 'user5@example.org']   # 19.11.2026: сисадмин Сотрудник89 И. В., копия — тех. директор и Т. В.
+IT_TO, IT_CC = ['user33@example.org'], ['user2@example.org']   # 19.11.2026: сисадмин Сотрудник50 И. В., копия — тех. директор; 28.11: itm@ в копию не ставим (Т. В. 16.11: ящик не трогаем)
 IT_AT, IT_MIN_CAMS, IT_MAX = '08:30', 6, 3
-SEC_TO = ['user11@example.org']               # начальник сторожевой службы Сотрудник35 С. В.
+SEC_TO = ['user11@example.org']               # начальник сторожевой службы Сотрудник37 С. В.
 SEC_CC = ['user2@example.org']                    # Сотрудник1 А. В. — видеонаблюдение
 SEC_AT = '07:40'                                 # утренняя сводка «вне графика» за ночь — раз в день
+# 23.11.2026, Сотрудник50 И. В.: обходы охраны 21:00, 24:00, 4:00, 6:00 (25–30 мин) и перерывы 21:50–22:00, 01:50–02:00, 03:00–04:00, 06:20–06:30 —
+#   «эти периоды нужно исключить из учёта»: в ленте событие остаётся (с пометкой), но тревог ночью и вопросов Сотрудник37 по нему нет
+GUARD = [('21:00', '21:30'), ('21:50', '22:00'), ('00:00', '00:30'), ('01:50', '02:00'), ('03:00', '04:30'), ('06:00', '06:30')]
+
+
+def _guard(t):
+    hm = (t or '')[11:16]
+    return any(a <= hm < b for a, b in GUARD)
+
 NAME_SEED = {'250|52': '052_Ворота', '250|50': '050_Периметр', '249|2': '002_Гараж', '249|3': '003_Часовня', '250|16': '016_Сборка Престиж'}
 
 X_RX = {
@@ -96,7 +105,7 @@ def parse(r):
     return ev
 
 
-# 23.11.2026, Т. В. (опрос «Только ночь 23:00–05:00»), после ответа Сотрудник35 С. В.: у этих камер графика нет —
+# 23.11.2026, Т. В. (опрос «Только ночь 23:00–05:00»), после ответа Сотрудник37 С. В.: у этих камер графика нет —
 #   011 парковка (дорога общего пользования) и 003 часовня (срабатывает на фары) — не фиксировать совсем;
 #   052 ворота и 002 гараж — «вне графика» только ночью 23:00–05:00 (любой день). Остальные камеры — как раньше.
 CAM_SCHED = [(re.compile(r'^0*11(?!\d)|парковк', re.I), None), (re.compile(r'^0*3(?!\d)|часовн', re.I), None),
@@ -162,7 +171,8 @@ def run(L, log, jload, jsave, publish, publish_file, alert, now, mail_send=None)
                 if not e.get('nvr'): e['nvr'] = {'249': 'Регистратор 1', '250': 'Регистратор 2'}.get([k for k, x in nm.items() if x == v_][0].split('|')[0], '')
         e['off'] = _off(e['t'], e.get('name') or '')
         e['zone'] = 'perim' if e['perim'] else 'room'
-        e['key'] = (not e['end']) and e['k'] not in ('test', 'sys') and e['off']
+        e['guard'] = _guard(e['t'])
+        e['key'] = (not e['end']) and e['k'] not in ('test', 'sys') and e['off'] and not e['guard']
     # — снимки: периметр и ночь, свежие первыми
     pubs = set(st.get('snaps') or [])
     edge = (now - datetime.timedelta(hours=SNAP_KEEP_H)).strftime('%Y-%m-%dT%H:%M')
@@ -211,7 +221,7 @@ def run(L, log, jload, jsave, publish, publish_file, alert, now, mail_send=None)
         n['ok'] = age is not None and age < SILENT_H
         if age is not None and age >= SILENT_H:
             alert('cctv_silent:' + name, 'Фабрика: видеонаблюдение — %s не присылал писем %d ч (последнее %s МСК). Проверьте, на связи ли регистратор '
-                  'и работает ли отправка почты (Сотрудник89 И. В.).' % (name, int(age), n['last'].replace('T', ' ')))
+                  'и работает ли отправка почты (Сотрудник50 И. В.).' % (name, int(age), n['last'].replace('T', ' ')))
     # — оповещения: только новые события после отметки (первый запуск — без «хвоста»)
     mark = st.get('mark') or t_now
     night_day = (now - datetime.timedelta(hours=7)).strftime('%Y-%m-%d')
@@ -225,7 +235,7 @@ def run(L, log, jload, jsave, publish, publish_file, alert, now, mail_send=None)
         if e['k'] == 'sys':
             alert('cctv_sys:%s:%s' % (key, e['ev']), 'Фабрика: видеонаблюдение — %s: %s (%s), %s МСК.' % (e['name'] or e.get('nvr') or 'регистратор', e['ev'], e.get('nvr') or '', e['t'][11:16]))
             continue
-        if not (e['night'] and e['perim']): continue
+        if not (e['night'] and e['perim']) or e.get('guard'): continue
         pend[key] = (pend.get(key) or 0) + 1
         lt = last_cam.get(key) or ''
         try: gap = (datetime.datetime.strptime(e['t'][:19], '%Y-%m-%dT%H:%M:%S') - datetime.datetime.strptime(lt[:19], '%Y-%m-%dT%H:%M:%S')).total_seconds() / 60 if lt else 1e9
@@ -252,8 +262,8 @@ def run(L, log, jload, jsave, publish, publish_file, alert, now, mail_send=None)
         if e['night']: c['night'] += 1
         if e['t'] > c['last']: c['last'] = e['t']
     items = [{'t': e['t'], 'k': e['k'], 'ev': e['ev'], 'name': e['name'], 'ch': e['ch'], 'nvr': e.get('nvr') or '', 'night': e['night'],
-              'perim': e['perim'], 'snap': e.get('snap'), 'off': e.get('off'), 'key': e.get('key')} for e in reversed(evs) if not e['end'] and e['k'] != 'test'][:400]
-    # — утренняя сводка Сотрудник35: события вне рабочего графика с прошлой сводки (периметр и помещения), просьба объяснить
+              'perim': e['perim'], 'snap': e.get('snap'), 'off': e.get('off'), 'key': e.get('key'), 'guard': e.get('guard')} for e in reversed(evs) if not e['end'] and e['k'] != 'test'][:400]
+    # — утренняя сводка Сотрудник37: события вне рабочего графика с прошлой сводки (периметр и помещения), просьба объяснить
     kul = st.get('kul') or {}
     today = t_now[:10]
     if mail_send and t_now[11:16] >= SEC_AT and kul.get('day') != today:

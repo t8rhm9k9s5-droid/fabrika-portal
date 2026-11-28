@@ -61,7 +61,12 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   function line(me){var s=P.st[me];return s?s[0]:fmt(me)}
   function draw(){
     if(!Z||!Z.calls){V.innerHTML='<p class="lead">Детализации ещё не разобраны роботом. Страница обновится сама.</p>';return}
-    var C=Z.calls.filter(function(c){return !SEL||c.me===SEL}), L=Z.lines||{}, h='';
+    // 26.11.2026, Т. В. (скрин «1 889 009 мин»): в детализации МТС кроме звонков — сессии интернета (4G/3G/gprs, объём в «длительности») и SMS;
+    //   звонками считаем только голос, итоги по номерам — из тех же звонков
+    var VO=Z.calls.filter(function(c){return !/4G|3G|LTE|gprs|hsdpa|sms|интернет/i.test(c.svc||'')}), L={};
+    VO.forEach(function(c){var x=L[c.me]||(L[c.me]={n:0,dur:0,u:{}});x.n++;x.dur+=c.dur||0;if(c.o)x.u[c.o]=1});
+    Object.keys(L).forEach(function(me){L[me].uniq=Object.keys(L[me].u).length});
+    var C=VO.filter(function(c){return !SEL||c.me===SEL}), h='';
     var tot=C.length, cl=0, none=0, nset={};
     C.forEach(function(c){var w=who(c.o);if(w.k==='cl')cl++;if(w.k==='none'){none++;nset[c.o]=1}});
     h+='<div class="kgrid"><div class="igroup"><div class="kt">Звонков за '+Z.days+' дн.</div><div class="kv">'+n(tot)+'</div><div class="ks">номеров с детализацией: '+Object.keys(L).length+'</div></div>'+

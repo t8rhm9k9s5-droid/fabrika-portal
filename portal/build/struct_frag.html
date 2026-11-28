@@ -55,6 +55,33 @@ body.wide .ios{max-width:min(1680px,100%)}
 .og-more>summary{padding:6px 0 0;border:0;font-size:13.5px}
 .og-more .og-body{padding:6px 0 2px}
 .og-tools a[data-og]{cursor:pointer}
+/* 28.11.2026, Т. В.: «Контакты сотрудников / карта ID» (#sec-con) — поиск, фильтры, поля и три действия у каждого человека */
+.ct-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 4px}
+.ct-tools .og-search{flex:2 1 240px}
+.ct-sel{flex:1 1 200px;min-width:0;max-width:100%;min-height:40px;padding:8px 34px 8px 14px;border-radius:12px;border:.5px solid var(--ios-sep);background:var(--ios-fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238e8e93' stroke-width='1.8'/%3E%3C/svg%3E") no-repeat right 13px center;color:inherit;font:15px var(--f-body);-webkit-appearance:none;appearance:none;cursor:pointer}
+.ct-tools .og-search{min-height:40px}
+.ct-sel:focus-visible,.ct-tools .og-search:focus-visible,.ct-a a:focus-visible,.ct-cp:focus-visible,.ct-k a:focus-visible{outline:2px solid var(--ios-blue);outline-offset:2px}
+.ct-cnt{flex:1 1 100%;color:var(--ios-2);font-size:13.5px;margin:2px 2px 0}
+.ct-f{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;margin:8px 0 0;font-size:14px}
+.ct-f dt{color:var(--ios-2);font-size:13px;padding-top:1px}
+.ct-f dd{margin:0;min-width:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.ct-f dd a{color:inherit;text-decoration:none}
+.ct-f dd .no{color:var(--t-warn,#b36200)}
+.ct-f dd small{display:block;color:var(--ios-2);font-size:12.5px}
+.ct-cp{margin-left:6px;padding:2px 8px;border:0;border-radius:999px;background:var(--ios-fill);color:var(--ios-blue);font:600 12.5px var(--f-body);cursor:pointer;vertical-align:1px}
+.ct-cp:active{opacity:.7}
+.ct-a{margin-top:10px}
+.ct-a a,.ct-a span{min-height:36px;padding:7px 13px;transition:background-color .15s ease-out,transform .15s ease-out}
+.ct-a a:hover{background:color-mix(in srgb,var(--ios-blue) 22%,transparent)}
+.ct-a a.ml:hover{background:color-mix(in srgb,var(--ios-2) 22%,transparent)}
+.ct-a a:active{transform:scale(.97)}
+.ct-a span.off{display:inline-flex;align-items:center;border-radius:999px;background:var(--ios-fill);color:var(--ios-2);font:500 13.5px var(--f-body);opacity:.75;cursor:not-allowed}
+.ct-k .pk{cursor:pointer}
+.ct-id{display:block;white-space:nowrap}
+.ct-k .pk.on{outline:2px solid var(--ios-blue);outline-offset:-2px}
+.ct-none{padding:18px 16px;color:var(--ios-2)}
+@media (max-width:700px){.ct-a a,.ct-a span{min-height:40px}.ct-sel{flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){.ct-a a,.ct-a span{transition:none}.ct-a a:active{transform:none}}
 @media (max-width:700px){.og-root::after{display:none}.og-kids{border-top:0;padding-top:0}.og-root{padding-bottom:12px}}
 .mtx td.muted{color:var(--muted,#8e8e93);font-style:italic}
 /* 28.10.2026: статистика рекламаций за период — полоски и воронка этапов */
@@ -230,7 +257,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     if (R.busy) return h + note('Проверяю доступ…');
     if (R.err) return h + note(R.err === 'login' ? 'Войдите личным входом.' : 'Не получилось: ' + esc(R.err) + ' <a href="#" onclick="return false" data-secre="' + part + '">Повторить</a>');
     if (R.pin === 'wait') return h + note((R.sent ? '<b>Подтвердите в Telegram.</b> Бот «Фабрика» прислал вам кнопку «Да, это я» — нажмите её, затем ' : (esc(R.why || 'Нужно подтверждение в Telegram.') + ' Затем ')) + '<a href="#" data-secre="' + part + '">Проверить</a>.');
-    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник91 Отчество42 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
+    if (R.access === false) return h + note(R.req === 'sent' ? 'Сотрудник4 доступа отправлен Сотрудник91 Отчество41 в Telegram. Когда он нажмёт «Пустить» — <a href="#" data-secre="' + part + '">Проверить</a>.' :
       R.req === 'again' ? 'Сотрудник4 уже у Сотрудник2 Отчество2. После его ответа — <a href="#" data-secre="' + part + '">Проверить</a>.' : esc(R.why || 'Доступа нет.'));
     if (R.none) return h + note(esc(R.why || 'Раздел ещё не выложен.'));
     return h + note('Нет данных. <a href="#" data-secre="' + part + '">Повторить</a>');
@@ -249,8 +276,9 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       { t: 'Зоны ответственности', ic: 's_grid', href: '#ko', v: P ? (P.zones || []).length : null, s: P ? 'людей ' + (P.people || []).length + ' · кто за что отвечает' : st('ko') },
       { t: 'СИМ-карты МТС', ic: 's_phone', href: '#sec-sim', v: nSim, s: M ? 'разделов ' + (M.sheets || []).length + ' · на проверке' : st('sim') }];
     var tiles = [['#sec-org', 'Оргструктура компании', 'отделы, участки, руководители, телефоны', 's_org'], ['#sec-kos', 'Коммерческий отдел: функционал', 'блок-схема, обязанности, графики ОП, подрядчики', 's_sales'],
-      ['#ko', 'Коммерческий отдел: люди и зоны', 'кто за что отвечает, инструкции, изменения штата', 's_person'], ['#sec-sim', 'СИМ-карты МТС', 'сотрудники, устройства, счётчики', 's_phone']];
-    var h = '<a class="back" href="razdel.html#people">Люди</a><h1>Структура</h1><p class="lead">Оргструктура, коммерческий отдел и СИМ-карты — только Т. В. и А. В. Сотрудник1; данные отдаёт бот по личному входу.</p>';
+      ['#ko', 'Коммерческий отдел: люди и зоны', 'кто за что отвечает, инструкции, изменения штата', 's_person'], ['#sec-sim', 'СИМ-карты МТС', 'сотрудники, устройства, счётчики', 's_phone'],
+      ['#sec-con', 'Контакты сотрудников', 'ФИО и должность по структуре, корпоративный номер, почта, MAX ID', 's_chat']];   // 28.11.2026, Т. В.: карта ID
+    var h = '<a class="back" href="razdel.html#people">Люди</a><h1>Структура</h1><p class="lead">Оргструктура, коммерческий отдел, СИМ-карты и контакты сотрудников — только Т. В. и А. В. Сотрудник1; данные отдаёт бот по личному входу.</p>';
     if (!on) h += '<div class="igroup"><div class="cpl"><div>Войдите личным входом («Профиль» → «Войти») — бот пришлёт в Telegram кнопку «Да, это я».</div></div></div>';
     h += '<section class="fhome hub"><div class="hub-main"><div class="fh-cap"><h2>Контрольные точки раздела</h2></div><ul class="pk-grid hub-k" data-n="4" style="grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))">' + kp.map(function (k) {
       return '<li><a class="pk" href="' + k.href + '" style="--c:' + C + '" data-tone="n"><span class="pk-t">' + ic(k.ic) + esc(k.t) + '</span><span class="pk-v">' + (k.v != null ? esc(k.v) : '—') + '</span><span class="pk-s">' + esc(k.s) + '</span></a></li>';
@@ -333,7 +361,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
         return sxCard((a.n ? 'Уч. ' + a.n + ' · ' : 'Ночная смена · ') + a.title, a.staff ? a.staff + ' чел.' : '', [(a.blocks || []).join(', '), a.note].filter(Boolean).map(esc).join(' · '),
           [sxP(a.who, true)].concat((a.team || []).map(function (p) { return sxP(p); })));
       })));
-    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник81 и вся его служба, системный администратор и 1С-программисты»
+    // 12.11.2026, Т. В.: «брат с 1/11 технический директор — ему подчиняется Сотрудник82 и вся его служба, системный администратор и 1С-программисты»
     var td = O.tech_director, TD = DP.filter(function (d) { return (O.tech_depts || []).indexOf(d.key) >= 0; });
     if (td && TD.length) h += sxSec('og-t', 'Техническая служба · ' + TD.length, sxScheme([sxCard('Технический директор', TD.reduce(function (s, d) { return s + (Number(d.count) || 0); }, 0) + ' чел.', '', [sxP(td, true)], 'og-node')],
       TD.map(function (d) { return sxCard(d.title, d.count ? d.count + ' чел.' : '', d.note && !/^Подчиняется техническому/.test(d.note) ? esc(d.note) : (/уточняется/.test(d.note || '') ? 'состав службы уточняется' : ''), (d.heads || []).map(function (p) { return sxP(p, true); }).concat((d.staff || []).map(function (p) { return sxP(p); }))); })));
@@ -413,7 +441,7 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
       ch.push(sxCard(c.kind === 'gone' ? 'Уволен(а) / нет в списке' : c.kind === 'new' ? 'Сотрудник6 сотрудник' : c.kind === 'quiet' ? 'Нет активности' : 'Изменение', '', '',
         [sxRow({ n: c.name, r: c.what || '', x: c.ask ? 'Вопрос' + (c.to ? ' (' + c.to + ')' : '') + ': ' + c.ask : '', chips: [[c.answer ? 'ответ: ' + c.answer : 'ответа нет', '', c.answer ? 'tag' : 'warn']] })], 'og-warn'));
     });
-    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник21 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник8 напрямую' })]));
+    ch.push(sxCard('ОП Самара', '', '', [sxRow({ n: 'Руководитель офиса не назначен (в поиске)', r: 'Сотрудник22 Н. А. подчиняется руководителю сети офисов М. И. Сотрудник8 напрямую' })]));
     if (SPB && SPB.list && SPB.list.length) ch.push(sxCard('ОП Санкт-Петербург закрыт с ' + dd(SPB.closed), SPB.list.length + ' клиентов', '', SPB.by.map(function (x) { return sxRow({ n: x[0], r: 'клиентов передано: ' + n(x[1]) }); }).concat(
       ['<details class="og-fold"><summary>Список клиентов · ' + n(SPB.list.length) + '</summary>' + SPB.list.map(function (x) { return sxRow({ n: x[0], r: 'передан: ' + x[1] }); }).join('') + '</details>'])));
     if ((K.check || []).length) ch.push(sxCard('Что проверить', K.check.length + '', '', K.check.map(function (c, i) { return sxRow({ n: (i + 1) + '.', r: c }); })));
@@ -463,19 +491,153 @@ details.rep.tzr > summary span{flex:1 1 100%;white-space:normal}
     h += sxSec('sm-o', 'Устройства, руководство, уволенные', sxGrid(rest.map(function (sh) { return sxCard(sh.name, (sh.rows || []).length + ' · ' + sumOf(sh.rows || []), '', (sh.rows || []).map(row), /уволен/i.test(sh.name) ? 'og-warn' : ''); })));
     sxDone(h + '<p class="ifoot">' + esc(D.note || '') + (O ? ' Отдел определён по оргструктуре (ФИО пользователя номера).' : ' Отделы появятся, когда загрузится оргструктура.') + '</p>');
   }
+  // ================= 28.11.2026, Т. В.: «Контакты сотрудников» / карта ID. ФИО, должность и подразделение — ТОЛЬКО из оргструктуры (часть org),
+  // корпоративный номер — из реестра СИМ МТС (часть sim), MAX ID — org.mx (состав групп MAX и реестр доступа, build/gen_sec.py). Данные — те же закрытые
+  // части бота, что у «Структуры»: в странице ничего не лежит, видят только те, кому бот отдаёт «Структуру».
+  var CON = { q: '', d: '', f: '', foc: false };
+  function conKey(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/ъ/g, 'ь').replace(/\(.*?\)|\bгк\s+фабрикант\b/g, ' ').replace(/\s+-\s+.*$/, '').replace(/[^а-яa-z ]/g, ' ').split(/\s+/).filter(Boolean).slice(0, 2).join(' '); }
+  function conK2(k) { var w = k.split(' '); return w.length === 2 ? w[0] + ' ' + w[1].charAt(0) : ''; }
+  function conDig(x) { var s = String(x || '').replace(/\D/g, ''); if (s.length === 11 && s[0] === '8') s = '7' + s.slice(1); if (s.length === 10 && s[0] === '9') s = '7' + s; return s; }
+  function conFmt(x) { var s = conDig(x); return s.length === 11 && s[0] === '7' ? '+7 ' + s.slice(1, 4) + ' ' + s.slice(4, 7) + '-' + s.slice(7, 9) + '-' + s.slice(9) : String(x || '').trim(); }
+  function conTel(x) { var s = conDig(x); return 'tel:' + (s.length >= 11 ? '+' + s : s); }
+  function secCon() {
+    var g = secGate('org', 'Контакты сотрудников'); if (g != null) { V.innerHTML = g; return; }
+    if (!SEC.sim && !SECR.sim && secLogged()) setTimeout(function () { secLoad('sim', false); }, 0);   // номера — из реестра СИМ
+    var O = (SEC.org || {}).org; if (!O) { V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>Контакты сотрудников</h1><div class="igroup"><div class="ct-none">Оргструктура не пришла от бота. <a href="#" data-secre="org">Повторить</a></div></div>'; return; }
+    var MX = (SEC.org || {}).mx || null, MI = (MX && MX.ids) || {}, SM = SEC.sim || null, SR = SECR.sim || {};
+    // 1. люди — только из оргструктуры (как orgView): руководство, приёмная, отделы, участки, ночная смена; повтор человека — строкой «также»
+    var L = [], by = {}, DO = [], DC = {};
+    var add = function (p, d, sub) {
+      if (!p || !p.name || /^(КПП|Пост |Сторож)/i.test(p.name)) return;     // посты охраны — не сотрудники
+      var k = conKey(p.name), w = d + (sub ? ' · ' + sub : '');
+      if (by[k]) { if (by[k].d !== d && by[k].also.indexOf(w) < 0) by[k].also.push(w); return; }
+      var x = { n: p.name, r: p.role || '', d: d, sub: sub || '', e: (p.emails || []).filter(Boolean), ph: (p.phones || []).filter(Boolean), k: k, also: [] };
+      by[k] = x; L.push(x); if (!DC[d]) { DC[d] = 0; DO.push(d); } DC[d]++;
+    };
+    (O.leadership || []).concat(O.directors || []).forEach(function (p) { add(p, 'Руководство'); }); add(O.tech_director, 'Руководство'); add(O.reception, 'Приёмная');
+    (O.departments || []).forEach(function (d) { (d.heads || []).concat(d.staff || []).forEach(function (p) { add(p, d.title); }); (d.subgroups || []).forEach(function (sg) { add(sg.head, d.title, sg.title); (sg.staff || []).forEach(function (p) { add(p, d.title, sg.title); }); }); });
+    (O.areas || []).forEach(function (a) { var t = 'уч. ' + a.n + ' · ' + a.title; add(a.who, 'Производство', t); (a.team || []).forEach(function (p) { add(p, 'Производство', t); }); });
+    if (O.night_shift) add(O.night_shift.who, 'Производство', 'ночная смена');
+    var orgK2 = {}; L.forEach(function (p) { var q = conK2(p.k); orgK2[q] = (orgK2[q] || 0) + 1; });
+    var fz = function (M, k) { if (M[k]) return k; var q = conK2(k); if (!q || orgK2[q] !== 1) return ''; var c = Object.keys(M).filter(function (x) { return conK2(x) === q; }); return c.length === 1 ? c[0] : ''; };   // опечатка в имени (Алесандр, Гюльнара) — по фамилии и первой букве, только однозначно
+    // 2. реестр СИМ: номер → кто пользуется; у человека корпоративный — номер, где он пользователь
+    var C = SM ? SM.cols || [] : [], ci = function (rx) { for (var i = 0; i < C.length; i++) if (rx.test(C[i])) return i; return -1; };
+    var iF = ci(/ФИО/i), iN = ci(/Номер/i), iU = ci(/Кто пользуется/i), iT = ci(/Тариф/i), SB = {}, PH = {}, simAll = [];
+    if (SM) (SM.sheets || []).forEach(function (sh) {
+      var emp = /сотрудник|руковод/i.test(sh.name || '');
+      (sh.rows || []).forEach(function (r) {
+        var who = String((iU >= 0 && r[iU]) || (iF >= 0 && r[iF]) || '').trim(), num = conDig(r[iN]); if (!num) return;
+        PH[num] = { who: who.replace(/\s+-\s+свобод.*$/i, ''), sh: sh.name || '' };
+        if (!emp || /свобод/i.test(who + ' ' + (iF >= 0 ? r[iF] : ''))) return;
+        var k = conKey(who); if (k.split(' ').length < 2) return;
+        (SB[k] = SB[k] || []).push({ ph: num, t: iT >= 0 ? String(r[iT] || '') : '' }); simAll.push({ k: k, ph: num, who: who });
+      });
+    });
+    // 3. сведение по каждому человеку
+    var used = {}, usedSim = {};
+    L.forEach(function (p) {
+      var sk = SM ? fz(SB, p.k) : '', mk = fz(MI, p.k);
+      p.sim = sk ? SB[sk] : []; p.simFz = sk && sk !== p.k; if (sk) usedSim[sk] = 1;
+      p.mx = mk ? MI[mk].slice() : []; p.mxFz = mk && mk !== p.k; p.mx.forEach(function (u) { used[u] = 1; });
+      var own = {}; p.sim.forEach(function (s) { own[s.ph] = 1; });
+      p.oph = p.ph.map(function (x) { var dg = conDig(x), R = PH[dg]; return { x: x, dg: dg, other: R && !own[dg] ? R : null }; }).filter(function (o) { return !own[o.dg]; });
+      p.fl = [SM && !p.sim.length ? 'nosim' : '', MX && !p.mx.length ? 'nomx' : '', !p.e.length ? 'nomail' : '', p.mx.length > 1 ? 'mx2' : '', SM && p.sim.length && p.oph.some(function (o) { return /^79/.test(o.dg); }) ? 'phd' : ''].filter(Boolean);
+    });
+    var N = L.length, nSim = L.filter(function (p) { return p.sim.length; }).length, nMx = L.filter(function (p) { return p.mx.length; }).length;
+    var isDiff = function (p) { return p.fl.some(function (f) { return f === 'nosim' || f === 'nomx' || f === 'mx2' || f === 'phd'; }); }, nDiff = L.filter(isDiff).length;
+    // 4. разметка
+    var kp = [{ f: '', t: 'Сотрудники', v: N, s: 'по оргструктуре · отделов ' + DO.length },
+      { f: 'nosim', t: 'Корпоративный номер', v: SM ? nSim : null, s: SM ? 'нет у ' + (N - nSim) + ' · реестр СИМ МТС' : (SR.busy || !SECR.sim ? 'реестр СИМ загружается…' : 'реестр СИМ не пришёл'), tone: SM && N - nSim ? 'warn' : 'n' },
+      { f: 'nomx', t: 'MAX ID', v: MX ? nMx : null, s: MX ? 'нет у ' + (N - nMx) : 'карта MAX ID ещё не выложена', tone: MX && N - nMx ? 'warn' : 'n' },
+      { f: 'diff', t: 'Расхождения', v: nDiff, s: 'нет номера или MAX ID, два ID, номер не свой', tone: nDiff ? 'warn' : 'ok' }];
+    var h = '<a class="back" href="#struct">Структура</a><h1>Контакты сотрудников</h1><p class="lead">ФИО, должность и подразделение — по оргструктуре; номер — из реестра СИМ МТС; MAX ID — из групп MAX и реестра доступа. Нажмите кнопку — позвонить, написать письмо или в MAX.</p>';
+    h += '<div class="fhome hub sx-k ct-k"><ul class="pk-grid hub-k" data-n="4">' + kp.map(function (k) {
+      return '<li><a href="#" class="pk' + (CON.f === k.f || (k.f === '' && !CON.f) ? ' on' : '') + '" style="--c:var(--ic-docs)" data-tone="' + (k.tone || 'n') + '" data-cf="' + k.f + '" aria-pressed="' + (CON.f === k.f) + '"><span class="pk-t">' + esc(k.t) + '</span><span class="pk-v">' + (k.v != null ? esc(k.v) : '—') + '</span><span class="pk-s">' + esc(k.s) + '</span></a></li>';
+    }).join('') + '</ul></div>';
+    var opt = function (v, t, cur) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+    h += '<div class="ct-tools"><input class="og-search ct-q" type="search" inputmode="search" autocomplete="off" aria-label="Поиск по фамилии" placeholder="Фамилия, имя или номер" value="' + esc(CON.q) + '">' +
+      '<select class="ct-sel ct-d" aria-label="Подразделение">' + opt('', 'Все подразделения · ' + N, CON.d) + DO.map(function (d) { return opt(d, d + ' · ' + DC[d], CON.d); }).join('') + '</select>' +
+      '<select class="ct-sel ct-f2" aria-label="Показать">' + opt('', 'Все сотрудники', CON.f) + opt('nosim', 'Нет корпоративного номера', CON.f) + opt('nomx', 'Нет MAX ID', CON.f) + opt('nomail', 'Нет рабочей почты', CON.f) + opt('diff', 'Есть расхождения', CON.f) + '</select>' +
+      '<p class="ct-cnt" aria-live="polite"></p></div>';
+    var row = function (p) {
+      var f = [], q = [p.n, p.e.join(' ')].concat(p.sim.map(function (s) { return s.ph; }), p.oph.map(function (o) { return o.dg; })).join(' ').toLowerCase().replace(/ё/g, 'е');
+      var ph = p.sim.map(function (s) { return '<a href="' + conTel(s.ph) + '">' + esc(conFmt(s.ph)) + '</a>'; }).join('<br>');
+      if (!SM) ph = '<span class="no">' + (SR.busy || !SECR.sim ? 'реестр СИМ загружается…' : 'реестр СИМ не пришёл') + '</span>';
+      else if (!p.sim.length) ph = '<span class="no">нет в реестре СИМ</span>';
+      else if (p.simFz) ph += '<small>в реестре — с опечаткой в имени</small>';
+      f.push(['Корп. мобильный', ph]);
+      if (p.oph.length) f.push(['По структуре', p.oph.map(function (o) { return '<a href="' + conTel(o.x) + '">' + esc(conFmt(o.x)) + '</a><small>' + (o.other ? 'корпоративный, в реестре: ' + esc(o.other.who || o.other.sh) : SM ? 'не в реестре СИМ — личный или городской' : 'из оргструктуры') + '</small>'; }).join('')]);
+      f.push(['Почта', p.e.length ? p.e.map(function (e) { return '<a href="mailto:' + esc(e) + '">' + esc(e) + '</a>'; }).join('<br>') : '<span class="no">нет рабочей почты</span>']);
+      f.push(['MAX ID', p.mx.length ? p.mx.map(function (u) { return '<span class="ct-id">' + esc(u) + '<button type="button" class="ct-cp" data-cp="' + esc(u) + '" aria-label="Скопировать MAX ID ' + esc(u) + '">Скопировать</button></span>'; }).join('') + (p.mx.length > 1 ? '<small class="no">два MAX ID — какой рабочий, уточнить у Сотрудник5</small>' : '') + (p.mxFz ? '<small>совпадение по фамилии и первой букве имени</small>' : '') : '<span class="no">' + (MX ? 'неизвестен' : 'карта MAX ID ещё не выложена') + '</span>']);
+      var tel = p.sim.length ? p.sim[0].ph : p.ph[0], a = [];
+      a.push(p.mx.length ? '<a href="max://user/' + esc(p.mx[0]) + '" title="Откроется приложение MAX">Написать в MAX</a>' : '<span class="off" aria-disabled="true" title="MAX ID неизвестен">Написать в MAX</span>');
+      a.push(tel ? '<a href="' + conTel(tel) + '">Позвонить</a>' : '<span class="off" aria-disabled="true" title="Номера нет">Позвонить</span>');
+      a.push(p.e.length ? '<a class="ml" href="mailto:' + esc(p.e[0]) + '">Написать письмо</a>' : '<span class="off" aria-disabled="true" title="Почты нет">Написать письмо</span>');
+      return '<div class="who ct' + (/руковод|директор|начальник|Имя1|председатель/i.test(p.r) ? ' hd' : '') + '" data-q="' + esc(q) + '" data-d="' + esc(p.d) + '" data-f="' + p.fl.join(' ') + (isDiff(p) ? ' diff' : '') + '"><div class="wn">' + esc(p.n) + '</div>' +
+        '<div class="wr">' + esc(p.r || 'должность не указана') + '</div>' + (p.sub || p.also.length ? '<div class="wx">' + esc([p.sub, p.also.length ? 'также: ' + p.also.join('; ') : ''].filter(Boolean).join(' · ')) + '</div>' : '') +
+        '<dl class="ct-f">' + f.map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + x[1] + '</dd>'; }).join('') + '</dl><div class="acts ct-a">' + a.join('') + '</div></div>';
+    };
+    h += sxSec('ct-l', 'Сотрудники по подразделениям', '<div class="og-grid ct-g">' + DO.map(function (d) {
+      var P = L.filter(function (p) { return p.d === d; });
+      return '<div class="igroup og-card ct-c" data-d="' + esc(d) + '"><div class="og-h"><b>' + esc(d) + '</b><span>' + P.length + ' чел.</span></div>' + P.map(row).join('') + '</div>';
+    }).join('') + '</div><div class="igroup ct-empty" hidden><div class="ct-none">Никого не нашлось. Проверьте фамилию или выберите «Все подразделения» и «Все сотрудники».</div></div>');
+    // 5. в реестрах есть, в оргструктуре нет — для сверки (ФИО отсюда на портал не идут)
+    var sx = SM ? simAll.filter(function (s) { return !usedSim[s.k]; }) : [], mxo = MX ? (MX.all || []).filter(function (m) { return m[1] && !used[m[1]]; }) : [];
+    var seen = {}; mxo = mxo.filter(function (m) { if (seen[m[1]]) return false; seen[m[1]] = 1; return true; });
+    if (sx.length || mxo.length) h += sxSec('ct-x', 'В реестрах есть, в оргструктуре нет', sxGrid([
+      sx.length ? conFold('Номера СИМ на людей вне структуры', sx.length + '', 'уволен, не внесён в структуру или служебный номер — решает Т. В.', sx.map(function (s) { return sxRow({ n: s.who, chips: [[conFmt(s.ph), conTel(s.ph), 'tel']] }); })) : '',
+      mxo.length ? conFold('MAX ID без сотрудника в структуре', mxo.length + '', 'имя в MAX не совпало с ФИО по структуре — сверить с Сотрудник5', mxo.map(function (m) { return sxRow({ n: m[0] || 'без имени', r: 'MAX ID ' + m[1], x: m[2] || '' }); })) : ''].filter(Boolean)));
+    h += '<p class="ifoot">Оргструктура: ' + esc(String(O.generated || '').slice(0, 10) || '—') + (SM ? ' · реестр СИМ: ' + esc(String(SM.src || '').split(';')[0]) : '') + (MX ? ' · MAX ID: ' + esc(MX.src || '') : '') + '. ФИО и должности берутся только из штатной структуры — не из подписей писем и профилей MAX.</p>';
+    V.innerHTML = h; conWire();
+  }
+  function conFold(title, right, meta, rows) { return '<div class="igroup og-card"><div class="og-h"><b>' + esc(title) + '</b><span>' + esc(right) + '</span></div><div class="og-m">' + esc(meta) + '</div><details class="og-fold"><summary>Показать список · ' + rows.length + '</summary>' + rows.join('') + '</details></div>'; }
+  function conWire() {
+    var q = V.querySelector('.ct-q'), sd = V.querySelector('.ct-d'), sf = V.querySelector('.ct-f2'), cnt = V.querySelector('.ct-cnt'), emp = V.querySelector('.ct-empty');
+    var apply = function () {
+      var v = CON.q.trim().toLowerCase().replace(/ё/g, 'е'), dg = /[а-яa-z]/.test(v) ? '' : v.replace(/\D/g, ''), n = 0, all = 0;
+      if (dg.length === 11 && dg[0] === '8') dg = '7' + dg.slice(1);
+      V.querySelectorAll('.ct-c').forEach(function (c) {
+        var any = 0;
+        c.querySelectorAll('.who.ct').forEach(function (w) {
+          all++; var fl = ' ' + (w.getAttribute('data-f') || '') + ' ', t = w.getAttribute('data-q') || '';
+          var ok = (!CON.d || w.getAttribute('data-d') === CON.d) && (!CON.f || fl.indexOf(' ' + CON.f + ' ') >= 0) &&
+            (!v || (dg.length >= 3 ? t.indexOf(dg) >= 0 : (' ' + t).indexOf(' ' + v) >= 0));   // цифры — по номеру, буквы — с начала фамилии, имени или почты
+          w.hidden = !ok; if (ok) { any++; n++; }
+        });
+        c.hidden = !any;
+      });
+      cnt.textContent = n === all ? 'Показаны все: ' + all : 'Показано ' + n + ' из ' + all;
+      emp.hidden = n > 0;
+      V.querySelectorAll('.ct-k .pk').forEach(function (a) { var on = (a.getAttribute('data-cf') || '') === CON.f; a.classList.toggle('on', on); a.setAttribute('aria-pressed', on); });
+    };
+    q.oninput = function () { CON.q = q.value; apply(); };
+    q.onfocus = function () { CON.foc = true; }; q.onblur = function () { CON.foc = false; };
+    sd.onchange = function () { CON.d = sd.value; apply(); };
+    sf.onchange = function () { CON.f = sf.value; apply(); };
+    V.querySelectorAll('.ct-k .pk').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); CON.f = a.getAttribute('data-cf') || ''; sf.value = CON.f; apply(); }; });
+    V.querySelectorAll('.ct-cp').forEach(function (b) {
+      b.onclick = function () {
+        var t = b.getAttribute('data-cp'), done = function (ok) { b.textContent = ok ? 'Скопировано' : 'Не скопировалось'; setTimeout(function () { b.textContent = 'Скопировать'; }, 1500); };
+        try { navigator.clipboard.writeText(t).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+      };
+    });
+    apply();
+    if (CON.foc) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (e) {} }   // фоновая догрузка бота перерисовывает раздел — поиск не теряет фокус
+  }
   function secHtml(part, title) {      // целая страница из пакета «Структура» — во встроенном окне без скриптов сайта
     var g = secGate(part, title); if (g != null) { V.innerHTML = g; return; }
     var D = SEC[part] || {};
     V.innerHTML = '<a class="back" href="#struct">Структура</a><h1>' + esc(title) + '</h1><p class="lead">' + esc(D.src || '') + '</p><iframe id="secfr" sandbox="allow-scripts" style="width:100%;height:80vh;border:0;border-radius:12px;background:#fff"></iframe>';
     document.getElementById('secfr').srcdoc = String(D.html || '');
   }
-  // 03.11.2026: ответ М. И. Сотрудник8 02.11 — ОП Самара без руководителя (в поиске, Сотрудник21 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
+  // 03.11.2026: ответ М. И. Сотрудник8 02.11 — ОП Самара без руководителя (в поиске, Сотрудник22 подчиняется ему напрямую); ОП Санкт-Петербург закрыт 23.06 — кому переданы клиенты
   var SPB = (function () { try { return JSON.parse(document.getElementById('spb-data').textContent || 'null'); } catch (e) { return null; } })();
+  var RH = null;
   function route() {
     document.body.classList.add('wide');
-    var h = location.hash;
-    if (h === '#ko') ko(); else if (h === '#sec-org') orgView(); else if (h === '#sec-kos') kosView(); else if (h === '#sec-sim') secSim(); else struct();
-    window.scrollTo(0, 0);
+    var h = location.hash, top = h !== RH; RH = h;   // 28.11.2026: фоновая догрузка бота перерисовывает раздел — наверх только при смене раздела
+    if (h === '#ko') ko(); else if (h === '#sec-org') orgView(); else if (h === '#sec-kos') kosView(); else if (h === '#sec-sim') secSim(); else if (h === '#sec-con') secCon(); else struct();
+    if (top) window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', route); route();
   if (window.T14Live && T14Live.bin) T14Live.bin('staff.bin').then(function (Z) { if (Z && Z.changes) { KOW = Z; if (location.hash === '#ko') route(); } });

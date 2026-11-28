@@ -18,7 +18,7 @@
 4) В 10:35 МСК (час после последнего по расписанию отчёта) по рабочим дням: каких отчётов за прошлый рабочий день нет →
    письмо на cfg.json → alert_to (через ту же почту), сообщение в MAX (если бот подключён) и пометка в lb.bin — её передаёт Telegram-бот.
 0) Перед всем — обновления сайта с Google Диска (deploy.py), если задана папка cfg.json → drive_folder.
-5) 27.10.2026: рабочий ящик user5@example.org (Mail.ru) — itm.py: отчёты оттуда же (Gmail больше не обязателен), уведомления о важных письмах
+5) 27.10.2026: рабочий ящик user6@example.org (Mail.ru) — itm.py: отчёты оттуда же (Gmail больше не обязателен), уведомления о важных письмах
    и черновики ответов через бота (st/mq.bin → Google-скрипт → st/dr.php → «Черновики»). Пароль для внешнего приложения — ~/.fabrika_live/itm_app_password.
 6) 29.10.2026, пользователь: «убери почту с хостинга работай напрямую через gmail и mail.ru» (и отправку, и чтение; письма — «с itm@ через Gmail»).
    code/mail_cfg.json {"send": "bot", "read": "gas"} (спецификация — fabrika/notes/mail_via_gmail.md; нет файла — как раньше):
@@ -77,9 +77,9 @@ CHECK_AT = CFG.get('check_at') or '10:35'
 GALV_Q = '(Гальваника OR ' + ' OR '.join('%02d_Гальваника' % m for m in range(1, 13)) + ')'
 QUERY = ('(((from:user28@example.org subject:Отчет) OR ((from:user16@example.org OR from:user15@example.org) ' + GALV_Q + ')'
          ' OR (from:user3@example.org (subject:"Складские остатки" OR subject:"Жилпромсервис отчеты" OR subject:"ПКС свободные остатки"))'
-         ' OR ((from:user5@example.org OR from:user4@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
+         ' OR ((from:user6@example.org OR from:user5@example.org) (subject:"ПКС свободные остатки" OR subject:"Складские остатки"))'
          ' OR (from:user30@example.org filename:zip)'
-         ' OR ((from:user6@example.org OR from:user35@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
+         ' OR ((from:user4@example.org OR from:user35@example.org) filename:xlsx (отзывов OR отзывы))) has:attachment'   # 03.11.2026: выгрузка отзывов Ozon (А. Сотрудник1, e-commerce) шла в owner@ — st/ozrev.bin не появлялся
          ' OR ((from:user16@example.org OR from:user15@example.org) ' + GALV_Q + ')) after:')   # 03.11.2026: письмо ПЭО «выпуска в 1С нет» — без вложения
 GALV_FROM = ('user16@example.org', 'user15@example.org')
 GALV_DATE = re.compile(r'за\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}|\d{2}))?(?!\d)', re.I)
@@ -91,7 +91,7 @@ GALV_SINCE = re.compile(r'(?<![А-Яа-яЁёA-Za-z])(?:начиная\s+)?[сc]
 def galv_none(frm, subj, text, sent, has_pdf):
     """03.11.2026 (Т. В.: робот должен отличать «отчёт не пришёл» от «ПЭО сообщила, что выпуска в 1С нет»): письмо ПЭО с темой «…Гальваника…»
     без PDF, где сказано, что выпуск за дату в 1С отсутствует / нет / не внесён / не проведён → дата 'ГГГГ-ММ-ДД' (за неё отчёт считается пришедшим,
-    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник68 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
+    выпуска нет), иначе None. Пример: 03.11 08:51 Сотрудник69 «11_Гальваника НОЯБРЬ 2026»: «…выпуск по участку гальванического покрытия
     за 02.11.2026 в 1С отсутствуют»."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return None
     t = re.sub(r'\s+', ' ', text or '')
@@ -109,7 +109,7 @@ def galv_none(frm, subj, text, sent, has_pdf):
 
 
 def galv_none_since(frm, subj, text, sent, has_pdf):
-    """05.11.2026 (сверка 15:05: письмо Сотрудник68 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
+    """05.11.2026 (сверка 15:05: письмо Сотрудник69 05.11 09:00 «выпуска нет c 02.11» не распознано — galv_none понимает только «за ДД.ММ»,
     из-за этого ушло ложное «гальваника за 03.11 не пришла»): «выпуска в 1С нет с ДД.ММ» → все даты от ДД.ММ по день до письма
     (за них отчёт считается пришедшим, выпуска нет); иначе []. Те же условия, что у galv_none: ПЭО, тема «…Гальваника…», без PDF."""
     if has_pdf or (frm or '').lower() not in GALV_FROM or 'гальваник' not in (subj or '').lower(): return []
@@ -355,7 +355,7 @@ def prev_workday(d):
 
 
 # REDACTED_B64_8 1) mail
-# 04.11.2026, Т. В. Сотрудник1: «user4@example.org — лично мой ящик… Почту ты пока читаешь, пока не перестанет туда служебная почта приходить.
+# 04.11.2026, Т. В. Сотрудник1: «user5@example.org — лично мой ящик… Почту ты пока читаешь, пока не перестанет туда служебная почта приходить.
 # Во всём остальном owner@ не используешь вообще». Поэтому: ЧТЕНИЕ отчётов из Gmail владельца (cfg.json → mail) — пока остаётся (OWNER_GMAIL_READ),
 # выключить — когда служебная почта перестанет туда приходить (False + пакет кода); ОТПРАВКА с Gmail владельца (запасной SMTP) — выключена совсем,
 # запасной путь — служебный ящик 1c@.
@@ -480,7 +480,7 @@ def ingest_message(raw, recv):
                     jsave('sales_day.json', sdj)
                     got.append({'k': 'sday:' + rec['kind'], 'date': rec['date'], 'file': fn})
                     continue
-                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) — все дни + сумма месяца
+                mr = SDY.parse_month(data)                   # 30.10.2026: отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник11) — все дни + сумма месяца
                 if mr:
                     sdj = jload('sales_day.json', {})
                     SDY.merge_month(sdj, mr, iso(sent), fn[:80])
@@ -503,9 +503,9 @@ def ingest_message(raw, recv):
                     continue
             except Exception as e: log('  ! продажи за день:', fn, e.__class__.__name__, e); last_e = e
         if low.endswith('.xlsx') and re.search(r'запас\w*\s*гп|товары\s+на\s+складах', fn + ' ' + subj, re.I):
-            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник13, используй его как базу… движение по складу в разрезе филиалов… склады брака
+            # 03.11.2026 (Т. В.: «Возьми отчет от Сотрудник14, используй его как базу… движение по складу в разрезе филиалов… склады брака
             #   внутри отчета… на главной — общее количество согласно того отчета»): 1С «Товары на складах» («Запасы ГП», ежедневно на 1c@ —
-            #   запрошено у В. В. Сотрудник10 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
+            #   запрошено у В. В. Сотрудник11 03.11) → state/stock_mv.json → st/smv.bin, st/smvs.bin (stock_mv.py)
             try:
                 import stock_mv as SMV
                 rd = SMV.ingest(fn, data, iso(sent), jload, jsave, log)
@@ -736,7 +736,7 @@ REPORTS_X = [
     ('omts:zps', '1С «Жилпромсервис Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:fts', '1С «ФТС Заявки снабжения: просроченные даты поставки»', '08:35', 'same', 'all'),
     ('omts:pok', '1С «Покупные товары»', '08:30', 'same', 'mwf'),
-    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник10 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
+    ('recl', '1С «Реестр рекламаций»', 'по понедельникам', 'same', 'mon'),   # 12.11.2026, Сотрудник11 В. В.: «ТЗ в работе» и «Реестр рекламаций» — раз в неделю, по понедельникам
 ]
 
 
@@ -897,7 +897,7 @@ def mail_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=Non
     (пользователь: письма не должны задерживать сайт, отчёты и обновления). Ответ 'ok (очередь)' — письмо принято к отправке."""
     try:
         import mail_q as MQ
-        return MQ.enqueue(subject, text, list(to or CFG.get('alert_to') or ['user5@example.org']), cc, att, html, reply_to)
+        return MQ.enqueue(subject, text, list(to or CFG.get('alert_to') or ['user6@example.org']), cc, att, html, reply_to)
     except Exception as e:
         return 'почта: очередь недоступна: %s %s' % (e.__class__.__name__, str(e)[:100])
 
@@ -919,7 +919,7 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
         only1c = MQ.send_1c()
     except Exception: only1c = False
     from email.message import EmailMessage
-    rcpt = ', '.join(to or CFG.get('alert_to') or ['user5@example.org'])
+    rcpt = ', '.join(to or CFG.get('alert_to') or ['user6@example.org'])
     ccs = ', '.join(cc or [])
     pw = app_password()
     try:
@@ -991,7 +991,7 @@ def _smtp_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=No
             if r: return r
         else: errs.append('нет пароля 1c@')
     if ipw:
-        me = (CFG.get('itm_mail') or 'user5@example.org')
+        me = (CFG.get('itm_mail') or 'user6@example.org')
         frm_me = email.utils.formataddr((from_name, me)) if from_name else 'Фабрика <%s>' % me
         for port, make in ((465, _ssl465), (587, _tls587)):
             r = via('itm@ %d' % port, make, me, ipw, frm_me)
@@ -1060,7 +1060,7 @@ def check(t, last, alerts, status):
 
 def watch(t, alerts, status):
     """27.10.2026, сторож: Google-скрипт бота раз в 10 минут отмечается в state/gas_hb.json (st/hb.php). Нет отметки дольше 30 минут
-    (06:30–22:50 МСК) — письмо на user5@example.org и в MAX; отметки снова пошли — ещё одно сообщение. До первой отметки — молчит."""
+    (06:30–22:50 МСК) — письмо на user6@example.org и в MAX; отметки снова пошли — ещё одно сообщение. До первой отметки — молчит."""
     hb = jload('gas_hb.json', None)
     if not hb or not hb.get('t'): return None
     age = int(time.time() - float(hb['t'])) // 60
@@ -1284,7 +1284,7 @@ def sales_day_backfill():
     mk = jload('sales_day_bf.json', {}) or {}
     pos, size = int(mk.get('pos') or 0), os.path.getsize(idx)
     if pos > size or mk.get('v') != BF_V: pos = 0                       # 30.10.2026 ~18:50: v2 — отчёт «за месяц» (parse_month): архив перечитать один раз —
-                                                                          # письмо Сотрудник10 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
+                                                                          # письмо Сотрудник11 30.10 17:30 пришло до установки разборщика месяца, позиция ушла дальше
     if pos == size: return {'state': 'ok', 'n': 0}
     sdj, n = None, 0
     with open(idx, 'rb') as f:
@@ -1511,14 +1511,6 @@ def lane_reports():
             status['mreg'] = MR.run(L, log, jload, jsave, publish, publish_file, now())
         except Exception as e:
             status['mreg'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! почта → документы:', e.__class__.__name__, e)
-        try:                                                           # 19.11.2026, Т. В.: онлайн-цены → портал без пересборки сайта (Claude кладёт code/online.json пакетом кода)
-            po = os.path.join(CODE, 'online.json'); so = jload('onl_pub.json', {}) or {}
-            if os.path.exists(po) and so.get('m') != os.path.getmtime(po):
-                with open(po, encoding='utf-8') as f: oj = json.load(f)
-                if isinstance(oj, dict) and oj.get('arts') and publish('onl.bin', oj): so = {'m': os.path.getmtime(po), 't': oj.get('t')}; jsave('onl_pub.json', so)
-            status['onl'] = so.get('t')
-        except Exception as e:
-            status['onl'] = 'ошибка: %s' % e.__class__.__name__; log('  ! онлайн-цены:', e.__class__.__name__, e)
         try: status['sday_bf'] = sales_day_backfill()                  # 30.10.2026: «Продажи в разрезе…» из архива 1c@ (пришли до разборщика)
         except Exception as e:
             status['sday_bf'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! продажи за день (архив):', e.__class__.__name__, e)
@@ -1540,6 +1532,12 @@ def lane_reports():
         except Exception as e:
             status['gdrive_1c'] = {'t': iso(t), 'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}
             log('  ! диск 1c@:', e.__class__.__name__, e)
+    try:                                                   # 28.11.2026 (№420): онлайн-цены — робот сам берёт Google Таблицу цен (Диск 1c@) → st/onl.bin,
+        import onl_sheet as ONS                            #   без пересборки сайта и без пакета Claude; code/online.json (если положат) — основа для arts/web
+        _on = ONS.run(L, CODE, log, jload, jsave, publish)
+        status['onl'] = _on.get('t'); status['onl_sheet'] = _on   # status.onl — как с 19.11: время данных на портале
+    except Exception as e:
+        status['onl_sheet'] = {'state': 'ошибка: %s' % (str(e)[:160] or e.__class__.__name__)}; log('  ! онлайн-цены:', e.__class__.__name__, e)
     try: _report_alerts(auth_warn, quar)
     except Exception as e: log('  ! оповещения reports:', e.__class__.__name__, e)
     if recv is None:                                         # 30.10.2026 аудит P8: без recv.json данные портала и проверка 10:35 не считаются
@@ -1998,7 +1996,7 @@ def lane_mail():
         if MQ.send_off():                                  # 01.11.2026, замечание 05: режим отправки не прочитан — письма ждут в очереди
             status['mail_q'] = {'state': 'остановлено: ' + (MQ.mode().get('err') or 'режим не задан'), 'pending': len(MQ.pending())}
         elif MQ.send_bot():                                # 29.10.2026, «убери почту с хостинга»: send="bot" — без SMTP и сети: подтверждения бота + очередь → st/mo.bin
-            status['mail_q'] = MQ.bot_work(publish, list(CFG.get('alert_to') or ['user5@example.org']), log)
+            status['mail_q'] = MQ.bot_work(publish, list(CFG.get('alert_to') or ['user6@example.org']), log)
             # 30.10.2026 DESIGN 14: письма с вложениями больше 200 КБ скрипт бота не берёт — их отправляет хостинг по SMTP, как раньше
             if MQ.big_pending():
                 status['mail_q_smtp'] = MQ.work(lambda *a, **k: _smtp_send(*a, _hybrid=True, **k), log, budget=120, only=MQ.is_big)

@@ -128,17 +128,26 @@
   // 21.11.2026 (аудит): условный запрос — браузер спрашивает хостинг «изменился ли файл» (ETag) и получает 304 без тела, если нет.
   //   Раньше метка ?m= и cache:'no-store' заставляли каждый раз качать файл целиком (4 МБ на все разделы).
   var NETC = {}, ZN = { 'ls.bin': 1, 'pf.bin': 1, 'sales.bin': 1, 'cam.bin': 1, 'omts.bin': 1, 'smvs.bin': 1 };   // те же, что ZNAMES в live.py
-  function net(name, signal) {
+  // 28.11.2026 (скорость, Т. В.: «быстро на слабом интернете 1–2 Мбит/с и на iPhone»): файла нет на хостинге (ответ 404) —
+  //   час не спрашиваем снова: раньше «Продажи» и главная на каждом заходе ждали два ответа 404 (mps.bin, ozrev.bin) по 73 КБ страницы ошибки.
+  //   Фоновые проверки свежести — с низким приоритетом (priority: 'low'), чтобы не отнимать канал у того, что страница ждёт сейчас.
+  var MISSK = 't14.miss', MISS = {};
+  try { MISS = JSON.parse(localStorage.getItem(MISSK) || '{}') || {}; } catch (e) { MISS = {}; }
+  function miss(name, on) { if (on) MISS[name] = Date.now(); else if (MISS[name]) delete MISS[name]; else return; try { localStorage.setItem(MISSK, JSON.stringify(MISS)); } catch (e) { } }
+  function net(name, signal, low) {
     if (NETC[name]) return NETC[name];   // один запрос на файл одновременно
-    function f1(path) { return fetch(path, { cache: 'no-cache', credentials: 'same-origin', signal: signal }).then(function (r) { return r.ok ? r.text() : null; }); }
+    if (MISS[name] && Date.now() - MISS[name] < 3600000) return Promise.resolve(null);
+    var gone = 0;
+    function f1(path) { var o = { cache: 'no-cache', credentials: 'same-origin', signal: signal }; if (low) o.priority = 'low';
+      return fetch(path, o).then(function (r) { if (r.status === 404) { gone++; return null; } return r.ok ? r.text() : null; }); }
     // 21.11.2026 (Рекс CG-56): сжатая копия (st/z/, формат T14B2) — для новых страниц; не пришла или не та — прежний файл st/<имя>
     var first = ZN[name] && window.DecompressionStream ? f1('st/z/' + name).then(function (t) { return t && t.indexOf('T14B2.') === 0 ? t : null; }, function () { return null; }) : Promise.resolve(null);
     function v(t) {   // 21.11.2026 (Рекс CG-56): в память и хранилище — только файл, который расшифровался и разобрался; иначе остаётся прежний
       if (!t || !OK(t)) return Promise.resolve(null);
       return Promise.resolve(open(t)).then(function (d) { if (!d) return null; cput(name, t); pput(name, t); return t; }, function () { return null; });
     }
-    var p = NETC[name] = first.then(v).then(function (t) { return t || f1('st/' + name).then(v); })
-      .then(function (t) { delete NETC[name]; return t; }, function (e) { delete NETC[name]; throw e; });
+    var p = NETC[name] = first.then(v).then(function (t) { if (t) return t; gone = 0; return f1('st/' + name).then(v); })
+      .then(function (t) { delete NETC[name]; miss(name, !t && gone > 0); return t; }, function (e) { delete NETC[name]; throw e; });
     return p;
   }
   function OK(t) { return t.indexOf('T14B1.') === 0 || t.indexOf('T14B2.') === 0; }
@@ -147,14 +156,14 @@
     if (c && age < FRESH) return Promise.resolve(open(c.t)).catch(function () { return net(name).then(open); });
     if (c && age < STALE) {
       var shown = Promise.resolve(open(c.t)).catch(function () { return null; });
-      net(name).then(function (t) { if (t && t !== c.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
+      net(name, null, 1).then(function (t) { if (t && t !== c.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
       return shown;
     }
     return pget(name).then(function (pc) {        // во вкладке нет — из хранилища браузера: показать сразу, свежий — следом
       if (!pc || !pc.t || !OK(pc.t)) return net(name).then(open);
       MEM[name] = { at: pc.at, t: pc.t };
       var shown = Promise.resolve(open(pc.t)).catch(function () { return null; });
-      if (Date.now() - pc.at >= FRESH) net(name).then(function (t) { if (t && t !== pc.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
+      if (Date.now() - pc.at >= FRESH) net(name, null, 1).then(function (t) { if (t && t !== pc.t) return Promise.resolve(open(t)).then(function (d) { if (d) onNew(d); }); }).catch(function () { });
       return shown.then(function (d) { return d || net(name).then(open); });
     });
   }
@@ -176,7 +185,7 @@
       if (i >= ALL.length || (PAC && PAC.signal.aborted)) return;
       var nm = ALL[i++], c = cget(nm);
       if (c && Date.now() - c.at < FRESH) return next();
-      net(nm, PAC && PAC.signal).catch(function () { }).then(function () { setTimeout(next, 150); });
+      net(nm, PAC && PAC.signal, 1).catch(function () { }).then(function () { setTimeout(next, 150); });
     })();
   }
   try { addEventListener('pagehide', function () { if (PAC) PAC.abort(); }); } catch (e) { }
@@ -187,34 +196,80 @@
   // 01.11.2026 (внешняя проверка кода, замечание 08): страница, открытая весь день, показывала утренние цифры — файл запоминался навсегда,
   //   неудачная загрузка (null) тоже. Теперь: неудача не запоминается (следующий вызов пробует снова); каждые 10 минут и при возврате
   //   на вкладку запрошенные страницей файлы перекачиваются, другой файл → события «t14live» / «t14bin» (хабы и главная перерисовываются).
-  var USED = {};
+  // 28.11.2026 (Т. В., агент avtoobnov): «живые данные перечитываются по таймеру и при возврате в приложение, без перезагрузки посреди действия».
+  //   • раз в 5 минут (было 10), при возврате на вкладку / в приложение, при возврате страницы из кэша «назад/вперёд», при появлении связи;
+  //   • другой файл → «t14live» / «t14bin», как раньше (главная, план, модель, хабы, «Продажи» перерисовываются сами);
+  //   • страница, которая сама не перерисовывается (staff, cams, poruch, transport, …): если ДАННЫЕ отличаются от показанных (а не только
+  //     подпись — хостинг заново подписывает файл каждый прогон), — T14Update.soft('data') из pwa.js: перезагрузка в тихий момент
+  //     (вкладка в фоне / сразу после возврата, пока экран не трогали / 10 минут без касаний), никогда — при открытой форме или окне.
+  //     Такая страница в фоне на компьютере проверяет файлы не чаще раза в 10 минут — при возврате уже свежая, без мигания.
+  var USED = {}, SHOWN = {}, SEEN = {}, HID = 0;
+  var SELF = { '': 1, 'index.html': 1, 'home.html': 1, 'plan.html': 1 };   // перерисовываются сами по «t14live» / «t14bin»; другие — window.T14_LIVE_SELF = true
+  function selfPaint() { return !!window.T14_LIVE_SELF || !!SELF[location.pathname.split('/').pop() || '']; }
+  function sig(d) {                                // отпечаток данных (длина + FNV-1a текста JSON)
+    var s = ''; try { s = JSON.stringify(d); } catch (e) { return ''; }
+    var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return s.length + ':' + (h >>> 0);
+  }
+  function shownSig(name) {                       // отпечаток того, что страница показала (по тексту файла — страница могла поменять сам объект)
+    var x = SHOWN[name]; if (!x) return Promise.resolve(null);
+    if (!x.p) x.p = x.t ? Promise.resolve(open(x.t)).then(sig, function () { return sig(x.o); }) : Promise.resolve(sig(x.o));
+    return x.p;
+  }
   function refresh(force) {
     if (document.hidden && !force) return;
+    var mine = !selfPaint();
     Object.keys(USED).forEach(function (name) {
       var c = cget(name);
-      if (!force && c && Date.now() - c.at < FRESH) return;
-      net(name).then(function (t) {
-        if (!t || (c && t === c.t)) return;
+      var src = (!force && c && Date.now() - c.at < FRESH) ? Promise.resolve(c.t) : net(name, null, 1);
+      src.then(function (t) {
+        if (!t) return;
+        var changed = !c || t !== c.t;
+        if (!changed && (!mine || !SHOWN[name] || SEEN[name] === t)) return;
         return Promise.resolve(open(t)).then(function (d) {
           if (!d) return;
-          if (name === 'ls.bin') { P = Promise.resolve(d); try { window.dispatchEvent(new CustomEvent('t14live', { detail: d })); } catch (e) { } }
-          else BINS[name] = Promise.resolve(d);
-          try { window.dispatchEvent(new CustomEvent('t14bin', { detail: { name: name, data: d } })); } catch (e) { }
+          SEEN[name] = t;
+          if (changed) {
+            if (name === 'ls.bin') { P = Promise.resolve(d); try { window.dispatchEvent(new CustomEvent('t14live', { detail: d })); } catch (e) { } }
+            else BINS[name] = Promise.resolve(d);
+            try { window.dispatchEvent(new CustomEvent('t14bin', { detail: { name: name, data: d } })); } catch (e) { }
+          }
+          if (mine && SHOWN[name]) return shownSig(name).then(function (s0) { if (s0 && sig(d) !== s0 && window.T14Update && window.T14Update.soft) window.T14Update.soft('data'); });
         });
       }).catch(function () { });
     });
   }
   try {
-    setInterval(refresh, 600000);
+    setInterval(function () {
+      if (!document.hidden) return refresh();
+      if (selfPaint() || Date.now() - HID < 600000) return;
+      HID = Date.now(); refresh(true);
+    }, 300000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+    addEventListener('pageshow', function (e) { if (e.persisted) refresh(); });
+    addEventListener('online', function () { refresh(true); });
   } catch (e) { }
+  // 28.11.2026 (скорость): страница запоминает, какие файлы она брала (localStorage t14.use:<страница>). При следующем заходе live.js сразу,
+  //   ещё до разбора остальной страницы, достаёт их из хранилища браузера и расшифровывает — когда страница попросит файл, цифры уже готовы;
+  //   проверка свежести у хостинга начинается тоже раньше. Страница по-прежнему получает тот же Promise (BINS / P) и те же события.
+  var PGK = 't14.use:' + (location.pathname.split('/').pop() || 'home.html'), USE = {}, PRIMED = [];
+  try { PRIMED = (localStorage.getItem(PGK) || '').split(',').filter(function (x) { return /^[a-z0-9_]+\.bin$/.test(x); }).slice(0, 24); } catch (e) { }
+  var useT = 0;
+  function used(name) { if (USE[name]) return; USE[name] = 1; clearTimeout(useT); useT = setTimeout(function () { try { localStorage.setItem(PGK, Object.keys(USE).join(',')); } catch (e) { } }, 1500); }
+  function bin0(name) {
+    if (BINS[name]) return BINS[name];
+    var p = BINS[name] = get(name, function (d) { BINS[name] = Promise.resolve(d); try { window.dispatchEvent(new CustomEvent('t14bin', { detail: { name: name, data: d } })); } catch (e) { } })
+      .catch(function (e) { try { console.log('live ' + name + ': ' + e); } catch (_) {} return null; })
+      .then(function (d) { if (!d && BINS[name] === p) delete BINS[name]; return d; });   // неудача не запоминается
+    return p;
+  }
   window.T14Live = {
     refresh: refresh,
     prefetch: prefetch,
     load: function () {
       if (P) return P;
       if (window.__T14_FILE || location.protocol === 'file:') return (P = Promise.resolve(null));     // the offline copy has no hosting
-      USED['ls.bin'] = 1;
+      USED['ls.bin'] = 1; used('ls.bin');
       var p = P = get('ls.bin', function (d) { P = Promise.resolve(d); try { window.dispatchEvent(new CustomEvent('t14live', { detail: d })); window.dispatchEvent(new CustomEvent('t14bin', { detail: { name: 'ls.bin', data: d } })); } catch (e) { } })
         .catch(function (e) { try { console.log('live: ' + e); } catch (_) {} return null; })
         .then(function (d) { if (!d && P === p) P = null; return d; });       // неудача не запоминается
@@ -223,12 +278,8 @@
     // 27.10.2026: other files of the hosting in the same format — st/oz.bin (Ozon), st/sales.bin (отчёты офисов продаж)
     bin: function (name) {
       if (window.__T14_FILE || location.protocol === 'file:' || !/^[a-z0-9_]+\.bin$/.test(name)) return Promise.resolve(null);
-      USED[name] = 1;
-      if (BINS[name]) return BINS[name];
-      var p = BINS[name] = get(name, function (d) { BINS[name] = Promise.resolve(d); try { window.dispatchEvent(new CustomEvent('t14bin', { detail: { name: name, data: d } })); } catch (e) { } })
-        .catch(function (e) { try { console.log('live ' + name + ': ' + e); } catch (_) {} return null; })
-        .then(function (d) { if (!d && BINS[name] === p) delete BINS[name]; return d; });   // неудача не запоминается
-      return p;
+      USED[name] = 1; used(name);
+      return bin0(name);
     },
     // 29.10.2026: файлы из почты itm@ и с сайта компании, которые хостинг положил в st/f/<fid>.bin (publish_file). Раньше страницы звали
     // T14Live.download, а его не было — ссылки «файл» в «Документах» и «Продажах» молчали. PDF — в своём просмотрщике (pdfview.js, «‹ Назад»);
@@ -256,5 +307,13 @@
       });
     }
   };
+  // 28.11.2026 (avtoobnov): что страница получила первым (то, что она нарисовала) — с этим refresh() сравнивает свежие данные (страницы, которые сами не перерисовываются)
+  (function () {
+    var L = window.T14Live, b0 = L.bin, l0 = L.load;
+    function keep(name) { return function (d) { if (d && !SHOWN[name]) { var c = cget(name); SHOWN[name] = { t: c ? c.t : null, o: d, p: null }; } return d; }; }   // первое показанное
+    L.bin = function (name) { return b0.call(L, name).then(keep(name)); };
+    L.load = function () { return l0.call(L).then(keep('ls.bin')); };
+  })();
   window.T14Live.load().then(function (d) { if (d) try { window.dispatchEvent(new CustomEvent('t14live', { detail: d })); } catch (e) {} });
+  if (!window.__T14_FILE && location.protocol !== 'file:') PRIMED.forEach(function (nm) { if (nm !== 'ls.bin') bin0(nm); });   // заранее — файлы прошлого захода
 })();

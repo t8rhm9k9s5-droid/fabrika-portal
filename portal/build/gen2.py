@@ -322,10 +322,8 @@ if os.path.exists('/home/claude/build/site3d.json'):
                     q = np.array([Tm(v) for v in b['poly']])
                     ang = math.degrees(math.atan2(q[1][1] - q[0][1], q[1][0] - q[0][0]))
                     lsvg.append(f'<text class="blab blab-stage2" data-lb="{b["k"]}" x="{cx:.2f}" y="{cy:.2f}" font-size="3.4" transform="rotate({ang:.1f} {cx:.2f} {cy:.2f})">Склад №2 — 2-й этап, не построен</text>')
-                if b.get('kind') == 'plan' and False:   # 17.11.2026: подпись «красный контур на ГП, без подписи» убрана — здание чужое (ответ гл. инженера 23.10, 1.8), подробности в карточке
-                    q = np.array([Tm(v) for v in b['poly']])
-                    ang = math.degrees(math.atan2(q[2][1] - q[1][1], q[2][0] - q[1][0]))
-                    lsvg.append(f'<text class="blab blab-plan" data-lb="{b["k"]}" x="{cx:.2f}" y="{cy:.2f}" font-size="2.6" transform="rotate({ang:.1f} {cx:.2f} {cy:.2f})">красный контур на ГП, без подписи</text>')
+                # 17.11.2026: подпись «красный контур на ГП, без подписи» убрана — здание чужое (ответ гл. инженера 23.10, 1.8), подробности в карточке;
+                #   28.11.2026 (CodeQL 1589): выключенный блок «and False» удалён — недостижимый код
                 bmeta[b['k']] = {'name': b['name'], 'src': b['src'], 'zones': b.get('zones', []), 'area': b['area'], 'lat': b['lat'], 'lon': b['lon'],
                                  'cad': b.get('cad', []), 'note': b.get('note'), 'spec': b.get('spec'), 'kind': b.get('kind'),
                                  'poly': [[round(x - E0, 2), round(N1 - y, 2)] for x, y, *_ in b['poly']], 'parent': b.get('parent')}
@@ -497,6 +495,7 @@ data['plans'] = _plans
 import sys as _scc; _scc.path.insert(0, '/home/claude/build/review'); import corr_cams_1028 as _CC; _CC.apply_plan(data)   # 28.10.2026: камеры по кадрам и скриншотам А. Сотрудник1 (+ камеры 249 со схемы 2026)
 _CB.apply_plan(data)   # 28.10.2026, второй заход: камеры по ответу А. Сотрудник1 (+ новая 250/028)
 import corr_alex_1106 as _AX; _AX.apply_plan(data)   # 09.11.2026: камера 063 по скриншоту А. В. Сотрудник1
+import corr_cams_2811 as _K28; _K28.apply_plan(data)   # 28.11.2026 (агент karta): камеры по ответу Сотрудник50 И. 27.11, IP с экрана сняты; без номера — убраны (в plan_frag.html применено 28.11)
 tpl2 = _CC.plan_tpl(_cg1_read_file('/home/claude/build/site_template_v2.html', encoding='utf-8'))   # сектор обзора по углу камеры
 out2 = (tpl2.replace('/*__DATA__*/', 'const DATA=' + json.dumps(data, ensure_ascii=False) + ';')
            .replace('<!--__STATIC__-->', svg_static).replace('__VB__', f'0 0 {W:.2f} {H:.2f}'))

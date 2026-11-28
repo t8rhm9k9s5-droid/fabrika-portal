@@ -60,11 +60,22 @@ for name, src in (('home.html', '/home/claude/build/home_frag.html'), ('products
                   # 23.11.2026, Т. В.: «форму расчёта клади на портал с тем же кодом… в разделе продажи»; база и расчёты — общие с веб-приложением (work/calc)
                   ('calc.html', '/home/claude/build/calc_frag.html'),
                   # 16.11.2026, Т. В. (опрос): «Структура» — своя страница в разделе «Люди» (оргструктура, коммерческий отдел, СИМ-карты; раньше внутри «Продаж»)
-                  ('struct.html', '/home/claude/build/struct_frag.html')):
+                  ('struct.html', '/home/claude/build/struct_frag.html'),
+                  # 28.11.2026 (агент chaty, задача №353): «Чаты» — группы MAX, личные сообщения ботам, вопросы без ответа; пункт меню и данные — только администраторам (op chats бота)
+                  ('chaty.html', '/home/claude/build/chaty_frag.html')):
     frags[name] = _cg1_read_file(src, encoding='utf-8')
+# 28.11.2026 (агент raschety_portal, задача №475): «Произведённые расчёты» и «База цен» внутри калькулятора (calc.html#raschety, #ceny).
+#   calc_frag.html пишет fabrika/work/calc/calc_build.py и при перезапуске стирает вставку — поэтому блок ставится здесь, на каждой сборке:
+#   build/raschety/apply.py (якоря по одному, повторно не вставляет), код раздела — build/raschety/reg_*.html|css|js
+if 'RASCHETY-2811' not in frags['calc.html']:
+    import tempfile as _tf_r
+    with _tf_r.TemporaryDirectory() as _td_r:
+        _wr(frags['calc.html'], os.path.join(_td_r, 'a.html'), 'w', encoding='utf-8')
+        subprocess.run(['python3', '/home/claude/build/raschety/apply.py', os.path.join(_td_r, 'a.html'), os.path.join(_td_r, 'b.html')], check=True)
+        frags['calc.html'] = _rd(os.path.join(_td_r, 'b.html'), encoding='utf-8')
 # the name everywhere is «Фабрика» (22.10.2026): the first <title> of each page
-_TITLES = {'home.html': 'Фабрика', 'calc.html': 'Фабрика — калькулятор мебели', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
-           'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'cams.html': 'Фабрика — видеонаблюдение', 'jps.html': 'Фабрика — Жилпромсервис', 'mts.html': 'Фабрика — звонки МТС', 'ftp.html': 'Фабрика — файлы FTP сайта', 'site.html': 'Фабрика — сайт', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'struct.html': 'Фабрика — структура', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — энергоресурсы и счётчики'}
+_TITLES = {'home.html': 'Фабрика', 'calc.html': 'Фабрика — калькулятор мебели', 'razdel.html': 'Фабрика — разделы', 'poruch.html': 'Фабрика — поручения', 'infografika.html': 'Фабрика — инфографика', 'ppr.html': 'Фабрика — календарь и журнал ППР', 'products.html': 'Фабрика — изделия и материалы', 'index.html': 'Фабрика — модель', 'plan.html': 'Фабрика — план', 'stores.html': 'Фабрика — остатки ОП', 'sales.html': 'Фабрика — продажи', 'calls.html': 'Фабрика — кому звонить', 'omts.html': 'Фабрика — ОМТС', 'docs.html': 'Фабрика — чертежи', 'staff.html': 'Фабрика — производство',
+           'archive.html': 'Фабрика — архив', 'stock.html': 'Фабрика — склад', 'library.html': 'Фабрика — документы', 'cams.html': 'Фабрика — видеонаблюдение', 'jps.html': 'Фабрика — Жилпромсервис', 'mts.html': 'Фабрика — звонки МТС', 'ftp.html': 'Фабрика — файлы FTP сайта', 'site.html': 'Фабрика — сайт', 'chat.html': 'Фабрика — чат', 'admin.html': 'Фабрика — управление', 'struct.html': 'Фабрика — структура', 'chaty.html': 'Фабрика — чаты', 'transport.html': 'Фабрика — транспорт', 'utils.html': 'Фабрика — энергоресурсы и счётчики'}
 for _n, _t in _TITLES.items():
     if _n in frags: frags[_n] = re.sub(r'<title>[^<]*</title>', '<title>' + _t + '</title>', frags[_n], count=1)
 # one look for every page (22.10.2026): the model's colours, type and glass (assets/ui.css) and the tab bar below (assets/site.js); no address
@@ -88,7 +99,7 @@ for _n in frags:
 with open(os.path.join(SITE, 'assets', 'sky.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8') + "\nwindow.T14SKY && T14SKY.mount('right');\n")
 frags['plan.html'] += '\n<script src="assets/sky.js"></script>\n'
-# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник11 Сотрудник27); ядро погоды без плашки — assets/sky0.js
+# 02.11.2026, замечания Т. В.: на главной — день недели, дата и погода (Сотрудник12 Сотрудник28); ядро погоды без плашки — assets/sky0.js
 with open(os.path.join(SITE, 'assets', 'sky0.js'), 'w', encoding='utf-8') as _cg1_output_file:
     _cg1_output_file.write(_cg1_read_file('/home/claude/build/app/sky_core.js', encoding='utf-8'))
 frags['home.html'] += '\n<script src="assets/sky0.js"></script>\n'
@@ -99,6 +110,8 @@ frags['plan.html'] = frags['plan.html'].replace(_tf, "window.T14Plan={cams,camEl
 frags['plan.html'] += '\n<script src="assets/blind.js"></script>\n'
 frags['plan.html'] += '<script src="assets/mapinfo.js"></script>\n'   # 02.11.2026: сводка карты в свободной области
 frags['plan.html'] += '<script src="assets/layers.js"></script>\n'   # 16.11.2026, Т. В.: таблетка «Слои / + / −», «Камеры» и окно слоёв (образец — сайт «Дом»)
+shutil.copy('/home/claude/build/app/layers.js', os.path.join(SITE, 'assets', 'layers.js'))   # 28.11.2026 (агент karta → источники): исходник окна слоёв — build/app/layers.js (раньше файл жил только в site/assets)
+shutil.copy('/home/claude/build/app/site.js', os.path.join(SITE, 'assets', 'site.js'))   # 28.11.2026 (агент chaty → источники): меню портала — исходник build/app/site.js (раньше файл жил только в site/assets); пункт «Чаты» — администраторам
 
 if os.path.exists('/home/claude/build/wx/wx.json'): shutil.copy('/home/claude/build/wx/wx.json', os.path.join(SITE, 'assets', 'wx.json'))   # the forecast for pages that cannot reach api.met.no
 # PDF inside the site with a fixed «‹ Назад» (23.10.2026): the library opens its files here
@@ -182,12 +195,12 @@ try:
                    'oz': round(sum(r['rev'] for r in _rows)) if _rows else None, 'ozu': round(sum(r['units'] for r in _rows)) if _rows else None,
                    'stock': round(_tot) if _so.get('date') and _d0.isoformat() <= _so['date'] <= _d1.isoformat() else None})
         _d0 = _d1 + _dt.timedelta(days=1)
-    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник14 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
+    _OPn = {'moscow': 'Москва', 'ekb': 'Екатеринбург', 'krasnodar': 'Краснодар', 'nn': 'Сотрудник10 Имя3', 'samara': 'Самара', 'simferopol': 'Симферополь', 'ryazan': 'Рязань', 'spb': 'Санкт-Петербург'}
     _OP = [{'k': k, 't': (c.get('wh') or _OPn.get(k) or k).replace('Имя2 продаж ', ''), 'stock': round(c.get('total') or 0)} for k, c in sorted(_so.get('cities', {}).items(), key=lambda kv: -(kv[1].get('total') or 0))]
     _SHIP = {'v': 1, 'weeks': _W, 'op': _OP, 'stock_date': _so.get('date'), 'asked': '2026-10-29'}
 except Exception as _e:
     print('график отгрузки:', _e); _SHIP = None
-# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник26 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
+# 11.11.2026: «План отгрузки на неделю» — 1С «График отгрузки за неделю» от Сотрудник27 Ю. А. (build/ship_plan/<дата>.json ← ship_plan/parse_ship_plan.py)
 try:
     _spl = sorted(_gl.glob('/home/claude/build/ship_plan/2*.json'))
     if _spl and _SHIP is not None:
@@ -248,11 +261,13 @@ try:
         if _it.get('hidden'): continue
         _f = _it.get('file', ''); _web = 'library/' + _f.replace('raw/', '', 1)
         _stem = _re_di.sub(r'\.(pdf|docx?|xlsx?|ods)$', '', _f)
-        if not _f.lower().endswith('.pdf') and any(_x.get('file') == _stem + '.pdf' for _x in _LJ2['items']): continue   # Word/Excel с готовым PDF — показываем PDF
+        if not _f.lower().endswith('.pdf') and any(_x.get('file') == _stem + '.pdf' and not _x.get('hidden') for _x in _LJ2['items']): continue   # Word/Excel с готовым PDF — показываем PDF
+        # 28.11.2026 (агент dokumenty): PDF-двойник скрыт (одна строка на документ) — строка Word открывает этот PDF для просмотра
+        _twin = ('library/' + _stem.replace('raw/', '', 1) + '.pdf') if not _f.lower().endswith('.pdf') and os.path.exists('/home/claude/library/' + _stem + '.pdf') else ''
         # 16.11.2026 (R5-10 Рекса): копия <файл>.pdf старше самого файла (конвертация нового Word/Excel не удалась) — превью не показываем,
         #   иначе под карточкой нового файла открылся бы старый текст; остаётся открытие самого файла
         _src = '/home/claude/library/' + _f
-        _pdf = _web if _f.lower().endswith('.pdf') else (_web + '.pdf' if os.path.exists(_src + '.pdf') and (not os.path.exists(_src) or os.path.getmtime(_src + '.pdf') >= os.path.getmtime(_src)) else '')
+        _pdf = _web if _f.lower().endswith('.pdf') else (_web + '.pdf' if os.path.exists(_src + '.pdf') and (not os.path.exists(_src) or os.path.getmtime(_src + '.pdf') >= os.path.getmtime(_src)) else _twin)
         _DI.setdefault(_it.get('cat', 'other'), []).append([_re_di.sub(r'\s*\((PDF|Word|Excel)[^)]*\)\s*$', '', _it.get('title', '')), _NUM2.get(_stem, ''), _web, _pdf, str(_it.get('date') or '')[:10]])
     for _k in _DI: _DI[_k].sort(key=lambda r: r[4], reverse=True)
 except Exception as _e: _DI = {}; print('docidx', _e)
@@ -268,7 +283,7 @@ if 'infografika.html' in frags: frags['infografika.html'] = frags['infografika.h
 try: _JK = _cg1_read_json('/home/claude/build/jps/kb_2026.json', encoding='utf-8')
 except Exception as _e: print('ЖПС база:', _e); _JK = None
 # 19.11.2026, Т. В.: «изменения из базы 1С не применяй, применяй те данные, которые у тебя были» — месяцы, по которым у портала
-#   есть принятый итог (sales_1c/month_override.json: октябрь 124,52 млн по отчёту Сотрудник10), берутся оттуда, а не из выгрузки
+#   есть принятый итог (sales_1c/month_override.json: октябрь 124,52 млн по отчёту Сотрудник11), берутся оттуда, а не из выгрузки
 try:
     _MOV = _cg1_read_json('/home/claude/build/sales_1c/month_override.json', encoding='utf-8')
     if _JK:
@@ -327,7 +342,7 @@ try:
     if _ON is not None and _ON.get('runet') and os.path.exists('/home/claude/build/online/client_check.json'):
         _ON['runet']['check'] = _cg1_read_json('/home/claude/build/online/client_check.json', encoding='utf-8')
 except Exception as _e: print('рунет:', _e)
-# 14.11.2026, Т. В.: «по Онлайн Имя6 и ВсеИнструментам — их склад, продажи, динамика… подсветки, рекомендации» — витрина ВИ (ежедневная
+# 14.11.2026, Т. В.: «по Онлайн Имя4 и ВсеИнструментам — их склад, продажи, динамика… подсветки, рекомендации» — витрина ВИ (ежедневная
 #   проверка vi_*.json: есть / мало / нет / под заказ) против нашего склада (ctx.json → our_stock), ошибки карточек ВИ (weekly_extra)
 try:
     if _ON is not None:
@@ -534,7 +549,7 @@ for _n in frags:
 import datetime as _fdt, json as _fjs
 _FDAY = (_fdt.datetime.utcnow() + _fdt.timedelta(hours=3)).strftime('%Y-%m-%d')
 _FCAT = {'catalogs': ['docs', 'items'], 'prices': ['docs', 'items'], 'memo': ['docs'], 'cards': ['docs'], 'regs': ['docs'], 'forms': ['docs'], 'reports': ['fin', 'sales'],
-         'other': ['quality'], 'certs': ['quality'], 'recl': ['quality'], 'hr': ['people'], 'econ': ['fin', 'prod'], 'marketing': ['docs'], 'brand': ['docs']}
+         'other': ['quality'], 'certs': ['quality'], 'recl': ['quality'], 'hr': ['people'], 'econ': ['fin', 'prod'], 'marketing': ['docs'], 'brand': ['docs'], 'legal': ['docs']}   # 28.11.2026 (агент znak): «Правовые и регистрационные» — в «Договоры и формы»
 _FI = []
 try:
     for _it in (_cg1_read_json('/home/claude/library/library.json', encoding='utf-8') or {}).get('items', []):
@@ -621,7 +636,7 @@ try:   # сумма продаж — отчёт 1С «Продажи» по ме
     _PU['rev'] = {'m': list(range(_m0, _m1 + 1)), 'v': [round(sum((t.get('sm') or [0] * 4)[i] for t in _A['types'])) for i in range(_m1 - _m0 + 1)],
                   'to': '%s-%s-%s' % (_dm.group(5), _dm.group(4), _dm.group(3)), 'src': 'отчёт 1С «Продажи»'}
     _PU['items'] = _A.get('n')
-    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник10) и ежедневные рассылки
+    # 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — отчёт 1С «Продажи» за месяц по дням (В. В. Сотрудник11) и ежедневные рассылки
     # (sales_day.py → daily.json): пришёл отчёт «за месяц» — сумма текущего месяца = сумма дней (на время последнего письма), а не факт на 28.10
     try:
         import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -664,7 +679,7 @@ try:   # склад — тот же снимок, что у раздела «С�
         _AW = _SD.get('allwh') or {}
         if _AW.get('list'): _PU['stock']['allwh'] = {'date': _AW.get('date'), 'list': [{'n': w.get('n'), 'q': w.get('q'), 'd': w.get('d')} for w in _AW['list']]}
     except Exception as _e4: print('пульс, все склады:', _e4)
-    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник13; свежий — smvs.bin)
+    try:   # 03.11.2026, Т. В.: «На главной плашке… общее количество согласно того отчета» — итог отчёта 1С «Товары на складах» (М. М. Сотрудник14; свежий — smvs.bin)
         import glob as _gl
         _mf = sorted(_gl.glob('/home/claude/stock/move/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'))
         if _mf:
@@ -803,6 +818,9 @@ for _it in _lib.get('items') or []:
     _no = _it.get('number') or ''; _kn = ''
     if _no:
         _d = re.sub(r'\D', '', _no); _kn = ' '.join([_no, _no.replace('-', ''), 'фаб ' + _d, 'фаб ' + str(int(_d)) if _d else '', _d])
+    if _it.get('fab'):   # 28.11.2026 (агент znak): свой номер документа (свидетельство № …) и сквозной ФАБ — оба в поиске
+        _fd = re.sub(r'\D', '', _it['fab']); _no = (_no + ' · ' if _no else '') + _it['fab']
+        _kn = (_kn + ' ' if _kn else '') + ' '.join([_it['fab'].lower(), _it['fab'].lower().replace('-', ''), _fd, 'фаб ' + str(int(_fd)), 'правовые регистрационные'])
     _S.append({'t': _it.get('title'), 'x': (_no + ' · Документы') if _no else 'Документы',
                'u': ('library.html#open=' + _uq.quote(_it['file'], safe='/')) if _it.get('file') else 'library.html#' + (_it.get('cat') or ''),
                'g': 'Документы', 'i': 'file', 'c': 'var(--ic-docs)', **({'k': _kn} if _kn else {})})

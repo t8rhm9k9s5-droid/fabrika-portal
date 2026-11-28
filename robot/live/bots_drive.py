@@ -35,7 +35,7 @@ ALERT_KEEP, MAIL_KEEP, MAIL_TTL = 50, 30, 2 * 86400
 FILES = [('lb.bin', 'st'), ('bd.bin', 'site'), ('mq.bin', 'st'), ('gl.bin', 'st'), ('bn.bin', 'site'), ('bot_done.json', 'site'), ('ua.bin', 'st'),
          ('wx_f.json', 'wx'), ('site_ver.json', 'ver'),
          ('rem.bin', 'st'), ('poll.bin', 'st'), ('grp.bin', 'st'), ('grpp.bin', 'st'), ('diag.bin', 'st'), ('hs.bin', 'st'), ('recl.bin', 'st'),
-         ('kb.bin', 'st'), ('ls.bin', 'st'), ('sales.bin', 'st'), ('omts.bin', 'st'), ('smvs.bin', 'st'), ('mxsurvey.bin', 'st'), ('docs.bin', 'st'), ('staff.bin', 'st'),
+         ('kb.bin', 'st'), ('cam.bin', 'st'), ('ls.bin', 'st'), ('sales.bin', 'st'), ('omts.bin', 'st'), ('smvs.bin', 'st'), ('mxsurvey.bin', 'st'), ('docs.bin', 'st'), ('staff.bin', 'st'),
          ('bot_rules.json', 'code'), ('bot_prompt.txt', 'code'), ('price_now.json', 'code'), ('ko_staff.json', 'code'), ('unans_org.json', 'code'),
          ('mx_direct.json', 'code')]   # 20.11.2026, Т. В.: личные сообщения из mx_direct.json шлёт бот Google (DirectFile.gs) — участок bots хостинга выключен
 DOWN = ('ev.bin', 'hb.json', 'mx_direct.json', 'poruch.bin')   # 13.11: poruch.bin — раздел «Поручения» (бот MAX, ключ сайта)                           # из «От ботов» (плюс папка dr/)
@@ -301,7 +301,7 @@ def queue_mail(L, subject, text, to, cc=None, att=None, html=None, reply_to=None
     if skipped: body += '\n\n(вложения не переданы боту — слишком большие: %s)' % ', '.join(skipped)[:300]
     now = time.time()
     rec = {'id': 'rm-%d-%s' % (int(now), _sha((str(subject) + body + ','.join(to or [])).encode('utf-8'))[:8]), 't': _iso(now), 'ts': int(now),
-           'subject': str(subject or '')[:200], 'text': body[:20000], 'to': list(to or []), 'cc': list(cc or []), 'reply_to': reply_to or 'user5@example.org'}
+           'subject': str(subject or '')[:200], 'text': body[:20000], 'to': list(to or []), 'cc': list(cc or []), 'reply_to': reply_to or 'user6@example.org'}
     if html: rec['html'] = str(html)[:40000]
     if atts: rec['att'] = atts
     def fn(items):
@@ -315,7 +315,7 @@ def install(live, L, CODE):
     """вызывается из live.py при загрузке модуля (строка перед LANES): при флаге bots_off max_send/mail_send робота не шлют сами —
     оповещения и письма уходят ботам через Диск. Без флага ничего не меняется. → True, если подменено."""
     if not off(CODE): return False
-    alert_to = [str(x).lower() for x in (getattr(live, 'CFG', {}) or {}).get('alert_to') or ['user5@example.org']]
+    alert_to = [str(x).lower() for x in (getattr(live, 'CFG', {}) or {}).get('alert_to') or ['user6@example.org']]
     def max_send(text):
         return queue_alert(L, str(text).split('\n')[0][:150], text)
     def mail_send(subject, text, to=None, cc=None, att=None, html=None, reply_to=None):

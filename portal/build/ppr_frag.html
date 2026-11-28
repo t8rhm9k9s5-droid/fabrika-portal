@@ -21,7 +21,7 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .pp-seg{display:inline-flex;background:var(--ios-fill);border-radius:10px;padding:2px;margin:8px 0}
 .pp-seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font:500 13.5px var(--f-body);color:var(--ios-label);cursor:pointer}
 .pp-seg button[aria-pressed=true]{background:var(--ios-group);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.pp-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin:10px 0 4px}
+.pp-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:10px 0 4px}
 .pp-k div{background:var(--ios-group);border-radius:14px;padding:11px 13px;box-shadow:0 0 0 .5px var(--ios-sep)}
 .pp-k b{display:block;font:600 22px/1.15 var(--f-body);color:var(--ios-label)}
 .pp-k span{font-size:12.5px;color:var(--ios-2)}
@@ -42,20 +42,129 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 .pp-docs a{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--ios-group);border-radius:14px;padding:12px 14px;color:var(--ios-label);text-decoration:none;box-shadow:0 0 0 .5px var(--ios-sep)}
 .pp-docs a small{color:var(--ios-2)}
 .pfoot{color:var(--ios-2);font-size:12.5px;margin:16px 2px 0;max-width:80ch}
+/* 28.11.2026 — журнал ППР и отметки «выполнено / просрочено» (поручение P-067; вносит Сотрудник82 Ю. В. с ~10.12) */
+.pp-mon button{display:inline-flex;align-items:center;gap:6px}
+.pp-b{font:700 11.5px/1 var(--f-body);font-style:normal;min-width:18px;padding:3px 5px;border-radius:999px;background:#d70015;color:#fff;text-align:center}
+.pp-mon button[aria-pressed=true] .pp-b{background:#fff;color:#c0271d}
+.pp-k b{white-space:nowrap}
+.pp-k .pp-kok b{color:#1f7a35}
+.pp-k .pp-klate b{color:#c0271d}
+.pp-jh{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:20px 2px 8px}
+.pp-jh .pp-h{margin:0}
+.pp-new{min-height:40px;padding:0 16px;font-size:15px;border-radius:999px}
+.pp-cap{color:var(--ios-2);font-size:13px;margin:-2px 2px 8px}
+.pp-note{padding:14px 16px;font-size:14px;color:var(--ios-label)}
+.pp-note.bad{color:#c0271d}
+.pp-in{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:12px}
+.pp-in .ibtn{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:999px;text-decoration:none;font-size:16px}
+.pp-in .pp-go{text-decoration:none}
+.pp-jl{padding:0 16px}
+.pp-jr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:12px 0;border-top:.5px solid var(--ios-sep)}
+.pp-jr:first-child{border-top:0}
+.pp-jd{font:600 15px var(--f-body);font-variant-numeric:tabular-nums;color:var(--ios-label)}
+.pp-jb{min-width:0;display:grid;gap:2px;font-size:14px}
+.pp-jb>b{font:600 15px var(--f-body);color:var(--ios-label)}
+.pp-jb>span{color:var(--ios-label)}
+.pp-jb small{color:var(--ios-2);font-size:13px}
+.pp-jb .pp-p{justify-self:start}
+.pp-by{color:var(--ios-2);font-size:12.5px}
+.pp-del,.pp-go,.pp-more{border:0;background:none;color:var(--ios-blue);font:500 14px var(--f-body);padding:6px 4px;cursor:pointer;border-radius:8px}
+.pp-del:hover,.pp-go:hover,.pp-more:hover{background:var(--ios-fill)}
+.pp-del:disabled{opacity:.5}
+.pp-more{display:block;margin:2px 0 0 auto;padding:8px 12px}
+.pp-mk{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px}
+.pp-p{display:inline-block;font:600 12px/1.3 var(--f-body);padding:3px 9px;border-radius:999px;background:var(--ios-fill);color:var(--ios-label)}
+.pp-p.ok{background:rgba(52,199,89,.16);color:#1f7a35}
+.pp-p.late{background:rgba(255,59,48,.13);color:#c0271d}
+.pp-mk .pp-go{padding:3px 6px;font-size:13.5px}
+.pp-cok{color:#1f7a35}.pp-clate{color:#c0271d;font-weight:600}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pp-p.ok,:root:not([data-theme="light"]) .pp-k .pp-kok b,:root:not([data-theme="light"]) .pp-cok{color:#4cd964}
+  :root:not([data-theme="light"]) .pp-p.late,:root:not([data-theme="light"]) .pp-k .pp-klate b,:root:not([data-theme="light"]) .pp-clate,:root:not([data-theme="light"]) .pp-note.bad{color:#ff7a70}}
+:root[data-theme="dark"] .pp-p.ok,:root[data-theme="dark"] .pp-k .pp-kok b,:root[data-theme="dark"] .pp-cok{color:#4cd964}
+:root[data-theme="dark"] .pp-p.late,:root[data-theme="dark"] .pp-k .pp-klate b,:root[data-theme="dark"] .pp-clate,:root[data-theme="dark"] .pp-note.bad{color:#ff7a70}
+/* окно записи: на телефоне — лист снизу, на широком экране — по центру */
+.pp-dlg{border:0;padding:0;margin:auto;width:min(580px,calc(100% - 32px));max-height:min(90vh,920px);border-radius:22px;background:var(--ios-bg,#f2f2f7);color:var(--ios-label);box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
+.pp-dlg::backdrop{background:rgba(0,0,0,.38)}
+.pp-dlg[open]{animation:ppUp .22s ease-out}
+@keyframes ppUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.pp-dlg[open]{animation:none}}
+.pp-dlg form{max-height:inherit;overflow:auto;overscroll-behavior:contain;padding:0 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.pp-dh{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin:0 -16px 6px;padding:14px 16px 10px;background:var(--ios-bg,#f2f2f7);border-bottom:.5px solid var(--ios-sep)}
+.pp-dh b{font:600 17px var(--f-body);text-align:center}
+.pp-x{justify-self:start;border:0;background:none;color:var(--ios-blue);font:400 17px var(--f-body);padding:6px 2px;cursor:pointer}
+.pp-dlg .igroup{margin-top:12px}
+.pp-dlg .ihdr{margin:18px 16px 6px}
+.pp-dlg .ifield{align-items:center}
+.pp-dlg .ifield[hidden],.pp-dlg [hidden]{display:none}
+.pp-dlg .ifield textarea{min-height:64px;padding:12px 0}
+.pp-dlg .ifield select{appearance:none;-webkit-appearance:none;text-overflow:ellipsis;background:none;padding-right:18px;background-image:linear-gradient(45deg,transparent 50%,var(--ios-2) 50%),linear-gradient(135deg,var(--ios-2) 50%,transparent 50%);background-position:calc(100% - 9px) 50%,calc(100% - 4px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.pp-dlg .ifield input:focus-visible,.pp-dlg .ifield select:focus-visible,.pp-dlg .ifield textarea:focus-visible,.pp-top input:focus-visible{outline:none}
+.pp-dlg .ifield:focus-within,.pp-top:focus-within{box-shadow:inset 3px 0 0 var(--ios-blue)}
+.pp-kr:focus-within{box-shadow:inset 3px 0 0 var(--ios-blue)}
+.pp-x:focus-visible,.pp-add:focus-visible,.pp-rm:focus-visible,.pp-go:focus-visible,.pp-del:focus-visible,.pp-more:focus-visible,.pp-new:focus-visible{outline:2px solid var(--ios-blue);outline-offset:2px}
+.pp-kr{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-top:.5px solid var(--ios-sep);cursor:pointer;font-size:15px}
+.pp-kr:first-child{border-top:0}
+.pp-kr input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--ios-blue)}
+.pp-kr small{display:block;color:var(--ios-2);font-size:13px;margin-top:2px}
+.pp-kn{margin:0;padding:12px 16px;color:var(--ios-2);font-size:14px}
+.pp-top{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 40px;align-items:center;border-top:.5px solid var(--ios-sep)}
+.pp-top:first-child{border-top:0}
+.pp-top input{min-width:0;border:0;background:none;color:var(--ios-label);font:400 16px var(--f-body);padding:13px 0 13px 16px;outline:none}
+.pp-top input+input{border-left:.5px solid var(--ios-sep);padding-left:12px}
+.pp-rm{border:0;background:none;color:var(--ios-2);font:400 22px/1 var(--f-body);height:44px;cursor:pointer}
+.pp-add{border:0;background:none;color:var(--ios-blue);font:500 15px var(--f-body);padding:10px 16px;cursor:pointer}
+.pp-act{display:grid;margin-top:16px}
+.pp-dlg .imsg{margin:12px 16px 0}
+@media (max-width:600px){
+  .pp-dlg{width:100%;max-width:100%;margin:auto 0 0;border-radius:22px 22px 0 0;max-height:94vh}
+  .pp-dlg .ifield>span{width:104px;font-size:15px}
+}
 </style>
 <main class="ios" id="ppr">
   <a class="back" href="razdel.html#prod">Производство</a>
-  <h1>Календарь ППР</h1>
-  <p class="lead">Планово-предупредительный ремонт и ТО оборудования: что по плану в выбранном месяце — по участкам, оборудованию и исполнителям.</p>
+  <h1>Календарь и журнал ППР</h1>
+  <p class="lead">Планово-предупредительный ремонт и ТО оборудования: что по плану в выбранном месяце — по участкам, оборудованию и исполнителям, и журнал ППР: что сделано, кем, доливки и pH.</p>
   <div id="ppView"></div>
 </main>
+<dialog class="pp-dlg" id="ppDlg" aria-labelledby="ppDlgT">
+  <form id="ppF" novalidate>
+    <div class="pp-dh"><button type="button" class="pp-x" data-close>Отмена</button><b id="ppDlgT">Запись в журнал ППР</b><span></span></div>
+    <div class="igroup iflds">
+      <label class="ifield"><span>Дата работ</span><input type="date" name="d" required></label>
+      <label class="ifield"><span>Месяц плана</span><select name="pm"></select></label>
+      <label class="ifield"><span>Оборудование</span><select name="eq" required></select></label>
+      <label class="ifield" hidden><span>Что именно</span><input name="eqx" maxlength="120" placeholder="Название оборудования или объекта"></label>
+    </div>
+    <p class="ihdr" id="ppKh" hidden>Что из графика выполнено</p>
+    <div class="igroup" id="ppK" hidden></div>
+    <div class="igroup iflds">
+      <label class="ifield"><span>Вид работ</span><textarea name="w" rows="2" maxlength="600" placeholder="Например: замена масла, чистка фильтра"></textarea></label>
+      <label class="ifield"><span>Исполнитель</span><input name="who" maxlength="120" list="ppWho" autocomplete="off" placeholder="Фамилия И. О."></label>
+    </div>
+    <datalist id="ppWho"></datalist>
+    <p class="ihdr">Доливки — что и сколько</p>
+    <div class="igroup" id="ppTop"></div>
+    <button type="button" class="pp-add">+ Добавить доливку</button>
+    <div class="igroup iflds">
+      <label class="ifield"><span>pH</span><input name="ph" inputmode="decimal" maxlength="5" placeholder="например 7,2" autocomplete="off"></label>
+      <label class="ifield"><span>Примечание</span><textarea name="n" rows="2" maxlength="600" placeholder="Замечания, что осталось сделать"></textarea></label>
+    </div>
+    <p class="imsg" id="ppMsg" role="status" aria-live="polite"></p>
+    <div class="pp-act"><button type="submit" class="ibtn pri">Сохранить запись</button></div>
+  </form>
+</dialog>
 <script id="ppr-data" type="application/json">__PPR__</script>
 <script>
 (function () {
   'use strict';
+  /* 28.11.2026, Т. В. (поручение P-067, ответ Сотрудник1 А. В. 27.11): журнал ППР — дата, вид работ, исполнитель, доливки (что и сколько), pH,
+     примечание; вносит Сотрудник82 Ю. В. примерно с 10.12. Запись сохраняется сама, без Claude: страница → скрипт бота «Фабрика» (acct.json,
+     T14Acct.api: ppradd / pprlist / pprdel, PprJournal.gs) → Google-таблица под 1c@, лист «ppr». Отметки календаря — по записям журнала:
+     пункт графика месяца с записью — «выполнено», месяц закончился без записи — «просрочено». Отметки считаются с J0 (начало журнала). */
   var D = {}; try { D = JSON.parse(document.getElementById('ppr-data').textContent); } catch (e) { D = {}; }
   var V = document.getElementById('ppView'), MN = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-  var now = new Date(Date.now() + 3 * 3600e3), M = now.getUTCMonth(), MODE = 'plan';
+  var now = new Date(Date.now() + 3 * 3600e3), M = now.getUTCMonth(), MODE = 'plan', Y = now.getUTCFullYear(), M0 = M;
+  var J0 = '2026-12', EXTRA = { 'Очистные и септики': ['Выгребная яма у склада № 1'] };   // J0 — с какого месяца плана считать отметки
   try { var h = /m=(\d+)/.exec(location.hash); if (h) M = Math.max(0, Math.min(11, +h[1] - 1)); } catch (e) { }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n(x) { return String(Math.round(x * 10) / 10).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -68,38 +177,231 @@ body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
   }
   function activity(count) { return numberForm(count, 'мероприятие', 'мероприятия', 'мероприятий'); }
   function rowsFor(m, mode) { return (D.rows || []).filter(function (r) { return mode === 'ops' ? /[SDW]/.test(r[7]) : r[4][m] > 0 && !/[SDW]/.test(r[7]); }); }
+  function pad(x) { return (x < 10 ? '0' : '') + x; }
+  function pmOf(m) { return Y + '-' + pad(m + 1); }
+  function today() { return now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate()); }
+  function dm(d) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? m[3] + '.' + m[2] : esc(d); }
+  // ключ пункта графика: участок | оборудование | мероприятие (электрооборудование — по названию), FNV-1a → base36
+  function hk(s) { var x = 0x811c9dc5; for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; } return x.toString(36); }
+  function kP(r) { return r._k || (r._k = hk('p|' + r[0] + '|' + r[1] + '|' + r[2])); }
+  function kE(e) { return e._k || (e._k = hk('e|' + e[0])); }
+
+  // ---- журнал: состояние и сервер
+  var J = { st: 'idle', rows: [], can: false, me: '', err: '', at: 0, all: false }, IDX = {};
+  function A() { return window.T14Acct; }
+  function logged() { var a = A(); try { return !!(a && a.api && a.tok && a.tok()); } catch (e) { return false; } }
+  function api(op, b) { var a = A(); if (!a || !a.api) return Promise.reject(new Error('Журнал работает в приложении «Фабрика» (сайт с паролем).')); b = b || {}; b.tok = a.tok(); return a.api(op, b); }
+  function index() { IDX = {}; J.rows.forEach(function (r) { var P = IDX[r.pm] || (IDX[r.pm] = {}); (r.k || []).forEach(function (k) { (P[k] = P[k] || []).push(r); }); }); }
+  function load() {
+    if (!logged()) { J.st = 'nologin'; draw(); return; }
+    if (J.st !== 'ok') J.st = 'load'; draw();
+    api('pprlist', { y: String(Y) }).then(function (r) {
+      J.rows = (r.rows || []).sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : (b.t || 0) - (a.t || 0); });
+      J.can = !!r.can; J.me = r.me || ''; J.st = 'ok'; J.at = Date.now(); index(); draw();
+    }, function (e) { J.st = J.st === 'ok' ? 'ok' : 'err'; J.err = e && e.message || 'Нет связи с сервером.'; draw(); });
+  }
+  // отметка пункта: null — не считаем (до начала журнала или журнал не загружен)
+  function mark(key, m, times) {
+    var pm = pmOf(m); if (J.st !== 'ok' || pm < J0) return null;
+    var recs = (IDX[pm] || {})[key] || [], need = Math.max(1, times || 1);
+    if (recs.length >= need) return { s: 'done', r: recs };
+    if (m < M0) return { s: 'late', got: recs.length, need: need };
+    if (m === M0) return { s: 'plan', got: recs.length, need: need };
+    return { s: 'future' };
+  }
+  function lateIn(m) {
+    if (J.st !== 'ok' || pmOf(m) < J0 || m >= M0) return 0;
+    var c = 0;
+    rowsFor(m, 'plan').forEach(function (r) { var x = mark(kP(r), m, r[4][m]); if (x && x.s === 'late') c++; });
+    (D.el || []).forEach(function (e) { if (e[4][m]) { var x = mark(kE(e), m, 1); if (x && x.s === 'late') c++; } });
+    return c;
+  }
+  function pill(x, key, m) {
+    if (!x) return '';
+    var b = J.can && x.s !== 'done' && x.s !== 'future' ? '<button type="button" class="pp-go" data-k="' + key + '" data-m="' + m + '">Отметить</button>' : '';
+    if (x.s === 'done') return '<div class="pp-mk"><span class="pp-p ok">✓ выполнено ' + x.r.map(function (r) { return dm(r.d); }).join(', ') + '</span><span class="pp-by">' + esc(x.r[0].who || '') + '</span></div>';
+    if (x.s === 'late') return '<div class="pp-mk"><span class="pp-p late">просрочено' + (x.got ? ' · ' + x.got + ' из ' + x.need : '') + '</span>' + b + '</div>';
+    if (x.s === 'plan') return '<div class="pp-mk"><span class="pp-p">в плане' + (x.got ? ' · ' + x.got + ' из ' + x.need : '') + '</span>' + b + '</div>';
+    return '';
+  }
+  var KT = null;
+  function kNames(ks) {   // ключи пунктов графика → названия мероприятий
+    if (!KT) { KT = {}; (D.rows || []).forEach(function (r) { KT[kP(r)] = r[2]; }); (D.el || []).forEach(function (e) { KT[kE(e)] = 'осмотр / ремонт по графику'; }); }
+    var t = ks.map(function (k) { return KT[k]; }).filter(Boolean);
+    return t.length ? t.slice(0, 2).join('; ') + (t.length > 2 ? ' и ещё ' + (t.length - 2) : '') : 'пунктов: ' + ks.length;
+  }
+  function jBlock() {
+    var pm = pmOf(M), h = '<div class="pp-jh"><p class="pp-h">Журнал ППР · ' + MN[M].toLowerCase() + '</p>' + (J.st === 'ok' && J.can ? '<button type="button" class="ibtn pri pp-new" data-new="1">Новая запись</button>' : '') + '</div>';
+    if (J.st === 'nologin') return h + '<div class="pp-sec pp-note">Журнал ведётся под личным входом. После входа здесь появятся записи, кнопка «Новая запись» и отметки «выполнено / просрочено» у пунктов графика.<div class="pp-in"><a class="ibtn pri" href="login.html">Войти</a><a class="pp-go" href="login.html#mx">Войти через MAX — без пароля</a></div></div>';
+    if (J.st === 'load' || J.st === 'idle') return h + '<div class="pp-sec pp-note" aria-busy="true">Загружаю журнал…</div>';
+    if (J.st === 'err') return h + '<div class="pp-sec pp-note bad">Журнал не загрузился: ' + esc(J.err) + ' <button type="button" class="pp-go" data-reload="1">Повторить</button></div>';
+    var L = J.rows.filter(function (r) { return r.pm === pm || (!r.pm && String(r.d).slice(0, 7) === pm); });
+    if (!J.can) h += '<p class="pp-cap">Вносить записи могут служба главного механика и администраторы. Доступ даёт администратор портала (группа «Производство»).</p>';
+    if (!L.length) return h + '<div class="pp-sec pp-note">' + (pm < J0 ? 'Журнал ведётся с декабря 2026 — за ' + MN[M].toLowerCase() + ' записей нет.' : 'За ' + MN[M].toLowerCase() + ' записей пока нет.') + '</div>';
+    var show = J.all ? L : L.slice(0, 5);
+    h += '<div class="pp-sec pp-jl">' + show.map(function (r) {
+      var late = String(r.d).slice(0, 7) !== r.pm ? ' <span class="pp-p">за ' + MN[+String(r.pm).slice(5, 7) - 1].toLowerCase() + '</span>' : '';
+      return '<div class="pp-jr"><b class="pp-jd">' + dm(r.d) + '</b><div class="pp-jb"><b>' + esc(r.eq) + '</b>' + late +
+        (r.w ? '<span>' + esc(r.w) + '</span>' : '') + (r.k && r.k.length ? '<small>По графику: ' + esc(kNames(r.k)) + '</small>' : '') +
+        '<small>Исполнитель: ' + esc(r.who) + (r.top ? ' · доливки: ' + esc(r.top) : '') + (r.ph !== '' && r.ph != null ? ' · pH ' + esc(String(r.ph).replace('.', ',')) : '') + '</small>' +
+        (r.n ? '<small>' + esc(r.n) + '</small>' : '') + '<small class="pp-by">внёс ' + esc(r.by || '—') + '</small></div>' +
+        (r.del ? '<button type="button" class="pp-del" data-del="' + esc(r.id) + '" aria-label="Удалить запись от ' + dm(r.d) + '">Удалить</button>' : '') + '</div>';
+    }).join('') + '</div>';
+    if (L.length > 5) h += '<button type="button" class="pp-more" data-all="1">' + (J.all ? 'Свернуть' : 'Показать все записи (' + L.length + ')') + '</button>';
+    return h;
+  }
   function draw() {
-    var R = rowsFor(M, MODE), h = '';
+    var R = rowsFor(M, MODE), h = '', on = J.st === 'ok' && pmOf(M) >= J0;
     h += '<div class="pp-st"><span>⚠️</span><span><b>Статус графика:</b> ' + esc(D.status || '') + '. Календарь построен по нему, пока нет утверждённого.</span></div>';
-    h += '<div class="pp-mon" role="tablist">' + MN.map(function (x, i) { return '<button type="button" data-m="' + i + '" aria-pressed="' + (i === M) + '">' + x + '</button>'; }).join('') + '</div>';
+    h += '<div class="pp-mon" role="tablist">' + MN.map(function (x, i) { var c = lateIn(i); return '<button type="button" data-m="' + i + '" aria-pressed="' + (i === M) + '"' + (c ? ' aria-label="' + x + ', просрочено ' + c + '"' : '') + '>' + x + (c ? '<i class="pp-b">' + c + '</i>' : '') + '</button>'; }).join('') + '</div>';
     h += '<div class="pp-seg"><button type="button" data-mode="plan" aria-pressed="' + (MODE === 'plan') + '">Работы ремслужбы</button><button type="button" data-mode="el" aria-pressed="' + (MODE === 'el') + '">Электрооборудование</button><button type="button" data-mode="ops" aria-pressed="' + (MODE === 'ops') + '">Операторы у станка</button></div>';
+    function kpiMarks(list) {   // list: [{x}] — отметки месяца
+      if (!on) return '';
+      var d = list.filter(function (x) { return x && x.s === 'done'; }).length, l = list.filter(function (x) { return x && x.s === 'late'; }).length;
+      return '<div class="pp-kok"><b>' + d + '</b><span>выполнено из ' + list.length + ' по журналу</span></div>' + (M <= M0 ? '<div' + (l ? ' class="pp-klate"' : '') + '><b>' + l + '</b><span>просрочено</span></div>' : '');
+    }
     if (MODE === 'el') {
       var E = (D.el || []).filter(function (e) { return e[4][M]; }), dn = E.reduce(function (a, e) { return a + (e[4][M][1] || 0); }, 0);
-      h += '<div class="pp-k"><div><b>' + E.length + '</b><span>единиц в работе</span></div><div><b>' + E.filter(function (e) { return e[4][M][0] === 'Т'; }).length + '</b><span>текущих ремонтов</span></div><div><b>' + n(dn) + ' ч</b><span>простой в ремонте</span></div></div>';
-      h += '<div class="pp-sec" style="padding:4px 16px 10px">' + (E.length ? E.map(function (e) { var p = e[4][M]; return '<div class="pp-a"><span>' + esc(e[0]) + '</span><small>' + (p[0] === 'Т' ? 'текущий ремонт' : p[0] === 'К' ? 'капитальный' : 'осмотр') + ' · ' + n(p[1]) + ' ч</small>' + (e[3] ? '<em>последний ремонт ' + esc(e[3]) + ' · ресурс ' + n(e[1]) + ' ч</em>' : '') + '</div>'; }).join('') : '<p class="lead">В этом месяце по электрооборудованию ничего не запланировано.</p>') + '</div>';
+      var EX = E.map(function (e) { return mark(kE(e), M, 1); });
+      h += '<div class="pp-k"><div><b>' + E.length + '</b><span>единиц в работе</span></div><div><b>' + E.filter(function (e) { return e[4][M][0] === 'Т'; }).length + '</b><span>текущих ремонтов</span></div><div><b>' + n(dn) + ' ч</b><span>простой в ремонте</span></div>' + kpiMarks(EX) + '</div>';
+      h += jBlock();
+      h += '<p class="pp-h">По графику</p><div class="pp-sec" style="padding:4px 16px 10px">' + (E.length ? E.map(function (e, i) { var p = e[4][M]; return '<div class="pp-a"><span>' + esc(e[0]) + '</span><small>' + (p[0] === 'Т' ? 'текущий ремонт' : p[0] === 'К' ? 'капитальный' : 'осмотр') + ' · ' + n(p[1]) + ' ч</small>' + (e[3] ? '<em>последний ремонт ' + esc(e[3]) + ' · ресурс ' + n(e[1]) + ' ч</em>' : '') + pill(EX[i], kE(e), M) + '</div>'; }).join('') : '<p class="lead">В этом месяце по электрооборудованию ничего не запланировано.</p>') + '</div>';
     } else {
       var hrs = R.reduce(function (a, r) { return a + (MODE === 'ops' ? 0 : r[4][M] * (r[5] || 0)); }, 0), eqs = {}, who = {};
       R.forEach(function (r) { eqs[r[1]] = 1; if (MODE !== 'ops') who[r[6] || '—'] = (who[r[6] || '—'] || 0) + r[4][M] * (r[5] || 0); });
+      var RX = MODE === 'ops' ? [] : R.map(function (r) { return (r._x = mark(kP(r), M, r[4][M])); });
       h += '<div class="pp-k"><div><b>' + R.length + '</b><span>' + (MODE === 'ops' ? numberForm(R.length, 'проверка', 'проверки', 'проверок') + ' операторов' : activity(R.length) + ' в ' + monthIn[M]) + '</span></div><div><b>' + Object.keys(eqs).length + '</b><span>единиц оборудования</span></div>' +
-        (MODE === 'ops' ? '' : '<div><b>' + n(hrs) + ' ч</b><span>трудоёмкость, где указана</span></div>') + '</div>';
+        (MODE === 'ops' ? '' : '<div><b>' + n(hrs) + ' ч</b><span>трудоёмкость, где указана</span></div>' + kpiMarks(RX)) + '</div>';
+      h += jBlock();
       if (MODE !== 'ops') h += '<p class="pp-h">Кто делает · часов в месяце</p><div class="pp-sec" style="padding:4px 16px 10px">' + Object.keys(who).sort(function (a, b) { return who[b] - who[a]; }).map(function (w) { return '<div class="pp-a"><span>' + esc(w) + '</span><small>' + n(who[w]) + ' ч</small></div>'; }).join('') + '</div>';
       var S = {}; R.forEach(function (r) { (S[r[0]] = S[r[0]] || []).push(r); });
       h += '<p class="pp-h">По участкам</p>' + Object.keys(S).map(function (s) {
         var L = S[s], E = {}; L.forEach(function (r) { (E[r[1]] = E[r[1]] || []).push(r); });
-        return '<details class="pp-sec"><summary><b>' + esc(s || 'Без участка') + '</b><small>' + L.length + ' ' + activity(L.length) + '</small></summary><div class="pp-eq">' + Object.keys(E).map(function (e) {
-          return '<h4>' + esc(e) + '</h4>' + E[e].map(function (r) { return '<div class="pp-a"><span>' + esc(r[2]) + '</span><small>' + (MODE === 'ops' ? esc(r[3]) : (r[4][M] > 1 ? r[4][M] + ' раза · ' : '') + (r[5] ? n(r[5]) + ' ч' : 'часы не указаны')) + '</small><em>' + esc(r[6] || 'исполнитель не указан') + (MODE === 'ops' ? '' : ' · периодичность: ' + esc(r[3] || 'не указана')) + '</em></div>'; }).join('');
+        var lc = L.filter(function (r) { return r._x && r._x.s === 'late'; }).length, dc = L.filter(function (r) { return r._x && r._x.s === 'done'; }).length;
+        return '<details class="pp-sec"' + (OPEN[s] ? ' open' : '') + ' data-s="' + esc(s) + '"><summary><b>' + esc(s || 'Без участка') + '</b><small>' + L.length + ' ' + activity(L.length) + (MODE !== 'ops' && on ? (dc ? ' · <span class="pp-cok">выполнено ' + dc + '</span>' : '') + (lc ? ' · <span class="pp-clate">просрочено ' + lc + '</span>' : '') : '') + '</small></summary><div class="pp-eq">' + Object.keys(E).map(function (e) {
+          return '<h4>' + esc(e) + '</h4>' + E[e].map(function (r) { return '<div class="pp-a"><span>' + esc(r[2]) + '</span><small>' + (MODE === 'ops' ? esc(r[3]) : (r[4][M] > 1 ? r[4][M] + ' раза · ' : '') + (r[5] ? n(r[5]) + ' ч' : 'часы не указаны')) + '</small><em>' + esc(r[6] || 'исполнитель не указан') + (MODE === 'ops' ? '' : ' · периодичность: ' + esc(r[3] || 'не указана')) + '</em>' + (MODE === 'ops' ? '' : pill(r._x, kP(r), M)) + '</div>'; }).join('');
         }).join('') + '</div></details>';
       }).join('');
     }
     h += '<p class="pp-h">Документы</p><div class="pp-docs">' + [D.doc, D.src].filter(Boolean).map(function (d) { return '<a href="' + esc(d.href) + '" data-pdf="1" data-t="' + esc(d.t) + '"><span>' + esc(d.t) + '</span><small>' + esc(d.n || '') + '</small></a>'; }).join('') + '</div>';
-    h += '<p class="pfoot">Отметки «сделано» и напоминания исполнителям — через бота MAX: в начале месяца список работ, в середине — что не отмечено.</p>';
-    V.innerHTML = h;
+    h += '<p class="pfoot">Отметки у пунктов графика — по записям журнала ППР: есть запись за месяц — «выполнено», месяц закончился без записи — «просрочено». Отметки считаются с декабря 2026, с начала журнала. Ежесменные проверки операторов отмечаются у станка, в журнал не вносятся. Напоминания исполнителям — через бота MAX.</p>';
+    var y = window.scrollY; V.innerHTML = h; if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y);
     var sel = V.querySelector('.pp-mon button[aria-pressed=true]'); if (sel) { var mr = V.querySelector('.pp-mon'); mr.scrollLeft = sel.offsetLeft - (mr.clientWidth - sel.offsetWidth) / 2; }
   }
+  var OPEN = {};
+  V.addEventListener('toggle', function (e) { var d = e.target; if (d && d.matches && d.matches('details[data-s]')) OPEN[d.getAttribute('data-s')] = d.open; }, true);
   V.addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-m]'); if (b) { M = +b.getAttribute('data-m'); try { history.replaceState(history.state, '', '#m=' + (M + 1)); } catch (x) { } draw(); return; }
-    var s = e.target.closest('button[data-mode]'); if (s) { MODE = s.getAttribute('data-mode'); draw(); }
+    var b = e.target.closest('button[data-m]:not(.pp-go)'); if (b) { M = +b.getAttribute('data-m'); J.all = false; try { history.replaceState(history.state, '', '#m=' + (M + 1)); } catch (x) { } draw(); return; }
+    var s = e.target.closest('button[data-mode]'); if (s) { MODE = s.getAttribute('data-mode'); draw(); return; }
+    var g = e.target.closest('button.pp-go[data-k]'); if (g) { openForm({ k: g.getAttribute('data-k'), m: +g.getAttribute('data-m') }, g); return; }
+    if (e.target.closest('button[data-new]')) { openForm(null, e.target.closest('button')); return; }
+    if (e.target.closest('button[data-reload]')) { load(); return; }
+    if (e.target.closest('button[data-all]')) { J.all = !J.all; draw(); return; }
+    var dl = e.target.closest('button[data-del]'); if (dl) {
+      var id = dl.getAttribute('data-del'), r = J.rows.filter(function (x) { return x.id === id; })[0];
+      if (!r || !window.confirm('Удалить запись от ' + dm(r.d) + ' — ' + r.eq + '?')) return;
+      dl.disabled = true; dl.textContent = 'Удаляю…';
+      api('pprdel', { id: id }).then(function () { toast('Запись удалена'); load(); }, function (er) { dl.disabled = false; dl.textContent = 'Удалить'; window.alert('Не удалось удалить: ' + (er && er.message || 'нет связи')); });
+    }
   });
+
+  // ---- форма записи (окно поверх страницы; строится один раз, перерисовка календаря её не трогает)
+  var DLG = document.getElementById('ppDlg'), F = document.getElementById('ppF'), MSG = document.getElementById('ppMsg'), KBOX = document.getElementById('ppK'), KH = document.getElementById('ppKh'), TOP = document.getElementById('ppTop'), OPENER = null;
+  function toast(t) { try { if (window.T14Site && T14Site.toast) T14Site.toast(t); } catch (e) { } }
+  (function fill() {
+    var sec = {}, order = [];
+    (D.rows || []).forEach(function (r) { if (!sec[r[0]]) { sec[r[0]] = {}; order.push(r[0]); } sec[r[0]][r[1]] = 1; });
+    var o = '<option value="">Выберите…</option>' + order.map(function (s) { return '<optgroup label="' + esc(s) + '">' + Object.keys(sec[s]).map(function (e) { return '<option value="' + esc('p|' + s + '|' + e) + '">' + esc(e) + '</option>'; }).join('') + '</optgroup>'; }).join('');
+    o += '<optgroup label="Электрооборудование">' + (D.el || []).map(function (e) { return '<option value="' + esc('e|' + e[0]) + '">' + esc(e[0]) + '</option>'; }).join('') + '</optgroup>';
+    Object.keys(EXTRA).forEach(function (g) { o += '<optgroup label="' + esc(g) + '">' + EXTRA[g].map(function (x) { return '<option value="' + esc('x|' + x) + '">' + esc(x) + '</option>'; }).join('') + '</optgroup>'; });
+    o += '<option value="other">Другое — вписать</option>';
+    F.eq.innerHTML = o;
+    F.pm.innerHTML = MN.map(function (x, i) { return '<option value="' + pmOf(i) + '">' + x + ' ' + Y + '</option>'; }).join('');
+  })();
+  function eqText() {
+    var v = F.eq.value, p = v.split('|');
+    if (v === 'other') return F.eqx.value.trim();
+    if (p[0] === 'p') return p[2] + ' · ' + p[1];
+    return p.slice(1).join('|');
+  }
+  function planItems() {   // пункты графика для выбранного оборудования в месяце плана
+    var v = F.eq.value, p = v.split('|'), m = +String(F.pm.value).slice(5, 7) - 1;
+    if (p[0] === 'p') return (D.rows || []).filter(function (r) { return r[0] === p[1] && r[1] === p[2] && r[4][m] > 0 && !/[SDW]/.test(r[7]); }).map(function (r) { return { k: kP(r), t: r[2], s: (r[6] || 'исполнитель не указан') + (r[4][m] > 1 ? ' · ' + r[4][m] + ' раза в месяц' : '') }; });
+    if (p[0] === 'e') return (D.el || []).filter(function (e) { return e[0] === p.slice(1).join('|') && e[4][m]; }).map(function (e) { var q = e[4][m]; return { k: kE(e), t: (q[0] === 'Т' ? 'Текущий ремонт' : q[0] === 'К' ? 'Капитальный ремонт' : 'Осмотр') + ' по графику', s: n(q[1]) + ' ч простоя' }; });
+    return [];
+  }
+  function drawK(checked) {
+    var v = F.eq.value, L = v && v !== 'other' && v[0] !== 'x' ? planItems() : [], m = +String(F.pm.value).slice(5, 7) - 1;
+    F.eqx.closest('.ifield').hidden = v !== 'other';
+    KH.hidden = KBOX.hidden = !(v && v !== 'other' && v[0] !== 'x');
+    KBOX.innerHTML = L.length ? L.map(function (x) { return '<label class="pp-kr"><input type="checkbox" value="' + x.k + '"' + (checked && checked.indexOf(x.k) >= 0 ? ' checked' : '') + '><span>' + esc(x.t) + '<small>' + esc(x.s) + '</small></span></label>'; }).join('')
+      : '<p class="pp-kn">В графике на ' + MN[m].toLowerCase() + ' по этому оборудованию пунктов нет — опишите работы ниже.</p>';
+  }
+  function topRow(a, b) { return '<div class="pp-top"><input aria-label="Что долили" placeholder="Что: масло И-40, реагент…" maxlength="80" value="' + esc(a || '') + '"><input aria-label="Сколько" placeholder="Сколько: 2 л" maxlength="40" value="' + esc(b || '') + '"><button type="button" class="pp-rm" aria-label="Убрать строку">×</button></div>'; }
+  function tops() { return [].map.call(TOP.querySelectorAll('.pp-top'), function (r) { var i = r.querySelectorAll('input'); return [i[0].value.trim(), i[1].value.trim()]; }).filter(function (x) { return x[0] || x[1]; }); }
+  function checkedK() { return [].map.call(KBOX.querySelectorAll('input:checked'), function (i) { return i.value; }); }
+  var DK = 't14.pprdraft';
+  function saveDraft() { try { localStorage.setItem(DK, JSON.stringify({ d: F.d.value, pm: F.pm.value, eq: F.eq.value, eqx: F.eqx.value, k: checkedK(), w: F.w.value, who: F.who.value, top: tops(), ph: F.ph.value, n: F.n.value })); } catch (e) { } }
+  function readDraft() { try { return JSON.parse(localStorage.getItem(DK) || 'null'); } catch (e) { return null; } }
+  function dropDraft() { try { localStorage.removeItem(DK); } catch (e) { } }
+  var pmTouched = false;
+  function setForm(o) {
+    o = o || {};
+    F.d.value = o.d || today(); F.d.max = today();
+    F.pm.value = o.pm || String(F.d.value).slice(0, 7); if (!F.pm.value) F.pm.value = pmOf(M0);
+    F.eq.value = o.eq || ''; F.eqx.value = o.eqx || '';
+    F.w.value = o.w || ''; F.who.value = o.who || ''; F.ph.value = o.ph || ''; F.n.value = o.n || '';
+    var t = o.top && o.top.length ? o.top : [['', '']]; TOP.innerHTML = t.map(function (x) { return topRow(x[0], x[1]); }).join('');
+    pmTouched = !!o.pm && o.pm !== String(F.d.value).slice(0, 7);
+    drawK(o.k || []); MSG.textContent = ''; MSG.className = 'imsg';
+    var dl = document.getElementById('ppWho'), names = {}; J.rows.forEach(function (r) { if (r.who) names[r.who] = 1; }); if (J.me) names[J.me] = 1;
+    dl.innerHTML = Object.keys(names).map(function (x) { return '<option value="' + esc(x) + '">'; }).join('');
+  }
+  function openForm(pre, from) {
+    OPENER = from || null;
+    if (pre && pre.k) {   // «Отметить» у пункта графика: оборудование, месяц и пункт уже выбраны
+      var pm = pmOf(pre.m), r = (D.rows || []).filter(function (x) { return kP(x) === pre.k; })[0], e = !r && (D.el || []).filter(function (x) { return kE(x) === pre.k; })[0];
+      setForm({ pm: pm, eq: r ? 'p|' + r[0] + '|' + r[1] : e ? 'e|' + e[0] : '', k: [pre.k], who: J.me });
+    } else setForm(readDraft() || { who: J.me });   // месяц плана — по дате работ
+    try { DLG.showModal(); } catch (x) { DLG.setAttribute('open', ''); }
+    setTimeout(function () { (pre && pre.k ? F.w : F.eq.value ? F.w : F.eq).focus(); }, 60);
+  }
+  function closeForm() { try { DLG.close(); } catch (x) { DLG.removeAttribute('open'); } if (OPENER && document.contains(OPENER)) try { OPENER.focus(); } catch (e) { } }
+  function bad(t, el) { MSG.textContent = t; MSG.className = 'imsg bad'; if (el) try { el.focus(); } catch (e) { } return false; }
+  F.addEventListener('change', function (e) {
+    if (e.target === F.d && !pmTouched && F.d.value) { F.pm.value = String(F.d.value).slice(0, 7); if (F.pm.value !== String(F.d.value).slice(0, 7)) F.pm.value = pmOf(M0); drawK(checkedK()); }
+    if (e.target === F.pm) { pmTouched = true; drawK(checkedK()); }
+    if (e.target === F.eq) { drawK([]); if (F.eq.value === 'other') F.eqx.focus(); }
+    saveDraft();
+  });
+  F.addEventListener('input', saveDraft);
+  F.addEventListener('click', function (e) {
+    if (e.target.closest('[data-close]')) { closeForm(); return; }
+    if (e.target.closest('.pp-add')) { if (TOP.children.length < 10) { TOP.insertAdjacentHTML('beforeend', topRow()); TOP.lastElementChild.querySelector('input').focus(); } return; }
+    var rm = e.target.closest('.pp-rm'); if (rm) { var row = rm.closest('.pp-top'); if (TOP.children.length > 1) row.remove(); else row.querySelectorAll('input').forEach(function (i) { i.value = ''; }); saveDraft(); }
+  });
+  DLG.addEventListener('click', function (e) { if (e.target === DLG) closeForm(); });   // касание по затемнению
+  F.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var k = checkedK(), eq = eqText(), w = F.w.value.trim(), who = F.who.value.trim(), ph = F.ph.value.trim().replace(',', '.');
+    if (!F.d.value) return bad('Укажите дату работ.', F.d);
+    if (F.d.value > today()) return bad('Дата работ ещё не наступила — проверьте число.', F.d);
+    if (!eq) return bad(F.eq.value === 'other' ? 'Впишите, какое оборудование или объект обслуживали.' : 'Выберите оборудование или объект.', F.eq.value === 'other' ? F.eqx : F.eq);
+    if (!w && !k.length) return bad('Опишите, какие работы сделаны, или отметьте пункты графика.', F.w);
+    if (!who) return bad('Укажите исполнителя.', F.who);
+    if (ph && (!/^\d{1,2}(\.\d{1,2})?$/.test(ph) || +ph > 14)) return bad('pH — число от 0 до 14, например 7,2.', F.ph);
+    var btn = F.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Сохраняю…'; MSG.textContent = ''; MSG.className = 'imsg';
+    api('ppradd', { d: F.d.value, pm: F.pm.value, eq: eq, w: w, k: k, who: who, top: tops(), ph: ph, n: F.n.value.trim() }).then(function () {
+      btn.disabled = false; btn.textContent = 'Сохранить запись'; dropDraft(); closeForm(); toast('Запись внесена в журнал ППР');
+      var pm = F.pm.value; M = +pm.slice(5, 7) - 1; load();
+    }, function (er) {
+      btn.disabled = false; btn.textContent = 'Сохранить запись'; saveDraft();
+      bad('Не сохранено: ' + String(er && er.message || 'нет связи с сервером').replace(/[.\s]+$/, '') + '. Запись осталась в форме — нажмите «Сохранить запись» ещё раз.');
+    });
+  });
+
   draw();
+  function start() { load(); document.addEventListener('visibilitychange', function () { if (!document.hidden && (J.st !== 'ok' || Date.now() - J.at > 5 * 60e3)) load(); }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
 })();
 </script>

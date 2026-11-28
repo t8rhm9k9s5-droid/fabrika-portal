@@ -5,7 +5,7 @@
 (они уже WebP ≤1280, у крупных есть <путь>.640.webp — по карте _img.json), новых байтов фото не добавляется.
 Вызывается из build_new.py (build(...)) после сборки каталога; пишет out/n/d/pg/*, out/n/pages.js, out/n/pages.css, out/podbor.html (переход на /fsu/podbor).
 Отдельно: python3 pages_new.py [--base build/fsu] [--out work/fsu2/out]  (каталог out/ уже должен быть собран)."""
-import os, re, json, html, hashlib, shutil
+import os, re, json, html, hashlib, shutil, math   # 28.11.2026: проверка NaN через math.isnan (CodeQL 1737/1738)
 from html.parser import HTMLParser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,10 @@ def build(BASE, OUT, N, A, idx, ver):
     def page(u): return J('/api/v1/?action=blockPage.getPageByUrl&url=%s&lang=ru' % u)
     def one(sub): return J(next((k for k in A if sub in k), ''))
 
-    def fix(u):   # ссылки и картинки копии → адреса /fsu/…; внешние — как есть
+    def fix(u):   # 28.11.2026: битые адреса старых новостей → рабочие (assort/link_fix.json, агент sait); "" — убрать
+        v = fix0(u); return LFX.get(v, v) if v else v
+
+    def fix0(u):   # ссылки и картинки копии → адреса /fsu/…; внешние — как есть
         u = html.unescape(str(u or '')).strip()
         if not u or u.startswith(('javascript:', 'data:')): return ''
         if u.startswith(('http://', 'https://', 'mailto:', 'tel:', '#')):
@@ -83,6 +86,8 @@ def build(BASE, OUT, N, A, idx, ver):
         if u.startswith('/fsu/'): return u
         if u.startswith('/'): return '/fsu' + u
         return ''
+    _lf = '/home/claude/fabrika/work/fsu/assort/link_fix.json'
+    LFX = (json.load(open(_lf, encoding='utf-8')).get('map') or {}) if os.path.exists(_lf) else {}
 
     def im(src):   # {s: основной файл, t: миниатюра} — только если файл есть в копии
         s = fix(src)
@@ -222,7 +227,7 @@ def build(BASE, OUT, N, A, idx, ver):
     # --- остатки складов (файлы 1С): город → строки; модель → карточка каталога ---
     import pandas as pd
     SD = os.path.join(BASE, 'upload', 'als-1c', 'stores')
-    CITY = {'ryazan': 'Рязань', 'moscow': 'Москва', 'nizhny-novgorod': 'Сотрудник15 Имя3', 'samara': 'Самара', 'ekaterinburg': 'Екатеринбург',
+    CITY = {'ryazan': 'Рязань', 'moscow': 'Москва', 'nizhny-novgorod': 'Сотрудник10 Имя3', 'samara': 'Самара', 'ekaterinburg': 'Екатеринбург',
             'simferopol': 'Симферополь', 'krasnodar': 'Краснодар', 'almaty': 'Алматы', 'saint-petersburg': 'Санкт-Петербург', 'karshi': 'Карши'}
     nk = lambda s: re.sub(r'\s+', ' ', re.sub(r'[^a-zа-я0-9+]+', ' ', str(s).lower().replace('ё', 'е'))).strip()
     NM = {}
@@ -248,12 +253,12 @@ def build(BASE, OUT, N, A, idx, ver):
         if x.shape[1] >= 5:
             for r in x.itertuples(index=False):
                 nm, ch, q = r[0], r[1], r[4]
-                if not isinstance(nm, str) or nm.strip() in ('Склад', 'Номенклатура', 'Итого') or not isinstance(q, (int, float)) or q != q: continue
+                if not isinstance(nm, str) or nm.strip() in ('Склад', 'Номенклатура', 'Итого') or not isinstance(q, (int, float)) or math.isnan(q): continue
                 rows.append([nm.strip(), ch.strip() if isinstance(ch, str) else '', int(q)])
         else:
             for r in x.itertuples(index=False):
                 t, q = r[0], r[1]
-                if not isinstance(t, str) or not isinstance(q, (int, float)) or q != q or '(' not in t: continue
+                if not isinstance(t, str) or not isinstance(q, (int, float)) or math.isnan(q) or '(' not in t: continue
                 mm = re.match(r'^(.*?)\s*\((.*)\)\s*$', t.strip())
                 rows.append([mm.group(1), mm.group(2), int(q)] if mm else [t.strip(), '', int(q)])
         if not rows and x.shape[0] < 5: continue

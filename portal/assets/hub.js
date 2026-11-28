@@ -22,7 +22,7 @@
   function bin(name) { return (window.T14Live && T14Live.bin) ? T14Live.bin(name).catch(function () { return null; }) : Promise.resolve(null); }
   function norm(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(); }
   var MN = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник10) + рассылки
+  // 30.10.2026, пользователь: «в портале не обновилась сумма продаж» — сумма месяца по дням: отчёт 1С «Продажи» за месяц (В. В. Сотрудник11) + рассылки
   // за день (хостинг: sales.bin → sday). Пришёл отчёт «за месяц» — сумма дней (на время последнего письма); свежее сборки — берём с хостинга.
   function revLive(R, SD) {
     if (!R || !R.v || !R.v.length || !SD || !SD.days) return R;
@@ -690,7 +690,7 @@
       // 13.11.2026, Т. В.: «онлайн-продажи — приоритетная карточка, в продажах чуть ли не первой»: мониторинг наших моделей в интернете (build/online/online.json)
       // 14.11.2026 (реестр Рекса F4-01): данные онлайн-продаж — объект window.T14_ONLINE (sales_frag), не JSON-текст элемента
       var ON = window.T14_ONLINE && typeof window.T14_ONLINE === 'object' && !Array.isArray(window.T14_ONLINE) ? window.T14_ONLINE : null;
-      // 14.11.2026: весь Рунет (Google + Сотрудник11) по номенклатуре 1С — главнее старой выборки по 11 моделям
+      // 14.11.2026: весь Рунет (Google + Сотрудник12) по номенклатуре 1С — главнее старой выборки по 11 моделям
       var RNk = ON && ON.runet;
       if (RNk && RNk.offers) { var olow2 = (ON.prices || []).filter(function (q) { return q.p && q.r && q.p < q.r * (1 - (ON.thr || 0)); }).length;
         K.push({ id: 'onl', v: n(RNk.models_found) + '<small>из ' + n(RNk.models_n) + ' моделей</small>', s: 'в Рунете: ' + n(RNk.offers) + ' предложений на ' + n(RNk.sites_n) + ' сайтах · ' + (RNk.check ? 'магазинов на сверке с 1С — ' + n(RNk.check.shops) : 'не клиенты — ' + n((RNk.sites_by_type || {})['магазин'] || 0)) + (olow2 ? ' · ниже РРЦ — ' + n(olow2) : '') + ' · ' + String(RNk.t || '').slice(8, 10) + '.' + String(RNk.t || '').slice(5, 7), tone: 'warn' });
@@ -811,7 +811,7 @@
       var D = x.D, K = [], att = [], tl = [];
       function kind(k) { return ((D && D.kinds) || []).filter(function (r) { return r.k === k; })[0] || null; }
       var z = kind('zps'), f = kind('fts');
-      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник12), не утверждён Сотрудник7
+      var TT = window.OMTS_TERMS, TK = TT && TT.groups ? { id: 'term', v: n(TT.n_groups) + '<small>групп</small>', s: 'самый долгий: ' + TT.groups[0].g.toLowerCase() + ' — ' + TT.groups[0].rows[0].t.toLowerCase(), tag: 'проект', tone: 'warn' } : null;   // 03.11.2026: сроки поставки — проект ОМТС (Сотрудник13), не утверждён Сотрудник7
       if (!D) return { kpis: ['yday', 'late', 'open', 'old', 'med', 'term'].map(function (k) { return k === 'term' && TK ? TK : { id: k, v: '—', s: k === 'late' ? 'нет связи с отчётами ОМТС — данные приходят с хостинга' : '', tone: 'none' }; }), attn: [], attnMsg: 'Отчёты ОМТС ещё не загрузились — данные приходят с хостинга раз в 10 минут.' };
       var tz = z && z.total, tf = f && f.total, tot = (tz || 0) + (tf || 0);
       var HZ = z && z.hist, HF = f && f.hist, op = (HZ ? HZ.open || 0 : 0) + (HF ? HF.open || 0 : 0);
@@ -825,7 +825,7 @@
       K.push({ id: 'old', v: old ? n(old) + '<small>дн.</small>' : '—', s: 'с утверждения заявки', tone: old > 30 ? 'bad' : old ? 'warn' : 'none' });
       var med = [HZ && HZ.med_in, HF && HF.med_in].filter(function (v) { return v != null; }), avg = [HZ && HZ.avg_in, HF && HF.avg_in].filter(function (v) { return v != null; });
       K.push({ id: 'med', v: med.length ? n(Math.max.apply(null, med)) + (avg.length ? ' / ' + String(Math.max.apply(null, avg)).replace('.', ',') : '') + '<small>дн.</small>' : '—', s: 'медиана' + (avg.length ? ' / среднее' : '') + ': дней в просрочке до закрытия' + (avg.length ? '' : ' · среднее — после обновления хостинга'), tone: '' });
-      K.push(TK || { id: 'term', v: '—', s: 'документ готовит О. В. Сотрудник12', tag: 'готовится', tone: 'none' });
+      K.push(TK || { id: 'term', v: '—', s: 'документ готовит О. В. Сотрудник13', tag: 'готовится', tone: 'none' });
       [['ЖПС', z], ['ФТС', f]].forEach(function (q) {
         var r = q[1]; if (!r || !r.p) return;
         var L = (r.p.reqs || []), o30 = L.filter(function (x2) { return (x2.age || 0) > 30; }).length;
@@ -837,7 +837,7 @@
         att.push({ href: '#s-hist', ic: 'person', t: k + ': открытые заявки в просрочке', s: 'по истории ежедневных отчётов 1С', v: n(BR[k]), tone: 'warn' });
       });
       if (HZ || HF) tl.push({ id: 'hist', s: 'открыто ' + n(op) + ' · по неделям и ответственным' });
-      tl.push({ id: 'terms', s: TT && TT.groups ? 'проект ОМТС от ' + dd(TT.date) + ' · ' + TT.n_groups + ' групп, ' + TT.n_rows + ' строк · не утверждён' : 'готовится — О. В. Сотрудник12' }); tl.push({ id: 'norm', s: 'источник уточняется' });
+      tl.push({ id: 'terms', s: TT && TT.groups ? 'проект ОМТС от ' + dd(TT.date) + ' · ' + TT.n_groups + ' групп, ' + TT.n_rows + ' строк · не утверждён' : 'готовится — О. В. Сотрудник13' }); tl.push({ id: 'norm', s: 'источник уточняется' });
       return { kpis: K, attn: att, tiles: tl };
     },
     // 01.11.2026: вчера · прошлая неделя · месяц — заявки в просрочке по отчётам 1С (omts.bin → hist.dn: на конец дня, новые, закрытые)
@@ -880,7 +880,7 @@
     root: function () { return document.getElementById('home'); },
     anchor: function () { var h = document.querySelector('h1'); return h && (h.parentElement.querySelector(':scope > #res') || h.parentElement.querySelector(':scope > .igroup.hero')); },
     intro: function () { var h = document.querySelector('h1'); return h ? [h.parentElement.querySelector(':scope > .igroup.hero')] : []; },
-    // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник13, используй его как базу. То есть движение
+    // 03.11.2026, Т. В.: «Динамика складов показана абсолютно неверно на схеме. Возьми отчет от Сотрудник14, используй его как базу. То есть движение
     //   по складу в разрезе филиалов то же самое. Склады брака тоже можно указать уже внутри отчета.» → карточки и таблица по периодам — по отчёту
     //   1С «Товары на складах» (move-data сборки; свежее — st/smv.bin / smvs.bin робота хостинга); «Свободный остаток в Рязани» — как раньше (ПКС)
     kpis: [{ id: 'all', t: 'Все склады · конечный остаток', ic: 's_stock', href: '#s-whs' }, { id: 'mov', t: 'Приход за месяц', ic: 'trend', href: '#s-whs' },
@@ -971,7 +971,7 @@
       var sel = 0, pref = ['c', 'm', 'w', 'y'];                 // по умолчанию — текущий месяц, затем прошлый: отчёт месячный
       for (var pi = 0; pi < pref.length; pi++) { var si = -1; P.forEach(function (p, i) { if (p.k === pref[pi]) si = i; }); if (si >= 0 && rows[0].c[si] && rows[0].c[si].v != null) { sel = si; break; } }
       return { sel: sel, rows: rows.concat(more.slice(0, 3)), more: more.slice(3), moreT: 'остальные филиалы и брак (' + more.slice(3).length + ')',
-        note: 'Отчёт 1С «Товары на складах» — тот же, что у М. М. Сотрудник13 («Запасы ГП»): за месяц — конечный остаток и изменение от начального, с приходом и расходом; ' +
+        note: 'Отчёт 1С «Товары на складах» — тот же, что у М. М. Сотрудник14 («Запасы ГП»): за месяц — конечный остаток и изменение от начального, с приходом и расходом; ' +
           'за день и неделю — по ежедневной рассылке этого отчёта' + (days.length > MV.length ? '' : ' (появится, когда рассылка начнёт приходить)') + '. Последний отчёт — по ' + dd(last.to) + '.' };
     }
   };
@@ -983,12 +983,12 @@
     anchor: function () { var m = document.getElementById('main'); return m && m.querySelector(':scope > h2, :scope > section#catalog'); },
     // 02.11.2026, Т. В.: «только каталог» — без продаж, склада и «главного типа»; продукция по типам из прайс-листа 28.10
     kpis: [{ id: 'types', t: 'Типов продукции', ic: 's_grid', href: '#s-catalog' }, { id: 'items', t: 'Моделей в прайсе', ic: 's_items', href: '#s-catalog' },
-      { id: 'isp', t: 'Исполнений', ic: 'layers', href: '#s-catalog' }, { id: 'docs', t: 'Прайсы и сертификаты', ic: 's_docs', href: 'library.html#pcc~products' }],
+      { id: 'isp', t: 'Исполнений', ic: 'layers', href: '#s-catalog' }, { id: 'docs', t: 'Прайсы и сертификаты', ic: 's_docs', href: 'library.html#pcc' }],
     tiles: [{ id: 'catalog', t: 'Каталог по типам', ic: 's_grid', hdr: [/^каталог/, /#catalog/] },
       { id: 'models', t: 'Модели с фото', ic: 's_items', hdr: [/^модели/] },
       { id: 'mat', t: 'Материалы', ic: 'layers', hdr: [/^материалы/] },
       { id: 'out', t: 'Внешние пространства', ic: 'cube', opt: true, hdr: [/^внешние/] },
-      { id: 'lib', t: 'Прайсы, каталоги, сертификаты', ic: 's_docs', href: 'library.html#pcc~products', s: '«Документы» → прайсы, каталоги, сертификаты' }],
+      { id: 'lib', t: 'Прайсы, каталоги, сертификаты', ic: 's_docs', href: 'library.html#pcc', s: '«Документы» → прайсы, каталоги, сертификаты' }],
     data: function () { return {}; },
     fill: function () {
       var K = [], tl = [], ty = document.querySelectorAll('#catalog details.ctype').length, md = document.querySelectorAll('#catalog details.cmod').length, ri = document.querySelectorAll('#catalog .ctab tbody tr').length;

@@ -20,6 +20,35 @@ parts = {'ko': json.loads(pathlib.Path('/home/claude/build/data/ko_staff.json').
          # 12.11.2026, Т. В.: «всё должно быть как на сайте по оформлению» — данные пакета (JSON), страницу рисует портал (sales_frag: orgView, kosView)
          'org': {'src': 'Пакет «Структура» (снимок 03.11 + 11.11.2026), принят Т. В. 11.11 — на проверке', 'org': json.loads(pathlib.Path(ST + 'orgstruktura.json').read_text(encoding='utf-8'))},
          'kos': {'src': 'Пакет «Структура»: коммерческий отдел — функционал, зоны, блок-схема — на проверке', 'ko': json.loads(pathlib.Path(ST + 'kommercheskiy_otdel.json').read_text(encoding='utf-8'))}}
+# 28.11.2026, Т. В.: «Контакты сотрудников / карта ID» (struct.html#sec-con) — MAX ID к людям из оргструктуры. Только в закрытой части org
+#   (видят те же, кто видит «Структуру»). Источники — то, что уже есть у портала и бота: состав рабочих групп MAX (build/data/max_ids.json)
+#   и реестр доступа Сотрудник5 (work/access_2311/table.json). Ключ — «фамилия имя» (как key() в struct.html); ФИО на странице — только из оргструктуры.
+def _mxk(s):
+    import re as _r
+    s = _r.sub(r'\(.*?\)|\bгк\s+фабрикант\b', ' ', str(s or '').lower().replace('ё', 'е').replace('ъ', 'ь'))
+    s = _r.sub(r'[^а-яa-z ]', ' ', _r.sub(r'\s+-\s+.*$', '', s))
+    return ' '.join(s.split()[:2])
+try:
+    _ids, _all = {}, []
+    def _add(k, uid, src):
+        if len(k.split()) == 2 and uid and uid not in _ids.setdefault(k, []): _ids[k].append(uid)
+    _mx = json.loads(pathlib.Path('/home/claude/build/data/max_ids.json').read_text(encoding='utf-8'))
+    for m in _mx.get('people') or []:
+        u, nm = str(m.get('uid') or ''), (m.get('name') or '').split()
+        for a, b in ((m.get('ln', ''), m.get('fn', '')), (nm[1] if len(nm) > 1 else '', nm[0] if nm else '')):
+            _add(_mxk(a + ' ' + b), u, 'группы MAX')
+        _all.append([m.get('name') or '', u, 'группы MAX'])
+    try:
+        for r in json.loads(pathlib.Path('/home/claude/fabrika/work/access_2311/table.json').read_text(encoding='utf-8')).get('rows') or []:
+            u = str(r[3] or '').strip("'")
+            if u and r[1]: _add(_mxk(r[0]), u, 'реестр доступа')
+            if u and not any(x[1] == u for x in _all): _all.append([r[0], u, 'реестр доступа'])
+    except Exception as _e: print('реестр доступа:', _e)
+    _add('машинский тимур', '140426852', 'подтверждён Т. В. 24.11')
+    parts['org']['mx'] = {'src': 'состав рабочих групп MAX ' + str(_mx.get('t', ''))[:10] + ' и реестр доступа (Сотрудник50 И. В.); совпадение по фамилии и имени, привязка к корпоративному номеру — на проверке у Сотрудник5',
+                          'ids': _ids, 'all': _all}
+    print('MAX ID для контактов:', len(_ids))
+except Exception as _e: print('MAX ID для контактов:', _e)
 x = sorted(glob.glob('/home/claude/fabrika/struktura/СИМ-карты_МТС_по_разделам_*.xlsx'))
 if x:
     import openpyxl

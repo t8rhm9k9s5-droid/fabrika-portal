@@ -70,7 +70,7 @@ h2{font-size:38px;line-height:1.08}.kick{font-size:14px;font-weight:700;letter-s
 .m table{border-collapse:collapse;margin-top:14px;font-size:15.5px;width:100%%}.m td{padding:6px 0;border-bottom:1px solid #E5E7EB;vertical-align:top}.m td:first-child{color:#6B7280;width:44%%}
 .price{margin-top:18px;display:flex;align-items:baseline;gap:14px}.price .v{font-family:Gor;font-size:40px;white-space:nowrap}.price .t{font-size:15px;color:#6B7280}
 .stock{margin-top:12px;background:#FFF1EE;border-radius:14px;padding:12px 16px;font-size:15.5px;line-height:1.4}.stock b{color:#D93A20}
-.sale{width:100%%;border-collapse:collapse;margin-top:12px;font-size:13.5px}.sale th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B7280;border-bottom:2px solid #15181D;padding:5px 6px}.sale td{padding:6px;border-bottom:1px solid #E5E7EB;vertical-align:top}.sale td.n,.sale th.n{text-align:right;white-space:nowrap}.sale td.p{font-family:Gor;font-size:17px;white-space:nowrap;text-align:right}.sale s{color:#9AA1AB;font-family:Dep,sans-serif;font-size:13px;margin-right:8px}.sale .pc{color:#D93A20;font-family:Dep,sans-serif;font-size:12px;font-weight:700;margin-left:6px}
+.sale{width:100%%;border-collapse:collapse;margin-top:12px;font-size:13.5px}.sale th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B7280;border-bottom:2px solid #15181D;padding:5px 6px}.sale td{padding:6px;border-bottom:1px solid #E5E7EB;vertical-align:top}.sale td.n,.sale th.n{text-align:right;white-space:nowrap}.sale td.p{font-family:Gor;font-size:17px;white-space:nowrap;text-align:right}.sale td.lp{font-size:15px;white-space:nowrap;text-align:right;color:#6B7280;text-decoration:line-through}.sale td.sp{font-family:Gor;font-size:21px;white-space:nowrap;text-align:right;color:#D93A20}.sale td.dc{text-align:right;white-space:nowrap}.sale .bd{display:inline-block;background:#D93A20;color:#fff;font-family:Dep,sans-serif;font-weight:700;font-size:14px;border-radius:8px;padding:3px 8px}.sale s{color:#9AA1AB;font-family:Dep,sans-serif;font-size:13px;margin-right:8px}.sale .pc{color:#D93A20;font-family:Dep,sans-serif;font-size:12px;font-weight:700;margin-left:6px}
 ul{margin:14px 0 0;padding-left:22px;font-size:19px;line-height:1.5;color:#2B3037}li{margin-bottom:6px}
 .t{width:100%%;border-collapse:collapse;margin-top:22px;font-size:16px}.t th{text-align:left;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:#6B7280;border-bottom:2px solid #15181D;padding:8px 10px 8px 0}
 .t td{padding:9px 10px 9px 0;border-bottom:1px solid #E5E7EB;vertical-align:top}.small{font-size:13px;color:#8A9099;margin-top:14px}
@@ -132,7 +132,8 @@ def specs(c):
     return [(a, b) for a, b in out if len(str(b)) < 90]
 
 
-def s_model(code, stock='', why='', interior=False, price_note='по прайс-листу, с НДС', show_price=True, max_specs=12):
+def s_model(code, stock='', why='', interior=False, price_note='по прайс-листу, с НДС', show_price=True, max_specs=12, price=None):
+    # price=(руб., подпись) — одна цена колонки региона для исполнения со склада (26.11.2026, слово Т. В.: «есть цена, всё, мы оптовая компания»)
     c = card(code); e = IDX.get(code, {})
     k = None; viz = False
     if interior and (c.get('th') or {}).get('day'): k = c['th']['day']; viz = True
@@ -156,7 +157,12 @@ def s_model(code, stock='', why='', interior=False, price_note='по прайс-
     h = '<div class="m"><div><div class="pic%s"><img src="%s"></div>%s</div><div><div class="kick">%s</div><h2>%s</h2><div class="d">%s</div>' % (
         ' int' if interior and (c.get('th') or {}).get('day') else '', data_uri(pic, 1400), '<div class="viz">%s</div>' % ('визуализация по фото изделия' if viz else 'фото изделия'), esc(why or cat), esc(c['n']), esc(d))
     if sp: h += '<div class="specs">' + ''.join('<div%s><span>%s</span><b>%s</b></div>' % (' class="w"' if len(str(b)) > 24 else '', esc(a), esc(b)) for a, b in sp) + '</div>'
-    if prices and show_price:
+    if price and show_price and len(price) > 2 and price[2] and price[2] > price[0]:   # 26.11.2026, Т. В.: дисконт — цена прайса зачёркнута, цена со скидкой и %
+        h += '<div class="price"><div class="v"><s style="opacity:.55;font-size:.6em;margin-right:.4em">%s</s><span style="color:#e0412d">%s</span> <span style="font-size:.55em;color:#e0412d">−%d %%</span></div><div class="t">%s</div></div>' % (
+            rub(price[2]), rub(price[0]), round((1 - price[0] / price[2]) * 100), esc(price[1]))
+    elif price and show_price:
+        h += '<div class="price"><div class="v">%s</div><div class="t">%s</div></div>' % (rub(price[0]), esc(price[1]))
+    elif prices and show_price:
         rng = 'от %s' % rub(prices[0]) if prices[0] == prices[-1] or len(prices) < 2 else '%s – %s' % (rub(prices[0]).replace(' ₽', ''), rub(prices[-1]))
         h += '<div class="price"><div class="v">%s</div><div class="t">%s%s</div></div>' % (rng, esc(price_note), ' · %d исполнений' % len(prices) if len(prices) > 1 else '')
     if stock: h += '<div class="stock">%s</div>' % stock
